@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useStore } from '../store/useStore';
 import { useAuth } from '../lib/auth';
-import { Modal, ConfirmModal } from '../components/ui/Modal';
+import { ConfirmModal } from '../components/ui/Modal';
 import { BACKGROUNDS, FRAMES, AURAS } from '../data/collections';
 import { getRankByXp } from '../data/ranks';
 import { RankBadge } from '../components/ui/RankBadge';

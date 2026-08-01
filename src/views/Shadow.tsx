@@ -16,7 +16,6 @@ import {
 import {
   Sparkles, AlertTriangle, TrendingUp, Target, Trophy, Flame, Zap, Brain, Send, FileText, Lightbulb, Calendar, ChevronRight,
 } from 'lucide-react';
-import { triggerConfetti } from '../components/ui/Confetti';
 
 type Tab = 'overview' | 'analysis' | 'reports' | 'goals' | 'chat';
 

@@ -269,22 +269,23 @@ input[type='range']::-moz-range-thumb {
   left: 120%;
 }
 
-/* Page transition */
+/* Page transition — no fill-mode: avoids leaving a transform that creates
+   a containing block for position:fixed descendants (modals, overlays). */
 .page-enter {
-  animation: pageEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: pageEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @keyframes pageEnter {
-  0% { opacity: 0; transform: translateY(12px) scale(0.99); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
-/* Staggered fade-in for grids */
+/* Staggered fade-in for grids — opacity only, no persistent transform */
 .stagger-in {
-  animation: staggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: staggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @keyframes staggerIn {
-  0% { opacity: 0; transform: translateY(10px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
 /* Floating XP text */
@@ -400,6 +401,12 @@ input[type='range']::-moz-range-thumb {
 @keyframes typingDot {
   0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
   30% { opacity: 1; transform: translateY(-4px); }
+}
+
+/* Confetti burst — pure CSS, no RAF */
+@keyframes confettiBurst {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate(var(--confetti-vx, 100px), var(--confetti-vy, 300px)) rotate(var(--confetti-rot, 360deg)); opacity: 0; }
 }
 
 /* Respect reduced motion */

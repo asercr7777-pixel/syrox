@@ -2,8 +2,8 @@ import { useStore } from '../store/useStore';
 import { useAuth } from '../lib/auth';
 import { AURAS, WEAPONS, TITLES, SHIELDS, FRAMES, RARITY_META } from '../data/collections';
 import { getRankByXp, getNextRank } from '../data/ranks';
-import { RankBadge } from '../components/ui/RankBadge';
 import { XpBar } from '../components/ui/XpBar';
+import { AICommandCenter } from '../components/AICommandCenter';
 import { Flame, Coins, Star, Zap, Dumbbell, Calendar, TrendingUp, Award, Shield, Swords, Sparkles, BookOpen, Target, Trophy } from 'lucide-react';
 
 export function Profile() {
@@ -119,7 +119,7 @@ export function Profile() {
           Equipped Gear
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          {equippedItems.map(({ type, item, icon: Icon, placeholder }, i) => {
+          {equippedItems.map(({ type, item, icon: Icon }, i) => {
             const rarity = item ? (item as any).rarity : null;
             const meta = rarity ? RARITY_META[rarity as keyof typeof RARITY_META] : null;
             return (
@@ -211,6 +211,9 @@ export function Profile() {
           </div>
         </div>
       )}
+
+      {/* AI Command Center */}
+      <AICommandCenter />
     </div>
   );
 }

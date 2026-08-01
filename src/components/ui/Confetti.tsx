@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
-interface Particle {
+interface ConfettiPiece {
   id: number;
   x: number;
   y: number;
   vx: number;
   vy: number;
   color: string;
-  rotation: number;
-  rotationSpeed: number;
   size: number;
+  duration: number;
+  borderRadius: string;
 }
 
 const COLORS = ['#ff7a18', '#fbbf24', '#a855f7', '#06b6d4', '#10b981', '#f43f5e'];
@@ -21,66 +21,61 @@ export function triggerConfetti(count = 60) {
 }
 
 export function Confetti() {
-  const [particles, setParticles] = useState<Particle[]>([]);
+  const [pieces, setPieces] = useState<ConfettiPiece[]>([]);
+  const idRef = useRef(0);
 
-  useEffect(() => {
-    burstListener = (count: number) => {
-      const newParticles: Particle[] = [];
-      for (let i = 0; i < count; i++) {
-        newParticles.push({
-          id: Date.now() + i,
-          x: window.innerWidth / 2,
-          y: window.innerHeight / 2,
-          vx: (Math.random() - 0.5) * 16,
-          vy: (Math.random() - 1) * 14,
-          color: COLORS[Math.floor(Math.random() * COLORS.length)],
-          rotation: Math.random() * 360,
-          rotationSpeed: (Math.random() - 0.5) * 20,
-          size: 6 + Math.random() * 8,
-        });
-      }
-      setParticles((prev) => [...prev, ...newParticles]);
-    };
-    return () => { burstListener = null; };
+  const burst = useCallback((count: number) => {
+    const batch: ConfettiPiece[] = [];
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 4 + Math.random() * 12;
+      const duration = 1.5 + Math.random() * 0.8;
+      batch.push({
+        id: idRef.current++,
+        x: cx,
+        y: cy,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 4,
+        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+        size: 6 + Math.random() * 8,
+        duration,
+        borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+      });
+    }
+    setPieces((prev) => [...prev, ...batch]);
   }, []);
 
   useEffect(() => {
-    if (particles.length === 0) return;
-    let raf: number;
-    const tick = () => {
-      setParticles((prev) =>
-        prev
-          .map((p) => ({
-            ...p,
-            x: p.x + p.vx,
-            y: p.y + p.vy,
-            vy: p.vy + 0.4,
-            rotation: p.rotation + p.rotationSpeed,
-          }))
-          .filter((p) => p.y < window.innerHeight + 50 && p.x > -50 && p.x < window.innerWidth + 50)
-      );
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [particles.length > 0]);
+    burstListener = burst;
+    return () => { burstListener = null; };
+  }, [burst]);
 
-  if (particles.length === 0) return null;
+  const handleAnimationEnd = useCallback((id: number) => {
+    setPieces((prev) => prev.filter((p) => p.id !== id));
+  }, []);
+
+  if (pieces.length === 0) return null;
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-[200]">
-      {particles.map((p) => (
+    <div className="fixed inset-0 pointer-events-none z-[200] overflow-hidden">
+      {pieces.map((p) => (
         <div
           key={p.id}
-          className="confetti"
+          onAnimationEnd={() => handleAnimationEnd(p.id)}
           style={{
-            left: p.x,
-            top: p.y,
-            width: p.size,
-            height: p.size,
+            position: 'absolute',
+            left: `${p.x}px`,
+            top: `${p.y}px`,
+            width: `${p.size}px`,
+            height: `${p.size}px`,
             background: p.color,
-            transform: `rotate(${p.rotation}deg)`,
-            borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+            borderRadius: p.borderRadius,
+            ['--confetti-vx' as any]: `${p.vx * p.duration}px`,
+            ['--confetti-vy' as any]: `${(p.vy + 200) * p.duration}px`,
+            ['--confetti-rot' as any]: `${(Math.random() - 0.5) * 720 * p.duration}deg`,
+            animation: `confettiBurst ${p.duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`,
           }}
         />
       ))}

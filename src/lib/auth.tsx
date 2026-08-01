@@ -44,23 +44,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       options: { data: { username } },
     });
     if (error) return { error: error.message };
-    const signUp = async (email: string, password: string, username: string) => {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
+    if (data.user) {
+      await supabase.from('profiles').upsert({
+        id: data.user.id,
         username,
-      },
-    },
-  });
-
-  if (error) {
-    return { error: error.message };
-  }
-
-  return { error: null };
-};
+      });
+    }
     return { error: null };
   };
 

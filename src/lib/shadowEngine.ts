@@ -1,5 +1,5 @@
 import type { AppState, DayRecord } from '../store/types';
-import { getRankByXp, getNextRank, getRankIndex, RANKS } from '../data/ranks';
+import { getRankByXp, getNextRank } from '../data/ranks';
 import { todayStr } from '../store/defaults';
 
 export interface DailyReport {
@@ -398,10 +398,9 @@ export function generateWarnings(state: AppState): Warning[] {
 
 export function generateRecommendations(state: AppState): Recommendation[] {
   const recs: Recommendation[] = [];
-  const last7 = getHistoryRange(state.history, 7);
-  const today = todayStr();
   const enabledMain = state.mainTasks.filter((t) => t.enabled);
   const mainDone = enabledMain.filter((t) => state.coreCompleted[t.id]).length;
+  const last7 = getHistoryRange(state.history, 7);
   const hour = new Date().getHours();
 
   // Workout timing
@@ -532,8 +531,6 @@ export function generateShadowResponse(state: AppState, userText: string): strin
   const rank = getRankByXp(state.xp);
   const nextRank = getNextRank(state.xp);
   const enabledMain = state.mainTasks.filter((t) => t.enabled);
-  const mainDone = enabledMain.filter((t) => state.coreCompleted[t.id]).length;
-  const extraDone = Object.values(state.customCompleted).filter(Boolean).length;
   const last7 = getHistoryRange(state.history, 7);
   const avgDiscipline = last7.length > 0 ? Math.round(last7.reduce((a, h) => a + h.disciplineScore, 0) / last7.length) : 0;
   const lower = userText.toLowerCase();

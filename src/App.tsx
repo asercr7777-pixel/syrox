@@ -6,6 +6,9 @@ import { Confetti } from './components/ui/Confetti';
 import { AuthProvider, useAuth } from './lib/auth';
 import { useStore } from './store/useStore';
 import { syncSoundFlag } from './lib/sound';
+import { usePWA } from './hooks/usePWA';
+import { InstallButton } from './components/pwa/InstallButton';
+import { UpdateNotification } from './components/pwa/UpdateNotification';
 import { Loader2 } from 'lucide-react';
 
 const Dashboard = lazy(() => import('./views/Dashboard').then((m) => ({ default: m.Dashboard })));
@@ -36,6 +39,7 @@ function AppContent() {
   const { user, loading } = useAuth();
   const { state, loadFromCloud, setUserId, cloudLoaded } = useStore();
   const [view, setView] = useState<ViewId>('dashboard');
+  const { isInstalled, isInstallable, updateAvailable, promptInstall, applyUpdate } = usePWA();
 
   useEffect(() => {
     syncSoundFlag(state.soundEnabled);
@@ -79,6 +83,8 @@ function AppContent() {
       <Navigation current={view} onNavigate={handleNavigate} />
       <ToastContainer />
       <Confetti />
+      <UpdateNotification updateAvailable={updateAvailable} onApplyUpdate={applyUpdate} />
+      <InstallButton isInstallable={isInstallable} isInstalled={isInstalled} onInstall={promptInstall} />
 
       <main className="lg:ml-64 pt-16 lg:pt-6 px-4 pb-24 lg:pb-8 max-w-6xl mx-auto">
         <div key={view} className="page-enter">

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0c14"/>
+      <stop offset="100%" stop-color="#1a1e2e"/>
+    </linearGradient>
+    <linearGradient id="flame" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#ffd9b3"/>
+      <stop offset="40%" stop-color="#ff7a18"/>
+      <stop offset="100%" stop-color="#c44600"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <g filter="url(#glow)" transform="translate(256 280)">
+    <path d="M0 -120 C-35 -80 -55 -40 -55 0 C-55 50 -30 90 0 110 C30 90 55 50 55 0 C55 -40 35 -80 0 -120 Z" fill="url(#flame)"/>
+    <path d="M0 -80 C-20 -50 -32 -20 -32 10 C-32 45 -15 75 0 90 C15 75 32 45 32 10 C32 -20 20 -50 0 -80 Z" fill="#ff9a3c" opacity="0.7"/>
+    <path d="M0 -40 C-10 -20 -16 -5 -16 12 C-16 35 -8 55 0 65 C8 55 16 35 16 12 C16 -5 10 -20 0 -40 Z" fill="#ffd9b3" opacity="0.5"/>
+  </g>
+</svg>

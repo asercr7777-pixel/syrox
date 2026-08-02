@@ -1,7 +1,7 @@
 import { memo, useState, useMemo, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
-  AreaChart, Area, LineChart, Line, BarChart, Bar, RadarChart, Radar,
+  AreaChart, Area, LineChart, Line, RadarChart, Radar,
   PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
 } from 'recharts';
@@ -577,7 +577,7 @@ export const AICommandCenter = memo(function AICommandCenter() {
   );
 });
 
-function PredictionRow({ label, value, color, isText }: { label: string; value: string; color: string; isText?: boolean }) {
+function PredictionRow({ label, value, color }: { label: string; value: string; color: string; isText?: boolean }) {
   return (
     <div className="flex items-center justify-between p-2.5 rounded-lg border border-white/5 bg-slate-950/40">
       <span className="text-xs text-slate-300">{label}</span>

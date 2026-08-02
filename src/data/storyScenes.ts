@@ -10,7 +10,7 @@ export interface StoryScene {
     hint: string;
   };
   reward?: { type: 'xp' | 'coins'; amount: number; label: string };
-  unlocks?: string;
+  unlocks?: string | null;
 }
 
 export interface DialogueLine {

@@ -74,7 +74,7 @@ export function ItemInspection({ itemId, category, onBack }: ItemInspectionProps
       itemName = item.name;
       itemRarity = item.rarity;
       artComponent = (
-        <BackgroundArt id={item.id} name={item.name} rarity={item.rarity} css={item.css} size={300} />
+        <BackgroundArt id={item.id} name={item.name} size={300} />
       );
     }
   }
@@ -109,13 +109,13 @@ export function ItemInspection({ itemId, category, onBack }: ItemInspectionProps
     setRelatedItems(relatedPool.slice(0, 3));
   }, [item, itemId, category]);
 
-  const marketItem = MARKET_ITEMS.find((m) => m.id === itemId && m.category === category);
-  const rarity = RARITY_META[itemRarity as any];
-  const currentRank = getRankByXp(state.totalXp || 0);
+  const marketItem = MARKET_ITEMS.find((m) => m.id === itemId && m.category === (category as any));
+  const rarity = RARITY_META[itemRarity as keyof typeof RARITY_META];
+  const currentRank = getRankByXp(state.xp || 0);
 
   const isEquipped = state.equipped[category] === itemId;
   const isOwned = state.inventory?.some((inv) => inv.id === itemId && inv.type === category);
-  const canAfford = (state.gold || 0) >= (marketItem?.price || 0);
+  const canAfford = (state.coins || 0) >= (marketItem?.price || 0);
   const rankMet = RANKS.findIndex((r) => r.id === currentRank.id) >= RANKS.findIndex((r) => r.id === (marketItem?.rankRequired || 'E'));
 
   const generateLore = (name: string, rarity: string): string => {
@@ -306,7 +306,7 @@ export function ItemInspection({ itemId, category, onBack }: ItemInspectionProps
               {!isOwned && !canAfford && marketItem && (
                 <p className="text-xs text-ink-400 text-center flex items-center justify-center gap-1">
                   <Lock size={12} />
-                  Need {marketItem.price - (state.gold || 0)} more Gold
+                  Need {marketItem.price - (state.coins || 0)} more Coins
                 </p>
               )}
 
@@ -326,7 +326,7 @@ export function ItemInspection({ itemId, category, onBack }: ItemInspectionProps
             <h2 className="section-title mb-4">Related Items</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {relatedItems.map((relItem) => {
-                const relRarity = RARITY_META[relItem.rarity as any];
+                const relRarity = RARITY_META[relItem.rarity as keyof typeof RARITY_META];
                 let relArt = null;
 
                 if (category === 'weapon') {
@@ -344,8 +344,7 @@ export function ItemInspection({ itemId, category, onBack }: ItemInspectionProps
                       id={relItem.id}
                       name={relItem.name}
                       rarity={relItem.rarity}
-                      intensity={relItem.intensity}
-                      color={relItem.color}
+                      color={(relItem as any).color}
                       size={120}
                     />
                   );

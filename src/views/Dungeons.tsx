@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { RANKS, getRankByXp, getRankIndex } from '../data/ranks';
 import { DUNGEONS, type Dungeon, type DungeonReward } from '../data/dungeons';
@@ -7,8 +7,7 @@ import { Modal } from '../components/ui/Modal';
 import { toast } from '../components/ui/Toast';
 import { triggerConfetti } from '../components/ui/Confetti';
 import { playSound } from '../lib/sound';
-import { Swords, Lock, Check, Zap, Coins, Sparkles, Trophy, Award, Shield, ChevronRight, Flame, Dumbbell, Clock } from 'lucide-react';
-import type { RankId } from '../data/ranks';
+import { Swords, Lock, Check, Zap, Coins, Sparkles, Trophy, Award, Shield, Dumbbell } from 'lucide-react';
 
 const RARITY_COLORS: Record<string, string> = {
   common: '#9ca3af',
@@ -29,7 +28,6 @@ export function Dungeons() {
 
   const currentRank = getRankByXp(state.xp);
   const currentRankIndex = getRankIndex(currentRank.id);
-  const today = new Date().toISOString().slice(0, 10);
   const dungeonCompletedToday = state.dungeonClearedToday;
 
   const rankIds = RANKS.map((r) => r.id);

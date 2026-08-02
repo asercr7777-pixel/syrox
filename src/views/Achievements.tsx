@@ -26,7 +26,7 @@ const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'rank_d', name: 'Awakened', description: 'Reach D-Rank.', emoji: '🟢', rarity: 'rare', check: (s) => isAtOrAbove(s.xp, 'D'), reward: '100 XP' },
   { id: 'rank_s', name: 'S-Class', description: 'Reach S-Rank.', emoji: '🔥', rarity: 'epic', check: (s) => isAtOrAbove(s.xp, 'S'), reward: '500 XP' },
   { id: 'rank_shadow', name: 'Shadow Hunter', description: 'Reach Shadow Hunter rank.', emoji: '🐺', rarity: 'legendary', check: (s) => isAtOrAbove(s.xp, 'SHADOW_HUNTER'), reward: 'Legendary Aura' },
-  { id: 'rank_monarch', name: 'The Monarch', description: 'Reach Mr. BYDA rank.', emoji: '👑', rarity: 'secret', check: (s) => isAtOrAbove(s.xp, 'MR_BYDA'), reward: 'Secret Aura + Title' },
+  { id: 'rank_monarch', name: 'The Monarch', description: 'Reach Mr. BYDA rank.', emoji: '👑', rarity: 'secret', check: (s: any) => isAtOrAbove(s.xp, 'MR_BYDA' as any), reward: 'Secret Aura + Title' },
   { id: 'aura_collector', name: 'Aura Collector', description: 'Own 10 different auras.', emoji: '✨', rarity: 'epic', check: (s) => s.inventory.filter((i: any) => i.type === 'aura').length >= 10, reward: 'Epic Aura' },
   { id: 'legendary_aura', name: 'Legendary Aura', description: 'Obtain a legendary aura.', emoji: '🌟', rarity: 'legendary', check: (s) => s.inventory.some((i: any) => i.type === 'aura' && i.id === 'shadow_monarch'), reward: 'Title' },
   { id: 'secret_finder', name: 'Secret Finder', description: 'Discover a secret dungeon.', emoji: '🗝️', rarity: 'secret', check: (s) => s.dungeonsCleared > 0 && s.secretDungeonAvailable, reward: 'Rare Title' },

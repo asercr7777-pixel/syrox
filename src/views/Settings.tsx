@@ -2,12 +2,12 @@ import { useRef, useState } from 'react';
 import { useStore } from '../store/useStore';
 import { useAuth } from '../lib/auth';
 import { ConfirmModal } from '../components/ui/Modal';
-import { BACKGROUNDS, FRAMES, AURAS } from '../data/collections';
+import { BACKGROUNDS, AURAS } from '../data/collections';
 import { getRankByXp } from '../data/ranks';
 import { RankBadge } from '../components/ui/RankBadge';
 import {
   Upload, Trash2, Volume2, VolumeX, Bell, Palette, User as UserIcon,
-  Image as ImageIcon, Video, Sparkles, LogOut, Sun, Moon, Shield, Eye, Lock
+  Image as ImageIcon, Video, Sparkles, LogOut, Sun, Moon, Shield, Eye
 } from 'lucide-react';
 import { toast } from '../components/ui/Toast';
 import { playSound } from '../lib/sound';
@@ -36,7 +36,6 @@ export function Settings() {
   const videoRef = useRef<HTMLInputElement>(null);
   const rank = getRankByXp(state.xp);
   const aura = state.equipped.aura ? AURAS.find((a) => a.id === state.equipped.aura) : null;
-  const frame = state.equipped.frame ? FRAMES.find((f) => f.id === state.equipped.frame) : null;
 
   const handleImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

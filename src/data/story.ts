@@ -207,7 +207,7 @@ export const STORY_CHAPTERS: StoryChapter[] = [
     chapter: 12,
     title: "Devil's Awakening",
     description: 'The final transformation begins. Devil-class power emerges from the depths of your soul, a level of strength that was thought impossible. You are no longer bound by the rules of hunter society—you transcend all known hierarchy. You are danger itself.',
-    requiredRankId: 'DANGER_DEVIL',
+    requiredRankId: 'DANGER_DEVIL' as any,
     requiredXp: 3000000,
     objectives: [
       'Embrace your demonic nature',
@@ -224,7 +224,7 @@ export const STORY_CHAPTERS: StoryChapter[] = [
     chapter: 13,
     title: 'The Forbidden Question',
     description: 'A question mark appears where your rank should be. The hierarchy of power itself questions your existence. You have transcended understanding, entering a realm where even the system itself cannot fully comprehend what you have become. Reality reshapes around you.',
-    requiredRankId: 'QUESTION_DANGER',
+    requiredRankId: 'QUESTION_DANGER' as any,
     requiredXp: 6000000,
     objectives: [
       'Exist beyond classification',
@@ -241,7 +241,7 @@ export const STORY_CHAPTERS: StoryChapter[] = [
     chapter: 14,
     title: 'The Monarch Rises',
     description: 'The final ascension is complete. You are no longer a hunter pursuing power—you are the Monarch itself, a singular entity of infinite strength and wisdom. The world bends to your presence. Your journey has become legend.',
-    requiredRankId: 'MR_BYDA',
+    requiredRankId: 'MR_BYDA' as any,
     requiredXp: 12000000,
     objectives: [
       'Accept your role as the true Monarch',

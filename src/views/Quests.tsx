@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useStore, getQuestProgress } from '../store/useStore';
 import type { AppState } from '../store/types';
 import { QUESTS, getQuestsByCategory, type QuestCategory, type QuestDifficulty } from '../data/quests';

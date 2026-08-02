@@ -4,6 +4,7 @@ import { createDefaultState, levelFromXp, todayStr, uid, nowWeekKey } from './de
 import { DAILY_CHALLENGES, DAILY_LOGIN_REWARDS, SPIN_REWARDS } from '../data/tasks';
 import { RANKS, getRankByXp, getRankIndex } from '../data/ranks';
 import { AURAS, RARITY_META, WEAPONS, TITLES, type Rarity } from '../data/collections';
+import { QUESTS } from '../data/quests';
 import { DUNGEONS, SECRET_DUNGEONS, BOSS_DUNGEON } from '../data/dungeons';
 import { STORY_SCENES } from '../data/storyScenes';
 import { playSound } from '../lib/sound';
@@ -573,7 +574,7 @@ function damageBoss(amount: number): DropResult[] {
   setState((s) => {
     const bossId = 'dungeon_boss';
     if (s.bossDefeated[bossId]) return s;
-    const currentHp = s.bossHpRemaining[bossId] ?? BOSS_DUNGEON.hp;
+    const currentHp = s.bossHpRemaining[bossId] ?? (BOSS_DUNGEON as any).hp;
     const newHp = Math.max(0, currentHp - amount);
     let next = addPoints(s, amount, amount);
     next = { ...next, bossHpRemaining: { ...next.bossHpRemaining, [bossId]: newHp } };
@@ -826,7 +827,7 @@ function purchaseItem(itemId: string, category: string, price: number): boolean 
 function claimQuest(questId: string) {
   setState((s) => {
     if (s.questCompleted[questId]) return s;
-    const quest = QUESTS.find((q) => q.id === questId);
+    const quest = (QUESTS as any[]).find((q: any) => q.id === questId);
     if (!quest) return s;
     const progress = getQuestProgress(s, quest.metric);
     if (progress < quest.target) return s;

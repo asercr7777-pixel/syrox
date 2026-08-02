@@ -1,12 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, Lock, CheckCircle2, RotateCcw, BookOpen, Sparkles, Coins, Zap } from 'lucide-react';
+import { ChevronRight, CheckCircle2, RotateCcw, BookOpen, Sparkles, Coins, Zap } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { toast } from '../components/ui/Toast';
 import { triggerConfetti } from '../components/ui/Confetti';
 import {
-  STORY_SCENES, getSceneById, getNextScene, getTotalScenes, getShadowEmoji,
-  type StoryScene,
+  STORY_SCENES, getTotalScenes, getShadowEmoji,
 } from '../data/storyScenes';
 
 export default function StoryMode() {

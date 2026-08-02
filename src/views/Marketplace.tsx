@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import { RARITY_META, type Rarity } from '../data/collections';
 import { MARKET_ITEMS, CATEGORY_LABELS, type MarketCategory, type MarketItem } from '../data/marketplace';
-import { getRankByXp, RANKS } from '../data/ranks';
+import { RANKS } from '../data/ranks';
 import { Modal } from '../components/ui/Modal';
 import { toast } from '../components/ui/Toast';
 import { playSound } from '../lib/sound';
@@ -33,8 +33,6 @@ export function Marketplace() {
   const [previewItem, setPreviewItem] = useState<MarketItem | null>(null);
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [filterRarity, setFilterRarity] = useState<Rarity | 'all'>('all');
-
-  const rank = getRankByXp(state.xp);
 
   const items = useMemo(() => {
     let list = MARKET_ITEMS.filter((m) => m.category === category);

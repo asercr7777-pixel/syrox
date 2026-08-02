@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useStore } from '../store/useStore';
-import { getRankByXp } from '../data/ranks';
 import {
   generateDailyReport,
   generateWeeklyReport,
@@ -11,7 +10,6 @@ import {
   generateGoalSuggestions,
   getMotivationQuote,
   generateShadowGreeting,
-  generateShadowResponse,
 } from '../lib/shadowEngine';
 import {
   Sparkles, AlertTriangle, TrendingUp, Target, Trophy, Flame, Zap, Brain, Send, FileText, Lightbulb, Calendar, ChevronRight,
@@ -26,7 +24,6 @@ export function Shadow() {
   const [isTyping, setIsTyping] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  const rank = getRankByXp(state.xp);
   const dailyReport = useMemo(() => generateDailyReport(state), [state]);
   const weeklyReport = useMemo(() => generateWeeklyReport(state), [state]);
   const monthlyReport = useMemo(() => generateMonthlyReport(state), [state]);
@@ -119,7 +116,6 @@ export function Shadow() {
             onSend={handleSendChat}
             isTyping={isTyping}
             chatEndRef={chatEndRef}
-            username={state.username}
           />
         )}
       </div>
@@ -458,14 +454,13 @@ function GoalsTab({ goals }: { goals: ReturnType<typeof generateGoalSuggestions>
   );
 }
 
-function ChatTab({ chat, chatInput, setChatInput, onSend, isTyping, chatEndRef, username }: {
+function ChatTab({ chat, chatInput, setChatInput, onSend, isTyping, chatEndRef }: {
   chat: { id: string; role: 'user' | 'ai'; text: string; at: number }[];
   chatInput: string;
   setChatInput: (v: string) => void;
   onSend: () => void;
   isTyping: boolean;
   chatEndRef: React.RefObject<HTMLDivElement>;
-  username: string;
 }) {
   const quickPrompts = ['Daily report', 'Weekly report', 'Recommendations', 'Insights', 'Warnings', 'Goals', 'Motivate me'];
 

@@ -4,7 +4,7 @@ import { WORKOUT_SPLIT } from '../data/tasks';
 import { Modal, ConfirmModal } from '../components/ui/Modal';
 import { Plus, Pencil, Trash2, Check, Dumbbell, Play, Pause, Square, RotateCcw } from 'lucide-react';
 import { toast } from '../components/ui/Toast';
-import type { ExerciseEntry, WorkoutSessionRecord } from '../store/types';
+import type { ExerciseEntry } from '../store/types';
 
 type WorkoutMode = 'push' | 'pull' | 'legs' | 'cardio' | 'boxing' | 'custom';
 

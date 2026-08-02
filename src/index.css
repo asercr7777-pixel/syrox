@@ -417,3 +417,84 @@ input[type='range']::-moz-range-thumb {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ====== PWA / Native App Enhancements ====== */
+
+/* Safe area insets for notched devices */
+@supports (padding: env(safe-area-inset-top)) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Prevent text selection on UI elements */
+button, .btn, nav, [role="button"] {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: none;
+}
+
+/* Prevent pull-to-refresh on mobile */
+body {
+  overscroll-behavior-y: contain;
+}
+
+/* Better touch targets */
+@media (pointer: coarse) {
+  button, .btn, [role="button"] {
+    min-height: 40px;
+    min-width: 40px;
+  }
+}
+
+/* Disable tap highlight already set above, but ensure on all elements */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent zoom on input focus (iOS) */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea {
+    font-size: 16px;
+  }
+}
+
+/* Standalone mode adjustments */
+@media (display-mode: standalone) {
+  body {
+    user-select: none;
+  }
+  /* Allow text selection in inputs and content areas */
+  input, textarea, [contenteditable] {
+    user-select: text;
+  }
+}
+
+/* Improve render performance */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Content-visibility for off-screen sections */
+@media (min-width: 768px) {
+  .card-premium {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 200px;
+  }
+}
+
+/* will-change hints for animated elements */
+.page-enter, .stagger-in {
+  will-change: opacity;
+}

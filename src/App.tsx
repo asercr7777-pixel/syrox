@@ -1,27 +1,36 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Navigation, type ViewId } from './components/Navigation';
 import { Background } from './components/Background';
 import { ToastContainer } from './components/ui/Toast';
 import { Confetti } from './components/ui/Confetti';
-import { Dashboard } from './views/Dashboard';
-import { Tasks } from './views/Tasks';
-import { Workout } from './views/Workout';
-import { Dungeons } from './views/Dungeons';
-import { Inventory } from './views/Inventory';
-import { Marketplace } from './views/Marketplace';
-import { Quests } from './views/Quests';
-import StoryMode from './views/StoryMode';
-import { Achievements } from './views/Achievements';
-import { Leaderboard } from './views/Leaderboard';
-import { Profile } from './views/Profile';
-import { Settings } from './views/Settings';
-import { ItemInspection } from './views/ItemInspection';
-import { Auth } from './views/Auth';
-import { Shadow } from './views/Shadow';
 import { AuthProvider, useAuth } from './lib/auth';
 import { useStore } from './store/useStore';
 import { syncSoundFlag } from './lib/sound';
 import { Loader2 } from 'lucide-react';
+
+const Dashboard = lazy(() => import('./views/Dashboard').then((m) => ({ default: m.Dashboard })));
+const Tasks = lazy(() => import('./views/Tasks').then((m) => ({ default: m.Tasks })));
+const Quests = lazy(() => import('./views/Quests').then((m) => ({ default: m.Quests })));
+const StoryMode = lazy(() => import('./views/StoryMode').then((m) => ({ default: m.default })));
+const Workout = lazy(() => import('./views/Workout').then((m) => ({ default: m.Workout })));
+const Dungeons = lazy(() => import('./views/Dungeons').then((m) => ({ default: m.Dungeons })));
+const Profile = lazy(() => import('./views/Profile').then((m) => ({ default: m.Profile })));
+const Marketplace = lazy(() => import('./views/Marketplace').then((m) => ({ default: m.Marketplace })));
+const Inventory = lazy(() => import('./views/Inventory').then((m) => ({ default: m.Inventory })));
+const Achievements = lazy(() => import('./views/Achievements').then((m) => ({ default: m.Achievements })));
+const Leaderboard = lazy(() => import('./views/Leaderboard').then((m) => ({ default: m.Leaderboard })));
+const Settings = lazy(() => import('./views/Settings').then((m) => ({ default: m.Settings })));
+const ItemInspection = lazy(() => import('./views/ItemInspection').then((m) => ({ default: m.ItemInspection })));
+const Auth = lazy(() => import('./views/Auth').then((m) => ({ default: m.Auth })));
+const Shadow = lazy(() => import('./views/Shadow').then((m) => ({ default: m.Shadow })));
+
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <Loader2 className="animate-spin text-ember-400" size={32} />
+    </div>
+  );
+}
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -57,7 +66,9 @@ function AppContent() {
     return (
       <>
         <Background />
-        <Auth />
+        <Suspense fallback={<PageLoader />}>
+          <Auth />
+        </Suspense>
       </>
     );
   }
@@ -71,22 +82,24 @@ function AppContent() {
 
       <main className="lg:ml-64 pt-16 lg:pt-6 px-4 pb-24 lg:pb-8 max-w-6xl mx-auto">
         <div key={view} className="page-enter">
-          {view === 'dashboard' && <Dashboard onNavigate={setView} />}
-          {view === 'tasks' && <Tasks />}
-          {view === 'quests' && <Quests />}
-          {view === 'story' && <StoryMode />}
-          {view === 'workout' && <Workout />}
-          {view === 'dungeons' && <Dungeons />}
-          {view === 'profile' && <Profile />}
-          {view === 'marketplace' && <Marketplace />}
-          {view === 'inventory' && <Inventory />}
-          {view === 'achievements' && <Achievements />}
-          {view === 'leaderboard' && <Leaderboard />}
-          {view === 'shadow' && <Shadow />}
-          {view === 'settings' && <Settings />}
-          {view === 'iteminspection' && (
-            <ItemInspection itemId="" category="weapon" onBack={() => setView('inventory')} />
-          )}
+          <Suspense fallback={<PageLoader />}>
+            {view === 'dashboard' && <Dashboard onNavigate={setView} />}
+            {view === 'tasks' && <Tasks />}
+            {view === 'quests' && <Quests />}
+            {view === 'story' && <StoryMode />}
+            {view === 'workout' && <Workout />}
+            {view === 'dungeons' && <Dungeons />}
+            {view === 'profile' && <Profile />}
+            {view === 'marketplace' && <Marketplace />}
+            {view === 'inventory' && <Inventory />}
+            {view === 'achievements' && <Achievements />}
+            {view === 'leaderboard' && <Leaderboard />}
+            {view === 'shadow' && <Shadow />}
+            {view === 'settings' && <Settings />}
+            {view === 'iteminspection' && (
+              <ItemInspection itemId="" category="weapon" onBack={() => setView('inventory')} />
+            )}
+          </Suspense>
         </div>
       </main>
     </div>

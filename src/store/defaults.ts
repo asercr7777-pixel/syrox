@@ -189,6 +189,11 @@ export function createDefaultState(): AppState {
     questCompleted: {},
     questDateReset: null,
 
+    // Story Mode (Linear)
+    storySceneIndex: 0,
+    storySceneRewardsClaimed: {},
+
+    // Story Mode (Legacy)
     storyChapterIndex: 0,
     storyObjectivesCompleted: {},
     storyChoices: {},

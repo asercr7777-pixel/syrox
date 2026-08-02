@@ -16,14 +16,14 @@ export async function uploadBackground(
   userId: string,
   file: File,
   kind: 'image' | 'video',
-): Promise<{ url: string; error: string | null }> {
+): Promise<{ url: string; path: string; error: string | null }> {
   if (!isSupabaseConfigured()) {
-    return { url: '', error: 'Cloud storage is not configured.' };
+    return { url: '', path: '', error: 'Cloud storage is not configured.' };
   }
 
   const allowed = kind === 'image' ? ALLOWED_IMAGE_TYPES : ALLOWED_VIDEO_TYPES;
   if (!allowed.includes(file.type)) {
-    return { url: '', error: `Invalid file type. Allowed: ${allowed.join(', ')}` };
+    return { url: '', path: '', error: `Invalid file type. Allowed: ${allowed.join(', ')}` };
   }
 
   const ext = file.name.split('.').pop()?.toLowerCase() ?? (kind === 'image' ? 'png' : 'mp4');
@@ -39,12 +39,25 @@ export async function uploadBackground(
 
   if (upErr) {
     console.error('[backgroundUpload] upload error:', upErr.message);
-    return { url: '', error: sanitizeError(upErr.message) };
+    return { url: '', path: '', error: sanitizeError(upErr.message) };
   }
 
-  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
-  if (!data?.publicUrl) {
-    return { url: '', error: 'Failed to get public URL.' };
+  const { data: signedData, error: signedErr } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUrl(path, 31536000);
+
+  if (signedErr || !signedData?.signedUrl) {
+    return { url: '', path: '', error: 'File uploaded but could not generate URL.' };
   }
-  return { url: data.publicUrl, error: null };
+
+  return { url: signedData.signedUrl, path, error: null };
+}
+
+export async function getBackgroundUrl(path: string): Promise<string | null> {
+  if (!isSupabaseConfigured() || !path) return null;
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUrl(path, 31536000);
+  if (error || !data?.signedUrl) return null;
+  return data.signedUrl;
 }

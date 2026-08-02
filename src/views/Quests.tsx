@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { useStore } from '../store/useStore';
+import { useState, useMemo } from 'react';
+import { useStore, getQuestProgress } from '../store/useStore';
+import type { AppState } from '../store/types';
 import { QUESTS, getQuestsByCategory, type QuestCategory, type QuestDifficulty } from '../data/quests';
 import { toast } from '../components/ui/Toast';
 import { playSound } from '../lib/sound';
@@ -26,26 +27,7 @@ const DIFFICULTY_COLORS: Record<QuestDifficulty, { bg: string; border: string; t
 };
 
 function getProgressValue(state: any, metric: string): number {
-  switch (metric) {
-    case 'tasks_completed':
-      return Object.values(state.coreCompleted).filter(Boolean).length;
-    case 'workouts_done':
-      return state.workoutsCompletedToday;
-    case 'dungeon_cleared':
-      return state.dungeonClearedToday ? 1 : 0;
-    case 'streak_days':
-      return state.streak;
-    case 'xp_gained':
-      return state.xp;
-    case 'total_points':
-      return state.totalPoints;
-    case 'perfect_days':
-      return state.history.filter((h: any) => h.allMainDone).length;
-    case 'dungeons_cleared_total':
-      return state.dungeonsCleared;
-    default:
-      return 0;
-  }
+  return getQuestProgress(state as AppState, metric);
 }
 
 export function Quests() {

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { memo, useState, useMemo, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   AreaChart, Area, LineChart, Line, BarChart, Bar, RadarChart, Radar,
@@ -8,15 +8,15 @@ import {
 import {
   TrendingUp, Flame, Award, Target, Zap, Calendar, Clock, Trophy,
   Activity, Brain, AlertTriangle, Sparkles, Cpu,
-  Shield, Dumbbell, Gauge, Crown,
+  Shield, Gauge, Crown,
 } from 'lucide-react';
 import { useStore } from '../store/useStore';
-import { getRankByXp } from '../data/ranks';import {
+import { getRankByXp } from '../data/ranks';
+import {
   computeMetrics, computeInsights, computePredictions, computeTraits,
-  computeRankProgress, computeHeatmap, computeStreakHistory,
-  computeHabitData, computeGrowthComparison, computeTaskDistribution,
-  computeDisciplineTimeline, computeXpProgress, computeRadarData,
-  computePredictionData, getDailyCoach, getHabitColors,
+  computeRankProgress, computeStreakHistory,
+  computeTaskDistribution, computeDisciplineTimeline, computeXpProgress,
+  computeRadarData, getDailyCoach,
 } from '../lib/aiAnalysis';
 
 type RangeKey = 'week' | 'month' | 'year' | 'all';
@@ -46,13 +46,12 @@ function GlassCard({ children, delay = 0, className = '' }: { children: React.Re
       className={`relative rounded-2xl border border-purple-500/15 bg-gradient-to-br from-slate-900/80 via-purple-950/20 to-slate-900/80 backdrop-blur-xl overflow-hidden ${className}`}
     >
       <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ background: 'radial-gradient(circle at 30% 0%, rgba(168,85,247,0.08), transparent 60%)' }} />
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(168,85,247,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(168,85,247,0.5) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
       <div className="relative">{children}</div>
     </motion.div>
   );
 }
 
-function AnimatedCounter({ value, suffix = '', duration = 1000 }: { value: number; suffix?: string; duration?: number }) {
+const AnimatedCounter = memo(function AnimatedCounter({ value, suffix = '', duration = 1000 }: { value: number; suffix?: string; duration?: number }) {
   const [display, setDisplay] = useState(0);
   const rafRef = useRef<number | undefined>(undefined);
 
@@ -67,11 +66,12 @@ function AnimatedCounter({ value, suffix = '', duration = 1000 }: { value: numbe
       if (progress < 1) rafRef.current = requestAnimationFrame(animate);
     };
     rafRef.current = requestAnimationFrame(animate);
-    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+    return () => { if (rafRef) cancelAnimationFrame(rafRef.current!); };
   }, [value, duration]);
 
   return <span className="tabular-nums">{display.toLocaleString()}{suffix}</span>;
-}
+});
+
 
 function SectionTitle({ icon: Icon, title, subtitle }: { icon: typeof Cpu; title: string; subtitle?: string }) {
   return (
@@ -96,7 +96,7 @@ const tooltipStyle = {
   backdropFilter: 'blur(8px)',
 };
 
-export function AICommandCenter() {
+export const AICommandCenter = memo(function AICommandCenter() {
   const { state } = useStore();
   const [timelineRange, setTimelineRange] = useState<RangeKey>('month');
 
@@ -105,19 +105,14 @@ export function AICommandCenter() {
   const predictions = useMemo(() => computePredictions(state), [state.history, state.xp, state.streak]);
   const traits = useMemo(() => computeTraits(state), [state.history, state.streak, state.bestStreak, state.workoutSessions, state.achievements]);
   const rankProgress = useMemo(() => computeRankProgress(state), [state.history, state.xp]);
-  const heatmap = useMemo(() => computeHeatmap(state), [state.history]);
   const streakHistory = useMemo(() => computeStreakHistory(state), [state.history]);
-  const habitData = useMemo(() => computeHabitData(state), [state.history, state.mainTasks]);
-  const growthData = useMemo(() => computeGrowthComparison(state), [state.history]);
   const taskDist = useMemo(() => computeTaskDistribution(state), [state.history]);
   const timelineData = useMemo(() => computeDisciplineTimeline(state, timelineRange), [state.history, timelineRange]);
   const xpData = useMemo(() => computeXpProgress(state), [state.history]);
   const radarData = useMemo(() => computeRadarData(state), [state.history, state.xp, state.streak, state.workoutSessions, state.achievements, state.dungeonsCleared]);
-  const predictionData = useMemo(() => computePredictionData(state), [state.history]);
   const coachTip = useMemo(() => getDailyCoach(state), [state.history, state.xp, state.streak, state.mainTasks, state.coreCompleted]);
 
   const rank = getRankByXp(state.xp);
-  const habitColors = getHabitColors();
 
   const overviewItems = [
     { label: 'Discipline Rating', value: metrics.overallDisciplineRating, suffix: '/100', color: NEON_PURPLE, icon: Gauge },
@@ -189,6 +184,76 @@ export function AICommandCenter() {
           );
         })}
       </div>
+
+      {/* Capability Radar — Redesigned */}
+      <GlassCard delay={0}>
+        <div className="p-5">
+          <SectionTitle icon={Brain} title="Capability Radar" subtitle="Multi-dimensional discipline analysis" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
+            <div className="relative">
+              {/* Glow background */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-48 h-48 rounded-full opacity-30" style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.4), transparent 70%)' }} />
+              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="72%">
+                  <defs>
+                    <linearGradient id="radarGradient" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor={NEON_CYAN} stopOpacity={0.6} />
+                      <stop offset="50%" stopColor={NEON_PURPLE} stopOpacity={0.4} />
+                      <stop offset="100%" stopColor={NEON_PINK} stopOpacity={0.3} />
+                    </linearGradient>
+                    <linearGradient id="radarStroke" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor={NEON_CYAN} />
+                      <stop offset="50%" stopColor={NEON_PURPLE} />
+                      <stop offset="100%" stopColor={NEON_PINK} />
+                    </linearGradient>
+                  </defs>
+                  <PolarGrid stroke="rgba(168,85,247,0.12)" />
+                  <PolarAngleAxis dataKey="metric" tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 600 }} />
+                  <PolarRadiusAxis domain={[0, 100]} tick={{ fontSize: 8, fill: '#475569' }} axisLine={false} />
+                  <Radar
+                    dataKey="value"
+                    stroke="url(#radarStroke)"
+                    fill="url(#radarGradient)"
+                    strokeWidth={2.5}
+                    style={{ filter: 'drop-shadow(0 0 8px rgba(168,85,247,0.5))' }}
+                    animationDuration={800}
+                    isAnimationActive
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+            {/* Metric breakdown */}
+            <div className="space-y-2.5">
+              {radarData.map((d: any, i: number) => (
+                <motion.div
+                  key={d.metric}
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.06 }}
+                  className="flex items-center gap-3"
+                >
+                  <span className="text-xs text-slate-300 w-24 flex-shrink-0">{d.metric}</span>
+                  <div className="flex-1 h-2 bg-slate-950/60 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${d.value}%` }}
+                      transition={{ delay: i * 0.06 + 0.2, duration: 0.6, ease: 'easeOut' }}
+                      className="h-full rounded-full"
+                      style={{
+                        background: `linear-gradient(90deg, ${NEON_CYAN}, ${NEON_PURPLE})`,
+                        boxShadow: `0 0 6px ${NEON_PURPLE}80`,
+                      }}
+                    />
+                  </div>
+                  <span className="text-xs font-bold tabular-nums text-purple-300 w-10 text-right">{d.value}</span>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </GlassCard>
 
       {/* Professional Analytics */}
       <GlassCard delay={0}>
@@ -281,7 +346,7 @@ export function AICommandCenter() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,122,24,0.08)" />
                 <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={(v) => v.slice(5)} />
-                <YAxis tick={{ fontSize: 10, fill: '#64748b' }} />
+                <YAxis tick={{ fontSize: 10, fill: '#64749b' }} />
                 <Tooltip contentStyle={tooltipStyle} />
                 <Area
                   type="monotone"
@@ -322,87 +387,6 @@ export function AICommandCenter() {
           </div>
         </GlassCard>
       </div>
-
-      {/* Habit Completion + Radar */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <GlassCard delay={0}>
-          <div className="p-5">
-            <SectionTitle icon={Dumbbell} title="Habit Completion" subtitle="Daily task completion (last 14 days)" />
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={habitData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(168,85,247,0.08)" />
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={(v) => v.slice(5)} />
-                <YAxis tick={{ fontSize: 10, fill: '#64748b' }} />
-                <Tooltip contentStyle={tooltipStyle} />
-                <Legend wrapperStyle={{ fontSize: 10, color: '#8a93b0' }} />
-                {state.mainTasks.filter((t) => t.enabled).map((t) => (
-                  <Bar key={t.id} dataKey={t.label} stackId="a" fill={habitColors[t.label] ?? NEON_PURPLE} radius={[0, 0, 0, 0]} />
-                ))}
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </GlassCard>
-
-        <GlassCard delay={1}>
-          <div className="p-5">
-            <SectionTitle icon={Brain} title="Capability Radar" subtitle="Multi-dimensional discipline analysis" />
-            <ResponsiveContainer width="100%" height={220}>
-              <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="75%">
-                <PolarGrid stroke="rgba(168,85,247,0.15)" />
-                <PolarAngleAxis dataKey="metric" tick={{ fontSize: 10, fill: '#8a93b0' }} />
-                <PolarRadiusAxis domain={[0, 100]} tick={{ fontSize: 8, fill: '#475569' }} />
-                <Radar
-                  dataKey="value"
-                  stroke={NEON_PURPLE}
-                  fill={NEON_PURPLE}
-                  fillOpacity={0.3}
-                  strokeWidth={2}
-                  style={{ filter: `drop-shadow(0 0 6px ${NEON_PURPLE})` }}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
-        </GlassCard>
-      </div>
-
-      {/* Weekly Heatmap */}
-      <GlassCard delay={0}>
-        <div className="p-5">
-          <SectionTitle icon={Calendar} title="Activity Heatmap" subtitle="365 days of discipline intensity" />
-          <div className="overflow-x-auto scrollbar-thin pb-2">
-            <div className="flex gap-[3px] min-w-max">
-              {Array.from({ length: 53 }, (_, weekIdx) => (
-                <div key={weekIdx} className="flex flex-col gap-[3px]">
-                  {Array.from({ length: 7 }, (_, dayIdx) => {
-                    const flatIdx = weekIdx * 7 + dayIdx;
-                    const entry = heatmap[flatIdx];
-                    if (!entry) return <div key={dayIdx} className="w-[11px] h-[11px] rounded-[2px]" />;
-                    const colors = ['rgba(30,27,43,0.6)', 'rgba(168,85,247,0.25)', 'rgba(168,85,247,0.45)', 'rgba(168,85,247,0.7)', 'rgba(168,85,247,0.95)'];
-                    return (
-                      <div
-                        key={dayIdx}
-                        className="w-[11px] h-[11px] rounded-[2px] transition-transform hover:scale-150 cursor-default"
-                        style={{
-                          background: colors[entry.level],
-                          boxShadow: entry.level >= 3 ? '0 0 4px rgba(168,85,247,0.6)' : 'none',
-                        }}
-                        title={`${entry.date}: ${entry.value}% discipline`}
-                      />
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5 mt-3 justify-end">
-            <span className="text-[10px] text-slate-500">Less</span>
-            {['rgba(30,27,43,0.6)', 'rgba(168,85,247,0.25)', 'rgba(168,85,247,0.45)', 'rgba(168,85,247,0.7)', 'rgba(168,85,247,0.95)'].map((c, i) => (
-              <div key={i} className="w-[11px] h-[11px] rounded-[2px]" style={{ background: c }} />
-            ))}
-            <span className="text-[10px] text-slate-500">More</span>
-          </div>
-        </div>
-      </GlassCard>
 
       {/* Rank Progress Timeline + Streak History */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -469,49 +453,6 @@ export function AICommandCenter() {
                 </motion.div>
               ))}
             </div>
-          </div>
-        </GlassCard>
-      </div>
-
-      {/* AI Prediction Chart + Growth Comparison */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <GlassCard delay={0}>
-          <div className="p-5">
-            <SectionTitle icon={Sparkles} title="AI Prediction" subtitle={`Projected discipline score — next 30 days (${predictions.confidence}% confidence)`} />
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={predictionData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(168,85,247,0.08)" />
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={(v) => v.slice(5)} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#64748b' }} />
-                <Tooltip contentStyle={tooltipStyle} />
-                <Line
-                  type="monotone"
-                  dataKey="projected"
-                  stroke={NEON_CYAN}
-                  strokeWidth={2}
-                  strokeDasharray="5 3"
-                  dot={false}
-                  style={{ filter: `drop-shadow(0 0 6px ${NEON_CYAN})` }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </GlassCard>
-
-        <GlassCard delay={1}>
-          <div className="p-5">
-            <SectionTitle icon={TrendingUp} title="Growth Comparison" subtitle="Period-over-period XP comparison" />
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={growthData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(168,85,247,0.08)" />
-                <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#64748b' }} />
-                <YAxis tick={{ fontSize: 10, fill: '#64748b' }} />
-                <Tooltip contentStyle={tooltipStyle} />
-                <Legend wrapperStyle={{ fontSize: 10, color: '#8a93b0' }} />
-                <Bar dataKey="value" name="Current" fill={NEON_PURPLE} radius={[4, 4, 0, 0]} style={{ filter: `drop-shadow(0 0 4px ${NEON_PURPLE})` }} />
-                <Bar dataKey="compareValue" name="Previous" fill="rgba(100,116,139,0.5)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
           </div>
         </GlassCard>
       </div>
@@ -634,9 +575,9 @@ export function AICommandCenter() {
       </GlassCard>
     </div>
   );
-}
+});
 
-function PredictionRow({ label, value, color }: { label: string; value: string; color: string; isText?: boolean }) {
+function PredictionRow({ label, value, color, isText }: { label: string; value: string; color: string; isText?: boolean }) {
   return (
     <div className="flex items-center justify-between p-2.5 rounded-lg border border-white/5 bg-slate-950/40">
       <span className="text-xs text-slate-300">{label}</span>

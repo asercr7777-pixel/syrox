@@ -217,7 +217,11 @@ export interface AppState {
   questCompleted: Record<string, boolean>;
   questDateReset: string | null;
 
-  // Story Mode
+  // Story Mode (Linear)
+  storySceneIndex: number;
+  storySceneRewardsClaimed: Record<string, boolean>;
+
+  // Story Mode (Legacy)
   storyChapterIndex: number;
   storyObjectivesCompleted: Record<string, boolean>;
   storyChoices: Record<string, string>;

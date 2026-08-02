@@ -5,6 +5,7 @@ import { DAILY_CHALLENGES, DAILY_LOGIN_REWARDS, SPIN_REWARDS } from '../data/tas
 import { RANKS, getRankByXp, getRankIndex } from '../data/ranks';
 import { AURAS, RARITY_META, WEAPONS, TITLES, type Rarity } from '../data/collections';
 import { DUNGEONS, SECRET_DUNGEONS, BOSS_DUNGEON } from '../data/dungeons';
+import { STORY_SCENES } from '../data/storyScenes';
 import { playSound } from '../lib/sound';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
@@ -190,6 +191,40 @@ function addXp(s: AppState, amount: number): AppState {
   return { ...s, xp, level, coins };
 }
 
+export function getQuestProgress(s: AppState, metric: string): number {
+  switch (metric) {
+    case 'tasks_completed': {
+      const today = Object.values(s.coreCompleted).filter(Boolean).length + Object.values(s.customCompleted).filter(Boolean).length;
+      const total = s.history.reduce((a, h) => a + Object.values(h.coreCompleted).filter(Boolean).length + Object.values(h.customCompleted).filter(Boolean).length, 0);
+      return today + total;
+    }
+    case 'workouts_done':
+      return s.workoutsCompletedToday + s.workoutSessions.length;
+    case 'dungeon_cleared':
+      return s.dungeonClearedToday ? 1 : 0;
+    case 'dungeons_cleared_total':
+      return s.dungeonsCleared;
+    case 'streak_days':
+      return s.streak;
+    case 'xp_gained':
+      return s.xp;
+    case 'total_points':
+      return s.totalPoints;
+    case 'perfect_days':
+      return s.history.filter((h) => h.allMainDone).length;
+    case 'focused_sessions':
+      return Object.values(s.customCompleted).filter(Boolean).length + s.history.reduce((a, h) => a + Object.values(h.customCompleted).filter(Boolean).length, 0);
+    case 'meditation_sessions':
+      return (s.coreCompleted.pray ? 1 : 0) + s.history.filter((h) => h.coreCompleted.pray).length;
+    case 'challenging_tasks':
+      return s.workoutsCompletedToday + s.history.filter((h) => h.workoutCompleted).length;
+    case 'learning_sessions':
+      return (s.coreCompleted.read_quran ? 1 : 0) + s.history.filter((h) => h.coreCompleted.read_quran).length;
+    default:
+      return 0;
+  }
+}
+
 function addPoints(s: AppState, xp: number, points: number): AppState {
   const dailyRemaining = s.dailyCap - s.dailyXp;
   const cappedXp = Math.max(0, Math.min(xp, dailyRemaining));
@@ -315,23 +350,26 @@ function toggleCoreTask(id: string) {
     const wasCompleted = s.coreCompleted[id];
     const next = { ...s, coreCompleted: { ...s.coreCompleted, [id]: !wasCompleted } };
     if (!wasCompleted) {
+      const coinReward = Math.max(10, Math.floor(task.points * 0.3));
       const withPoints = addPoints(next, task.points, task.points);
+      const withCoins = { ...withPoints, coins: withPoints.coins + coinReward };
       playSound('task');
-      const allDone = s.mainTasks.filter((t) => t.enabled).every((t) => withPoints.coreCompleted[t.id]);
+      const allDone = s.mainTasks.filter((t) => t.enabled).every((t) => withCoins.coreCompleted[t.id]);
       if (allDone) {
         const today = todayStr();
         if (s.lastActiveDate !== today) {
           const newStreak = s.streak + 1;
           return {
-            ...withPoints,
+            ...withCoins,
             streak: newStreak,
             bestStreak: Math.max(s.bestStreak, newStreak),
             lastActiveDate: today,
+            coins: withCoins.coins + 50,
           };
         }
-        return withPoints;
+        return withCoins;
       }
-      return withPoints;
+      return withCoins;
     } else {
       return {
         ...next,
@@ -351,8 +389,10 @@ function toggleCustomTask(id: string) {
     const wasCompleted = s.customCompleted[id];
     const next = { ...s, customCompleted: { ...s.customCompleted, [id]: !wasCompleted } };
     if (!wasCompleted) {
+      const coinReward = Math.max(5, Math.floor(task.points * 0.2));
       playSound('task');
-      return addPoints(next, task.points, task.points);
+      const withPoints = addPoints(next, task.points, task.points);
+      return { ...withPoints, coins: withPoints.coins + coinReward };
     } else {
       return {
         ...next,
@@ -640,7 +680,7 @@ function claimChallenge(challengeId: string) {
     if (s.dailyChallengeCompleted[challengeId]) return s;
     if (!challenge.check(s)) return s;
     let next = addPoints(s, challenge.xp, 0);
-    next = { ...next, coins: next.coins + challenge.coins, dailyChallengeCompleted: { ...next.dailyChallengeCompleted, [challengeId]: true } };
+    next = { ...next, coins: next.coins + challenge.coins + 25, dailyChallengeCompleted: { ...next.dailyChallengeCompleted, [challengeId]: true } };
     return next;
   });
   playSound('task');
@@ -786,8 +826,14 @@ function purchaseItem(itemId: string, category: string, price: number): boolean 
 function claimQuest(questId: string) {
   setState((s) => {
     if (s.questCompleted[questId]) return s;
+    const quest = QUESTS.find((q) => q.id === questId);
+    if (!quest) return s;
+    const progress = getQuestProgress(s, quest.metric);
+    if (progress < quest.target) return s;
     playSound('reward');
-    return { ...s, questCompleted: { ...s.questCompleted, [questId]: true } };
+    let next = addPoints(s, quest.xpReward, 0);
+    next = { ...next, coins: next.coins + quest.coinReward, questCompleted: { ...next.questCompleted, [questId]: true } };
+    return next;
   });
 }
 
@@ -804,6 +850,34 @@ function advanceStory() {
     };
   });
   playSound('rankup');
+}
+
+function advanceStoryScene() {
+  setState((s) => ({
+    ...s,
+    storySceneIndex: Math.min(s.storySceneIndex + 1, 100),
+  }));
+  playSound('rankup');
+}
+
+function claimStorySceneReward(sceneId: string) {
+  setState((s) => {
+    if (s.storySceneRewardsClaimed[sceneId]) return s;
+    const scene = STORY_SCENES.find((sc) => sc.id === sceneId);
+    if (!scene?.reward) return s;
+    const reward = scene.reward;
+    let next = s;
+    if (reward.type === 'xp') {
+      next = addPoints(s, reward.amount, 0);
+    } else if (reward.type === 'coins') {
+      next = { ...s, coins: s.coins + reward.amount };
+    }
+    return {
+      ...next,
+      storySceneRewardsClaimed: { ...next.storySceneRewardsClaimed, [sceneId]: true },
+    };
+  });
+  playSound('reward');
 }
 
 function toggleStoryObjective(chapterIndex: number, objectiveIndex: number) {
@@ -1329,6 +1403,8 @@ export interface StoreActions {
   claimQuest: (questId: string) => void;
   // Story
   advanceStory: () => void;
+  advanceStoryScene: () => void;
+  claimStorySceneReward: (sceneId: string) => void;
   toggleStoryObjective: (chapterIndex: number, objectiveIndex: number) => void;
   setStoryChoice: (chapterIndex: number, choiceId: string) => void;
   completeStorySideQuest: (questId: string) => void;
@@ -1506,6 +1582,8 @@ export function useStore(): StoreActions {
     purchaseItem,
     claimQuest,
     advanceStory,
+    advanceStoryScene,
+    claimStorySceneReward,
     toggleStoryObjective,
     setStoryChoice,
     completeStorySideQuest,

@@ -21,7 +21,7 @@ const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'week_streak', name: 'Week Warrior', description: 'Maintain a 7-day streak.', emoji: '🔥', rarity: 'rare', check: (s) => s.bestStreak >= 7, reward: '200 XP + Rare Title' },
   { id: 'month_streak', name: 'Iron Discipline', description: 'Maintain a 30-day streak.', emoji: '⛓️', rarity: 'epic', check: (s) => s.bestStreak >= 30, reward: '1000 XP + Epic Aura' },
   { id: 'first_dungeon', name: 'Dungeon Clearer', description: 'Clear your first dungeon.', emoji: '🏰', rarity: 'rare', check: (s) => s.dungeonsCleared >= 1, reward: '150 XP' },
-  { id: 'boss_slayer', name: 'Boss Slayer', description: 'Defeat the Dungeon Boss.', emoji: '💀', rarity: 'legendary', check: (s) => s.bossDefeated, reward: 'Legendary Aura + Title' },
+  { id: 'boss_slayer', name: 'Boss Slayer', description: 'Defeat the Dungeon Boss.', emoji: '💀', rarity: 'legendary', check: (s) => Object.values(s.bossDefeated).some(Boolean), reward: 'Legendary Aura + Title' },
   { id: 'dungeon_conqueror', name: 'Dungeon Conqueror', description: 'Clear 10 dungeons.', emoji: '👑', rarity: 'legendary', check: (s) => s.dungeonsCleared >= 10, reward: '1000 XP + Exclusive Title' },
   { id: 'rank_d', name: 'Awakened', description: 'Reach D-Rank.', emoji: '🟢', rarity: 'rare', check: (s) => isAtOrAbove(s.xp, 'D'), reward: '100 XP' },
   { id: 'rank_s', name: 'S-Class', description: 'Reach S-Rank.', emoji: '🔥', rarity: 'epic', check: (s) => isAtOrAbove(s.xp, 'S'), reward: '500 XP' },

@@ -112,7 +112,7 @@ export const DAILY_CHALLENGES: DailyChallenge[] = [
     label: 'Complete all main tasks',
     description: 'Finish every core task today.',
     xp: 150,
-    coins: 80,
+    coins: 120,
     check: (s) => s && s.coreCompleted && Object.values(s.coreCompleted).every(Boolean),
   },
   {
@@ -120,7 +120,7 @@ export const DAILY_CHALLENGES: DailyChallenge[] = [
     label: 'Finish a workout',
     description: 'Complete any workout session.',
     xp: 120,
-    coins: 60,
+    coins: 100,
     check: (s) => s && s.workoutsCompletedToday > 0,
   },
   {
@@ -128,7 +128,7 @@ export const DAILY_CHALLENGES: DailyChallenge[] = [
     label: 'Drink enough water',
     description: 'Complete the water task.',
     xp: 60,
-    coins: 30,
+    coins: 50,
     check: (s) => s && s.coreCompleted && s.coreCompleted.water,
   },
   {
@@ -136,7 +136,7 @@ export const DAILY_CHALLENGES: DailyChallenge[] = [
     label: 'Read for 20 minutes',
     description: 'Complete the Quran reading task.',
     xp: 80,
-    coins: 40,
+    coins: 60,
     check: (s) => s && s.coreCompleted && s.coreCompleted.read_quran,
   },
   {
@@ -144,7 +144,7 @@ export const DAILY_CHALLENGES: DailyChallenge[] = [
     label: 'Clear a dungeon',
     description: 'Complete today\'s dungeon.',
     xp: 200,
-    coins: 100,
+    coins: 200,
     check: (s) => s && s.dungeonClearedToday,
   },
   {
@@ -152,7 +152,7 @@ export const DAILY_CHALLENGES: DailyChallenge[] = [
     label: 'No missed tasks',
     description: 'Do not miss any core task today.',
     xp: 100,
-    coins: 50,
+    coins: 80,
     check: (s) => s && s.coreCompleted && Object.values(s.coreCompleted).every(Boolean),
   },
 ];

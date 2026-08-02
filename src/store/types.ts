@@ -227,6 +227,43 @@ export interface AppState {
   storyBossDefeated: Record<string, boolean>;
   storyLog: { chapterId: string; type: 'cutscene' | 'boss' | 'dialogue'; timestamp: number }[];
 
+  // Story NPCs
+  npcReputation: Record<string, number>;
+  npcQuestsCompleted: Record<string, boolean>;
+  npcDialogueIndex: Record<string, number>;
+
+  // Story Reputation
+  reputation: Record<string, number>;
+
+  // Story Factions
+  joinedFaction: string | null;
+
+  // Story World Events
+  activeWorldEvent: string | null;
+  worldEventExpiresAt: number | null;
+
+  // Story Dungeons
+  storyDungeonsCleared: Record<string, boolean>;
+
+  // Story Lore
+  loreUnlocked: string[];
+
+  // Story Achievements
+  storyAchievementsUnlocked: string[];
+
+  // New Game+
+  ngPlusUnlocked: boolean;
+  ngPlusActive: boolean;
+  ngPlusHiddenBossesDefeated: Record<string, boolean>;
+
+  // Endgame
+  infiniteTowerFloor: number;
+  dailyBossDate: string | null;
+  dailyBossDefeated: boolean;
+  weeklyRaidDamage: number;
+  weeklyRaidWeek: string | null;
+  weeklyRaidDefeated: boolean;
+
   // Boss Battles
   activeBossId: string | null;
   bossHpRemaining: Record<string, number>;

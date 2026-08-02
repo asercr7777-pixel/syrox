@@ -853,6 +853,112 @@ function defeatStoryBoss(bossId: string) {
   playSound('rankup');
 }
 
+function interactNPC(npcId: string, repChange: number) {
+  setState((s) => ({
+    ...s,
+    npcReputation: { ...s.npcReputation, [npcId]: (s.npcReputation[npcId] ?? 0) + repChange },
+  }));
+}
+
+function completeNPCQuest(questId: string) {
+  setState((s) => {
+    if (s.npcQuestsCompleted[questId]) return s;
+    return { ...s, npcQuestsCompleted: { ...s.npcQuestsCompleted, [questId]: true } };
+  });
+}
+
+function advanceNPCDialogue(npcId: string) {
+  setState((s) => ({
+    ...s,
+    npcDialogueIndex: { ...s.npcDialogueIndex, [npcId]: (s.npcDialogueIndex[npcId] ?? 0) + 1 },
+  }));
+}
+
+function addReputation(repId: string, amount: number) {
+  setState((s) => ({
+    ...s,
+    reputation: { ...s.reputation, [repId]: (s.reputation[repId] ?? 0) + amount },
+  }));
+}
+
+function joinFaction(factionId: string) {
+  setState((s) => ({ ...s, joinedFaction: factionId }));
+  playSound('rankup');
+}
+
+function leaveFaction() {
+  setState((s) => ({ ...s, joinedFaction: null }));
+}
+
+function triggerWorldEvent(eventId: string, durationMs: number) {
+  setState((s) => ({ ...s, activeWorldEvent: eventId, worldEventExpiresAt: Date.now() + durationMs }));
+}
+
+function clearWorldEvent() {
+  setState((s) => ({ ...s, activeWorldEvent: null, worldEventExpiresAt: null }));
+}
+
+function clearStoryDungeon(dungeonId: string) {
+  setState((s) => {
+    if (s.storyDungeonsCleared[dungeonId]) return s;
+    return { ...s, storyDungeonsCleared: { ...s.storyDungeonsCleared, [dungeonId]: true } };
+  });
+}
+
+function unlockLore(loreId: string) {
+  setState((s) => {
+    if (s.loreUnlocked.includes(loreId)) return s;
+    return { ...s, loreUnlocked: [...s.loreUnlocked, loreId] };
+  });
+}
+
+function unlockStoryAchievement(achievementId: string) {
+  setState((s) => {
+    if (s.storyAchievementsUnlocked.includes(achievementId)) return s;
+    return { ...s, storyAchievementsUnlocked: [...s.storyAchievementsUnlocked, achievementId] };
+  });
+  playSound('rankup');
+}
+
+function activateNGPlus() {
+  setState((s) => ({
+    ...s,
+    ngPlusUnlocked: true,
+    ngPlusActive: true,
+    storyChapterIndex: 0,
+    storyObjectivesCompleted: {},
+  }));
+  playSound('rankup');
+}
+
+function defeatNGPlusBoss(bossId: string) {
+  setState((s) => ({
+    ...s,
+    ngPlusHiddenBossesDefeated: { ...s.ngPlusHiddenBossesDefeated, [bossId]: true },
+  }));
+  playSound('rankup');
+}
+
+function climbInfiniteTower(floor: number) {
+  setState((s) => ({ ...s, infiniteTowerFloor: Math.max(s.infiniteTowerFloor, floor) }));
+  playSound('task');
+}
+
+function defeatDailyBoss() {
+  setState((s) => ({ ...s, dailyBossDate: todayStr(), dailyBossDefeated: true }));
+  playSound('rankup');
+}
+
+function dealRaidDamage(damage: number) {
+  setState((s) => ({ ...s, weeklyRaidDamage: s.weeklyRaidDamage + damage }));
+  playSound('task');
+}
+
+function defeatWeeklyRaid() {
+  setState((s) => ({ ...s, weeklyRaidDefeated: true, weeklyRaidWeek: nowWeekKey() }));
+  playSound('rankup');
+}
+
 function unlockAchievements(ids: string[]) {
   if (ids.length === 0) return;
   setState((s) => {
@@ -1228,6 +1334,32 @@ export interface StoreActions {
   completeStorySideQuest: (questId: string) => void;
   unlockStorySecretQuest: (questId: string) => void;
   defeatStoryBoss: (bossId: string) => void;
+  // Story NPCs
+  interactNPC: (npcId: string, repChange: number) => void;
+  completeNPCQuest: (questId: string) => void;
+  advanceNPCDialogue: (npcId: string) => void;
+  // Story Reputation
+  addReputation: (repId: string, amount: number) => void;
+  // Story Factions
+  joinFaction: (factionId: string) => void;
+  leaveFaction: () => void;
+  // Story World Events
+  triggerWorldEvent: (eventId: string, durationMs: number) => void;
+  clearWorldEvent: () => void;
+  // Story Dungeons
+  clearStoryDungeon: (dungeonId: string) => void;
+  // Story Lore
+  unlockLore: (loreId: string) => void;
+  // Story Achievements
+  unlockStoryAchievement: (achievementId: string) => void;
+  // New Game+
+  activateNGPlus: () => void;
+  defeatNGPlusBoss: (bossId: string) => void;
+  // Endgame
+  climbInfiniteTower: (floor: number) => void;
+  defeatDailyBoss: () => void;
+  dealRaidDamage: (damage: number) => void;
+  defeatWeeklyRaid: () => void;
   // Achievements (scoped — no raw setState)
   unlockAchievements: (ids: string[]) => void;
   foundEasterEgg: (id: string) => void;
@@ -1379,6 +1511,23 @@ export function useStore(): StoreActions {
     completeStorySideQuest,
     unlockStorySecretQuest,
     defeatStoryBoss,
+    interactNPC,
+    completeNPCQuest,
+    advanceNPCDialogue,
+    addReputation,
+    joinFaction,
+    leaveFaction,
+    triggerWorldEvent,
+    clearWorldEvent,
+    clearStoryDungeon,
+    unlockLore,
+    unlockStoryAchievement,
+    activateNGPlus,
+    defeatNGPlusBoss,
+    climbInfiniteTower,
+    defeatDailyBoss,
+    dealRaidDamage,
+    defeatWeeklyRaid,
     unlockAchievements,
     foundEasterEgg,
     engageBoss,

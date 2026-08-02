@@ -198,6 +198,34 @@ export function createDefaultState(): AppState {
     storyBossDefeated: {},
     storyLog: [],
 
+    npcReputation: {},
+    npcQuestsCompleted: {},
+    npcDialogueIndex: {},
+
+    reputation: { kingdom: 0, guild: 0, guardian: 0, scholar: 0, void: 0 },
+
+    joinedFaction: null,
+
+    activeWorldEvent: null,
+    worldEventExpiresAt: null,
+
+    storyDungeonsCleared: {},
+
+    loreUnlocked: ['lore_fv', 'lore_first_habit'],
+
+    storyAchievementsUnlocked: [],
+
+    ngPlusUnlocked: false,
+    ngPlusActive: false,
+    ngPlusHiddenBossesDefeated: {},
+
+    infiniteTowerFloor: 0,
+    dailyBossDate: null,
+    dailyBossDefeated: false,
+    weeklyRaidDamage: 0,
+    weeklyRaidWeek: null,
+    weeklyRaidDefeated: false,
+
     activeBossId: null,
     bossHpRemaining: {},
     bossDefeated: {},

@@ -5,8 +5,6 @@ import {
   BookOpen,
   Dumbbell,
   User,
-  BarChart3,
-  Crown,
   Store,
   Backpack,
   Trophy,
@@ -35,8 +33,6 @@ export type ViewId =
   | 'workout'
   | 'dungeons'
   | 'profile'
-  | 'stats'
-  | 'ranks'
   | 'marketplace'
   | 'inventory'
   | 'achievements'
@@ -59,8 +55,6 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'workout', label: 'Workout', icon: Dumbbell },
   { id: 'dungeons', label: 'Dungeons', icon: Swords },
   { id: 'profile', label: 'Hunter Profile', icon: User },
-  { id: 'stats', label: 'Statistics', icon: BarChart3 },
-  { id: 'ranks', label: 'Ranks', icon: Crown },
   { id: 'marketplace', label: 'Marketplace', icon: Store },
   { id: 'inventory', label: 'Inventory', icon: Backpack },
   { id: 'achievements', label: 'Achievements', icon: Trophy },
@@ -95,34 +89,11 @@ export function Navigation({ current, onNavigate }: NavigationProps) {
     await signOut();
   };
 
-  const navList = (items: NavItem[]) => (
-    <nav className="space-y-1">
-      {items.map((item) => {
-        const Icon = item.icon;
-        const active = current === item.id;
-        return (
-          <button
-            key={item.id}
-            onClick={() => handleNav(item.id)}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-              active
-                ? 'bg-gradient-to-r from-ember-500/20 to-transparent text-ember-400 border border-ember-500/30'
-                : 'text-ink-300 hover:bg-white/5 hover:text-ink-100'
-            }`}
-          >
-            <Icon size={18} className={active ? 'text-ember-400' : ''} />
-            <span className="flex-1 text-left">{item.label}</span>
-          </button>
-        );
-      })}
-    </nav>
-  );
-
   return (
     <>
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 flex-col glass border-r border-white/5 z-40">
-        <div className="p-5 border-b border-white/5">
+        <div className="p-4 border-b border-white/5">
           <div className="flex items-center gap-3">
             <RankBadge rank={rank} size="sm" auraColor={aura?.color} />
             <div className="min-w-0">
@@ -166,15 +137,7 @@ export function Navigation({ current, onNavigate }: NavigationProps) {
             );
           })}
         </nav>
-        <div className="p-3 border-t border-white/5 space-y-2">
-          <div className="flex items-center justify-between text-xs text-ink-300 px-2">
-            <span>Streak</span>
-            <span className="font-bold text-ember-400">{state.streak} 🔥</span>
-          </div>
-          <div className="flex items-center justify-between text-xs text-ink-300 px-2">
-            <span>Coins</span>
-            <span className="font-bold text-gold-400">{state.coins.toLocaleString()} 🪙</span>
-          </div>
+        <div className="p-3 border-t border-white/5">
           <button
             onClick={handleSignOut}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-ink-300 hover:bg-danger-500/10 hover:text-danger-400 transition-all"
@@ -187,14 +150,14 @@ export function Navigation({ current, onNavigate }: NavigationProps) {
 
       {/* Mobile top bar */}
       <header className="lg:hidden fixed top-0 left-0 right-0 z-40 glass border-b border-white/5">
-        <div className="flex items-center justify-between p-3">
+        <div className="flex items-center justify-between px-3 py-1.5">
           <div className="flex items-center gap-2">
             <RankBadge rank={rank} size="sm" auraColor={aura?.color} />
             <div>
-              <p className="font-display font-bold text-sm leading-tight">{state.username}</p>
+              <p className="font-display font-bold text-xs leading-tight">{state.username}</p>
               {title && (
                 <p
-                  className="text-[10px] font-semibold uppercase tracking-wider leading-tight truncate"
+                  className="text-[9px] font-semibold uppercase tracking-wider leading-tight truncate"
                   style={{
                     color: titleMeta?.color,
                     textShadow: isHighRarityTitle ? `0 0 8px ${titleMeta?.glow}` : 'none',
@@ -204,17 +167,17 @@ export function Navigation({ current, onNavigate }: NavigationProps) {
                   {title.name}
                 </p>
               )}
-              <p className="text-xs text-ink-300 leading-tight">{rank.name} · Lvl {state.level}</p>
+              <p className="text-[10px] text-ink-300 leading-tight">{rank.name} · Lvl {state.level}</p>
             </div>
           </div>
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="p-2 rounded-lg hover:bg-white/10"
+            className="p-1.5 rounded-lg hover:bg-white/10"
           >
-            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            {mobileOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
-        <div className="px-3 pb-2">
+        <div className="px-3 pb-1.5">
           <XpBar xp={state.xp} compact />
         </div>
       </header>

@@ -12,10 +12,8 @@ import { Marketplace } from './views/Marketplace';
 import { Quests } from './views/Quests';
 import StoryMode from './views/StoryMode';
 import { Achievements } from './views/Achievements';
-import { Stats } from './views/Stats';
 import { Leaderboard } from './views/Leaderboard';
 import { Profile } from './views/Profile';
-import { Ranks } from './views/Ranks';
 import { Settings } from './views/Settings';
 import { ItemInspection } from './views/ItemInspection';
 import { Auth } from './views/Auth';
@@ -29,14 +27,11 @@ function AppContent() {
   const { user, loading } = useAuth();
   const { state, loadFromCloud, setUserId, cloudLoaded } = useStore();
   const [view, setView] = useState<ViewId>('dashboard');
-  const [inspectionItem, setInspectionItem] = useState<{ itemId: string; category: 'weapon' | 'aura' | 'title' | 'shield' | 'frame' | 'background' } | null>(null);
 
   useEffect(() => {
     syncSoundFlag(state.soundEnabled);
   }, [state.soundEnabled]);
 
-  // Load cloud state when user logs in; reset state on logout.
-  // The store handles all auto-saving internally (debounced + flush on hide/unload).
   useEffect(() => {
     if (user) {
       void loadFromCloud(user.id);
@@ -46,7 +41,7 @@ function AppContent() {
   }, [user, setUserId, loadFromCloud]);
 
   const handleNavigate = (v: ViewId) => {
-    if (v === 'iteminspection' && !inspectionItem) return;
+    if (v === 'iteminspection') return;
     setView(v);
   };
 
@@ -74,7 +69,7 @@ function AppContent() {
       <ToastContainer />
       <Confetti />
 
-      <main className="lg:ml-64 pt-20 lg:pt-6 px-4 pb-24 lg:pb-8 max-w-6xl mx-auto">
+      <main className="lg:ml-64 pt-16 lg:pt-6 px-4 pb-24 lg:pb-8 max-w-6xl mx-auto">
         <div key={view} className="page-enter">
           {view === 'dashboard' && <Dashboard onNavigate={setView} />}
           {view === 'tasks' && <Tasks />}
@@ -83,16 +78,14 @@ function AppContent() {
           {view === 'workout' && <Workout />}
           {view === 'dungeons' && <Dungeons />}
           {view === 'profile' && <Profile />}
-          {view === 'stats' && <Stats />}
-          {view === 'ranks' && <Ranks />}
           {view === 'marketplace' && <Marketplace />}
           {view === 'inventory' && <Inventory />}
           {view === 'achievements' && <Achievements />}
           {view === 'leaderboard' && <Leaderboard />}
           {view === 'shadow' && <Shadow />}
           {view === 'settings' && <Settings />}
-          {view === 'iteminspection' && inspectionItem && (
-            <ItemInspection itemId={inspectionItem.itemId} category={inspectionItem.category} onBack={() => setView('inventory')} />
+          {view === 'iteminspection' && (
+            <ItemInspection itemId="" category="weapon" onBack={() => setView('inventory')} />
           )}
         </div>
       </main>

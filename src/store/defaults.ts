@@ -191,6 +191,12 @@ export function createDefaultState(): AppState {
 
     storyChapterIndex: 0,
     storyObjectivesCompleted: {},
+    storyChoices: {},
+    storySideQuestsCompleted: {},
+    storySecretQuestsUnlocked: {},
+    storyCompletedChapters: [],
+    storyBossDefeated: {},
+    storyLog: [],
 
     activeBossId: null,
     bossHpRemaining: {},

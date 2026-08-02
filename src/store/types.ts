@@ -220,6 +220,12 @@ export interface AppState {
   // Story Mode
   storyChapterIndex: number;
   storyObjectivesCompleted: Record<string, boolean>;
+  storyChoices: Record<string, string>;
+  storySideQuestsCompleted: Record<string, boolean>;
+  storySecretQuestsUnlocked: Record<string, boolean>;
+  storyCompletedChapters: number[];
+  storyBossDefeated: Record<string, boolean>;
+  storyLog: { chapterId: string; type: 'cutscene' | 'boss' | 'dialogue'; timestamp: number }[];
 
   // Boss Battles
   activeBossId: string | null;

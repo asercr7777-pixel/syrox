@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { getRankByXp, getNextRank } from '../data/ranks';
 import { RankBadge } from '../components/ui/RankBadge';
@@ -5,10 +6,9 @@ import { XpBar } from '../components/ui/XpBar';
 import { DisciplineLineChart, buildDisciplineData } from '../components/ui/DisciplineLineChart';
 import { DailyRewards } from '../components/ui/DailyRewards';
 import { getAuraById } from '../data/collections';
-import { Flame, Coins, Zap, ChevronRight, Dumbbell, TrendingUp, Target, Check } from 'lucide-react';
-import type { ViewId } from '../components/Navigation';
 import { triggerConfetti } from '../components/ui/Confetti';
-import { useEffect, useRef } from 'react';
+import type { ViewId } from '../components/Navigation';
+import { Flame, Coins, Zap, ChevronRight, Dumbbell, TrendingUp, Target, Check } from 'lucide-react';
 
 interface DashboardProps {
   onNavigate: (v: ViewId) => void;
@@ -82,16 +82,30 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         </div>
       </div>
 
+      {/* Coins & Streak compact cards */}
+      <div className="grid grid-cols-2 gap-3 page-enter">
+        <div className="card-premium p-3 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gold-500/15 flex items-center justify-center flex-shrink-0">
+            <Coins size={20} className="text-gold-400" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-lg font-bold tabular-nums text-gold-400">{state.coins.toLocaleString()}</p>
+            <p className="text-xs text-ink-300">Coins</p>
+          </div>
+        </div>
+        <div className="card-premium p-3 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-ember-500/15 flex items-center justify-center flex-shrink-0">
+            <Flame size={20} className="text-ember-400" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-lg font-bold tabular-nums text-ember-400">{state.streak} <span className="text-sm text-ink-400">days</span></p>
+            <p className="text-xs text-ink-300">Daily Streak</p>
+          </div>
+        </div>
+      </div>
+
       {/* Daily Rewards */}
       <DailyRewards />
-
-      {/* Stats: Level, Rank, XP, Coins */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard icon={Zap} label="Level" value={`${state.level}`} sub="Current" color="ember" index={0} />
-        <StatCard icon={TrendingUp} label="Rank" value={rank.name} sub={rank.emoji} color="shadow" index={1} />
-        <StatCard icon={Zap} label="XP" value={state.xp.toLocaleString()} sub={`/${nextRank ? nextRank.xpRequired.toLocaleString() : 'MAX'}`} color="frost" index={2} />
-        <StatCard icon={Coins} label="Coins" value={state.coins.toLocaleString()} sub="Spend wisely" color="gold" index={3} />
-      </div>
 
       {/* Daily Progress */}
       <div className="card-premium p-5 page-enter" style={{ animationDelay: '0.05s' }}>
@@ -178,6 +192,13 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         )}
       </div>
 
+      {/* Stats: Level, Rank, XP */}
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard icon={Zap} label="Level" value={`${state.level}`} sub="Current" color="ember" index={0} />
+        <StatCard icon={TrendingUp} label="Rank" value={rank.name} sub={rank.emoji} color="shadow" index={1} />
+        <StatCard icon={Zap} label="XP" value={state.xp.toLocaleString()} sub={`/${nextRank ? nextRank.xpRequired.toLocaleString() : 'MAX'}`} color="frost" index={2} />
+      </div>
+
       {/* Discipline Graph */}
       <div className="card-premium p-5 page-enter" style={{ animationDelay: '0.2s' }}>
         <div className="flex items-center justify-between mb-4">
@@ -185,8 +206,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             <TrendingUp size={18} className="text-ember-400" />
             <h2 className="section-title">Discipline Graph</h2>
           </div>
-          <button onClick={() => onNavigate('stats')} className="btn-ghost btn-sheen text-sm">
-            Full Stats <ChevronRight size={16} />
+          <button onClick={() => onNavigate('leaderboard')} className="btn-ghost btn-sheen text-sm">
+            Leaderboard <ChevronRight size={16} />
           </button>
         </div>
         <p className="text-xs text-ink-300 mb-3">Last 30 days · Based on Main + Extra tasks completed</p>

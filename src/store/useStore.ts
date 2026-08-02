@@ -792,7 +792,17 @@ function claimQuest(questId: string) {
 }
 
 function advanceStory() {
-  setState((s) => ({ ...s, storyChapterIndex: s.storyChapterIndex + 1, storyObjectivesCompleted: {} }));
+  setState((s) => {
+    const completedCh = s.storyChapterIndex;
+    const chId = `chapter_${completedCh + 1}`;
+    return {
+      ...s,
+      storyChapterIndex: s.storyChapterIndex + 1,
+      storyObjectivesCompleted: {},
+      storyCompletedChapters: s.storyCompletedChapters.includes(completedCh) ? s.storyCompletedChapters : [...s.storyCompletedChapters, completedCh],
+      storyLog: [...s.storyLog, { chapterId: chId, type: 'cutscene' as const, timestamp: Date.now() }],
+    };
+  });
   playSound('rankup');
 }
 
@@ -805,6 +815,42 @@ function toggleStoryObjective(chapterIndex: number, objectiveIndex: number) {
       [key]: !s.storyObjectivesCompleted[key],
     },
   }));
+}
+
+function setStoryChoice(chapterIndex: number, choiceId: string) {
+  const key = `chapter_${chapterIndex}`;
+  setState((s) => ({
+    ...s,
+    storyChoices: { ...s.storyChoices, [key]: choiceId },
+    storyLog: [...s.storyLog, { chapterId: key, type: 'dialogue' as const, timestamp: Date.now() }],
+  }));
+}
+
+function completeStorySideQuest(questId: string) {
+  setState((s) => {
+    if (s.storySideQuestsCompleted[questId]) return s;
+    return { ...s, storySideQuestsCompleted: { ...s.storySideQuestsCompleted, [questId]: true } };
+  });
+}
+
+function unlockStorySecretQuest(questId: string) {
+  setState((s) => {
+    if (s.storySecretQuestsUnlocked[questId]) return s;
+    return { ...s, storySecretQuestsUnlocked: { ...s.storySecretQuestsUnlocked, [questId]: true } };
+  });
+}
+
+function defeatStoryBoss(bossId: string) {
+  setState((s) => {
+    if (s.storyBossDefeated[bossId]) return s;
+    const chId = `chapter_${s.storyChapterIndex + 1}`;
+    return {
+      ...s,
+      storyBossDefeated: { ...s.storyBossDefeated, [bossId]: true },
+      storyLog: [...s.storyLog, { chapterId: chId, type: 'boss' as const, timestamp: Date.now() }],
+    };
+  });
+  playSound('rankup');
 }
 
 function unlockAchievements(ids: string[]) {
@@ -1178,6 +1224,10 @@ export interface StoreActions {
   // Story
   advanceStory: () => void;
   toggleStoryObjective: (chapterIndex: number, objectiveIndex: number) => void;
+  setStoryChoice: (chapterIndex: number, choiceId: string) => void;
+  completeStorySideQuest: (questId: string) => void;
+  unlockStorySecretQuest: (questId: string) => void;
+  defeatStoryBoss: (bossId: string) => void;
   // Achievements (scoped — no raw setState)
   unlockAchievements: (ids: string[]) => void;
   foundEasterEgg: (id: string) => void;
@@ -1325,6 +1375,10 @@ export function useStore(): StoreActions {
     claimQuest,
     advanceStory,
     toggleStoryObjective,
+    setStoryChoice,
+    completeStorySideQuest,
+    unlockStorySecretQuest,
+    defeatStoryBoss,
     unlockAchievements,
     foundEasterEgg,
     engageBoss,

@@ -761,43 +761,13 @@ function updateNotifications(patch: Partial<AppState['notifications']>) {
 }
 
 function sendChat(text: string) {
-  setState((s) => {
-    const userMsg = { id: uid(), role: 'user' as const, text, at: Date.now() };
-    const rank = getRankByXp(s.xp);
-    const enabledMain = s.mainTasks.filter((t) => t.enabled);
-    const allMain = enabledMain.every((t) => s.coreCompleted[t.id]);
-    const completedCount = enabledMain.filter((t) => s.coreCompleted[t.id]).length;
-    const nextRank = RANKS[getRankIndex(rank.id) + 1];
-    const xpToNext = nextRank ? nextRank.xpRequired - s.xp : 0;
+  const userMsg = { id: uid(), role: 'user' as const, text, at: Date.now() };
+  setState((s) => ({ ...s, chat: [...s.chat, userMsg] }));
+}
 
-    let response = '';
-    const lower = text.toLowerCase();
-    if (lower.includes('task') || lower.includes('suggest')) {
-      const incomplete = enabledMain.filter((t) => !s.coreCompleted[t.id]);
-      response = incomplete.length > 0
-        ? `Your next targets: ${incomplete.slice(0, 3).map((t) => t.label).join(', ')}. Complete these to grow your streak and push toward ${nextRank?.name ?? 'the top'}.`
-        : 'All core tasks done today. Outstanding. Rest, recover, and prepare for tomorrow.';
-    } else if (lower.includes('workout') || lower.includes('train')) {
-      response = `Today's split: Push, Pull, or Leg — pick one and complete every exercise. Aim for full range of motion. Your body is your primary weapon, ${rank.name} hunter.`;
-    } else if (lower.includes('motivat')) {
-      response = `You're at ${rank.name} with ${s.streak}-day streak. ${nextRank ? `${xpToNext.toLocaleString()} XP to ${nextRank.name}.` : 'You are at the apex.'} The shadow grows when you rest too long. Move now.`;
-    } else if (lower.includes('analy') || lower.includes('performance')) {
-      response = `Analysis: ${completedCount}/${enabledMain.length} core tasks done today. Streak: ${s.streak} days. Dungeons cleared: ${s.dungeonsCleared}. ${allMain ? 'Perfect day in progress.' : 'Focus on completing all core tasks to maintain your streak.'} ${s.streak < 3 ? 'Build a 3-day streak to unlock bonus rewards.' : ''}`;
-    } else if (lower.includes('dungeon')) {
-      response = s.dungeonClearedToday
-        ? "Today's dungeon is already cleared. Return tomorrow — the gate resets at midnight."
-        : `Your rank's dungeon awaits. ${s.secretDungeonAvailable ? 'A SECRET dungeon has also appeared — act fast, it expires soon!' : ''}`;
-    } else if (lower.includes('rank')) {
-      response = nextRank
-        ? `You need ${xpToNext.toLocaleString()} more XP to reach ${nextRank.name} ${nextRank.emoji}. Keep completing tasks and clearing dungeons.`
-        : 'You have reached the apex rank. There is nothing above — only maintaining the throne.';
-    } else {
-      response = `I hear you, ${s.username}. As your AI Coach, I track your streak (${s.streak} days), XP (${s.xp.toLocaleString()}), and rank (${rank.name}). Ask me about tasks, workouts, dungeons, or motivation.`;
-    }
-
-    const aiMsg = { id: uid(), role: 'ai' as const, text: response, at: Date.now() + 1 };
-    return { ...s, chat: [...s.chat, userMsg, aiMsg] };
-  });
+function addAIMessage(text: string) {
+  const aiMsg = { id: uid(), role: 'ai' as const, text, at: Date.now() };
+  setState((s) => ({ ...s, chat: [...s.chat, aiMsg] }));
 }
 
 function addFriend(name: string) {
@@ -1095,6 +1065,10 @@ function removeAchievements(ids: string[]) {
     if (filtered.length === s.achievements.length) return s;
     return { ...s, achievements: filtered };
   });
+}
+
+function clearChat() {
+  setState((s) => ({ ...s, chat: [] }));
 }
 
 function foundEasterEgg(id: string) {
@@ -1437,6 +1411,8 @@ export interface StoreActions {
   updateNotifications: (patch: Partial<AppState['notifications']>) => void;
   // AI
   sendChat: (text: string) => void;
+  addAIMessage: (text: string) => void;
+  clearChat: () => void;
   // Friends
   addFriend: (name: string) => void;
   removeFriend: (id: string) => void;
@@ -1623,6 +1599,8 @@ export function useStore(): StoreActions {
     toggleSound,
     updateNotifications,
     sendChat,
+    addAIMessage,
+    clearChat,
     addFriend,
     removeFriend,
     sendMotivation,

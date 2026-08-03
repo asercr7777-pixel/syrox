@@ -34,9 +34,17 @@ export function Shadow() {
   const motivation = useMemo(() => getMotivationQuote(state), [state.streak, new Date().getDate()]);
   const greeting = useMemo(() => generateShadowGreeting(state), [state.username, state.streak, state.xp]);
 
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [state.chat, isTyping]);
+
+  useEffect(() => {
+    return () => {
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    };
+  }, []);
 
   const handleSendChat = () => {
     if (!chatInput.trim()) return;
@@ -44,7 +52,8 @@ export function Shadow() {
     setChatInput('');
     setIsTyping(true);
     sendChat(text);
-    setTimeout(() => setIsTyping(false), 600);
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    typingTimerRef.current = setTimeout(() => setIsTyping(false), 600);
   };
 
   const tabs: { id: Tab; label: string; icon: typeof Sparkles }[] = [

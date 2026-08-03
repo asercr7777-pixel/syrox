@@ -1,6 +1,9 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, X, CheckCircle2, Smartphone } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Download, X, CheckCircle2, Smartphone, Sparkles } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+
+const DISMISS_KEY = 'pwa-install-dismissed';
+const DISMISS_COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000; // 3 days
 
 interface InstallButtonProps {
   isInstallable: boolean;
@@ -9,22 +12,37 @@ interface InstallButtonProps {
 }
 
 export function InstallButton({ isInstallable, isInstalled, onInstall }: InstallButtonProps) {
-  const [showButton, setShowButton] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
   const [installing, setInstalling] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+  const [sessionDismissed, setSessionDismissed] = useState(false);
+
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+
+  const shouldShowPrompt = useCallback(() => {
+    if (isInstalled || sessionDismissed) return false;
+    const dismissed = localStorage.getItem(DISMISS_KEY);
+    if (dismissed) {
+      const dismissedAt = parseInt(dismissed, 10);
+      if (Date.now() - dismissedAt < DISMISS_COOLDOWN_MS) return false;
+    }
+    return true;
+  }, [isInstalled, sessionDismissed]);
 
   useEffect(() => {
-    if (dismissed || isInstalled) {
-      setShowButton(false);
-      return;
-    }
-    if (isInstallable) {
-      const timer = setTimeout(() => setShowButton(true), 3000);
+    if (!shouldShowPrompt()) return;
+    if (isInstallable || (isIOS && !isInstalled)) {
+      const timer = setTimeout(() => setShowModal(true), 2500);
       return () => clearTimeout(timer);
     }
-  }, [isInstallable, isInstalled, dismissed]);
+  }, [isInstallable, isIOS, isInstalled, shouldShowPrompt]);
+
+  const handleDismiss = useCallback(() => {
+    setShowModal(false);
+    setSessionDismissed(true);
+    localStorage.setItem(DISMISS_KEY, Date.now().toString());
+  }, []);
 
   const handleInstall = async () => {
     if (installing) return;
@@ -33,42 +51,93 @@ export function InstallButton({ isInstallable, isInstalled, onInstall }: Install
     setInstalling(false);
     if (success) {
       setShowSuccess(true);
-      setShowButton(false);
+      setShowModal(false);
+      localStorage.removeItem(DISMISS_KEY);
       setTimeout(() => setShowSuccess(false), 4000);
+    } else {
+      setShowModal(false);
+      setShowInstructions(true);
     }
   };
 
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+  const handleInstallClick = useCallback(() => {
+    void handleInstall();
+  }, []);
+
+  const closeInstructions = useCallback(() => {
+    setShowInstructions(false);
+    setSessionDismissed(true);
+    localStorage.setItem(DISMISS_KEY, Date.now().toString());
+  }, []);
+
   const showIOSInstructions = isIOS && !isInstalled && !isInstallable;
 
   return (
     <>
-      {/* Floating Install Button */}
+      {/* Centered Install Modal */}
       <AnimatePresence>
-        {showButton && !isInstalled && (
+        {showModal && !isInstalled && shouldShowPrompt() && (
           <motion.div
-            initial={{ opacity: 0, y: 80, scale: 0.8 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 80, scale: 0.8 }}
-            transition={{ type: 'spring', duration: 0.6, bounce: 0.4 }}
-            className="fixed bottom-20 lg:bottom-6 right-4 z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 pointer-events-auto"
           >
-            <div className="relative">
-              {/* Pulsing glow */}
-              <motion.div
-                animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0, 0.3] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="absolute inset-0 rounded-2xl"
-                style={{ background: 'radial-gradient(circle, rgba(255,122,24,0.4), transparent 70%)' }}
-              />
-              <div className="relative flex items-center gap-2">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleDismiss} />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', duration: 0.5, bounce: 0.3 }}
+              className="relative card-premium p-6 max-w-sm w-full"
+            >
+              <button
+                onClick={handleDismiss}
+                className="absolute top-3 right-3 p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/5 transition"
+              >
+                <X size={18} />
+              </button>
+
+              <div className="text-center mb-5">
+                <div
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                  style={{ background: 'linear-gradient(135deg, rgba(255,122,24,0.2), rgba(232,93,0,0.05))' }}
+                >
+                  <Sparkles size={28} className="text-ember-400" />
+                </div>
+                <h3 className="font-display font-bold text-lg mb-1">Install Discipline</h3>
+                <p className="text-sm text-slate-400">
+                  Add the app to your device for quick access, offline support, and a native experience.
+                </p>
+              </div>
+
+              <div className="space-y-2 mb-5">
+                {[
+                  { icon: '⚡', text: 'Instant access from your home screen' },
+                  { icon: '📱', text: 'Works offline — no internet needed' },
+                  { icon: '🎮', text: 'Full-screen immersive experience' },
+                ].map((feature, i) => (
+                  <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/5">
+                    <span className="text-lg">{feature.icon}</span>
+                    <span className="text-xs text-slate-300">{feature.text}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-2">
                 <button
-                  onClick={handleInstall}
+                  onClick={handleDismiss}
+                  className="flex-1 py-3 rounded-xl text-sm font-semibold text-slate-300 bg-white/5 hover:bg-white/10 transition"
+                >
+                  Not Now
+                </button>
+                <button
+                  onClick={handleInstallClick}
                   disabled={installing}
-                  className="flex items-center gap-2.5 px-5 py-3 rounded-2xl font-semibold text-sm text-white transition-all active:scale-95 disabled:opacity-60"
+                  className="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition-all active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
                   style={{
                     background: 'linear-gradient(135deg, #ff7a18, #e85d00)',
-                    boxShadow: '0 8px 24px rgba(255,122,24,0.3)',
+                    boxShadow: '0 4px 16px rgba(255,122,24,0.3)',
                   }}
                 >
                   {installing ? (
@@ -78,26 +147,17 @@ export function InstallButton({ isInstallable, isInstalled, onInstall }: Install
                       className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
                     />
                   ) : (
-                    <Download size={18} />
+                    <Download size={16} />
                   )}
-                  <span>Install App</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setShowButton(false);
-                    setDismissed(true);
-                  }}
-                  className="p-2 rounded-xl bg-white/5 text-slate-400 hover:text-slate-200 transition"
-                >
-                  <X size={16} />
+                  Install
                 </button>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* iOS Instructions Modal */}
+      {/* iOS / Manual Install Instructions Modal */}
       <AnimatePresence>
         {(showIOSInstructions || showInstructions) && !isInstalled && (
           <motion.div
@@ -106,13 +166,19 @@ export function InstallButton({ isInstallable, isInstalled, onInstall }: Install
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] flex items-center justify-center p-4"
           >
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowInstructions(false)} />
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={closeInstructions} />
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               className="relative card-premium p-6 max-w-sm w-full"
             >
+              <button
+                onClick={closeInstructions}
+                className="absolute top-3 right-3 p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/5 transition"
+              >
+                <X size={18} />
+              </button>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,122,24,0.15)' }}>
                   <Smartphone size={20} className="text-ember-400" />
@@ -139,11 +205,11 @@ export function InstallButton({ isInstallable, isInstalled, onInstall }: Install
                     </div>
                   </>
                 ) : (
-                  <p>Tap the install button that appears in your browser's address bar, or use the "Install App" button.</p>
+                  <p>Tap the install button that appears in your browser's address bar, or use the menu option "Install app".</p>
                 )}
               </div>
               <button
-                onClick={() => setShowInstructions(false)}
+                onClick={closeInstructions}
                 className="btn-ghost w-full mt-5 text-sm"
               >
                 Got it
@@ -169,16 +235,6 @@ export function InstallButton({ isInstallable, isInstalled, onInstall }: Install
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Manual trigger for iOS — hidden button in settings area */}
-      {showIOSInstructions && !showInstructions && !showButton && !dismissed && (
-        <button
-          onClick={() => setShowInstructions(true)}
-          className="fixed bottom-20 lg:bottom-6 right-4 z-40 px-4 py-2.5 rounded-xl text-xs font-semibold bg-white/5 text-slate-300 border border-white/10 backdrop-blur-xl flex items-center gap-2"
-        >
-          <Download size={14} /> Install
-        </button>
-      )}
     </>
   );
 }

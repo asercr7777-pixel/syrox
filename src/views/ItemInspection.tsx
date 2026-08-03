@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Check, ChevronLeft, Coins, Lock, Sparkles } from 'lucide-react';
 import { useStore } from '../store/useStore';
-import { WEAPONS, AURAS, SHIELDS, FRAMES, BACKGROUNDS, RARITY_META } from '../data/collections';
+import { WEAPONS, AURAS, SHIELDS, FRAMES, BACKGROUNDS, TITLES, RARITY_META } from '../data/collections';
 import { MARKET_ITEMS } from '../data/marketplace';
 import { WeaponArt } from '../art/WeaponArt';
 import { AuraArt } from '../art/AuraArt';
@@ -77,6 +77,19 @@ export function ItemInspection({ itemId, category, onBack }: ItemInspectionProps
         <BackgroundArt id={item.id} name={item.name} size={300} />
       );
     }
+  } else if (category === 'title') {
+    item = TITLES.find((t) => t.id === itemId);
+    if (item) {
+      itemName = item.name;
+      itemRarity = item.rarity;
+      artComponent = (
+        <div className="flex items-center justify-center" style={{ width: 300, height: 300 }}>
+          <span className="font-display text-2xl font-bold" style={{ color: RARITY_META[item.rarity as keyof typeof RARITY_META]?.color }}>
+            {item.name}
+          </span>
+        </div>
+      );
+    }
   }
 
   useEffect(() => {
@@ -104,6 +117,10 @@ export function ItemInspection({ itemId, category, onBack }: ItemInspectionProps
       relatedPool = BACKGROUNDS.filter(
         (b) => b.id !== itemId && b.rarity === item.rarity
       );
+    } else if (category === 'title') {
+      relatedPool = TITLES.filter(
+        (t) => t.id !== itemId && t.rarity === item.rarity
+      );
     }
 
     setRelatedItems(relatedPool.slice(0, 3));
@@ -118,37 +135,36 @@ export function ItemInspection({ itemId, category, onBack }: ItemInspectionProps
   const canAfford = (state.coins || 0) >= (marketItem?.price || 0);
   const rankMet = RANKS.findIndex((r) => r.id === currentRank.id) >= RANKS.findIndex((r) => r.id === (marketItem?.rankRequired || 'E'));
 
-  const generateLore = (name: string, rarity: string): string => {
+  const lore = useMemo(() => {
     const rarityDescriptions: Record<string, string[]> = {
       common: [
-        `${name} is a humble beginning. Every legend starts with such modest tools.`,
-        `A simple ${name.toLowerCase()} that has seen service in countless hands.`,
+        `${itemName} is a humble beginning. Every legend starts with such modest tools.`,
+        `A simple ${itemName.toLowerCase()} that has seen service in countless hands.`,
       ],
       rare: [
-        `${name} bears the mark of skilled craftsmanship. It whispers of distant adventures.`,
-        `Rare and sought-after, ${name} grants those who wield it an edge in battle.`,
+        `${itemName} bears the mark of skilled craftsmanship. It whispers of distant adventures.`,
+        `Rare and sought-after, ${itemName} grants those who wield it an edge in battle.`,
       ],
       epic: [
-        `${name} thrums with dormant power. Few are worthy to claim such a treasure.`,
-        `An artifact of legendary proportions, ${name} channels the very essence of magic.`,
+        `${itemName} thrums with dormant power. Few are worthy to claim such a treasure.`,
+        `An artifact of legendary proportions, ${itemName} channels the very essence of magic.`,
       ],
       legendary: [
-        `${name} is spoken of in whispered legends. Its power bends reality itself.`,
-        `The very existence of ${name} defies comprehension. It is power incarnate.`,
+        `${itemName} is spoken of in whispered legends. Its power bends reality itself.`,
+        `The very existence of ${itemName} defies comprehension. It is power incarnate.`,
       ],
       mythic: [
-        `${name} transcends mortal understanding. It exists at the edge of creation.`,
-        `Beyond myth and legend, ${name} is a force that shapes the world.`,
+        `${itemName} transcends mortal understanding. It exists at the edge of creation.`,
+        `Beyond myth and legend, ${itemName} is a force that shapes the world.`,
       ],
       secret: [
-        `${name} is known to but the chosen few. Its true power remains locked away.`,
-        `A secret kept by ages, ${name} waits for one worthy to unlock its potential.`,
+        `${itemName} is known to but the chosen few. Its true power remains locked away.`,
+        `A secret kept by ages, ${itemName} waits for one worthy to unlock its potential.`,
       ],
     };
-
-    const descriptions = rarityDescriptions[rarity] || [];
-    return descriptions[Math.floor(Math.random() * descriptions.length)] || `${name} is a powerful artifact.`;
-  };
+    const descriptions = rarityDescriptions[itemRarity] || [];
+    return descriptions[Math.floor(Math.random() * descriptions.length)] || `${itemName} is a powerful artifact.`;
+  }, [itemName, itemRarity]);
 
   if (!item) {
     return (
@@ -236,7 +252,7 @@ export function ItemInspection({ itemId, category, onBack }: ItemInspectionProps
                 Lore
               </h3>
               <p className="text-ink-300 text-sm italic leading-relaxed">
-                {generateLore(itemName, itemRarity)}
+                {lore}
               </p>
             </div>
 

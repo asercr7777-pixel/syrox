@@ -104,21 +104,6 @@
       "icons": [{ "src": "/icons/shortcut-dungeons.png", "sizes": "96x96", "type": "image/png" }]
     }
   ],
-  "screenshots": [
-    {
-      "src": "/icons/screenshot-mobile-1.png",
-      "sizes": "1080x1920",
-      "type": "image/png",
-      "platform": "android",
-      "label": "Dashboard with daily tasks and rank progress"
-    },
-    {
-      "src": "/icons/screenshot-mobile-2.png",
-      "sizes": "1080x1920",
-      "type": "image/png",
-      "platform": "android",
-      "label": "Story Mode with Shadow guide"
-    }
-  ],
+  "screenshots": [],
   "prefer_related_applications": false
 }

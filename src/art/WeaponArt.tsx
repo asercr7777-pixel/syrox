@@ -142,7 +142,7 @@ function drawWeapon(
   }
 }
 
-function drawSword(rng: any, metal: string, edge: string, accent: string, dark: string, len: number, curve: number, guard: number, pommel: number, engraving: boolean) {
+function drawSword(rng: any, metal: string, _edge: string, accent: string, dark: string, len: number, curve: number, guard: number, pommel: number, engraving: boolean) {
   const bladeTop = -48 * len;
   const guardW = rng.range(14, 22);
   return (
@@ -170,7 +170,7 @@ function drawSword(rng: any, metal: string, edge: string, accent: string, dark: 
   );
 }
 
-function drawGreatsword(rng: any, metal: string, edge: string, accent: string, dark: string, len: number, guard: number, engraving: boolean) {
+function drawGreatsword(rng: any, metal: string, _edge: string, accent: string, dark: string, len: number, _guard: number, engraving: boolean) {
   const bladeTop = -52 * len;
   const guardW = rng.range(20, 28);
   return (
@@ -195,7 +195,7 @@ function drawGreatsword(rng: any, metal: string, edge: string, accent: string, d
   );
 }
 
-function drawKatana(rng: any, metal: string, edge: string, accent: string, dark: string, len: number, curve: number, engraving: boolean) {
+function drawKatana(_rng: any, metal: string, _edge: string, accent: string, dark: string, len: number, curve: number, engraving: boolean) {
   const bladeTop = -50 * len;
   return (
     <g>
@@ -217,7 +217,7 @@ function drawKatana(rng: any, metal: string, edge: string, accent: string, dark:
   );
 }
 
-function drawDagger(rng: any, metal: string, edge: string, accent: string, dark: string, len: number, curve: number, engraving: boolean) {
+function drawDagger(_rng: any, metal: string, _edge: string, accent: string, dark: string, len: number, curve: number, engraving: boolean) {
   const bladeTop = -38 * len;
   return (
     <g>
@@ -238,7 +238,7 @@ function drawDagger(rng: any, metal: string, edge: string, accent: string, dark:
   );
 }
 
-function drawAxe(rng: any, metal: string, edge: string, accent: string, dark: string, len: number, engraving: boolean) {
+function drawAxe(rng: any, metal: string, _edge: string, accent: string, dark: string, _len: number, engraving: boolean) {
   const bladeStyle = rng.int(0, 2);
   return (
     <g>
@@ -267,7 +267,7 @@ function drawAxe(rng: any, metal: string, edge: string, accent: string, dark: st
   );
 }
 
-function drawHammer(rng: any, metal: string, edge: string, accent: string, dark: string, len: number, engraving: boolean) {
+function drawHammer(rng: any, metal: string, _edge: string, accent: string, dark: string, _len: number, engraving: boolean) {
   const headW = rng.range(16, 22);
   return (
     <g>
@@ -286,7 +286,7 @@ function drawHammer(rng: any, metal: string, edge: string, accent: string, dark:
   );
 }
 
-function drawSpear(rng: any, metal: string, edge: string, accent: string, dark: string, len: number, engraving: boolean) {
+function drawSpear(_rng: any, metal: string, _edge: string, accent: string, dark: string, _len: number, engraving: boolean) {
   return (
     <g>
       {/* Long shaft */}
@@ -303,7 +303,7 @@ function drawSpear(rng: any, metal: string, edge: string, accent: string, dark: 
   );
 }
 
-function drawBow(rng: any, metal: string, edge: string, accent: string, dark: string, engraving: boolean) {
+function drawBow(rng: any, metal: string, _edge: string, accent: string, dark: string, engraving: boolean) {
   const curve = rng.range(30, 40);
   return (
     <g>
@@ -325,7 +325,7 @@ function drawBow(rng: any, metal: string, edge: string, accent: string, dark: st
   );
 }
 
-function drawCrossbow(rng: any, metal: string, edge: string, accent: string, dark: string, engraving: boolean) {
+function drawCrossbow(_rng: any, metal: string, _edge: string, accent: string, dark: string, engraving: boolean) {
   return (
     <g>
       {/* Stock */}
@@ -344,7 +344,7 @@ function drawCrossbow(rng: any, metal: string, edge: string, accent: string, dar
   );
 }
 
-function drawScythe(rng: any, metal: string, edge: string, accent: string, dark: string, len: number, engraving: boolean) {
+function drawScythe(_rng: any, metal: string, _edge: string, accent: string, dark: string, _len: number, engraving: boolean) {
   return (
     <g>
       {/* Shaft */}
@@ -359,7 +359,7 @@ function drawScythe(rng: any, metal: string, edge: string, accent: string, dark:
   );
 }
 
-function drawStaff(rng: any, metal: string, edge: string, accent: string, dark: string, len: number, engraving: boolean) {
+function drawStaff(rng: any, metal: string, _edge: string, accent: string, dark: string, _len: number, _engraving: boolean) {
   const orbStyle = rng.int(0, 2);
   return (
     <g>
@@ -379,8 +379,8 @@ function drawStaff(rng: any, metal: string, edge: string, accent: string, dark: 
   );
 }
 
-function drawParticles(rng: any, pal: any, uid: string) {
-  const particles = Array.from({ length: 6 }, (_, i) => ({
+function drawParticles(rng: any, pal: any, _uid: string) {
+  const particles = Array.from({ length: 6 }, (_, _i) => ({
     x: rng.range(-40, 40),
     y: rng.range(-40, 40),
     r: rng.range(0.8, 2),

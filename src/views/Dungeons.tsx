@@ -7,7 +7,7 @@ import { Modal } from '../components/ui/Modal';
 import { toast } from '../components/ui/Toast';
 import { triggerConfetti } from '../components/ui/Confetti';
 import { playSound } from '../lib/sound';
-import { Swords, Lock, Check, Zap, Coins, Sparkles, Trophy, Award, Shield, Dumbbell } from 'lucide-react';
+import { Swords, Lock, Check, Zap, Coins, Sparkles, Trophy, Award, Shield, Dumbbell, X } from 'lucide-react';
 
 const RARITY_COLORS: Record<string, string> = {
   common: '#9ca3af',
@@ -53,14 +53,14 @@ export function Dungeons() {
 
   const handleCompleteDungeon = () => {
     if (!activeDungeon) return;
-    const drops = clearDungeon(activeDungeon.id);
+    const drops = clearDungeon(activeDungeon.id) ?? [];
     setRewardDrops(drops);
     setShowReward(activeDungeon);
     setActiveDungeon(null);
     triggerConfetti(80);
   };
 
-  const allExercisesDone = activeDungeon && activeDungeon.exercises.every((_, i) => completedExercise[i]);
+  const allExercisesDone = activeDungeon && activeDungeon.exercises.length > 0 && activeDungeon.exercises.every((_, i) => completedExercise[i]);
 
   return (
     <div className="space-y-6">
@@ -216,11 +216,16 @@ export function Dungeons() {
       </Modal>
 
       {/* Active dungeon modal */}
-      <Modal open={activeDungeon !== null} onClose={() => {}} title="" size="md">
+      <Modal open={activeDungeon !== null} onClose={() => setActiveDungeon(null)} title="" size="md">
         {activeDungeon && (
           <div className="text-center">
-            <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-3 energy-pulse" style={{ background: `${currentRank.color}20` }}>
-              <Swords size={24} style={{ color: currentRank.color }} />
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center energy-pulse" style={{ background: `${currentRank.color}20` }}>
+                <Swords size={24} style={{ color: currentRank.color }} />
+              </div>
+              <button onClick={() => setActiveDungeon(null)} className="p-2 rounded-lg text-ink-400 hover:text-ink-200 hover:bg-white/5 transition">
+                <X size={18} />
+              </button>
             </div>
             <h3 className="font-display text-xl font-bold">{activeDungeon.name}</h3>
             <p className="text-xs text-ink-400 mt-1">Complete all exercises to clear the dungeon</p>
@@ -229,7 +234,7 @@ export function Dungeons() {
             <div className="h-2 bg-ink-950 rounded-full overflow-hidden my-4 border border-white/5">
               <div
                 className="h-full bg-gradient-to-r from-ember-500 to-gold-500 rounded-full transition-all duration-500"
-                style={{ width: `${(Object.values(completedExercise).filter(Boolean).length / activeDungeon.exercises.length) * 100}%` }}
+                style={{ width: `${activeDungeon.exercises.length > 0 ? (Object.values(completedExercise).filter(Boolean).length / activeDungeon.exercises.length) * 100 : 0}%` }}
               />
             </div>
 

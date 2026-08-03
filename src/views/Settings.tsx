@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { useAuth } from '../lib/auth';
 import { ConfirmModal } from '../components/ui/Modal';
@@ -34,6 +34,12 @@ export function Settings() {
   const [uploading, setUploading] = useState(false);
   const imageRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => { isMountedRef.current = false; };
+  }, []);
   const rank = getRankByXp(state.xp);
   const aura = state.equipped.aura ? AURAS.find((a) => a.id === state.equipped.aura) : null;
 
@@ -55,12 +61,14 @@ export function Settings() {
       if (user) {
         const { url, error } = await uploadBackground(user.id, file, 'image');
         if (error || !url) throw new Error(error || 'Upload failed');
+        if (!isMountedRef.current) return;
         setCustomBackground(url);
         setBackgroundType('image');
         toast({ title: 'Image background applied', type: 'success' });
       } else {
         const reader = new FileReader();
         reader.onload = () => {
+          if (!isMountedRef.current) return;
           setCustomBackground(reader.result as string);
           setBackgroundType('image');
           toast({ title: 'Image background applied', type: 'success' });
@@ -72,7 +80,7 @@ export function Settings() {
       const msg = err instanceof Error ? err.message : 'Unknown error';
       toast({ title: 'Upload failed', message: msg, type: 'error' });
     } finally {
-      setUploading(false);
+      if (isMountedRef.current) setUploading(false);
       e.target.value = '';
     }
   };
@@ -95,12 +103,14 @@ export function Settings() {
       if (user) {
         const { url, error } = await uploadBackground(user.id, file, 'video');
         if (error || !url) throw new Error(error || 'Upload failed');
+        if (!isMountedRef.current) return;
         setBackgroundVideo(url);
         setBackgroundType('video');
         toast({ title: 'Video background applied', type: 'success' });
       } else {
         const reader = new FileReader();
         reader.onload = () => {
+          if (!isMountedRef.current) return;
           setBackgroundVideo(reader.result as string);
           setBackgroundType('video');
           toast({ title: 'Video background applied', type: 'success' });
@@ -112,7 +122,7 @@ export function Settings() {
       const msg = err instanceof Error ? err.message : 'Unknown error';
       toast({ title: 'Upload failed', message: msg, type: 'error' });
     } finally {
-      setUploading(false);
+      if (isMountedRef.current) setUploading(false);
       e.target.value = '';
     }
   };

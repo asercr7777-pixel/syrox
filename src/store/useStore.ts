@@ -133,6 +133,22 @@ function doDailyReset() {
       secretExpires = Date.now() + 6 * 3600 * 1000;
     }
 
+    const currentWeek = nowWeekKey();
+    const currentMonth = today.slice(0, 7);
+    const lastReset = s.lastDailyResetDate ?? today;
+    const monthChanged = lastReset.slice(0, 7) !== currentMonth;
+
+    const newQuestCompleted = { ...s.questCompleted };
+    for (const quest of QUESTS) {
+      if (quest.category === 'daily') {
+        delete newQuestCompleted[quest.id];
+      } else if (quest.category === 'weekly' && s.weeklyMissionWeek !== currentWeek) {
+        delete newQuestCompleted[quest.id];
+      } else if (quest.category === 'monthly' && monthChanged) {
+        delete newQuestCompleted[quest.id];
+      }
+    }
+
     return {
       ...s,
       coreCompleted: Object.fromEntries(s.mainTasks.filter(t => t.enabled).map((t) => [t.id, false])),
@@ -151,13 +167,15 @@ function doDailyReset() {
       dailyChallengeIds: challengeIds,
       dailyChallengeCompleted: {},
       dailyChallengeDate: today,
-      weeklyMissionWeek: s.weeklyMissionWeek ?? nowWeekKey(),
+      weeklyMissionWeek: currentWeek,
       streak: newStreak,
       bestStreak: newBestStreak,
       streakShield: newStreakShield,
       secretDungeonAvailable: secretAvailable,
       secretDungeonId: secretId,
       secretDungeonExpiresAt: secretExpires,
+      questCompleted: newQuestCompleted,
+      questDateReset: today,
     };
   });
 }
@@ -826,8 +844,8 @@ function purchaseItem(itemId: string, category: string, price: number): boolean 
 
 function claimQuest(questId: string) {
   setState((s) => {
-    if (s.questCompleted[questId]) return s;
-    const quest = (QUESTS as any[]).find((q: any) => q.id === questId);
+    if (s.questCompleted[questId] === true) return s;
+    const quest = QUESTS.find((q) => q.id === questId);
     if (!quest) return s;
     const progress = getQuestProgress(s, quest.metric);
     if (progress < quest.target) return s;
@@ -841,12 +859,19 @@ function claimQuest(questId: string) {
 function advanceStory() {
   setState((s) => {
     const completedCh = s.storyChapterIndex;
+    if (s.storyCompletedChapters.includes(completedCh)) {
+      return {
+        ...s,
+        storyChapterIndex: s.storyChapterIndex + 1,
+        storyObjectivesCompleted: {},
+      };
+    }
     const chId = `chapter_${completedCh + 1}`;
     return {
       ...s,
       storyChapterIndex: s.storyChapterIndex + 1,
       storyObjectivesCompleted: {},
-      storyCompletedChapters: s.storyCompletedChapters.includes(completedCh) ? s.storyCompletedChapters : [...s.storyCompletedChapters, completedCh],
+      storyCompletedChapters: [...s.storyCompletedChapters, completedCh],
       storyLog: [...s.storyLog, { chapterId: chId, type: 'cutscene' as const, timestamp: Date.now() }],
     };
   });
@@ -854,10 +879,14 @@ function advanceStory() {
 }
 
 function advanceStoryScene() {
-  setState((s) => ({
-    ...s,
-    storySceneIndex: Math.min(s.storySceneIndex + 1, 100),
-  }));
+  setState((s) => {
+    const maxIndex = STORY_SCENES.length - 1;
+    if (s.storySceneIndex >= maxIndex) return s;
+    return {
+      ...s,
+      storySceneIndex: s.storySceneIndex + 1,
+    };
+  });
   playSound('rankup');
 }
 
@@ -866,6 +895,8 @@ function claimStorySceneReward(sceneId: string) {
     if (s.storySceneRewardsClaimed[sceneId]) return s;
     const scene = STORY_SCENES.find((sc) => sc.id === sceneId);
     if (!scene?.reward) return s;
+    const sceneIndex = STORY_SCENES.findIndex((sc) => sc.id === sceneId);
+    if (sceneIndex < 0 || sceneIndex > s.storySceneIndex) return s;
     const reward = scene.reward;
     let next = s;
     if (reward.type === 'xp') {
@@ -883,22 +914,28 @@ function claimStorySceneReward(sceneId: string) {
 
 function toggleStoryObjective(chapterIndex: number, objectiveIndex: number) {
   const key = `${chapterIndex}-${objectiveIndex}`;
-  setState((s) => ({
-    ...s,
-    storyObjectivesCompleted: {
-      ...s.storyObjectivesCompleted,
-      [key]: !s.storyObjectivesCompleted[key],
-    },
-  }));
+  setState((s) => {
+    if (chapterIndex > s.storyChapterIndex) return s;
+    return {
+      ...s,
+      storyObjectivesCompleted: {
+        ...s.storyObjectivesCompleted,
+        [key]: !s.storyObjectivesCompleted[key],
+      },
+    };
+  });
 }
 
 function setStoryChoice(chapterIndex: number, choiceId: string) {
   const key = `chapter_${chapterIndex}`;
-  setState((s) => ({
-    ...s,
-    storyChoices: { ...s.storyChoices, [key]: choiceId },
-    storyLog: [...s.storyLog, { chapterId: key, type: 'dialogue' as const, timestamp: Date.now() }],
-  }));
+  setState((s) => {
+    if (chapterIndex > s.storyChapterIndex) return s;
+    return {
+      ...s,
+      storyChoices: { ...s.storyChoices, [key]: choiceId },
+      storyLog: [...s.storyLog, { chapterId: key, type: 'dialogue' as const, timestamp: Date.now() }],
+    };
+  });
 }
 
 function completeStorySideQuest(questId: string) {
@@ -1047,6 +1084,16 @@ function unlockAchievements(ids: string[]) {
         ...toAdd.map((id) => ({ id, unlockedAt: Date.now() })),
       ],
     };
+  });
+}
+
+function removeAchievements(ids: string[]) {
+  if (ids.length === 0) return;
+  setState((s) => {
+    const toRemove = new Set(ids);
+    const filtered = s.achievements.filter((a) => !toRemove.has(a.id));
+    if (filtered.length === s.achievements.length) return s;
+    return { ...s, achievements: filtered };
   });
 }
 
@@ -1439,6 +1486,7 @@ export interface StoreActions {
   defeatWeeklyRaid: () => void;
   // Achievements (scoped — no raw setState)
   unlockAchievements: (ids: string[]) => void;
+  removeAchievements: (ids: string[]) => void;
   foundEasterEgg: (id: string) => void;
   // Boss Battles
   engageBoss: (bossId: string) => void;
@@ -1608,6 +1656,7 @@ export function useStore(): StoreActions {
     dealRaidDamage,
     defeatWeeklyRaid,
     unlockAchievements,
+    removeAchievements,
     foundEasterEgg,
     engageBoss,
     attackBoss,

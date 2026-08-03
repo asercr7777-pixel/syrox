@@ -172,7 +172,7 @@ function drawShape(shape: ShieldShape, rng: any, pal: any, uid: string, emblem: 
   }
 }
 
-function drawEmblem(style: number, accent: string, rng: any) {
+function drawEmblem(style: number, accent: string, _rng: any) {
   switch (style) {
     case 0: return <circle cx="0" cy="-2" r="6" fill={accent} opacity="0.7" />;
     case 1: return <polygon points="0,-10 6,-2 0,6 -6,-2" fill={accent} opacity="0.7" />;

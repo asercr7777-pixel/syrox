@@ -26,8 +26,12 @@ const DIFFICULTY_COLORS: Record<QuestDifficulty, { bg: string; border: string; t
   mythic: { bg: 'bg-purple-500/10', border: 'border-purple-500/40', text: 'text-purple-400', badge: 'bg-purple-500/20 text-purple-400' },
 };
 
-function getProgressValue(state: any, metric: string): number {
-  return getQuestProgress(state as AppState, metric);
+function getProgressValue(state: AppState, metric: string): number {
+  return getQuestProgress(state, metric);
+}
+
+function isQuestCompleted(state: AppState, questId: string): boolean {
+  return state.questCompleted[questId] === true;
 }
 
 export function Quests() {
@@ -36,7 +40,7 @@ export function Quests() {
 
   const currentQuests = getQuestsByCategory(activeCategory);
   const unclaimedCompleted = QUESTS.filter(
-    (q) => state.questCompleted[q.id] === false && getProgressValue(state, q.metric) >= q.target
+    (q) => !isQuestCompleted(state, q.id) && getProgressValue(state, q.metric) >= q.target
   ).length;
 
   const hasUnclaimedCompleted = unclaimedCompleted > 0;
@@ -44,6 +48,7 @@ export function Quests() {
   const handleClaimQuest = (questId: string) => {
     const quest = QUESTS.find((q) => q.id === questId);
     if (!quest) return;
+    if (isQuestCompleted(state, questId)) return;
 
     const progress = getProgressValue(state, quest.metric);
     if (progress < quest.target) return;
@@ -62,7 +67,7 @@ export function Quests() {
   const handleClaimAll = () => {
     let claimed = 0;
     QUESTS.forEach((quest) => {
-      if (!state.questCompleted[quest.id]) {
+      if (!isQuestCompleted(state, quest.id)) {
         const progress = getProgressValue(state, quest.metric);
         if (progress >= quest.target) {
           claimQuest(quest.id);
@@ -143,7 +148,7 @@ export function Quests() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {currentQuests.map((quest) => {
           const progress = getProgressValue(state, quest.metric);
-          const isCompleted = state.questCompleted[quest.id];
+          const isCompleted = isQuestCompleted(state, quest.id);
           const isReady = progress >= quest.target && !isCompleted;
           const pct = Math.min(100, (progress / quest.target) * 100);
           const colors = DIFFICULTY_COLORS[quest.difficulty];

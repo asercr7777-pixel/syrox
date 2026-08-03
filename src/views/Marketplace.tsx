@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { RARITY_META, type Rarity } from '../data/collections';
 import { MARKET_ITEMS, CATEGORY_LABELS, type MarketCategory, type MarketItem } from '../data/marketplace';
@@ -33,6 +33,13 @@ export function Marketplace() {
   const [previewItem, setPreviewItem] = useState<MarketItem | null>(null);
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [filterRarity, setFilterRarity] = useState<Rarity | 'all'>('all');
+  const purchaseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (purchaseTimerRef.current) clearTimeout(purchaseTimerRef.current);
+    };
+  }, []);
 
   const items = useMemo(() => {
     let list = MARKET_ITEMS.filter((m) => m.category === category);
@@ -76,7 +83,8 @@ export function Marketplace() {
     }
     setPurchasing(item.id);
     playSound('whoosh');
-    setTimeout(() => {
+    if (purchaseTimerRef.current) clearTimeout(purchaseTimerRef.current);
+    purchaseTimerRef.current = setTimeout(() => {
       const success = purchaseItem(item.id, item.category, item.price);
       setPurchasing(null);
       if (success) {

@@ -2,9 +2,10 @@ import { useStore } from '../store/useStore';
 import { RARITY_META } from '../data/collections';
 import { isAtOrAbove } from '../data/ranks';
 import { Trophy, Lock, Check } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { toast } from '../components/ui/Toast';
 import { triggerConfetti } from '../components/ui/Confetti';
+import type { AppState } from '../store/types';
 
 interface AchievementDef {
   id: string;
@@ -12,7 +13,7 @@ interface AchievementDef {
   description: string;
   emoji: string;
   rarity: keyof typeof RARITY_META;
-  check: (s: any) => boolean;
+  check: (s: AppState) => boolean;
   reward: string;
 }
 
@@ -26,11 +27,11 @@ const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'rank_d', name: 'Awakened', description: 'Reach D-Rank.', emoji: '🟢', rarity: 'rare', check: (s) => isAtOrAbove(s.xp, 'D'), reward: '100 XP' },
   { id: 'rank_s', name: 'S-Class', description: 'Reach S-Rank.', emoji: '🔥', rarity: 'epic', check: (s) => isAtOrAbove(s.xp, 'S'), reward: '500 XP' },
   { id: 'rank_shadow', name: 'Shadow Hunter', description: 'Reach Shadow Hunter rank.', emoji: '🐺', rarity: 'legendary', check: (s) => isAtOrAbove(s.xp, 'SHADOW_HUNTER'), reward: 'Legendary Aura' },
-  { id: 'rank_monarch', name: 'The Monarch', description: 'Reach Mr. BYDA rank.', emoji: '👑', rarity: 'secret', check: (s: any) => isAtOrAbove(s.xp, 'MR_BYDA' as any), reward: 'Secret Aura + Title' },
-  { id: 'aura_collector', name: 'Aura Collector', description: 'Own 10 different auras.', emoji: '✨', rarity: 'epic', check: (s) => s.inventory.filter((i: any) => i.type === 'aura').length >= 10, reward: 'Epic Aura' },
-  { id: 'legendary_aura', name: 'Legendary Aura', description: 'Obtain a legendary aura.', emoji: '🌟', rarity: 'legendary', check: (s) => s.inventory.some((i: any) => i.type === 'aura' && i.id === 'shadow_monarch'), reward: 'Title' },
+  { id: 'rank_monarch', name: 'The Monarch', description: 'Reach Shadow Monarch rank.', emoji: '👑', rarity: 'secret', check: (s) => isAtOrAbove(s.xp, 'SHADOW_MONARCH'), reward: 'Secret Aura + Title' },
+  { id: 'aura_collector', name: 'Aura Collector', description: 'Own 10 different auras.', emoji: '✨', rarity: 'epic', check: (s) => s.inventory.filter((i) => i.type === 'aura').length >= 10, reward: 'Epic Aura' },
+  { id: 'legendary_aura', name: 'Legendary Aura', description: 'Obtain a legendary aura.', emoji: '🌟', rarity: 'legendary', check: (s) => s.inventory.some((i) => i.type === 'aura' && i.id === 'shadow_monarch'), reward: 'Title' },
   { id: 'secret_finder', name: 'Secret Finder', description: 'Discover a secret dungeon.', emoji: '🗝️', rarity: 'secret', check: (s) => s.dungeonsCleared > 0 && s.secretDungeonAvailable, reward: 'Rare Title' },
-  { id: 'perfect_day', name: 'Perfect Day', description: 'Complete all main tasks in one day.', emoji: '💯', rarity: 'epic', check: (s) => s.mainTasks.filter((t: any) => t.enabled).length > 0 && s.mainTasks.filter((t: any) => t.enabled).every((t: any) => s.coreCompleted[t.id]), reward: '200 XP' },
+  { id: 'perfect_day', name: 'Perfect Day', description: 'Complete all main tasks in one day.', emoji: '💯', rarity: 'epic', check: (s) => s.mainTasks.filter((t) => t.enabled).length > 0 && s.mainTasks.filter((t) => t.enabled).every((t) => s.coreCompleted[t.id]), reward: '200 XP' },
   { id: 'spin_lucky', name: 'Lucky Spin', description: 'Win a rare+ reward from the spin wheel.', emoji: '🎡', rarity: 'rare', check: (s) => s.lastSpinRewardId === 'aura' || s.lastSpinRewardId === 'weapon' || s.lastSpinRewardId === 'chest', reward: '100 XP' },
   { id: 'no_skip', name: 'No Skip November', description: '30 days without missing a main task.', emoji: '🛡️', rarity: 'mythic', check: (s) => s.bestStreak >= 30, reward: 'Mythic Title' },
   // Easter eggs
@@ -39,16 +40,31 @@ const ACHIEVEMENTS: AchievementDef[] = [
 ];
 
 export function Achievements() {
-  const { state, unlockAchievements, foundEasterEgg } = useStore();
+  const { state, unlockAchievements, removeAchievements, foundEasterEgg } = useStore();
+  const lastCheckedKey = useRef<string>('');
 
-  // Check for newly unlocked achievements
+  // Check for newly unlocked / incorrectly unlocked achievements
   useEffect(() => {
+    const stateKey = `${state.totalPoints}-${state.bestStreak}-${state.dungeonsCleared}-${state.xp}-${state.level}-${state.inventory.length}-${state.easterEggsFound.length}-${state.lastSpinRewardId}`;
+    if (lastCheckedKey.current === stateKey) return;
+    lastCheckedKey.current = stateKey;
+
+    const unlockedIds = new Set(state.achievements.map((x) => x.id));
     const newlyUnlocked: AchievementDef[] = [];
+    const shouldLock: string[] = [];
+
     for (const a of ACHIEVEMENTS) {
-      const already = state.achievements.some((x) => x.id === a.id);
-      if (!already && a.check(state)) {
+      const isUnlocked = unlockedIds.has(a.id);
+      const meetsReq = a.check(state);
+      if (!isUnlocked && meetsReq) {
         newlyUnlocked.push(a);
+      } else if (isUnlocked && !meetsReq) {
+        shouldLock.push(a.id);
       }
+    }
+
+    if (shouldLock.length > 0) {
+      removeAchievements(shouldLock);
     }
     if (newlyUnlocked.length > 0) {
       unlockAchievements(newlyUnlocked.map((a) => a.id));
@@ -64,7 +80,7 @@ export function Achievements() {
       foundEasterEgg('shadow');
       toast({ title: 'Easter Egg Found!', message: '🌑 Shadow Whisperer', type: 'reward', icon: '🌑' });
     }
-  }, [state, unlockAchievements, foundEasterEgg]);
+  }, [state.totalPoints, state.bestStreak, state.dungeonsCleared, state.xp, state.level, state.inventory.length, state.easterEggsFound, state.lastSpinRewardId, state.achievements, unlockAchievements, removeAchievements, foundEasterEgg]);
 
   const unlockedCount = state.achievements.length;
   const totalCount = ACHIEVEMENTS.length;

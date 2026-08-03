@@ -62,23 +62,24 @@ export function usePWA() {
 
   const promptInstall = useCallback(async () => {
     if (!installPromptEvent) return false;
-    await installPromptEvent.prompt();
-    const choice = await installPromptEvent.userChoice;
+    let choice: { outcome: 'accepted' | 'dismissed' } | null = null;
+    try {
+      await installPromptEvent.prompt();
+      choice = await installPromptEvent.userChoice;
+    } catch {
+      return false;
+    }
     setInstallPromptEvent(null);
     setIsInstallable(false);
-    return choice.outcome === 'accepted';
+    return choice?.outcome === 'accepted';
   }, [installPromptEvent]);
 
   const applyUpdate = useCallback(() => {
     if (registration?.waiting) {
       registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      return;
     }
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      window.location.reload();
-    });
-    if (!registration?.waiting) {
-      window.location.reload();
-    }
+    window.location.reload();
   }, [registration]);
 
   return {

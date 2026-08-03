@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import { getRankByXp, getNextRank } from '../data/ranks';
 import { RankBadge } from '../components/ui/RankBadge';
@@ -27,7 +27,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const extraCompleted = Object.values(state.customCompleted).filter(Boolean).length;
   const totalTasks = enabledMainTasks.length + state.customTasks.length;
   const totalDone = completedCount + extraCompleted;
-  const dailyPct = Math.min(100, (state.dailyXp / state.dailyCap) * 100);
+  const dailyPct = state.dailyCap > 0 ? Math.min(100, (state.dailyXp / state.dailyCap) * 100) : 0;
   const disciplineScore = totalTasks > 0 ? Math.round((totalDone / totalTasks) * 100) : 0;
 
   useEffect(() => {
@@ -37,10 +37,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     prevAllDone.current = allDone;
   }, [allDone]);
 
-  const disciplineData = buildDisciplineData(state.history, 30);
-  const todayWorkoutSeconds = state.workoutSessions
+  const disciplineData = useMemo(() => buildDisciplineData(state.history, 30), [state.history]);
+  const todayWorkoutSeconds = useMemo(() => state.workoutSessions
     .filter((s) => new Date(s.completedAt).toISOString().slice(0, 10) === new Date().toISOString().slice(0, 10))
-    .reduce((acc, s) => acc + s.durationSeconds, 0);
+    .reduce((acc, s) => acc + s.durationSeconds, 0), [state.workoutSessions]);
   const todayWorkoutMin = Math.floor(todayWorkoutSeconds / 60);
 
   return (

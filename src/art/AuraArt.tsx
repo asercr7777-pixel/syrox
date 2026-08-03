@@ -232,7 +232,7 @@ function drawStone(rng: any, color: string, uid: string, count: number, animated
   );
 }
 
-function drawBronze(rng: any, color: string, uid: string, count: number, animated: boolean) {
+function drawBronze(_rng: any, color: string, uid: string, count: number, animated: boolean) {
   const rings = Array.from({ length: 3 }, (_, i) => ({ r: 20 + i * 8, delay: i * 0.5 }));
   return (
     <g>
@@ -370,7 +370,7 @@ function drawCosmic(rng: any, color: string, uid: string, count: number, animate
 }
 
 function drawChaos(rng: any, color: string, uid: string, count: number, animated: boolean) {
-  const shards = Array.from({ length: count }, (_, i) => {
+  const shards = Array.from({ length: count }, (_, _i) => {
     const angle = rng.range(0, Math.PI * 2);
     const r = rng.range(18, 40);
     return { x: 60 + Math.cos(angle) * r, y: 60 + Math.sin(angle) * r, s: rng.range(2, 5), rot: rng.range(0, 360), delay: rng.range(0, 2) };

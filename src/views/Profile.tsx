@@ -90,9 +90,9 @@ export function Profile() {
                 <span
                   className="chip"
                   style={{
-                    background: `${RARITY_META[title.rarity].color}20`,
-                    color: RARITY_META[title.rarity].color,
-                    border: `1px solid ${RARITY_META[title.rarity].color}40`,
+                    background: `${RARITY_META[title.rarity]?.color ?? '#888'}20`,
+                    color: RARITY_META[title.rarity]?.color ?? '#888',
+                    border: `1px solid ${RARITY_META[title.rarity]?.color ?? '#888'}40`,
                   }}
                 >
                   {title.name}

@@ -93,10 +93,13 @@ function RankCard({ rank, index, currentXp, claimed, onClaim }: { rank: Rank; in
       {status === 'locked' && (
         <div className="w-full py-2 rounded-xl bg-ink-800/60 border border-white/5 text-center text-xs font-medium text-ink-400 flex items-center justify-center gap-1.5"><Lock size={12} /> {(rank.xpRequired - currentXp).toLocaleString()} XP to unlock</div>
       )}
-      <style>{`@keyframes floatParticle { 0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; } 50% { transform: translateY(-20px) scale(1.5); opacity: 0.8; } }`}</style>
     </div>
   );
 }
+
+const floatParticleStyle = document.createElement('style');
+floatParticleStyle.textContent = `@keyframes floatParticle { 0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; } 50% { transform: translateY(-20px) scale(1.5); opacity: 0.8; } }`;
+document.head.appendChild(floatParticleStyle);
 
 // --- Leaderboard section ---
 
@@ -138,11 +141,11 @@ export function Leaderboard() {
   const currentIdx = getRankIndex(currentRank.id);
   const rankProgressPct = nextRank ? Math.min(100, Math.round(((state.xp - currentRank.xpRequired) / (nextRank.xpRequired - currentRank.xpRequired) * 100))) : 100;
 
-  const fetchLeaderboard = async () => {
+  const fetchLeaderboard = async (key?: SortKey) => {
     if (!isSupabaseConfigured()) { setLoading(false); return; }
     setLoading(true);
     try {
-      const { data, error } = await supabase.from('leaderboard').select('*').order(sortKey, { ascending: false }).limit(100);
+      const { data, error } = await supabase.from('leaderboard').select('*').order(key ?? sortKey, { ascending: false }).limit(100);
       if (error) throw error;
       setRows(data as LeaderboardRow[] ?? []);
     } catch { setRows([]); } finally { setLoading(false); }
@@ -152,7 +155,7 @@ export function Leaderboard() {
 
   const handleSortChange = (key: SortKey) => {
     setSortKey(key);
-    fetchLeaderboard();
+    fetchLeaderboard(key);
   };
 
   const handleRefresh = async () => {

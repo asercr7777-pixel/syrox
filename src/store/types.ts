@@ -220,6 +220,7 @@ export interface AppState {
   // Story Mode (Linear)
   storySceneIndex: number;
   storySceneRewardsClaimed: Record<string, boolean>;
+  storySceneObjectivesCompleted: Record<string, boolean>;
 
   // Story Mode (Legacy)
   storyChapterIndex: number;

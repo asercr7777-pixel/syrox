@@ -399,6 +399,7 @@ function toggleCoreTask(id: string) {
       };
     }
   });
+  checkAndAdvanceStoryScene();
 }
 
 function toggleCustomTask(id: string) {
@@ -584,6 +585,7 @@ function clearDungeon(dungeonId: string): DropResult[] {
     return { ...next, inventory: [...next.inventory, ...newItems, ...rewardItems] };
   });
   playSound('rankup');
+  checkAndAdvanceStoryScene();
   return drops;
 }
 
@@ -824,6 +826,7 @@ function claimQuest(questId: string) {
     next = { ...next, coins: next.coins + quest.coinReward, questCompleted: { ...next.questCompleted, [questId]: true } };
     return next;
   });
+  checkAndAdvanceStoryScene();
 }
 
 function advanceStory() {
@@ -848,10 +851,51 @@ function advanceStory() {
   playSound('rankup');
 }
 
+function isStoryObjectiveMet(sceneId: string, s: AppState): boolean {
+  const scene = STORY_SCENES.find((sc) => sc.id === sceneId);
+  if (!scene?.objective) return true;
+  if (s.storySceneObjectivesCompleted[sceneId]) return true;
+  // Auto-detect based on objective type
+  const label = scene.objective.label.toLowerCase();
+  if (label.includes('core task')) {
+    return Object.values(s.coreCompleted).some(Boolean);
+  }
+  if (label.includes('quest board') || label.includes('quests page')) {
+    // Visiting quests is implied — mark as met if any quest has been claimed
+    return Object.values(s.questCompleted).some(Boolean);
+  }
+  if (label.includes('achievements')) {
+    return s.achievements.length > 0;
+  }
+  if (label.includes('dungeon')) {
+    return s.dungeonsCleared > 0 || s.dungeonClearedToday;
+  }
+  return false;
+}
+
+function checkAndAdvanceStoryScene() {
+  setState((s) => {
+    const currentScene = STORY_SCENES[Math.min(s.storySceneIndex, STORY_SCENES.length - 1)];
+    if (!currentScene?.objective) return s;
+    if (!isStoryObjectiveMet(currentScene.id, s)) return s;
+    // Mark objective complete
+    if (s.storySceneObjectivesCompleted[currentScene.id]) return s;
+    return {
+      ...s,
+      storySceneObjectivesCompleted: { ...s.storySceneObjectivesCompleted, [currentScene.id]: true },
+    };
+  });
+}
+
 function advanceStoryScene() {
   setState((s) => {
     const maxIndex = STORY_SCENES.length - 1;
     if (s.storySceneIndex >= maxIndex) return s;
+    const currentScene = STORY_SCENES[s.storySceneIndex];
+    // Guard: cannot advance if current scene has an unmet objective
+    if (currentScene?.objective && !isStoryObjectiveMet(currentScene.id, s)) return s;
+    // Guard: cannot advance if reward is unclaimed
+    if (currentScene?.reward && !s.storySceneRewardsClaimed[currentScene.id]) return s;
     return {
       ...s,
       storySceneIndex: s.storySceneIndex + 1,
@@ -1055,6 +1099,7 @@ function unlockAchievements(ids: string[]) {
       ],
     };
   });
+  checkAndAdvanceStoryScene();
 }
 
 function removeAchievements(ids: string[]) {
@@ -1429,6 +1474,7 @@ export interface StoreActions {
   advanceStory: () => void;
   advanceStoryScene: () => void;
   claimStorySceneReward: (sceneId: string) => void;
+  checkAndAdvanceStoryScene: () => void;
   toggleStoryObjective: (chapterIndex: number, objectiveIndex: number) => void;
   setStoryChoice: (chapterIndex: number, choiceId: string) => void;
   completeStorySideQuest: (questId: string) => void;
@@ -1611,6 +1657,7 @@ export function useStore(): StoreActions {
     advanceStory,
     advanceStoryScene,
     claimStorySceneReward,
+    checkAndAdvanceStoryScene,
     toggleStoryObjective,
     setStoryChoice,
     completeStorySideQuest,

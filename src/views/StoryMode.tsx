@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, CheckCircle2, RotateCcw, BookOpen, Sparkles, Coins, Zap } from 'lucide-react';
+import { ChevronRight, CheckCircle2, RotateCcw, BookOpen, Sparkles, Coins, Zap, Lock } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { toast } from '../components/ui/Toast';
 import { triggerConfetti } from '../components/ui/Confetti';
@@ -9,7 +9,7 @@ import {
 } from '../data/storyScenes';
 
 export default function StoryMode() {
-  const { state, advanceStoryScene, claimStorySceneReward } = useStore();
+  const { state, advanceStoryScene, claimStorySceneReward, checkAndAdvanceStoryScene } = useStore();
   const [dialogueIndex, setDialogueIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -19,6 +19,13 @@ export default function StoryMode() {
   const currentScene = STORY_SCENES[Math.min(state.storySceneIndex, STORY_SCENES.length - 1)];
   const isLastScene = state.storySceneIndex >= STORY_SCENES.length - 1;
   const rewardClaimed = !!state.storySceneRewardsClaimed[currentScene.id];
+  const objectiveCompleted = !!state.storySceneObjectivesCompleted[currentScene.id];
+  const hasObjective = !!currentScene.objective;
+
+  // Auto-detect objective completion whenever state changes
+  useEffect(() => {
+    checkAndAdvanceStoryScene();
+  }, [state.coreCompleted, state.dungeonsCleared, state.dungeonClearedToday, state.questCompleted, state.achievements, state.storySceneIndex, checkAndAdvanceStoryScene]);
 
   // Reset dialogue when scene changes
   useEffect(() => {
@@ -107,6 +114,17 @@ export default function StoryMode() {
 
   const currentLine = currentScene.dialogue[dialogueIndex];
   const dialogueComplete = dialogueIndex >= currentScene.dialogue.length - 1 && !isTyping;
+  const canAdvance = dialogueComplete && (!hasObjective || objectiveCompleted) && (!currentScene.reward || rewardClaimed);
+
+  // Auto-advance when objective is completed and reward is claimed (or no reward)
+  const prevObjectiveCompleted = useRef(objectiveCompleted);
+  useEffect(() => {
+    if (objectiveCompleted && !prevObjectiveCompleted.current && dialogueComplete && (rewardClaimed || !currentScene.reward) && !isLastScene) {
+      const timer = setTimeout(() => advanceStoryScene(), 800);
+      return () => clearTimeout(timer);
+    }
+    prevObjectiveCompleted.current = objectiveCompleted;
+  }, [objectiveCompleted, dialogueComplete, rewardClaimed, currentScene, isLastScene, advanceStoryScene]);
   const progress = ((state.storySceneIndex + 1) / getTotalScenes()) * 100;
 
   return (
@@ -257,8 +275,22 @@ export default function StoryMode() {
               </div>
             )}
 
-            {/* Next / Advance buttons */}
-            {dialogueComplete && (rewardClaimed || !currentScene.reward) && (
+            {/* Objective locked — cannot advance yet */}
+            {dialogueComplete && hasObjective && !objectiveCompleted && (rewardClaimed || !currentScene.reward) && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex flex-col items-center gap-2"
+              >
+                <div className="flex items-center gap-2 text-amber-400/80 text-sm">
+                  <Lock size={14} />
+                  <span>Complete the objective to continue</span>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Next / Advance buttons — only when all conditions met */}
+            {canAdvance && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -293,17 +325,30 @@ export default function StoryMode() {
         </div>
       </div>
 
-      {/* Objective hint */}
+      {/* Objective hint — shows Active or Completed state */}
       {currentScene.objective && dialogueComplete && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-4 p-3 rounded-xl border border-purple-500/20 bg-purple-500/5 flex items-center gap-3"
+          className={`mt-4 p-3 rounded-xl border flex items-center gap-3 ${
+            objectiveCompleted
+              ? 'border-emerald2-500/30 bg-emerald2-500/5'
+              : 'border-purple-500/20 bg-purple-500/5'
+          }`}
         >
-          <BookOpen size={16} className="text-purple-400 flex-shrink-0" />
+          {objectiveCompleted ? (
+            <CheckCircle2 size={16} className="text-emerald2-400 flex-shrink-0" />
+          ) : (
+            <BookOpen size={16} className="text-purple-400 flex-shrink-0" />
+          )}
           <div>
-            <p className="text-xs font-semibold text-purple-300">{currentScene.objective.label}</p>
-            <p className="text-xs text-purple-300/60">{currentScene.objective.hint}</p>
+            <p className={`text-xs font-semibold ${objectiveCompleted ? 'text-emerald2-300' : 'text-purple-300'}`}>
+              {currentScene.objective.label}
+              {objectiveCompleted && ' — Complete'}
+            </p>
+            <p className={`text-xs ${objectiveCompleted ? 'text-emerald2-400/60' : 'text-purple-300/60'}`}>
+              {currentScene.objective.hint}
+            </p>
           </div>
         </motion.div>
       )}

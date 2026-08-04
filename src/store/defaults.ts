@@ -192,6 +192,7 @@ export function createDefaultState(): AppState {
     // Story Mode (Linear)
     storySceneIndex: 0,
     storySceneRewardsClaimed: {},
+    storySceneObjectivesCompleted: {},
 
     // Story Mode (Legacy)
     storyChapterIndex: 0,

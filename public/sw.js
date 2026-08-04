@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1.0.0';
+const CACHE_VERSION = 'v2.0.0';
 const STATIC_CACHE = `discipline-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `discipline-runtime-${CACHE_VERSION}`;
 const IMAGE_CACHE = `discipline-images-${CACHE_VERSION}`;

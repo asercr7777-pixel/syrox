@@ -44,11 +44,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       options: { data: { username } },
     });
     if (error) return { error: error.message };
-    if (data.user) {
-      await supabase.from('profiles').upsert({
-        id: data.user.id,
-        username,
-      });
+    // Profile creation is handled by a database trigger on auth.users.
+    // If a session was created (email confirmation off), update the username.
+    if (data.user && data.session) {
+      try {
+        await supabase.from('profiles').update({ username }).eq('id', data.user.id);
+      } catch {
+        // Non-fatal — trigger already created the profile with default username
+      }
     }
     return { error: null };
   };

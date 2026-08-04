@@ -13,7 +13,6 @@ import { Loader2 } from 'lucide-react';
 
 const Dashboard = lazy(() => import('./views/Dashboard').then((m) => ({ default: m.Dashboard })));
 const Tasks = lazy(() => import('./views/Tasks').then((m) => ({ default: m.Tasks })));
-const Quests = lazy(() => import('./views/Quests').then((m) => ({ default: m.Quests })));
 const StoryMode = lazy(() => import('./views/StoryMode').then((m) => ({ default: m.default })));
 const Workout = lazy(() => import('./views/Workout').then((m) => ({ default: m.Workout })));
 const Dungeons = lazy(() => import('./views/Dungeons').then((m) => ({ default: m.Dungeons })));
@@ -91,7 +90,6 @@ function AppContent() {
           <Suspense fallback={<PageLoader />}>
             {view === 'dashboard' && <Dashboard onNavigate={setView} />}
             {view === 'tasks' && <Tasks />}
-            {view === 'quests' && <Quests />}
             {view === 'story' && <StoryMode />}
             {view === 'workout' && <Workout />}
             {view === 'dungeons' && <Dungeons />}

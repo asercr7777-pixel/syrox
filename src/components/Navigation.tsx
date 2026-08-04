@@ -1,7 +1,7 @@
 import {
   LayoutDashboard,
   CheckSquare,
-  ScrollText,
+
   BookOpen,
   Dumbbell,
   User,
@@ -28,7 +28,6 @@ import { useAuth } from '../lib/auth';
 export type ViewId =
   | 'dashboard'
   | 'tasks'
-  | 'quests'
   | 'story'
   | 'workout'
   | 'dungeons'
@@ -50,7 +49,6 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'tasks', label: 'Tasks', icon: CheckSquare },
-  { id: 'quests', label: 'Quests', icon: ScrollText },
   { id: 'story', label: 'Story Mode', icon: BookOpen },
   { id: 'workout', label: 'Workout', icon: Dumbbell },
   { id: 'dungeons', label: 'Dungeons', icon: Swords },

@@ -8,10 +8,56 @@ import { DailyRewards } from '../components/ui/DailyRewards';
 import { getAuraById } from '../data/collections';
 import { triggerConfetti } from '../components/ui/Confetti';
 import type { ViewId } from '../components/Navigation';
-import { Flame, Coins, Zap, ChevronRight, Dumbbell, TrendingUp, Target, Check } from 'lucide-react';
+import { Flame, Coins, Zap, ChevronRight, Dumbbell, TrendingUp, Target, Check, BookOpen, Star } from 'lucide-react';
+import { ALL_CHAPTERS } from '../data/story';
 
 interface DashboardProps {
   onNavigate: (v: ViewId) => void;
+}
+
+function StoryModeHero({ onNavigate, storyChapter, storyBossDefeated }: { onNavigate: (v: ViewId) => void; storyChapter: number; storyBossDefeated: Record<string, boolean> }) {
+  const chapter = ALL_CHAPTERS[Math.min(storyChapter, ALL_CHAPTERS.length - 1)];
+  const bossesDefeated = Object.values(storyBossDefeated).filter(Boolean).length;
+  const totalChapters = ALL_CHAPTERS.length;
+
+  return (
+    <div
+      className="card-premium p-5 md:p-6 page-enter relative overflow-hidden cursor-pointer group"
+      onClick={() => onNavigate('story')}
+      style={{ animationDelay: '0.03s' }}
+    >
+      <div
+        className="absolute inset-0 opacity-20 pointer-events-none transition-opacity group-hover:opacity-30"
+        style={{ background: chapter.bgGradient }}
+      />
+      <div className="relative flex items-center gap-4">
+        <div className="text-4xl md:text-5xl flex-shrink-0" style={{ filter: `drop-shadow(0 0 15px rgba(167,139,250,0.4))` }}>
+          {chapter.emoji}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <BookOpen size={14} className="text-ember-400" />
+            <span className="text-xs uppercase tracking-wider text-ember-400 font-bold">Story Mode</span>
+          </div>
+          <h3 className="font-display text-lg md:text-xl font-bold text-ink-100 truncate">
+            Chapter {chapter.number}: {chapter.title}
+          </h3>
+          <p className="text-xs text-ink-300 mt-0.5 line-clamp-1">{chapter.subtitle}</p>
+          <div className="flex items-center gap-3 mt-2 text-xs">
+            <span className="text-ink-400">{bossesDefeated}/{totalChapters} bosses defeated</span>
+            <span className="text-ink-500">·</span>
+            <span className="text-ember-400 font-medium flex items-center gap-1">
+              Continue <ChevronRight size={12} />
+            </span>
+          </div>
+        </div>
+        <div className="hidden md:flex flex-col items-center gap-1">
+          <Star size={20} className="text-gold-400" />
+          <span className="text-xs text-gold-400 font-bold">{chapter.number}/{totalChapters}</span>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function Dashboard({ onNavigate }: DashboardProps) {
@@ -106,6 +152,9 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
       {/* Daily Rewards */}
       <DailyRewards />
+
+      {/* Story Mode Hero */}
+      <StoryModeHero onNavigate={onNavigate} storyChapter={state.storyChapter} storyBossDefeated={state.storyBossDefeated} />
 
       {/* Daily Progress */}
       <div className="card-premium p-5 page-enter" style={{ animationDelay: '0.05s' }}>

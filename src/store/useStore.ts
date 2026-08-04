@@ -4,9 +4,7 @@ import { createDefaultState, levelFromXp, todayStr, uid, nowWeekKey } from './de
 import { DAILY_CHALLENGES, DAILY_LOGIN_REWARDS, SPIN_REWARDS } from '../data/tasks';
 import { RANKS, getRankByXp, getRankIndex } from '../data/ranks';
 import { AURAS, RARITY_META, WEAPONS, TITLES, type Rarity } from '../data/collections';
-import { QUESTS } from '../data/quests';
 import { DUNGEONS, SECRET_DUNGEONS, BOSS_DUNGEON } from '../data/dungeons';
-import { STORY_SCENES } from '../data/storyScenes';
 import { playSound } from '../lib/sound';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
@@ -137,17 +135,7 @@ function doDailyReset() {
     const currentMonth = today.slice(0, 7);
     const lastReset = s.lastDailyResetDate ?? today;
     const monthChanged = lastReset.slice(0, 7) !== currentMonth;
-
-    const newQuestCompleted = { ...s.questCompleted };
-    for (const quest of QUESTS) {
-      if (quest.category === 'daily') {
-        delete newQuestCompleted[quest.id];
-      } else if (quest.category === 'weekly' && s.weeklyMissionWeek !== currentWeek) {
-        delete newQuestCompleted[quest.id];
-      } else if (quest.category === 'monthly' && monthChanged) {
-        delete newQuestCompleted[quest.id];
-      }
-    }
+    void monthChanged;
 
     return {
       ...s,
@@ -174,8 +162,6 @@ function doDailyReset() {
       secretDungeonAvailable: secretAvailable,
       secretDungeonId: secretId,
       secretDungeonExpiresAt: secretExpires,
-      questCompleted: newQuestCompleted,
-      questDateReset: today,
     };
   });
 }
@@ -210,39 +196,7 @@ function addXp(s: AppState, amount: number): AppState {
   return { ...s, xp, level, coins };
 }
 
-export function getQuestProgress(s: AppState, metric: string): number {
-  switch (metric) {
-    case 'tasks_completed': {
-      const today = Object.values(s.coreCompleted).filter(Boolean).length + Object.values(s.customCompleted).filter(Boolean).length;
-      const total = s.history.reduce((a, h) => a + Object.values(h.coreCompleted).filter(Boolean).length + Object.values(h.customCompleted).filter(Boolean).length, 0);
-      return today + total;
-    }
-    case 'workouts_done':
-      return s.workoutsCompletedToday + s.workoutSessions.length;
-    case 'dungeon_cleared':
-      return s.dungeonClearedToday ? 1 : 0;
-    case 'dungeons_cleared_total':
-      return s.dungeonsCleared;
-    case 'streak_days':
-      return s.streak;
-    case 'xp_gained':
-      return s.xp;
-    case 'total_points':
-      return s.totalPoints;
-    case 'perfect_days':
-      return s.history.filter((h) => h.allMainDone).length;
-    case 'focused_sessions':
-      return Object.values(s.customCompleted).filter(Boolean).length + s.history.reduce((a, h) => a + Object.values(h.customCompleted).filter(Boolean).length, 0);
-    case 'meditation_sessions':
-      return (s.coreCompleted.pray ? 1 : 0) + s.history.filter((h) => h.coreCompleted.pray).length;
-    case 'challenging_tasks':
-      return s.workoutsCompletedToday + s.history.filter((h) => h.workoutCompleted).length;
-    case 'learning_sessions':
-      return (s.coreCompleted.read_quran ? 1 : 0) + s.history.filter((h) => h.coreCompleted.read_quran).length;
-    default:
-      return 0;
-  }
-}
+
 
 function addPoints(s: AppState, xp: number, points: number): AppState {
   const dailyRemaining = s.dailyCap - s.dailyXp;
@@ -399,7 +353,6 @@ function toggleCoreTask(id: string) {
       };
     }
   });
-  checkAndAdvanceStoryScene();
 }
 
 function toggleCustomTask(id: string) {
@@ -585,7 +538,6 @@ function clearDungeon(dungeonId: string): DropResult[] {
     return { ...next, inventory: [...next.inventory, ...newItems, ...rewardItems] };
   });
   playSound('rankup');
-  checkAndAdvanceStoryScene();
   return drops;
 }
 
@@ -814,274 +766,66 @@ function purchaseItem(itemId: string, category: string, price: number): boolean 
   return success;
 }
 
-function claimQuest(questId: string) {
+function completeStoryMission(missionId: string, reward: { xp: number; coins: number }) {
   setState((s) => {
-    if (s.questCompleted[questId] === true) return s;
-    const quest = QUESTS.find((q) => q.id === questId);
-    if (!quest) return s;
-    const progress = getQuestProgress(s, quest.metric);
-    if (progress < quest.target) return s;
-    playSound('reward');
-    let next = addPoints(s, quest.xpReward, 0);
-    next = { ...next, coins: next.coins + quest.coinReward, questCompleted: { ...next.questCompleted, [questId]: true } };
-    return next;
-  });
-  checkAndAdvanceStoryScene();
-}
-
-function advanceStory() {
-  setState((s) => {
-    const completedCh = s.storyChapterIndex;
-    if (s.storyCompletedChapters.includes(completedCh)) {
-      return {
-        ...s,
-        storyChapterIndex: s.storyChapterIndex + 1,
-        storyObjectivesCompleted: {},
-      };
-    }
-    const chId = `chapter_${completedCh + 1}`;
-    return {
-      ...s,
-      storyChapterIndex: s.storyChapterIndex + 1,
-      storyObjectivesCompleted: {},
-      storyCompletedChapters: [...s.storyCompletedChapters, completedCh],
-      storyLog: [...s.storyLog, { chapterId: chId, type: 'cutscene' as const, timestamp: Date.now() }],
-    };
-  });
-  playSound('rankup');
-}
-
-function isStoryObjectiveMet(sceneId: string, s: AppState): boolean {
-  const scene = STORY_SCENES.find((sc) => sc.id === sceneId);
-  if (!scene?.objective) return true;
-  if (s.storySceneObjectivesCompleted[sceneId]) return true;
-  // Auto-detect based on objective type
-  const label = scene.objective.label.toLowerCase();
-  if (label.includes('core task')) {
-    return Object.values(s.coreCompleted).some(Boolean);
-  }
-  if (label.includes('quest board') || label.includes('quests page')) {
-    // Visiting quests is implied — mark as met if any quest has been claimed
-    return Object.values(s.questCompleted).some(Boolean);
-  }
-  if (label.includes('achievements')) {
-    return s.achievements.length > 0;
-  }
-  if (label.includes('dungeon')) {
-    return s.dungeonsCleared > 0 || s.dungeonClearedToday;
-  }
-  return false;
-}
-
-function checkAndAdvanceStoryScene() {
-  setState((s) => {
-    const currentScene = STORY_SCENES[Math.min(s.storySceneIndex, STORY_SCENES.length - 1)];
-    if (!currentScene?.objective) return s;
-    if (!isStoryObjectiveMet(currentScene.id, s)) return s;
-    // Mark objective complete
-    if (s.storySceneObjectivesCompleted[currentScene.id]) return s;
-    return {
-      ...s,
-      storySceneObjectivesCompleted: { ...s.storySceneObjectivesCompleted, [currentScene.id]: true },
-    };
-  });
-}
-
-function advanceStoryScene() {
-  setState((s) => {
-    const maxIndex = STORY_SCENES.length - 1;
-    if (s.storySceneIndex >= maxIndex) return s;
-    const currentScene = STORY_SCENES[s.storySceneIndex];
-    // Guard: cannot advance if current scene has an unmet objective
-    if (currentScene?.objective && !isStoryObjectiveMet(currentScene.id, s)) return s;
-    // Guard: cannot advance if reward is unclaimed
-    if (currentScene?.reward && !s.storySceneRewardsClaimed[currentScene.id]) return s;
-    return {
-      ...s,
-      storySceneIndex: s.storySceneIndex + 1,
-    };
-  });
-  playSound('rankup');
-}
-
-function claimStorySceneReward(sceneId: string) {
-  setState((s) => {
-    if (s.storySceneRewardsClaimed[sceneId]) return s;
-    const scene = STORY_SCENES.find((sc) => sc.id === sceneId);
-    if (!scene?.reward) return s;
-    const sceneIndex = STORY_SCENES.findIndex((sc) => sc.id === sceneId);
-    if (sceneIndex < 0 || sceneIndex > s.storySceneIndex) return s;
-    const reward = scene.reward;
-    let next = s;
-    if (reward.type === 'xp') {
-      next = addPoints(s, reward.amount, 0);
-    } else if (reward.type === 'coins') {
-      next = { ...s, coins: s.coins + reward.amount };
-    }
+    if (s.storyCompletedMissions[missionId]) return s;
+    let next = addPoints(s, reward.xp, 0);
+    next = { ...next, coins: next.coins + reward.coins };
     return {
       ...next,
-      storySceneRewardsClaimed: { ...next.storySceneRewardsClaimed, [sceneId]: true },
+      storyCompletedMissions: { ...next.storyCompletedMissions, [missionId]: true },
     };
   });
   playSound('reward');
 }
 
-function toggleStoryObjective(chapterIndex: number, objectiveIndex: number) {
-  const key = `${chapterIndex}-${objectiveIndex}`;
-  setState((s) => {
-    if (chapterIndex > s.storyChapterIndex) return s;
-    return {
-      ...s,
-      storyObjectivesCompleted: {
-        ...s.storyObjectivesCompleted,
-        [key]: !s.storyObjectivesCompleted[key],
-      },
-    };
-  });
-}
-
-function setStoryChoice(chapterIndex: number, choiceId: string) {
-  const key = `chapter_${chapterIndex}`;
-  setState((s) => {
-    if (chapterIndex > s.storyChapterIndex) return s;
-    return {
-      ...s,
-      storyChoices: { ...s.storyChoices, [key]: choiceId },
-      storyLog: [...s.storyLog, { chapterId: key, type: 'dialogue' as const, timestamp: Date.now() }],
-    };
-  });
-}
-
-function completeStorySideQuest(questId: string) {
-  setState((s) => {
-    if (s.storySideQuestsCompleted[questId]) return s;
-    return { ...s, storySideQuestsCompleted: { ...s.storySideQuestsCompleted, [questId]: true } };
-  });
-}
-
-function unlockStorySecretQuest(questId: string) {
-  setState((s) => {
-    if (s.storySecretQuestsUnlocked[questId]) return s;
-    return { ...s, storySecretQuestsUnlocked: { ...s.storySecretQuestsUnlocked, [questId]: true } };
-  });
+function setStoryChoice(chapterId: string, choiceId: string) {
+  setState((s) => ({
+    ...s,
+    storyChoices: { ...s.storyChoices, [chapterId]: choiceId },
+  }));
 }
 
 function defeatStoryBoss(bossId: string) {
   setState((s) => {
     if (s.storyBossDefeated[bossId]) return s;
-    const chId = `chapter_${s.storyChapterIndex + 1}`;
-    return {
-      ...s,
-      storyBossDefeated: { ...s.storyBossDefeated, [bossId]: true },
-      storyLog: [...s.storyLog, { chapterId: chId, type: 'boss' as const, timestamp: Date.now() }],
-    };
+    return { ...s, storyBossDefeated: { ...s.storyBossDefeated, [bossId]: true } };
   });
   playSound('rankup');
+}
+
+function advanceStoryChapter() {
+  setState((s) => ({
+    ...s,
+    storyChapter: s.storyChapter + 1,
+    storyMission: 0,
+  }));
+  playSound('rankup');
+}
+
+function setStoryMission(missionIndex: number) {
+  setState((s) => ({ ...s, storyMission: missionIndex }));
 }
 
 function interactNPC(npcId: string, repChange: number) {
   setState((s) => ({
     ...s,
-    npcReputation: { ...s.npcReputation, [npcId]: (s.npcReputation[npcId] ?? 0) + repChange },
+    storyNpcReputation: { ...s.storyNpcReputation, [npcId]: (s.storyNpcReputation[npcId] ?? 0) + repChange },
   }));
-}
-
-function completeNPCQuest(questId: string) {
-  setState((s) => {
-    if (s.npcQuestsCompleted[questId]) return s;
-    return { ...s, npcQuestsCompleted: { ...s.npcQuestsCompleted, [questId]: true } };
-  });
-}
-
-function advanceNPCDialogue(npcId: string) {
-  setState((s) => ({
-    ...s,
-    npcDialogueIndex: { ...s.npcDialogueIndex, [npcId]: (s.npcDialogueIndex[npcId] ?? 0) + 1 },
-  }));
-}
-
-function addReputation(repId: string, amount: number) {
-  setState((s) => ({
-    ...s,
-    reputation: { ...s.reputation, [repId]: (s.reputation[repId] ?? 0) + amount },
-  }));
-}
-
-function joinFaction(factionId: string) {
-  setState((s) => ({ ...s, joinedFaction: factionId }));
-  playSound('rankup');
-}
-
-function leaveFaction() {
-  setState((s) => ({ ...s, joinedFaction: null }));
-}
-
-function triggerWorldEvent(eventId: string, durationMs: number) {
-  setState((s) => ({ ...s, activeWorldEvent: eventId, worldEventExpiresAt: Date.now() + durationMs }));
-}
-
-function clearWorldEvent() {
-  setState((s) => ({ ...s, activeWorldEvent: null, worldEventExpiresAt: null }));
-}
-
-function clearStoryDungeon(dungeonId: string) {
-  setState((s) => {
-    if (s.storyDungeonsCleared[dungeonId]) return s;
-    return { ...s, storyDungeonsCleared: { ...s.storyDungeonsCleared, [dungeonId]: true } };
-  });
 }
 
 function unlockLore(loreId: string) {
   setState((s) => {
-    if (s.loreUnlocked.includes(loreId)) return s;
-    return { ...s, loreUnlocked: [...s.loreUnlocked, loreId] };
+    if (s.storyLoreUnlocked.includes(loreId)) return s;
+    return { ...s, storyLoreUnlocked: [...s.storyLoreUnlocked, loreId] };
   });
 }
 
 function unlockStoryAchievement(achievementId: string) {
   setState((s) => {
-    if (s.storyAchievementsUnlocked.includes(achievementId)) return s;
-    return { ...s, storyAchievementsUnlocked: [...s.storyAchievementsUnlocked, achievementId] };
+    if (s.storyAchievements.includes(achievementId)) return s;
+    return { ...s, storyAchievements: [...s.storyAchievements, achievementId] };
   });
-  playSound('rankup');
-}
-
-function activateNGPlus() {
-  setState((s) => ({
-    ...s,
-    ngPlusUnlocked: true,
-    ngPlusActive: true,
-    storyChapterIndex: 0,
-    storyObjectivesCompleted: {},
-  }));
-  playSound('rankup');
-}
-
-function defeatNGPlusBoss(bossId: string) {
-  setState((s) => ({
-    ...s,
-    ngPlusHiddenBossesDefeated: { ...s.ngPlusHiddenBossesDefeated, [bossId]: true },
-  }));
-  playSound('rankup');
-}
-
-function climbInfiniteTower(floor: number) {
-  setState((s) => ({ ...s, infiniteTowerFloor: Math.max(s.infiniteTowerFloor, floor) }));
-  playSound('task');
-}
-
-function defeatDailyBoss() {
-  setState((s) => ({ ...s, dailyBossDate: todayStr(), dailyBossDefeated: true }));
-  playSound('rankup');
-}
-
-function dealRaidDamage(damage: number) {
-  setState((s) => ({ ...s, weeklyRaidDamage: s.weeklyRaidDamage + damage }));
-  playSound('task');
-}
-
-function defeatWeeklyRaid() {
-  setState((s) => ({ ...s, weeklyRaidDefeated: true, weeklyRaidWeek: nowWeekKey() }));
   playSound('rankup');
 }
 
@@ -1099,7 +843,6 @@ function unlockAchievements(ids: string[]) {
       ],
     };
   });
-  checkAndAdvanceStoryScene();
 }
 
 function removeAchievements(ids: string[]) {
@@ -1468,44 +1211,14 @@ export interface StoreActions {
   resetAll: () => void;
   // Marketplace
   purchaseItem: (itemId: string, category: string, price: number) => boolean;
-  // Quests
-  claimQuest: (questId: string) => void;
-  // Story
-  advanceStory: () => void;
-  advanceStoryScene: () => void;
-  claimStorySceneReward: (sceneId: string) => void;
-  checkAndAdvanceStoryScene: () => void;
-  toggleStoryObjective: (chapterIndex: number, objectiveIndex: number) => void;
-  setStoryChoice: (chapterIndex: number, choiceId: string) => void;
-  completeStorySideQuest: (questId: string) => void;
-  unlockStorySecretQuest: (questId: string) => void;
+  completeStoryMission: (missionId: string, reward: { xp: number; coins: number }) => void;
+  setStoryChoice: (chapterId: string, choiceId: string) => void;
   defeatStoryBoss: (bossId: string) => void;
-  // Story NPCs
+  advanceStoryChapter: () => void;
+  setStoryMission: (missionIndex: number) => void;
   interactNPC: (npcId: string, repChange: number) => void;
-  completeNPCQuest: (questId: string) => void;
-  advanceNPCDialogue: (npcId: string) => void;
-  // Story Reputation
-  addReputation: (repId: string, amount: number) => void;
-  // Story Factions
-  joinFaction: (factionId: string) => void;
-  leaveFaction: () => void;
-  // Story World Events
-  triggerWorldEvent: (eventId: string, durationMs: number) => void;
-  clearWorldEvent: () => void;
-  // Story Dungeons
-  clearStoryDungeon: (dungeonId: string) => void;
-  // Story Lore
   unlockLore: (loreId: string) => void;
-  // Story Achievements
   unlockStoryAchievement: (achievementId: string) => void;
-  // New Game+
-  activateNGPlus: () => void;
-  defeatNGPlusBoss: (bossId: string) => void;
-  // Endgame
-  climbInfiniteTower: (floor: number) => void;
-  defeatDailyBoss: () => void;
-  dealRaidDamage: (damage: number) => void;
-  defeatWeeklyRaid: () => void;
   // Achievements (scoped — no raw setState)
   unlockAchievements: (ids: string[]) => void;
   removeAchievements: (ids: string[]) => void;
@@ -1653,33 +1366,14 @@ export function useStore(): StoreActions {
     setNote,
     resetAll,
     purchaseItem,
-    claimQuest,
-    advanceStory,
-    advanceStoryScene,
-    claimStorySceneReward,
-    checkAndAdvanceStoryScene,
-    toggleStoryObjective,
+    completeStoryMission,
     setStoryChoice,
-    completeStorySideQuest,
-    unlockStorySecretQuest,
     defeatStoryBoss,
+    advanceStoryChapter,
+    setStoryMission,
     interactNPC,
-    completeNPCQuest,
-    advanceNPCDialogue,
-    addReputation,
-    joinFaction,
-    leaveFaction,
-    triggerWorldEvent,
-    clearWorldEvent,
-    clearStoryDungeon,
     unlockLore,
     unlockStoryAchievement,
-    activateNGPlus,
-    defeatNGPlusBoss,
-    climbInfiniteTower,
-    defeatDailyBoss,
-    dealRaidDamage,
-    defeatWeeklyRaid,
     unlockAchievements,
     removeAchievements,
     foundEasterEgg,

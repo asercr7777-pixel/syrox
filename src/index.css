@@ -498,3 +498,20 @@ body {
 .page-enter, .stagger-in {
   will-change: opacity;
 }
+
+/* ====== Story Mode animations ====== */
+@keyframes floatParticle {
+  0%, 100% { transform: translate(0, 0); opacity: 0.3; }
+  50% { transform: translate(10px, -15px); opacity: 0.6; }
+}
+
+@keyframes emberFloat {
+  0% { transform: translate(0, 0) scale(1); opacity: 0.6; }
+  50% { transform: translate(5px, -20px) scale(1.2); opacity: 0.9; }
+  100% { transform: translate(0, -40px) scale(0.5); opacity: 0; }
+}
+
+@keyframes snowFall {
+  0% { transform: translate(0, 0); opacity: 0.4; }
+  100% { transform: translate(10px, 100px); opacity: 0; }
+}

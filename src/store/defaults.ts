@@ -185,52 +185,14 @@ export function createDefaultState(): AppState {
     easterEggsFound: [],
     createdAt: Date.now(),
 
-    questProgress: {},
-    questCompleted: {},
-    questDateReset: null,
-
-    // Story Mode (Linear)
-    storySceneIndex: 0,
-    storySceneRewardsClaimed: {},
-    storySceneObjectivesCompleted: {},
-
-    // Story Mode (Legacy)
-    storyChapterIndex: 0,
-    storyObjectivesCompleted: {},
+    storyChapter: 0,
+    storyMission: 0,
     storyChoices: {},
-    storySideQuestsCompleted: {},
-    storySecretQuestsUnlocked: {},
-    storyCompletedChapters: [],
+    storyCompletedMissions: {},
     storyBossDefeated: {},
-    storyLog: [],
-
-    npcReputation: {},
-    npcQuestsCompleted: {},
-    npcDialogueIndex: {},
-
-    reputation: { kingdom: 0, guild: 0, guardian: 0, scholar: 0, void: 0 },
-
-    joinedFaction: null,
-
-    activeWorldEvent: null,
-    worldEventExpiresAt: null,
-
-    storyDungeonsCleared: {},
-
-    loreUnlocked: ['lore_fv', 'lore_first_habit'],
-
-    storyAchievementsUnlocked: [],
-
-    ngPlusUnlocked: false,
-    ngPlusActive: false,
-    ngPlusHiddenBossesDefeated: {},
-
-    infiniteTowerFloor: 0,
-    dailyBossDate: null,
-    dailyBossDefeated: false,
-    weeklyRaidDamage: 0,
-    weeklyRaidWeek: null,
-    weeklyRaidDefeated: false,
+    storyNpcReputation: {},
+    storyLoreUnlocked: [],
+    storyAchievements: [],
 
     activeBossId: null,
     bossHpRemaining: {},

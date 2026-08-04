@@ -90,10 +90,10 @@
       "icons": [{ "src": "/icons/shortcut-tasks.png", "sizes": "96x96", "type": "image/png" }]
     },
     {
-      "name": "Quests",
-      "short_name": "Quests",
-      "description": "View and claim your quests",
-      "url": "/?view=quests",
+      "name": "Story Mode",
+      "short_name": "Story",
+      "description": "Continue your journey in The Broken Reality",
+      "url": "/?view=story",
       "icons": [{ "src": "/icons/shortcut-quests.png", "sizes": "96x96", "type": "image/png" }]
     },
     {

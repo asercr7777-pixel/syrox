@@ -21,6 +21,7 @@ const PRECACHE_URLS = [
   '/icons/apple-touch-icon.png',
   '/robots.txt',
   '/sitemap.xml',
+  '/OneSignalSDKWorker.js',
 ];
 
 const CACHE_STRATEGIES = {

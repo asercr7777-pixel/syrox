@@ -22,6 +22,8 @@ const Inventory = lazy(() => import('./views/Inventory').then((m) => ({ default:
 const Achievements = lazy(() => import('./views/Achievements').then((m) => ({ default: m.Achievements })));
 const Leaderboard = lazy(() => import('./views/Leaderboard').then((m) => ({ default: m.Leaderboard })));
 const Settings = lazy(() => import('./views/Settings').then((m) => ({ default: m.Settings })));
+const Notifications = lazy(() => import('./views/Notifications').then((m) => ({ default: m.Notifications })));
+const Reminders = lazy(() => import('./views/Reminders').then((m) => ({ default: m.Reminders })));
 const ItemInspection = lazy(() => import('./views/ItemInspection').then((m) => ({ default: m.ItemInspection })));
 const Auth = lazy(() => import('./views/Auth').then((m) => ({ default: m.Auth })));
 const Shadow = lazy(() => import('./views/Shadow').then((m) => ({ default: m.Shadow })));
@@ -99,7 +101,9 @@ function AppContent() {
             {view === 'achievements' && <Achievements />}
             {view === 'leaderboard' && <Leaderboard />}
             {view === 'shadow' && <Shadow />}
-            {view === 'settings' && <Settings />}
+            {view === 'settings' && <Settings onNavigate={setView} />}
+            {view === 'notifications' && <Notifications onNavigate={setView} />}
+            {view === 'reminders' && <Reminders onNavigate={setView} />}
             {view === 'iteminspection' && (
               <ItemInspection itemId="" category="weapon" onBack={() => setView('inventory')} />
             )}

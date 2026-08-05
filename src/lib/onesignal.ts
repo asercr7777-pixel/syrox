@@ -1,6 +1,7 @@
 // OneSignal Web Push Notifications integration
 // The SDK is loaded and initialized via the OneSignalDeferred pattern in index.html.
-// This module provides typed helpers for subscribing/unsubscribing from push.
+// This module provides typed helpers for subscribing/unsubscribing from push,
+// tagging the user with their Supabase user ID, and managing notification tags.
 
 declare global {
   interface Window {
@@ -18,10 +19,8 @@ export function isOneSignalConfigured(): boolean {
 export async function subscribeToPush(): Promise<boolean> {
   const OneSignal = await waitForOneSignal();
   if (!OneSignal) return false;
-
   const permission = await OneSignal.Notifications.requestPermission();
   if (!permission) return false;
-
   await OneSignal.User.PushSubscription.optIn();
   return true;
 }
@@ -41,6 +40,42 @@ export async function unsubscribeFromPush(): Promise<void> {
 export async function getNotificationPermission(): Promise<NotificationPermission> {
   if (typeof Notification === 'undefined') return 'denied';
   return Notification.permission;
+}
+
+/** Tag the OneSignal user with their Supabase user ID so the backend can target them. */
+export async function setExternalUserId(userId: string): Promise<void> {
+  const OneSignal = await waitForOneSignal();
+  if (!OneSignal) return;
+  try {
+    await OneSignal.User.addExternalId(userId);
+  } catch {
+    // Some SDK versions use a different API
+    try { await OneSignal.setExternalUserId(userId); } catch { /* noop */ }
+  }
+}
+
+/** Remove the external user ID (on sign-out). */
+export async function removeExternalUserId(): Promise<void> {
+  const OneSignal = await waitForOneSignal();
+  if (!OneSignal) return;
+  try {
+    await OneSignal.User.removeExternalId();
+  } catch {
+    try { await OneSignal.removeExternalUserId(); } catch { /* noop */ }
+  }
+}
+
+/** Sync notification category tags so the backend can filter who gets what. */
+export async function syncNotificationTags(tags: Record<string, string>): Promise<void> {
+  const OneSignal = await waitForOneSignal();
+  if (!OneSignal) return;
+  try {
+    for (const [key, value] of Object.entries(tags)) {
+      await OneSignal.User.addTag(key, value);
+    }
+  } catch {
+    try { await OneSignal.sendTags(tags); } catch { /* noop */ }
+  }
 }
 
 function waitForOneSignal(): Promise<any | null> {

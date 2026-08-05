@@ -8,7 +8,7 @@ import { RankBadge } from '../components/ui/RankBadge';
 import {
   Upload, Trash2, Volume2, VolumeX, Bell, Palette, User as UserIcon,
   Image as ImageIcon, Video, Sparkles, LogOut, Sun, Moon, Shield, Eye,
-  BellRing, BellOff, Loader2
+  BellRing, BellOff, Loader2, ChevronRight, AlarmClock,
 } from 'lucide-react';
 import { toast } from '../components/ui/Toast';
 import { playSound } from '../lib/sound';
@@ -24,7 +24,7 @@ type BgType = 'default' | 'image' | 'video' | 'animated';
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/ogg'];
 
-export function Settings() {
+export function Settings({ onNavigate }: { onNavigate?: (v: any) => void }) {
   const {
     state, updateProfile, setCustomBackground, setBackgroundVideo, setBackgroundType,
     setBackgroundBlur, setBackgroundDarken, setBackgroundBrightness, setSelectedBackground,
@@ -417,6 +417,30 @@ export function Settings() {
                 {pushEnabled ? 'Disable' : 'Enable'}
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Links to notification settings + reminders */}
+        {onNavigate && (
+          <div className="space-y-2 mb-4">
+            <button
+              onClick={() => onNavigate('notifications')}
+              className="w-full flex items-center justify-between p-3 rounded-xl bg-ink-950/40 border border-white/5 hover:bg-white/5 transition"
+            >
+              <span className="flex items-center gap-2 text-sm font-medium">
+                <BellRing size={16} className="text-ember-400" /> Notification Settings
+              </span>
+              <ChevronRight size={16} className="text-ink-400" />
+            </button>
+            <button
+              onClick={() => onNavigate('reminders')}
+              className="w-full flex items-center justify-between p-3 rounded-xl bg-ink-950/40 border border-white/5 hover:bg-white/5 transition"
+            >
+              <span className="flex items-center gap-2 text-sm font-medium">
+                <AlarmClock size={16} className="text-ember-400" /> Custom Reminders
+              </span>
+              <ChevronRight size={16} className="text-ink-400" />
+            </button>
           </div>
         )}
 

@@ -15,6 +15,8 @@ import {
   LogOut,
   Sparkles,
   Swords,
+  Bell,
+  AlarmClock,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
@@ -38,6 +40,8 @@ export type ViewId =
   | 'leaderboard'
   | 'shadow'
   | 'settings'
+  | 'notifications'
+  | 'reminders'
   | 'iteminspection';
 
 interface NavItem {
@@ -58,6 +62,8 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'achievements', label: 'Achievements', icon: Trophy },
   { id: 'leaderboard', label: 'Leaderboard', icon: Users },
   { id: 'shadow', label: 'Shadow AI', icon: Sparkles },
+  { id: 'notifications', label: 'Notifications', icon: Bell },
+  { id: 'reminders', label: 'Reminders', icon: AlarmClock },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 

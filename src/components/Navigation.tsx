@@ -154,11 +154,11 @@ export function Navigation({ current, onNavigate }: NavigationProps) {
 
       {/* Mobile top bar */}
       <header className="lg:hidden fixed top-0 left-0 right-0 z-40 glass border-b border-white/5">
-        <div className="flex items-center justify-between px-3 py-1.5">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between px-2 sm:px-3 py-1.5">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
             <RankBadge rank={rank} size="sm" auraColor={aura?.color} />
-            <div>
-              <p className="font-display font-bold text-xs leading-tight">{state.username}</p>
+            <div className="min-w-0">
+              <p className="font-display font-bold text-xs leading-tight truncate">{state.username}</p>
               {title && (
                 <p
                   className="text-[9px] font-semibold uppercase tracking-wider leading-tight truncate"
@@ -171,17 +171,17 @@ export function Navigation({ current, onNavigate }: NavigationProps) {
                   {title.name}
                 </p>
               )}
-              <p className="text-[10px] text-ink-300 leading-tight">{rank.name} · Lvl {state.level}</p>
+              <p className="text-[10px] text-ink-300 leading-tight truncate">{rank.name} · Lvl {state.level}</p>
             </div>
           </div>
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="p-1.5 rounded-lg hover:bg-white/10"
+            className="p-1.5 rounded-lg hover:bg-white/10 flex-shrink-0"
           >
             {mobileOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
-        <div className="px-3 pb-1.5">
+        <div className="px-2 sm:px-3 pb-1.5">
           <XpBar xp={state.xp} compact />
         </div>
       </header>
@@ -190,7 +190,7 @@ export function Navigation({ current, onNavigate }: NavigationProps) {
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50 animate-fade-in">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <div className="absolute left-0 top-0 bottom-0 w-72 glass border-r border-white/5 p-3 overflow-y-auto animate-slide-up">
+          <div className="absolute left-0 top-0 bottom-0 w-64 sm:w-72 max-w-[85vw] glass border-r border-white/5 p-3 overflow-y-auto animate-slide-up">
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon;
               const active = current === item.id;

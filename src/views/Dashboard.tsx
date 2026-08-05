@@ -92,21 +92,21 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   return (
     <div className="space-y-6">
       {/* Welcome / Hero header */}
-      <div className="card-premium p-6 md:p-8 page-enter">
+      <div className="card-premium p-4 sm:p-6 md:p-8 page-enter">
         <div
           className="absolute inset-0 opacity-30 pointer-events-none"
           style={{ background: `radial-gradient(circle at 30% 0%, ${rank.glow}, transparent 60%)` }}
         />
-        <div className="relative flex flex-col md:flex-row md:items-center gap-6">
-          <div className="flex items-center gap-5">
+        <div className="relative flex flex-col md:flex-row md:items-center gap-4 sm:gap-6">
+          <div className="flex items-center gap-3 sm:gap-5">
             <RankBadge rank={rank} size="xl" auraColor={aura?.color} />
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <h1 className="font-display text-2xl md:text-4xl font-bold" style={{ color: state.nameColor, textShadow: `0 0 20px ${rank.glow}40` }}>
+                <h1 className="font-display text-xl sm:text-2xl md:text-4xl font-bold truncate" style={{ color: state.nameColor, textShadow: `0 0 20px ${rank.glow}40` }}>
                   {state.username}
                 </h1>
                 {state.equipped.title && (
-                  <span className="chip bg-gold-500/15 text-gold-400 border border-gold-500/30">
+                  <span className="chip bg-gold-500/15 text-gold-400 border border-gold-500/30 flex-shrink-0">
                     {state.equipped.title.replace(/_/g, ' ')}
                   </span>
                 )}
@@ -114,7 +114,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               <p className="text-ink-300 text-sm">
                 {rank.emoji} {rank.name} · Level {state.level}
               </p>
-              <p className="text-xs text-ink-400 mt-1 italic">{rank.description}</p>
+              <p className="text-xs text-ink-400 mt-1 italic line-clamp-1">{rank.description}</p>
             </div>
           </div>
           <div className="flex-1 md:max-w-md md:ml-auto">
@@ -129,22 +129,22 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       </div>
 
       {/* Coins & Streak compact cards */}
-      <div className="grid grid-cols-2 gap-3 page-enter">
-        <div className="card-premium p-3 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gold-500/15 flex items-center justify-center flex-shrink-0">
-            <Coins size={20} className="text-gold-400" />
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 page-enter">
+        <div className="card-premium p-2.5 sm:p-3 flex items-center gap-2 sm:gap-3">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gold-500/15 flex items-center justify-center flex-shrink-0">
+            <Coins size={18} className="text-gold-400" />
           </div>
           <div className="min-w-0">
-            <p className="text-lg font-bold tabular-nums text-gold-400">{state.coins.toLocaleString()}</p>
+            <p className="text-base sm:text-lg font-bold tabular-nums text-gold-400 truncate">{state.coins.toLocaleString()}</p>
             <p className="text-xs text-ink-300">Coins</p>
           </div>
         </div>
-        <div className="card-premium p-3 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-ember-500/15 flex items-center justify-center flex-shrink-0">
-            <Flame size={20} className="text-ember-400" />
+        <div className="card-premium p-2.5 sm:p-3 flex items-center gap-2 sm:gap-3">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-ember-500/15 flex items-center justify-center flex-shrink-0">
+            <Flame size={18} className="text-ember-400" />
           </div>
           <div className="min-w-0">
-            <p className="text-lg font-bold tabular-nums text-ember-400">{state.streak} <span className="text-sm text-ink-400">days</span></p>
+            <p className="text-base sm:text-lg font-bold tabular-nums text-ember-400 truncate">{state.streak} <span className="text-sm text-ink-400">days</span></p>
             <p className="text-xs text-ink-300">Daily Streak</p>
           </div>
         </div>
@@ -242,7 +242,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       </div>
 
       {/* Stats: Level, Rank, XP */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         <StatCard icon={Zap} label="Level" value={`${state.level}`} sub="Current" color="ember" index={0} />
         <StatCard icon={TrendingUp} label="Rank" value={rank.name} sub={rank.emoji} color="shadow" index={1} />
         <StatCard icon={Zap} label="XP" value={state.xp.toLocaleString()} sub={`/${nextRank ? nextRank.xpRequired.toLocaleString() : 'MAX'}`} color="frost" index={2} />
@@ -314,8 +314,8 @@ function TaskCard({ emoji, label, points, done, onClick, index }: { emoji: strin
 
 function WorkoutStat({ label, value, unit, color }: { label: string; value: string; unit: string; color: string }) {
   return (
-    <div className="p-3 rounded-xl bg-ink-950/40 border border-white/5 hover:border-white/10 transition-colors">
-      <p className="text-2xl font-bold tabular-nums" style={{ color }}>
+    <div className="p-2.5 sm:p-3 rounded-xl bg-ink-950/40 border border-white/5 hover:border-white/10 transition-colors">
+      <p className="text-xl sm:text-2xl font-bold tabular-nums" style={{ color }}>
         {value}<span className="text-sm text-ink-400">{unit}</span>
       </p>
       <p className="text-xs text-ink-300">{label}</p>
@@ -331,11 +331,11 @@ function StatCard({ icon: Icon, label, value, sub, color, index }: { icon: typeo
     shadow: 'text-shadow-400 bg-shadow-500/10',
   };
   return (
-    <div className="card-premium p-4 stagger-in" style={{ animationDelay: `${index * 0.05}s` }}>
-      <div className={`w-9 h-9 rounded-lg flex items-center justify-center mb-2 ${colors[color]}`}>
-        <Icon size={18} />
+    <div className="card-premium p-3 sm:p-4 stagger-in" style={{ animationDelay: `${index * 0.05}s` }}>
+      <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center mb-2 ${colors[color]}`}>
+        <Icon size={16} />
       </div>
-      <p className="text-xl font-bold tabular-nums truncate">{value}</p>
+      <p className="text-lg sm:text-xl font-bold tabular-nums truncate">{value}</p>
       <p className="text-xs text-ink-300">{label}</p>
       <p className="text-xs text-ink-400 mt-0.5">{sub}</p>
     </div>

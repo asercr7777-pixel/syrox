@@ -37,6 +37,14 @@ export async function fetchReminders(userId: string): Promise<Reminder[]> {
   return data as Reminder[];
 }
 
+function getTimezone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  } catch {
+    return 'UTC';
+  }
+}
+
 export async function createReminder(userId: string, input: ReminderInput): Promise<{ error: string | null; data: Reminder | null }> {
   if (!isSupabaseConfigured()) return { error: null, data: null };
   const { data, error } = await supabase
@@ -50,6 +58,7 @@ export async function createReminder(userId: string, input: ReminderInput): Prom
       repeat_type: input.repeat_type,
       repeat_days: input.repeat_days ?? null,
       is_enabled: input.is_enabled ?? true,
+      timezone: getTimezone(),
     })
     .select('*')
     .single();

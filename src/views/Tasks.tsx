@@ -141,13 +141,13 @@ export function Tasks() {
 
       {/* Main tasks */}
       <div className="card p-5">
-        <div className="flex items-center justify-between mb-1">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-1 gap-2">
           <div>
             <h2 className="font-display text-lg font-bold">Main Tasks</h2>
-            <p className="text-xs text-ink-300 mb-4">These drive your main progression. Complete them all for a perfect day. Fully editable — add, rename, reorder, enable/disable, or delete.</p>
+            <p className="text-xs text-ink-300 mb-4 sm:mb-4">These drive your main progression. Complete them all for a perfect day.</p>
           </div>
-          <button onClick={openMainAdd} className="btn-primary">
-            <Plus size={18} /> Add Main Task
+          <button onClick={openMainAdd} className="btn-primary w-full sm:w-auto flex-shrink-0">
+            <Plus size={16} /> Add Main Task
           </button>
         </div>
         <div className="space-y-2">
@@ -157,7 +157,7 @@ export function Tasks() {
             return (
               <div
                 key={task.id}
-                className={`w-full flex items-center gap-3 p-3.5 rounded-xl border transition-all ${
+                className={`w-full flex items-center gap-2 sm:gap-3 p-3 sm:p-3.5 rounded-xl border transition-all ${
                   done
                     ? 'bg-emerald2-500/10 border-emerald2-500/40'
                     : task.enabled
@@ -166,21 +166,21 @@ export function Tasks() {
                 }`}
               >
                 {/* Reorder controls */}
-                <div className="flex flex-col gap-0.5">
+                <div className="flex flex-col gap-0.5 flex-shrink-0">
                   <button
                     onClick={() => reorderMainTask(task.id, 'up')}
                     disabled={idx === 0}
                     className="p-0.5 rounded hover:bg-white/10 disabled:opacity-20 disabled:cursor-not-allowed"
                   >
-                    <ChevronUp size={14} className="text-ink-300" />
+                    <ChevronUp size={12} className="text-ink-300" />
                   </button>
-                  <GripVertical size={14} className="text-ink-500 mx-auto" />
+                  <GripVertical size={12} className="text-ink-500 mx-auto" />
                   <button
                     onClick={() => reorderMainTask(task.id, 'down')}
                     disabled={idx === sortedMainTasks.length - 1}
                     className="p-0.5 rounded hover:bg-white/10 disabled:opacity-20 disabled:cursor-not-allowed"
                   >
-                    <ChevronDown size={14} className="text-ink-300" />
+                    <ChevronDown size={12} className="text-ink-300" />
                   </button>
                 </div>
 
@@ -188,27 +188,27 @@ export function Tasks() {
                 <button
                   onClick={() => task.enabled && toggleCoreTask(task.id)}
                   disabled={!task.enabled}
-                  className="flex items-center gap-3 flex-1 text-left disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 text-left disabled:cursor-not-allowed"
                 >
-                  <span className={`text-2xl transition-transform ${done ? 'scale-110' : 'opacity-70'}`}>{task.emoji}</span>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className={`font-medium ${done ? 'text-emerald2-400 line-through' : ''} ${!task.enabled ? 'text-ink-400' : ''}`}>
+                  <span className={`text-xl sm:text-2xl flex-shrink-0 transition-transform ${done ? 'scale-110' : 'opacity-70'}`}>{task.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className={`font-medium text-sm truncate ${done ? 'text-emerald2-400 line-through' : ''} ${!task.enabled ? 'text-ink-400' : ''}`}>
                         {task.label}
                       </p>
                       {cat && (
                         <span
-                          className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+                          className="text-[10px] px-1.5 py-0.5 rounded-full font-medium flex-shrink-0"
                           style={{ backgroundColor: `${cat.color}20`, color: cat.color }}
                         >
                           {cat.label}
                         </span>
                       )}
                       {!task.enabled && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-ink-800 text-ink-400 font-medium">Disabled</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-ink-800 text-ink-400 font-medium flex-shrink-0">Disabled</span>
                       )}
                     </div>
-                    <p className="text-xs text-ink-400">
+                    <p className="text-xs text-ink-400 truncate">
                       +{task.points} XP · Main
                       {task.description ? ` · ${task.description}` : ''}
                     </p>
@@ -219,26 +219,26 @@ export function Tasks() {
                 <button
                   onClick={() => task.enabled && toggleCoreTask(task.id)}
                   disabled={!task.enabled}
-                  className={`w-6 h-6 rounded-md border-2 flex items-center justify-center ${done ? 'bg-emerald2-500 border-emerald2-500' : 'border-ink-500'} ${!task.enabled ? 'opacity-30' : ''}`}
+                  className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${done ? 'bg-emerald2-500 border-emerald2-500' : 'border-ink-500'} ${!task.enabled ? 'opacity-30' : ''}`}
                 >
                   {done && <Check size={14} className="text-white" />}
                 </button>
 
                 {/* Edit / Enable-Disable / Delete */}
-                <div className="flex items-center gap-1 ml-1">
-                  <button onClick={() => openMainEdit(task)} className="p-2 rounded-lg hover:bg-white/10" title="Edit">
+                <div className="flex items-center gap-0.5 flex-shrink-0">
+                  <button onClick={() => openMainEdit(task)} className="p-1.5 rounded-lg hover:bg-white/10" title="Edit">
                     <Pencil size={14} className="text-ink-300" />
                   </button>
                   <button
                     onClick={() => updateMainTask(task.id, { enabled: !task.enabled })}
-                    className="p-2 rounded-lg hover:bg-white/10"
+                    className="p-1.5 rounded-lg hover:bg-white/10"
                     title={task.enabled ? 'Disable' : 'Enable'}
                   >
                     <Power size={14} className={task.enabled ? 'text-emerald2-400' : 'text-ink-400'} />
                   </button>
                   <button
                     onClick={() => setMainDeleteId(task.id)}
-                    className="p-2 rounded-lg hover:bg-danger-500/20 text-danger-400"
+                    className="p-1.5 rounded-lg hover:bg-danger-500/20 text-danger-400"
                     title="Delete"
                   >
                     <Trash2 size={14} />
@@ -260,15 +260,15 @@ export function Tasks() {
 
       {/* Custom tasks */}
       <div className="card p-5">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
           <div>
             <h2 className="font-display text-lg font-bold">Extra Tasks</h2>
             <p className="text-xs text-ink-300">Add unlimited extra tasks for bonus points.</p>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="chip bg-white/5 text-ink-300">{state.customTasks.length} tasks</span>
-            <button onClick={openCustomAdd} className="btn-primary">
-              <Plus size={18} /> Add Task
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="chip bg-white/5 text-ink-300 flex-shrink-0">{state.customTasks.length} tasks</span>
+            <button onClick={openCustomAdd} className="btn-primary flex-shrink-0">
+              <Plus size={16} /> Add Task
             </button>
           </div>
         </div>
@@ -286,29 +286,29 @@ export function Tasks() {
               return (
                 <div
                   key={task.id}
-                  className={`flex items-center gap-3 p-3.5 rounded-xl border transition-all ${
+                  className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-3.5 rounded-xl border transition-all ${
                     done
                       ? 'bg-emerald2-500/10 border-emerald2-500/40'
                       : 'bg-ink-950/40 border-white/5'
                   }`}
                 >
-                  <button onClick={() => toggleCustomTask(task.id)} className="flex items-center gap-3 flex-1 text-left">
-                    <span className={`text-2xl transition-transform ${done ? 'scale-110' : 'opacity-70'}`}>{task.emoji}</span>
-                    <div>
-                      <p className={`font-medium ${done ? 'text-emerald2-400 line-through' : ''}`}>{task.label}</p>
+                  <button onClick={() => toggleCustomTask(task.id)} className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 text-left">
+                    <span className={`text-xl sm:text-2xl flex-shrink-0 transition-transform ${done ? 'scale-110' : 'opacity-70'}`}>{task.emoji}</span>
+                    <div className="min-w-0">
+                      <p className={`font-medium text-sm truncate ${done ? 'text-emerald2-400 line-through' : ''}`}>{task.label}</p>
                       <p className="text-xs text-ink-400">+{task.points} XP · Bonus</p>
                     </div>
                   </button>
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => openCustomEdit(task.id)} className="p-2 rounded-lg hover:bg-white/10">
+                  <div className="flex items-center gap-0.5 flex-shrink-0">
+                    <button onClick={() => openCustomEdit(task.id)} className="p-1.5 rounded-lg hover:bg-white/10">
                       <Pencil size={14} className="text-ink-300" />
                     </button>
-                    <button onClick={() => setCustomDeleteId(task.id)} className="p-2 rounded-lg hover:bg-danger-500/20 text-danger-400">
+                    <button onClick={() => setCustomDeleteId(task.id)} className="p-1.5 rounded-lg hover:bg-danger-500/20 text-danger-400">
                       <Trash2 size={14} />
                     </button>
                     <button
                       onClick={() => toggleCustomTask(task.id)}
-                      className={`w-6 h-6 rounded-md border-2 flex items-center justify-center ml-1 ${done ? 'bg-emerald2-500 border-emerald2-500' : 'border-ink-500'}`}
+                      className={`w-6 h-6 rounded-md border-2 flex items-center justify-center ml-0.5 ${done ? 'bg-emerald2-500 border-emerald2-500' : 'border-ink-500'}`}
                     >
                       {done && <Check size={14} className="text-white" />}
                     </button>

@@ -146,7 +146,7 @@ export function Inventory() {
           <p className="text-xs text-ink-400 mt-1">Clear dungeons and spin the wheel to collect items.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
           {filtered.map((item) => {
             const meta = RARITY_META[item.rarity as Rarity];
             const isEquipped = equippedId === item.id;

@@ -44,6 +44,14 @@ export async function fetchNotificationSettings(userId: string): Promise<Notific
   return { ...DEFAULT_NOTIFICATION_SETTINGS, ...settings };
 }
 
+function getTimezone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  } catch {
+    return 'UTC';
+  }
+}
+
 export async function upsertNotificationSettings(
   userId: string,
   settings: Partial<NotificationSettings>,
@@ -51,6 +59,6 @@ export async function upsertNotificationSettings(
   if (!isSupabaseConfigured()) return { error: null };
   const { error } = await supabase
     .from('notification_settings')
-    .upsert({ user_id: userId, ...settings, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+    .upsert({ user_id: userId, ...settings, timezone: getTimezone(), updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
   return { error: error ? error.message : null };
 }

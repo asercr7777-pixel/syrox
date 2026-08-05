@@ -284,14 +284,14 @@ export function Reminders({ onNavigate }: RemindersProps) {
           {(form.repeat_type === 'weekly' || form.repeat_type === 'custom') && (
             <div>
               <label className="label">Days of week</label>
-              <div className="flex gap-1.5 mt-1">
+              <div className="flex gap-1 sm:gap-1.5 mt-1">
                 {DAY_LABELS.map((label, day) => {
                   const selected = form.repeat_days?.includes(day) ?? false;
                   return (
                     <button
                       key={day}
                       onClick={() => toggleDay(day)}
-                      className={`flex-1 py-2 rounded-lg text-xs font-medium transition ${
+                      className={`flex-1 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-xs font-medium transition ${
                         selected
                           ? 'bg-ember-500/30 border border-ember-500/50 text-ember-400'
                           : 'bg-ink-950/60 border border-white/5 text-ink-400 hover:bg-white/5'
@@ -327,40 +327,40 @@ export function Reminders({ onNavigate }: RemindersProps) {
           </div>
         )}
         {reminders.map((r) => (
-          <div key={r.id} className={`card p-4 transition ${!r.is_enabled ? 'opacity-50' : ''}`}>
-            <div className="flex items-start gap-3">
+          <div key={r.id} className={`card p-3 sm:p-4 transition ${!r.is_enabled ? 'opacity-50' : ''}`}>
+            <div className="flex items-start gap-2 sm:gap-3">
               <div className="flex-1 min-w-0">
                 <h3 className="font-display font-bold text-sm truncate">{r.reminder_title}</h3>
                 {r.reminder_description && (
                   <p className="text-xs text-ink-400 mt-0.5 line-clamp-2">{r.reminder_description}</p>
                 )}
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="flex flex-wrap gap-1.5 mt-2">
                   <span className="chip bg-ink-800 text-ink-200 text-xs flex items-center gap-1">
-                    <Clock size={10} /> {r.reminder_time}
+                    <Clock size={10} /> {r.reminder_time.slice(0, 5)}
                   </span>
                   <span className="chip bg-ink-800 text-ink-200 text-xs flex items-center gap-1">
                     <Repeat size={10} /> {formatRepeat(r)}
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                 <button
                   onClick={() => handleToggle(r)}
-                  className={`w-11 h-6 rounded-full relative transition flex-shrink-0 ${
+                  className={`w-10 h-5 sm:w-11 sm:h-6 rounded-full relative transition flex-shrink-0 ${
                     r.is_enabled ? 'bg-ember-500' : 'bg-ink-700'
                   }`}
                 >
-                  <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition ${r.is_enabled ? 'left-5' : 'left-0.5'}`} />
+                  <span className={`absolute top-0.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white transition ${r.is_enabled ? 'left-4 sm:left-5' : 'left-0.5'}`} />
                 </button>
                 <button
                   onClick={() => openEdit(r)}
-                  className="p-2 rounded-lg bg-ink-900/60 hover:bg-white/10 text-ink-300 transition"
+                  className="p-1.5 sm:p-2 rounded-lg bg-ink-900/60 hover:bg-white/10 text-ink-300 transition"
                 >
                   <Pencil size={14} />
                 </button>
                 <button
                   onClick={() => handleDelete(r.id)}
-                  className="p-2 rounded-lg bg-ink-900/60 hover:bg-danger-500/20 text-ink-300 hover:text-danger-400 transition"
+                  className="p-1.5 sm:p-2 rounded-lg bg-ink-900/60 hover:bg-danger-500/20 text-ink-300 hover:text-danger-400 transition"
                 >
                   <Trash2 size={14} />
                 </button>

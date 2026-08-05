@@ -24,6 +24,11 @@ body {
   overflow-x: hidden;
 }
 
+#root {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -497,6 +502,68 @@ body {
 /* will-change hints for animated elements */
 .page-enter, .stagger-in {
   will-change: opacity;
+}
+
+/* ====== Mobile Responsive Fixes (360px-390px) ====== */
+
+@media (max-width: 640px) {
+  /* Tighter card padding on mobile */
+  .card {
+    padding: 1rem;
+  }
+  .card-premium {
+    padding: 1rem;
+  }
+
+  /* Smaller section titles on mobile */
+  .section-title {
+    font-size: 1.125rem;
+  }
+
+  /* Smaller chips on mobile */
+  .chip {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.625rem;
+  }
+
+  /* Smaller buttons on mobile */
+  .btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+  .btn-primary {
+    padding: 0.5rem 0.75rem;
+  }
+
+  /* Inputs: full width, smaller padding */
+  .input {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  /* Prevent any horizontal overflow */
+  .card, .card-premium {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+}
+
+@media (max-width: 390px) {
+  /* Even tighter at 360-390px */
+  .card, .card-premium {
+    padding: 0.875rem;
+  }
+  .section-title {
+    font-size: 1rem;
+  }
+  .chip {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.5625rem;
+  }
+  .btn {
+    padding: 0.4rem 0.625rem;
+    font-size: 0.75rem;
+  }
 }
 
 /* ====== Story Mode animations ====== */

@@ -143,14 +143,14 @@ export function Workout() {
       </div>
 
       {/* Professional Timer */}
-      <div className="card p-6 md:p-8 relative overflow-hidden">
+      <div className="card p-4 sm:p-6 md:p-8 relative overflow-hidden">
         <div
           className="absolute inset-0 opacity-20 pointer-events-none"
           style={{ background: `radial-gradient(circle at 50% 0%, ${WORKOUT_MODES.find((m) => m.id === activeMode)?.color}, transparent 60%)` }}
         />
         <div className="relative">
           {/* Mode selector */}
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-6">
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-1.5 sm:gap-2 mb-4 sm:mb-6">
             {WORKOUT_MODES.map((m) => {
               const active = activeMode === m.id;
               return (
@@ -192,7 +192,7 @@ export function Workout() {
           </div>
 
           {/* Controls */}
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
             {!timerRunning && elapsedSeconds === 0 && (
               <button onClick={handleStart} className="btn-primary px-6 py-3">
                 <Play size={20} /> Start
@@ -224,7 +224,7 @@ export function Workout() {
       {showExercises && (
         <>
           {/* Day header */}
-          <div className="card p-5">
+          <div className="card p-4 sm:p-5">
             <div className="flex items-center justify-between mb-2">
               <div>
                 <h2 className="font-display text-xl font-bold">{day?.name}</h2>
@@ -249,13 +249,13 @@ export function Workout() {
             const secExercises = exercises.filter((e) => e.section === sec.type);
             if (secExercises.length === 0) return null;
             return (
-              <div key={sec.type} className="card p-5">
+              <div key={sec.type} className="card p-4 sm:p-5">
                 <h3 className="font-display text-sm font-bold uppercase tracking-wider text-ember-400 mb-3">{sec.name}</h3>
                 <div className="space-y-2">
                   {secExercises.map((ex) => (
                     <div
                       key={ex.id}
-                      className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                      className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl border transition-all ${
                         ex.completed
                           ? 'bg-emerald2-500/10 border-emerald2-500/40'
                           : 'bg-ink-950/40 border-white/5'
@@ -273,11 +273,11 @@ export function Workout() {
                         <p className={`font-medium ${ex.completed ? 'text-emerald2-400 line-through' : ''}`}>{ex.name}</p>
                         <p className="text-xs text-ink-400">{ex.sets} sets × {ex.reps} reps</p>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => openEdit(ex)} className="p-2 rounded-lg hover:bg-white/10">
+                      <div className="flex items-center gap-0.5 sm:gap-1">
+                        <button onClick={() => openEdit(ex)} className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10">
                           <Pencil size={14} />
                         </button>
-                        <button onClick={() => setDeleteId(ex.id)} className="p-2 rounded-lg hover:bg-danger-500/20 text-danger-400">
+                        <button onClick={() => setDeleteId(ex.id)} className="p-1.5 sm:p-2 rounded-lg hover:bg-danger-500/20 text-danger-400">
                           <Trash2 size={14} />
                         </button>
                       </div>
@@ -301,7 +301,7 @@ export function Workout() {
       )}
 
       {/* Workout History */}
-      <div className="card p-5">
+      <div className="card p-4 sm:p-5">
         <h2 className="section-title mb-4">Workout History</h2>
         {recentSessions.length === 0 ? (
           <p className="text-sm text-ink-400 text-center py-4">No workouts logged yet. Start training!</p>
@@ -310,25 +310,25 @@ export function Workout() {
             {recentSessions.map((s) => {
               const mode = WORKOUT_MODES.find((m) => m.id === s.type);
               return (
-                <div key={s.id} className="flex items-center gap-3 p-3 rounded-xl bg-ink-950/40 border border-white/5">
-                  <span className="text-2xl">{mode?.emoji ?? '💪'}</span>
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">{mode?.label ?? s.type}</p>
-                    <p className="text-xs text-ink-400">{new Date(s.completedAt).toLocaleString()}</p>
+                <div key={s.id} className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl bg-ink-950/40 border border-white/5">
+                  <span className="text-xl sm:text-2xl flex-shrink-0">{mode?.emoji ?? '💪'}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{mode?.label ?? s.type}</p>
+                    <p className="text-xs text-ink-400 truncate">{new Date(s.completedAt).toLocaleString()}</p>
                   </div>
-                  <span className="font-mono font-bold text-ember-400">{formatTime(s.durationSeconds)}</span>
+                  <span className="font-mono font-bold text-ember-400 text-sm sm:text-base flex-shrink-0">{formatTime(s.durationSeconds)}</span>
                 </div>
               );
             })}
           </div>
         )}
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          <div className="p-3 rounded-xl bg-ink-950/40 border border-white/5">
-            <p className="text-2xl font-bold text-ember-400">{state.workoutSessions.length}</p>
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3">
+          <div className="p-2.5 sm:p-3 rounded-xl bg-ink-950/40 border border-white/5">
+            <p className="text-xl sm:text-2xl font-bold text-ember-400">{state.workoutSessions.length}</p>
             <p className="text-xs text-ink-300">Total Sessions</p>
           </div>
-          <div className="p-3 rounded-xl bg-ink-950/40 border border-white/5">
-            <p className="text-2xl font-bold text-gold-400">{Math.floor(state.totalWorkoutSeconds / 60)}m</p>
+          <div className="p-2.5 sm:p-3 rounded-xl bg-ink-950/40 border border-white/5">
+            <p className="text-xl sm:text-2xl font-bold text-gold-400">{Math.floor(state.totalWorkoutSeconds / 60)}m</p>
             <p className="text-xs text-ink-300">Total Time</p>
           </div>
         </div>
@@ -341,7 +341,7 @@ export function Workout() {
             <label className="label">Exercise Name</label>
             <input className="input mt-1" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Bench Press" autoFocus />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
             <div>
               <label className="label">Sets</label>
               <input type="number" className="input mt-1" value={sets} onChange={(e) => setSets(Math.max(1, Number(e.target.value)))} min={1} />
@@ -354,7 +354,7 @@ export function Workout() {
           {!editId && (
             <div>
               <label className="label">Section</label>
-              <div className="grid grid-cols-3 gap-2 mt-1">
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mt-1">
                 {(['stretching', 'main', 'plyometric'] as const).map((s) => (
                   <button
                     key={s}

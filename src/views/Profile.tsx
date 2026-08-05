@@ -37,14 +37,14 @@ export function Profile() {
   return (
     <div className="space-y-6">
       {/* Profile Hero Card */}
-      <div className="card-premium p-6 md:p-8 relative overflow-hidden page-enter">
+      <div className="card-premium p-4 sm:p-6 md:p-8 relative overflow-hidden page-enter">
         <div
           className="absolute inset-0 opacity-40 pointer-events-none"
           style={{ background: `radial-gradient(circle at 30% 0%, ${rank.glow}, transparent 60%)` }}
         />
         {/* Banner */}
         <div
-          className="h-28 md:h-32 rounded-xl mb-4 relative overflow-hidden"
+          className="h-24 sm:h-28 md:h-32 rounded-xl mb-4 relative overflow-hidden"
           style={{ background: `linear-gradient(135deg, ${state.bannerColor}, ${state.bannerColor}80)` }}
         >
           <div className="absolute inset-0 bg-grid opacity-30" />
@@ -53,9 +53,9 @@ export function Profile() {
             style={{ background: `radial-gradient(circle at 50% 100%, ${aura?.color ?? rank.glow}40, transparent 70%)` }}
           />
         </div>
-        <div className="relative flex flex-col md:flex-row md:items-end gap-4 -mt-16 md:-mt-20">
+        <div className="relative flex flex-col md:flex-row md:items-end gap-3 sm:gap-4 -mt-12 sm:-mt-16 md:-mt-20">
           {/* Avatar with aura ring */}
-          <div className="relative flex-shrink-0">
+          <div className="relative flex-shrink-0 self-start">
             {aura && (
               <div
                 className="absolute -inset-3 rounded-full pointer-events-none"
@@ -66,17 +66,17 @@ export function Profile() {
               />
             )}
             <div
-              className="w-24 h-24 md:w-28 md:h-28 rounded-2xl flex items-center justify-center text-5xl md:text-6xl bg-ink-900 border-4 relative"
+              className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl flex items-center justify-center text-4xl sm:text-5xl md:text-6xl bg-ink-900 border-4 relative"
               style={{ borderColor: frame?.color ?? rank.color, boxShadow: `0 0 40px ${aura?.color ?? rank.glow}` }}
             >
               {state.avatar}
             </div>
           </div>
-          <div className="flex-1 pb-2">
-            <h1 className="font-display text-2xl md:text-3xl font-bold" style={{ color: state.nameColor, textShadow: `0 0 20px ${rank.glow}40` }}>
+          <div className="flex-1 min-w-0 pb-2">
+            <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-bold truncate" style={{ color: state.nameColor, textShadow: `0 0 20px ${rank.glow}40` }}>
               {state.username}
             </h1>
-            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+            <div className="flex items-center gap-1.5 sm:gap-2 mt-1.5 flex-wrap">
               <span
                 className="chip"
                 style={{ background: `${rank.color}20`, color: rank.color, border: `1px solid ${rank.color}40` }}
@@ -99,7 +99,7 @@ export function Profile() {
                 </span>
               )}
             </div>
-            <p className="text-xs text-ink-400 mt-1.5 italic">{rank.description}</p>
+            <p className="text-xs text-ink-400 mt-1.5 italic line-clamp-2">{rank.description}</p>
           </div>
         </div>
         <div className="mt-4">
@@ -163,7 +163,7 @@ export function Profile() {
       </div>
 
       {/* Quick Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
         <StatBox icon={Zap} label="Total XP" value={state.xp.toLocaleString()} color="#ff7a18" index={0} />
         <StatBox icon={Coins} label="Coins" value={state.coins.toLocaleString()} color="#fbbf24" index={1} />
         <StatBox icon={Flame} label="Highest Streak" value={`${state.bestStreak} days`} color="#f43f5e" index={2} />
@@ -220,11 +220,11 @@ export function Profile() {
 
 function StatBox({ icon: Icon, label, value, color, index }: { icon: typeof Flame; label: string; value: string; color: string; index: number }) {
   return (
-    <div className="card-premium p-4 stagger-in" style={{ animationDelay: `${index * 0.05}s` }}>
-      <div className="w-9 h-9 rounded-lg flex items-center justify-center mb-2" style={{ background: `${color}20`, color }}>
-        <Icon size={18} />
+    <div className="card-premium p-3 sm:p-4 stagger-in" style={{ animationDelay: `${index * 0.05}s` }}>
+      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center mb-2" style={{ background: `${color}20`, color }}>
+        <Icon size={16} />
       </div>
-      <p className="text-xl font-bold tabular-nums">{value}</p>
+      <p className="text-lg sm:text-xl font-bold tabular-nums truncate">{value}</p>
       <p className="text-xs text-ink-300">{label}</p>
     </div>
   );

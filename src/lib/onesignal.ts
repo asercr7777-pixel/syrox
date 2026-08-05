@@ -1,55 +1,24 @@
 // OneSignal Web Push Notifications integration
-// The SDK script is loaded in index.html; this module provides typed helpers.
+// The SDK is loaded and initialized via the OneSignalDeferred pattern in index.html.
+// This module provides typed helpers for subscribing/unsubscribing from push.
 
 declare global {
   interface Window {
     OneSignal?: any;
+    OneSignalDeferred?: ((OneSignal: any) => Promise<void>)[];
   }
 }
 
-const ONESIGNAL_APP_ID = import.meta.env.VITE_ONESIGNAL_APP_ID as string | undefined;
-
-let initialized = false;
+const ONESIGNAL_APP_ID = 'da4d587d-2e86-4056-b7fb-f65d37c2d819';
 
 export function isOneSignalConfigured(): boolean {
   return Boolean(ONESIGNAL_APP_ID);
-}
-
-export async function initOneSignal(): Promise<void> {
-  if (initialized || !isOneSignalConfigured()) return;
-
-  // Wait for the SDK script to load
-  const OneSignal = await waitForOneSignal();
-  if (!OneSignal) {
-    console.warn('[OneSignal] SDK not found on window');
-    return;
-  }
-
-  await OneSignal.init({
-    appId: ONESIGNAL_APP_ID!,
-    serviceWorkerPath: '/OneSignalSDKWorker.js',
-    serviceWorkerParam: { scope: '/' },
-    allowLocalhostAsSecureOrigin: true,
-    welcomeNotification: { title: 'Discipline System', message: 'Push notifications activated, Hunter.' },
-  });
-
-  // Register the existing PWA service worker alongside OneSignal's worker
-  if ('serviceWorker' in navigator) {
-    try {
-      await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-    } catch {
-      // PWA SW registration is non-fatal
-    }
-  }
-
-  initialized = true;
 }
 
 export async function subscribeToPush(): Promise<boolean> {
   const OneSignal = await waitForOneSignal();
   if (!OneSignal) return false;
 
-  // Request permission and subscribe
   const permission = await OneSignal.Notifications.requestPermission();
   if (!permission) return false;
 

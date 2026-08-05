@@ -134,7 +134,15 @@
       </div>
     </noscript>
     <!-- OneSignal Web Push SDK -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js.php" async></script>
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "da4d587d-2e86-4056-b7fb-f65d37c2d819",
+        });
+      });
+    </script>
 
     <script type="module" src="/src/main.tsx"></script>
   </body>

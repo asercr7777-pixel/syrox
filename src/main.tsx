@@ -2,6 +2,7 @@ import { StrictMode, useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import { SplashScreen } from './components/pwa/SplashScreen.tsx';
+import { initOneSignal } from './lib/onesignal';
 import './index.css';
 
 function Root() {
@@ -12,6 +13,9 @@ function Root() {
     if (seen) {
       setShowSplash(false);
     }
+    // Initialize OneSignal Web Push after a short delay so it doesn't block initial render
+    const timer = setTimeout(() => { void initOneSignal(); }, 2000);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleSplashComplete = () => {

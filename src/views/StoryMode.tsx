@@ -21,6 +21,7 @@ import { ScreenShake } from '../components/story/ScreenShake';
 import { ChapterTransition, FadeTransition } from '../components/story/FadeTransition';
 
 type ViewMode = 'map' | 'cutscene' | 'missions' | 'boss' | 'reward';
+type CutsceneType = 'intro' | 'missionBefore' | 'missionAfter' | 'boss';
 
 export default function StoryMode() {
   const {
@@ -43,7 +44,7 @@ export default function StoryMode() {
   const [rewardData, setRewardData] = useState<{ xp: number; coins: number; title?: string; lore?: string } | null>(null);
   const [cutsceneLines, setCutsceneLines] = useState<DialogueLine[]>([]);
   const [cutsceneChapter, setCutsceneChapter] = useState<StoryChapter | null>(null);
-  const [cutsceneType, setCutsceneType] = useState<'intro' | 'mission' | 'boss'>('intro');
+  const [cutsceneType, setCutsceneType] = useState<CutsceneType>('intro');
   const [pendingMission, setPendingMission] = useState<StoryMission | null>(null);
 
   const currentChapterNum = state.storyChapter;
@@ -104,7 +105,7 @@ export default function StoryMode() {
 
   // Handle chapter intro cutscene
   const handleStartChapter = useCallback((chapter: StoryChapter) => {
-    if (chapter.number > currentChapterNum && !isChapterUnlocked(chapter, state)) {
+    if (!isChapterUnlocked(chapter, state)) {
       toast({ title: 'Chapter Locked', message: 'Complete the current chapter to unlock this one.', type: 'info' });
       return;
     }
@@ -122,7 +123,9 @@ export default function StoryMode() {
     if (cutsceneType === 'intro') {
       setView('missions');
       if (musicOn && cutsceneChapter) playMusic(cutsceneChapter.musicTheme);
-    } else if (cutsceneType === 'mission' && pendingMission) {
+    } else if (cutsceneType === 'missionAfter') {
+      setView('missions');
+    } else if (cutsceneType === 'missionBefore' && pendingMission) {
       // Check if mission is complete
       if (checkMissionComplete(pendingMission)) {
         completeStoryMission(pendingMission.id, { xp: pendingMission.xpReward, coins: pendingMission.coinReward });
@@ -137,7 +140,7 @@ export default function StoryMode() {
         // Show mission after-cutscene
         if (pendingMission.cutsceneAfter.length > 0) {
           setCutsceneLines(pendingMission.cutsceneAfter);
-          setCutsceneType('mission');
+          setCutsceneType('missionAfter');
           setPendingMission(null);
           setView('cutscene');
         } else {
@@ -160,17 +163,17 @@ export default function StoryMode() {
   // Handle mission click
   const handleMissionClick = useCallback((mission: StoryMission) => {
     if (state.storyCompletedMissions[mission.id]) {
-      // Replay cutscene
-      setCutsceneLines(mission.cutsceneBefore);
+      // Replay the resolved scene without attempting to award again.
+      setCutsceneLines(mission.cutsceneAfter.length > 0 ? mission.cutsceneAfter : mission.cutsceneBefore);
       setCutsceneChapter(selectedChapter);
-      setCutsceneType('mission');
-      setPendingMission(mission);
+      setCutsceneType('missionAfter');
+      setPendingMission(null);
       setView('cutscene');
       return;
     }
     setCutsceneLines(mission.cutsceneBefore);
     setCutsceneChapter(selectedChapter);
-    setCutsceneType('mission');
+    setCutsceneType('missionBefore');
     setPendingMission(mission);
     setView('cutscene');
     playSfx('click');
@@ -247,6 +250,10 @@ export default function StoryMode() {
   const handleClaimReward = useCallback(() => {
     if (!selectedChapter) return;
     if (selectedChapter.number < getTotalChapters()) {
+      if (!state.storyBossDefeated[selectedChapter.boss.id]) {
+        toast({ title: 'Boss Not Defeated', message: 'Defeat the chapter boss before advancing.', type: 'info' });
+        return;
+      }
       advanceStoryChapter();
       setShowChapterTransition(true);
       setTimeout(() => {
@@ -258,7 +265,7 @@ export default function StoryMode() {
       setView('map');
       toast({ title: 'Story Complete!', message: 'You have completed all chapters. More coming soon!', type: 'info' });
     }
-  }, [selectedChapter, advanceStoryChapter, musicOn]);
+  }, [selectedChapter, state.storyBossDefeated, advanceStoryChapter, musicOn]);
 
   // Toggle music
   const toggleMusic = useCallback(() => {
@@ -300,13 +307,14 @@ export default function StoryMode() {
 
   // Chapter transition
   if (showChapterTransition && selectedChapter) {
+    const nextChapter = getChapterByNumber(selectedChapter.number);
     return (
       <ChapterTransition
         show={showChapterTransition}
-        chapterNumber={selectedChapter.number}
-        title={selectedChapter.title}
-        subtitle={selectedChapter.subtitle}
-        emoji={selectedChapter.emoji}
+        chapterNumber={Math.min(selectedChapter.number + 1, getTotalChapters())}
+        title={nextChapter?.title ?? selectedChapter.title}
+        subtitle={nextChapter?.subtitle ?? selectedChapter.subtitle}
+        emoji={nextChapter?.emoji ?? selectedChapter.emoji}
       />
     );
   }

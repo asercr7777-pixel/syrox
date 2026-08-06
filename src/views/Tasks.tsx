@@ -132,7 +132,7 @@ export function Tasks() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="section-title">Tasks</h1>
           <p className="text-sm text-ink-300">Core progression + custom tasks</p>
@@ -157,7 +157,7 @@ export function Tasks() {
             return (
               <div
                 key={task.id}
-                className={`w-full flex items-center gap-2 sm:gap-3 p-3 sm:p-3.5 rounded-xl border transition-all ${
+                className={`w-full grid grid-cols-[auto_1fr_auto] min-[380px]:flex min-[380px]:items-center gap-2 sm:gap-3 p-3 sm:p-3.5 rounded-xl border transition-all ${
                   done
                     ? 'bg-emerald2-500/10 border-emerald2-500/40'
                     : task.enabled
@@ -225,7 +225,7 @@ export function Tasks() {
                 </button>
 
                 {/* Edit / Enable-Disable / Delete */}
-                <div className="flex items-center gap-0.5 flex-shrink-0">
+                <div className="flex items-center gap-0.5 flex-shrink-0 justify-end">
                   <button onClick={() => openMainEdit(task)} className="p-1.5 rounded-lg hover:bg-white/10" title="Edit">
                     <Pencil size={14} className="text-ink-300" />
                   </button>
@@ -286,7 +286,7 @@ export function Tasks() {
               return (
                 <div
                   key={task.id}
-                  className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-3.5 rounded-xl border transition-all ${
+                  className={`grid grid-cols-[1fr_auto] min-[380px]:flex min-[380px]:items-center gap-2 sm:gap-3 p-3 sm:p-3.5 rounded-xl border transition-all ${
                     done
                       ? 'bg-emerald2-500/10 border-emerald2-500/40'
                       : 'bg-ink-950/40 border-white/5'
@@ -299,7 +299,7 @@ export function Tasks() {
                       <p className="text-xs text-ink-400">+{task.points} XP · Bonus</p>
                     </div>
                   </button>
-                  <div className="flex items-center gap-0.5 flex-shrink-0">
+                  <div className="flex items-center gap-0.5 flex-shrink-0 justify-end">
                     <button onClick={() => openCustomEdit(task.id)} className="p-1.5 rounded-lg hover:bg-white/10">
                       <Pencil size={14} className="text-ink-300" />
                     </button>

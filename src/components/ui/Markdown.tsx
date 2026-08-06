@@ -92,7 +92,7 @@ function parseBlocks(text: string): ParsedBlock[] {
 
     if (trimmed.match(/^\d+\.\s+/)) {
       const listLines: string[] = [];
-      let ordered = true;
+      const ordered = true;
       while (i < lines.length) {
         const lt = lines[i].trim();
         if (lt.match(/^\d+\.\s+/)) {

@@ -75,11 +75,11 @@ function isImageRequest(request) {
 
 // Stale-while-revalidate for static assets
 async function staleWhileRevalidate(request) {
-  const cache = caches.open(RUNTIME_CACHE);
-  const cachedResponse = await (await cache).match(request);
+  const cache = await caches.open(RUNTIME_CACHE);
+  const cachedResponse = await cache.match(request);
   const fetchPromise = fetch(request).then((networkResponse) => {
     if (networkResponse && networkResponse.ok) {
-      (await cache).put(request, networkResponse.clone());
+      void cache.put(request, networkResponse.clone());
     }
     return networkResponse;
   }).catch(() => cachedResponse);

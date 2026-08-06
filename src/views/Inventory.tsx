@@ -117,8 +117,8 @@ export function Inventory() {
       </div>
 
       {/* Search + sort */}
-      <div className="flex gap-2 flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
+      <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-2">
+        <div className="relative min-w-0 sm:flex-1 sm:min-w-[200px]">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" />
           <input
             className="input pl-10"
@@ -128,7 +128,7 @@ export function Inventory() {
           />
         </div>
         <select
-          className="input w-auto"
+          className="input w-full sm:w-auto"
           value={sort}
           onChange={(e) => setSort(e.target.value as SortMode)}
         >
@@ -146,7 +146,7 @@ export function Inventory() {
           <p className="text-xs text-ink-400 mt-1">Clear dungeons and spin the wheel to collect items.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
+        <div className="grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
           {filtered.map((item) => {
             const meta = RARITY_META[item.rarity as Rarity];
             const isEquipped = equippedId === item.id;

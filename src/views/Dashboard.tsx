@@ -158,7 +158,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
       {/* Daily Progress */}
       <div className="card-premium p-5 page-enter" style={{ animationDelay: '0.05s' }}>
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex flex-col min-[380px]:flex-row min-[380px]:items-center justify-between mb-3 gap-2">
           <div className="flex items-center gap-2">
             <Target size={18} className="text-ember-400" />
             <h2 className="section-title">Today's Progress</h2>
@@ -174,7 +174,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           />
           <div className="absolute inset-x-0 top-0 h-1/2 rounded-full pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.15), transparent)' }} />
         </div>
-        <div className="flex items-center justify-between text-xs text-ink-300">
+        <div className="flex flex-col min-[380px]:flex-row min-[380px]:items-center justify-between gap-1 text-xs text-ink-300">
           <span>Daily XP: {state.dailyXp.toLocaleString()} / {state.dailyCap.toLocaleString()}</span>
           <span>Discipline Score: <span className="text-ember-400 font-bold">{disciplineScore}%</span></span>
         </div>
@@ -182,7 +182,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
       {/* Main Tasks */}
       <div className="card-premium p-5 page-enter" style={{ animationDelay: '0.1s' }}>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col min-[380px]:flex-row min-[380px]:items-center justify-between mb-4 gap-2">
           <div>
             <h2 className="section-title">Main Tasks</h2>
             <p className="text-xs text-ink-300 mt-0.5">{completedCount}/{enabledMainTasks.length} complete · {allDone ? 'Perfect day!' : 'Keep going'}</p>
@@ -242,7 +242,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       </div>
 
       {/* Stats: Level, Rank, XP */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+      <div className="grid grid-cols-1 min-[380px]:grid-cols-3 gap-2 sm:gap-3">
         <StatCard icon={Zap} label="Level" value={`${state.level}`} sub="Current" color="ember" index={0} />
         <StatCard icon={TrendingUp} label="Rank" value={rank.name} sub={rank.emoji} color="shadow" index={1} />
         <StatCard icon={Zap} label="XP" value={state.xp.toLocaleString()} sub={`/${nextRank ? nextRank.xpRequired.toLocaleString() : 'MAX'}`} color="frost" index={2} />
@@ -274,7 +274,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             Train <ChevronRight size={16} />
           </button>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 min-[380px]:grid-cols-2 md:grid-cols-4 gap-3">
           <WorkoutStat label="Today" value={`${todayWorkoutMin}`} unit="min" color="#ff7a18" />
           <WorkoutStat label="All-time" value={`${Math.floor(state.totalWorkoutSeconds / 60)}`} unit="min" color="#fbbf24" />
           <WorkoutStat label="Sessions" value={`${state.workoutSessions.length}`} unit="" color="#38bdf8" />

@@ -151,7 +151,7 @@ export function Leaderboard() {
     } catch { setRows([]); } finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchLeaderboard(); /* eslint-disable-next-line */ }, []);
+  useEffect(() => { fetchLeaderboard(); }, []);
 
   const handleSortChange = (key: SortKey) => {
     setSortKey(key);

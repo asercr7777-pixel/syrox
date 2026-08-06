@@ -7,6 +7,12 @@ import { AURAS, RARITY_META, WEAPONS, TITLES, type Rarity } from '../data/collec
 import { DUNGEONS, SECRET_DUNGEONS, BOSS_DUNGEON } from '../data/dungeons';
 import { playSound } from '../lib/sound';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { ALL_CHAPTERS, getTotalChapters } from '../data/story';
+
+const ALL_STORY_CHAPTER_COUNT = getTotalChapters();
+const VALID_STORY_MISSION_IDS = new Set(ALL_CHAPTERS.flatMap((chapter) => chapter.missions.map((mission) => mission.id)));
+const VALID_STORY_BOSS_IDS = new Set(ALL_CHAPTERS.map((chapter) => chapter.boss.id));
+const VALID_STORY_LORE_IDS = new Set(ALL_CHAPTERS.flatMap((chapter) => chapter.boss.rewardLore ? [chapter.boss.rewardLore] : []));
 
 // ---------------------------------------------------------------------------
 // Module-level singleton state — shared across ALL components that call
@@ -24,6 +30,48 @@ const listeners = new Set<() => void>();
 
 function notify() {
   listeners.forEach((l) => l());
+}
+
+
+function pickValidRecord<T>(record: Record<string, T> | undefined, validIds: Set<string>): Record<string, T> {
+  if (!record) return {};
+  return Object.fromEntries(Object.entries(record).filter(([id]) => validIds.has(id)));
+}
+
+function pickValidArray(values: string[] | undefined, validIds: Set<string>): string[] {
+  if (!values) return [];
+  return values.filter((id, index, arr) => validIds.has(id) && arr.indexOf(id) === index);
+}
+
+function normalizeLoadedState(cloudState: AppState, def: AppState): AppState {
+  const safeMainTasks = cloudState.mainTasks && cloudState.mainTasks.length > 0
+    ? cloudState.mainTasks.map((task, index) => ({ ...task, order: Number.isFinite(task.order) ? task.order : index }))
+    : def.mainTasks;
+  const safeCoreCompleted = cloudState.mainTasks && cloudState.mainTasks.length > 0
+    ? Object.fromEntries(safeMainTasks.map((task) => [task.id, Boolean(cloudState.coreCompleted?.[task.id])]))
+    : def.coreCompleted;
+
+  return {
+    ...def,
+    ...cloudState,
+    level: levelFromXp(Math.max(0, cloudState.xp ?? def.xp)),
+    storyChapter: Math.max(0, Math.min(cloudState.storyChapter ?? 0, ALL_STORY_CHAPTER_COUNT)),
+    storyMission: Math.max(0, cloudState.storyMission ?? 0),
+    storyCompletedMissions: pickValidRecord(cloudState.storyCompletedMissions, VALID_STORY_MISSION_IDS),
+    storyBossDefeated: pickValidRecord(cloudState.storyBossDefeated, VALID_STORY_BOSS_IDS),
+    storyLoreUnlocked: pickValidArray(cloudState.storyLoreUnlocked, VALID_STORY_LORE_IDS),
+    storyChoices: cloudState.storyChoices ?? {},
+    storyNpcReputation: cloudState.storyNpcReputation ?? {},
+    storyAchievements: Array.from(new Set(cloudState.storyAchievements ?? [])),
+    mainTasks: safeMainTasks,
+    coreCompleted: safeCoreCompleted,
+    customCompleted: cloudState.customCompleted ?? {},
+    equipped: { ...def.equipped, ...cloudState.equipped },
+    notifications: { ...def.notifications, ...cloudState.notifications },
+    chestInventory: { ...def.chestInventory, ...cloudState.chestInventory },
+    bossHpRemaining: cloudState.bossHpRemaining ?? {},
+    bossDefeated: cloudState.bossDefeated ?? {},
+  };
 }
 
 function setState(updater: (s: AppState) => AppState) {
@@ -104,7 +152,7 @@ function doDailyReset() {
   setState((s) => {
     if (s.lastDailyResetDate === today) return s;
     let newStreak = s.streak;
-    let newBestStreak = s.bestStreak;
+    const newBestStreak = s.bestStreak;
     let newStreakShield = s.streakShield;
 
     if (s.lastActiveDate && s.lastActiveDate !== today) {
@@ -795,11 +843,15 @@ function defeatStoryBoss(bossId: string) {
 }
 
 function advanceStoryChapter() {
-  setState((s) => ({
-    ...s,
-    storyChapter: s.storyChapter + 1,
-    storyMission: 0,
-  }));
+  setState((s) => {
+    const maxCompletedIndex = ALL_STORY_CHAPTER_COUNT;
+    if (s.storyChapter >= maxCompletedIndex) return s;
+    return {
+      ...s,
+      storyChapter: Math.min(s.storyChapter + 1, maxCompletedIndex),
+      storyMission: 0,
+    };
+  });
   playSound('rankup');
 }
 
@@ -904,7 +956,7 @@ function openChest(chestId: string): DropResult | null {
     } else if (pick === 'xp') {
       const amt = 50 + Math.floor(Math.random() * 150);
       result = { type: 'xp', amount: amt, label: `${amt} XP` };
-      let next = addPoints(s, amt, 0);
+      const next = addPoints(s, amt, 0);
       return { ...next, chestInventory: { ...s.chestInventory, [chestId]: count - 1 } };
     } else {
       const rarity = rollRarity();
@@ -1076,22 +1128,7 @@ async function loadFromCloud(userId: string) {
     if (data?.state) {
       const cloudState = data.state as AppState;
       const def = createDefaultState();
-      // Safety: if cloud state has empty/missing mainTasks (from a previous
-      // race-condition save), fall back to defaults so tasks never disappear.
-      const safeMainTasks = cloudState.mainTasks && cloudState.mainTasks.length > 0
-        ? cloudState.mainTasks
-        : def.mainTasks;
-      const safeCoreCompleted = cloudState.mainTasks && cloudState.mainTasks.length > 0
-        ? cloudState.coreCompleted
-        : def.coreCompleted;
-      globalState = {
-        ...def,
-        ...cloudState,
-        mainTasks: safeMainTasks,
-        coreCompleted: safeCoreCompleted,
-        equipped: { ...def.equipped, ...cloudState.equipped },
-        notifications: { ...def.notifications, ...cloudState.notifications },
-      };
+      globalState = normalizeLoadedState(cloudState, def);
       notify();
     } else {
       // New user — seed initial state to cloud

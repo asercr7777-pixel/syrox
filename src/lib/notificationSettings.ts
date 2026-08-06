@@ -40,7 +40,7 @@ export async function fetchNotificationSettings(userId: string): Promise<Notific
     .eq('user_id', userId)
     .maybeSingle();
   if (error || !data) return { ...DEFAULT_NOTIFICATION_SETTINGS };
-  const { user_id, created_at, updated_at, ...settings } = data as any;
+  const { user_id: _user_id, created_at: _created_at, updated_at: _updated_at, ...settings } = data as any;
   return { ...DEFAULT_NOTIFICATION_SETTINGS, ...settings };
 }
 

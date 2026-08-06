@@ -168,12 +168,12 @@ export function Marketplace() {
       </div>
 
       {/* Search + filters */}
-      <div className="flex gap-2 flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
+      <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-2">
+        <div className="relative min-w-0 sm:flex-1 sm:min-w-[200px]">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" />
           <input className="input pl-10" placeholder="Search items..." value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
-        <select className="input w-auto" value={filterRarity} onChange={(e) => setFilterRarity(e.target.value as Rarity | 'all')}>
+        <select className="input w-full sm:w-auto" value={filterRarity} onChange={(e) => setFilterRarity(e.target.value as Rarity | 'all')}>
           <option value="all">All Rarities</option>
           <option value="common">Common</option>
           <option value="rare">Rare</option>
@@ -182,7 +182,7 @@ export function Marketplace() {
           <option value="mythic">Mythic</option>
           <option value="secret">Secret</option>
         </select>
-        <select className="input w-auto" value={sort} onChange={(e) => setSort(e.target.value as SortMode)}>
+        <select className="input w-full sm:w-auto" value={sort} onChange={(e) => setSort(e.target.value as SortMode)}>
           <option value="rarity">Sort: Rarity</option>
           <option value="price-low">Price: Low to High</option>
           <option value="price-high">Price: High to Low</option>
@@ -196,7 +196,7 @@ export function Marketplace() {
           <p className="text-ink-300">No items found.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {items.map((item, idx) => {
             const meta = RARITY_META[item.rarity];
             const owned = ownedIds.has(item.id);

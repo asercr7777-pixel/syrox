@@ -23,7 +23,7 @@ function isValidEmail(email: string): boolean {
 }
 
 export function Auth() {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, signInWithGoogle } = useAuth();
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -64,6 +64,15 @@ export function Auth() {
       }
     }
     setLoading(false);
+  };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    const { error } = await signInWithGoogle();
+    if (error) {
+      toast({ title: 'Google sign-in failed', message: error, type: 'error' });
+      setLoading(false);
+    }
   };
 
   const handleForgot = async (e: React.FormEvent) => {
@@ -115,6 +124,23 @@ export function Auth() {
             >
               Sign Up
             </button>
+          </div>
+
+
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+            className="btn-ghost w-full py-3 mb-4 text-sm"
+          >
+            {loading ? <Loader2 size={18} className="animate-spin" /> : <span className="text-base font-bold">G</span>}
+            Continue with Google
+          </button>
+
+          <div className="relative mb-4 flex items-center">
+            <div className="h-px flex-1 bg-white/10" />
+            <span className="px-3 text-[10px] uppercase tracking-wider text-ink-400">or use email</span>
+            <div className="h-px flex-1 bg-white/10" />
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">

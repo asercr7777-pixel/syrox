@@ -56,13 +56,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       options: { data: { username } },
     });
     if (error) return { error: error.message };
+
     // Profile creation is handled by a database trigger on auth.users.
     // If a session was created (email confirmation off), update the username.
     if (data.user && data.session) {
-      try {
-        await supabase.from('profiles').update({ username }).eq('id', data.user.id);
-      } catch {
-        // Non-fatal — trigger already created the profile with default username
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ username })
+        .eq('id', data.user.id);
+      if (profileError) {
+        console.error('[auth] profile username sync failed:', profileError);
+        return { error: 'Account was created, but the username could not be saved. Please try again.' };
       }
     }
     return { error: null };

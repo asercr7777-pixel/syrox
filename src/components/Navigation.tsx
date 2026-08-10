@@ -72,6 +72,8 @@ interface NavigationProps {
   onNavigate: (v: ViewId) => void;
 }
 
+const MENTALIST_URL = 'https://mentalist.bolt.host/';
+
 export function Navigation({ current, onNavigate }: NavigationProps) {
   const { state } = useStore();
   const { signOut } = useAuth();
@@ -101,7 +103,13 @@ export function Navigation({ current, onNavigate }: NavigationProps) {
           <div className="flex items-center gap-3">
             <RankBadge rank={rank} size="sm" auraColor={aura?.color} />
             <div className="min-w-0">
-              <p className="font-display font-bold text-sm truncate">{state.username}</p>
+              <a
+                href={MENTALIST_URL}
+                aria-label="Open Mentalist"
+                className="font-display font-bold text-sm truncate block cursor-pointer hover:text-ember-400 transition-colors"
+              >
+                {state.username}
+              </a>
               {title && (
                 <p
                   className="text-[10px] font-semibold uppercase tracking-wider truncate"
@@ -158,7 +166,13 @@ export function Navigation({ current, onNavigate }: NavigationProps) {
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <RankBadge rank={rank} size="sm" auraColor={aura?.color} />
             <div className="min-w-0">
-              <p className="font-display font-bold text-xs leading-tight truncate">{state.username}</p>
+              <a
+                href={MENTALIST_URL}
+                aria-label="Open Mentalist"
+                className="font-display font-bold text-xs leading-tight truncate block cursor-pointer hover:text-ember-400 transition-colors"
+              >
+                {state.username}
+              </a>
               {title && (
                 <p
                   className="text-[9px] font-semibold uppercase tracking-wider leading-tight truncate"

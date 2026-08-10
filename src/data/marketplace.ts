@@ -16,8 +16,8 @@ export interface MarketItem {
   description: string;
 }
 
-// Simplified economy: purchases should feel rewarding without requiring
-// weeks of grinding. Rarity still matters, but prices are intentionally lower.
+// Balanced economy: rarity increases both the cost and progression requirement,
+// while keeping common/rare items accessible during normal play.
 const RARITY_PRICE: Record<Rarity, number> = {
   common: 50,
   rare: 150,
@@ -45,6 +45,15 @@ export const CATEGORY_LABELS: Record<MarketCategory, string> = {
   backgrounds: 'Backgrounds',
 };
 
+const CATEGORY_SINGULAR: Record<MarketCategory, string> = {
+  weapons: 'weapon',
+  auras: 'aura',
+  titles: 'title',
+  shields: 'shield',
+  frames: 'frame',
+  backgrounds: 'background',
+};
+
 function rankForXp(xp: number): RankId {
   let result: RankId = 'E';
   for (const rank of RANKS) {
@@ -52,6 +61,12 @@ function rankForXp(xp: number): RankId {
     result = rank.id;
   }
   return result;
+}
+
+function buildDescription(name: string, rarity: Rarity, category: MarketCategory): string {
+  const type = CATEGORY_SINGULAR[category];
+  const rarityText = rarity.charAt(0).toUpperCase() + rarity.slice(1);
+  return `${name} is a ${rarityText} ${type}. Collect it, equip it, and show your progression.`;
 }
 
 function buildItems<T extends { id: string; name: string; rarity: Rarity }>(
@@ -68,7 +83,7 @@ function buildItems<T extends { id: string; name: string; rarity: Rarity }>(
       price: RARITY_PRICE[item.rarity],
       xpRequired,
       rankRequired: rankForXp(xpRequired),
-      description: `${item.name} — ${item.rarity} ${category.slice(0, -1)}.`,
+      description: buildDescription(item.name, item.rarity, category),
     };
   });
 }

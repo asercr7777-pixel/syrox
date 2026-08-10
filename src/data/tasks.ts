@@ -25,39 +25,9 @@ export interface WorkoutDay {
 }
 
 export const WORKOUT_SPLIT: WorkoutDay[] = [
-  {
-    id: 'push',
-    name: 'Day 1 — Push',
-    emoji: '💥',
-    description: 'Chest, shoulders, triceps focus.',
-    sections: [
-      { name: 'Stretching', type: 'stretching' },
-      { name: 'Push', type: 'main' },
-      { name: 'Plyometric', type: 'plyometric' },
-    ],
-  },
-  {
-    id: 'pull',
-    name: 'Day 2 — Pull',
-    emoji: '🏋️',
-    description: 'Back and biceps focus.',
-    sections: [
-      { name: 'Stretching', type: 'stretching' },
-      { name: 'Pull', type: 'main' },
-      { name: 'Plyometric', type: 'plyometric' },
-    ],
-  },
-  {
-    id: 'leg',
-    name: 'Day 3 — Leg',
-    emoji: '🦵',
-    description: 'Quads, hamstrings, calves focus.',
-    sections: [
-      { name: 'Stretching', type: 'stretching' },
-      { name: 'Leg', type: 'main' },
-      { name: 'Plyometric', type: 'plyometric' },
-    ],
-  },
+  { id: 'push', name: 'Day 1 — Push', emoji: '💥', description: 'Chest, shoulders, triceps focus.', sections: [{ name: 'Stretching', type: 'stretching' }, { name: 'Push', type: 'main' }, { name: 'Plyometric', type: 'plyometric' }] },
+  { id: 'pull', name: 'Day 2 — Pull', emoji: '🏋️', description: 'Back and biceps focus.', sections: [{ name: 'Stretching', type: 'stretching' }, { name: 'Pull', type: 'main' }, { name: 'Plyometric', type: 'plyometric' }] },
+  { id: 'leg', name: 'Day 3 — Leg', emoji: '🦵', description: 'Quads, hamstrings, calves focus.', sections: [{ name: 'Stretching', type: 'stretching' }, { name: 'Leg', type: 'main' }, { name: 'Plyometric', type: 'plyometric' }] },
 ];
 
 export interface DefaultExercise {
@@ -107,84 +77,44 @@ export interface DailyChallenge {
 }
 
 export const DAILY_CHALLENGES: DailyChallenge[] = [
-  {
-    id: 'all_main',
-    label: 'Complete all main tasks',
-    description: 'Finish every core task today.',
-    xp: 150,
-    coins: 120,
-    check: (s) => s && s.coreCompleted && Object.values(s.coreCompleted).every(Boolean),
-  },
-  {
-    id: 'workout_done',
-    label: 'Finish a workout',
-    description: 'Complete any workout session.',
-    xp: 120,
-    coins: 100,
-    check: (s) => s && s.workoutsCompletedToday > 0,
-  },
-  {
-    id: 'drink_water',
-    label: 'Drink enough water',
-    description: 'Complete the water task.',
-    xp: 60,
-    coins: 50,
-    check: (s) => s && s.coreCompleted && s.coreCompleted.water,
-  },
-  {
-    id: 'read_20',
-    label: 'Read for 20 minutes',
-    description: 'Complete the Quran reading task.',
-    xp: 80,
-    coins: 60,
-    check: (s) => s && s.coreCompleted && s.coreCompleted.read_quran,
-  },
-  {
-    id: 'dungeon_run',
-    label: 'Clear a dungeon',
-    description: 'Complete today\'s dungeon.',
-    xp: 200,
-    coins: 200,
-    check: (s) => s && s.dungeonClearedToday,
-  },
-  {
-    id: 'no_miss',
-    label: 'No missed tasks',
-    description: 'Do not miss any core task today.',
-    xp: 100,
-    coins: 80,
-    check: (s) => s && s.coreCompleted && Object.values(s.coreCompleted).every(Boolean),
-  },
+  { id: 'all_main', label: 'Complete all main tasks', description: 'Finish every core task today.', xp: 150, coins: 120, check: (s) => s && s.coreCompleted && Object.values(s.coreCompleted).every(Boolean) },
+  { id: 'workout_done', label: 'Finish a workout', description: 'Complete any workout session.', xp: 120, coins: 100, check: (s) => s && s.workoutsCompletedToday > 0 },
+  { id: 'drink_water', label: 'Drink enough water', description: 'Complete the water task.', xp: 60, coins: 50, check: (s) => s && s.coreCompleted && s.coreCompleted.water },
+  { id: 'read_20', label: 'Read for 20 minutes', description: 'Complete the Quran reading task.', xp: 80, coins: 60, check: (s) => s && s.coreCompleted && s.coreCompleted.read_quran },
+  { id: 'dungeon_run', label: 'Clear a dungeon', description: 'Complete today\'s dungeon.', xp: 200, coins: 200, check: (s) => s && s.dungeonClearedToday },
 ];
 
+// The store currently converts the old "shards" reward type into Coins because
+// there is no persistent shard balance in AppState. Keep these rewards honest
+// and consistent with what the player actually receives.
 export const DAILY_LOGIN_REWARDS = [
   { day: 1, type: 'coins', amount: 50, label: '50 Coins' },
   { day: 2, type: 'xp', amount: 100, label: '100 XP' },
   { day: 3, type: 'coins', amount: 100, label: '100 Coins' },
-  { day: 4, type: 'shards', amount: 5, label: '5 Aura Shards' },
+  { day: 4, type: 'coins', amount: 50, label: '50 Coins' },
   { day: 5, type: 'xp', amount: 200, label: '200 XP' },
   { day: 6, type: 'chest', amount: 1, label: 'Mystery Chest' },
   { day: 7, type: 'coins', amount: 250, label: '250 Coins + Streak Shield', shield: true },
   { day: 8, type: 'coins', amount: 100, label: '100 Coins' },
   { day: 9, type: 'xp', amount: 200, label: '200 XP' },
-  { day: 10, type: 'shards', amount: 10, label: '10 Aura Shards' },
+  { day: 10, type: 'coins', amount: 100, label: '100 Coins' },
   { day: 11, type: 'coins', amount: 150, label: '150 Coins' },
   { day: 12, type: 'xp', amount: 300, label: '300 XP' },
   { day: 13, type: 'chest', amount: 1, label: 'Mystery Chest' },
   { day: 14, type: 'coins', amount: 300, label: '300 Coins + Rare Aura Roll', aura: 'rare' },
   { day: 15, type: 'coins', amount: 150, label: '150 Coins' },
   { day: 16, type: 'xp', amount: 300, label: '300 XP' },
-  { day: 17, type: 'shards', amount: 15, label: '15 Aura Shards' },
+  { day: 17, type: 'coins', amount: 150, label: '150 Coins' },
   { day: 18, type: 'coins', amount: 200, label: '200 Coins' },
   { day: 19, type: 'chest', amount: 1, label: 'Mystery Chest' },
   { day: 20, type: 'xp', amount: 500, label: '500 XP' },
   { day: 21, type: 'coins', amount: 400, label: '400 Coins + Epic Aura Roll', aura: 'epic' },
-  { day: 22, type: 'shards', amount: 20, label: '20 Aura Shards' },
+  { day: 22, type: 'coins', amount: 200, label: '200 Coins' },
   { day: 23, type: 'xp', amount: 400, label: '400 XP' },
   { day: 24, type: 'chest', amount: 2, label: '2 Mystery Chests' },
   { day: 25, type: 'coins', amount: 500, label: '500 Coins' },
   { day: 26, type: 'xp', amount: 600, label: '600 XP' },
-  { day: 27, type: 'shards', amount: 25, label: '25 Aura Shards' },
+  { day: 27, type: 'coins', amount: 250, label: '250 Coins' },
   { day: 28, type: 'chest', amount: 2, label: '2 Mystery Chests' },
   { day: 29, type: 'xp', amount: 800, label: '800 XP' },
   { day: 30, type: 'aura', amount: 1, label: 'Legendary Aura Roll', aura: 'legendary' },

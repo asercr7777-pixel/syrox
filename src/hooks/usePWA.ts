@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -32,22 +32,33 @@ export function usePWA() {
       setInstallPromptEvent(null);
     };
 
+    const onControllerChange = () => {
+      window.location.reload();
+    };
+
     window.addEventListener('beforeinstallprompt', onBeforeInstall);
     window.addEventListener('appinstalled', onAppInstalled);
 
-    // Register service worker
     if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
       navigator.serviceWorker.register('/sw.js').then((reg) => {
         setRegistration(reg);
+
+        const checkForWaitingWorker = () => {
+          if (reg.waiting && navigator.serviceWorker.controller) {
+            setUpdateAvailable(true);
+          }
+        };
+
+        checkForWaitingWorker();
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
-          if (newWorker) {
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                setUpdateAvailable(true);
-              }
-            });
-          }
+          if (!newWorker) return;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              setUpdateAvailable(true);
+            }
+          });
         });
       }).catch((err) => {
         console.warn('[PWA] SW registration failed:', err);
@@ -57,6 +68,7 @@ export function usePWA() {
     return () => {
       window.removeEventListener('beforeinstallprompt', onBeforeInstall);
       window.removeEventListener('appinstalled', onAppInstalled);
+      navigator.serviceWorker?.removeEventListener('controllerchange', onControllerChange);
     };
   }, []);
 

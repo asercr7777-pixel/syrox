@@ -28,6 +28,18 @@ const ItemInspection = lazy(() => import('./views/ItemInspection').then((m) => (
 const Auth = lazy(() => import('./views/Auth').then((m) => ({ default: m.Auth })));
 const Shadow = lazy(() => import('./views/Shadow').then((m) => ({ default: m.Shadow })));
 
+const VALID_VIEWS = new Set<ViewId>([
+  'dashboard', 'tasks', 'story', 'workout', 'dungeons', 'profile',
+  'marketplace', 'inventory', 'achievements', 'leaderboard', 'shadow',
+  'settings', 'notifications', 'reminders', 'iteminspection',
+]);
+
+function getViewFromUrl(): ViewId {
+  if (typeof window === 'undefined') return 'dashboard';
+  const requested = new URLSearchParams(window.location.search).get('view');
+  return requested && VALID_VIEWS.has(requested as ViewId) ? requested as ViewId : 'dashboard';
+}
+
 function PageLoader() {
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
@@ -39,7 +51,7 @@ function PageLoader() {
 function AppContent() {
   const { user, loading } = useAuth();
   const { state, loadFromCloud, setUserId, cloudLoaded } = useStore();
-  const [view, setView] = useState<ViewId>('dashboard');
+  const [view, setView] = useState<ViewId>(getViewFromUrl);
   const { isInstalled, isInstallable, updateAvailable, promptInstall, applyUpdate } = usePWA();
 
   useEffect(() => {
@@ -54,9 +66,18 @@ function AppContent() {
     }
   }, [user, setUserId, loadFromCloud]);
 
+  useEffect(() => {
+    const onPopState = () => setView(getViewFromUrl());
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
   const handleNavigate = (v: ViewId) => {
     if (v === 'iteminspection') return;
     setView(v);
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', v);
+    window.history.replaceState({}, '', url);
   };
 
   if (loading || (user && !cloudLoaded)) {
@@ -90,7 +111,7 @@ function AppContent() {
       <main className="lg:ml-64 pt-16 lg:pt-6 px-3 sm:px-4 pb-24 lg:pb-8 max-w-6xl mx-auto overflow-x-hidden">
         <div key={view} className="page-enter">
           <Suspense fallback={<PageLoader />}>
-            {view === 'dashboard' && <Dashboard onNavigate={setView} />}
+            {view === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
             {view === 'tasks' && <Tasks />}
             {view === 'story' && <StoryMode />}
             {view === 'workout' && <Workout />}
@@ -101,11 +122,11 @@ function AppContent() {
             {view === 'achievements' && <Achievements />}
             {view === 'leaderboard' && <Leaderboard />}
             {view === 'shadow' && <Shadow />}
-            {view === 'settings' && <Settings onNavigate={setView} />}
-            {view === 'notifications' && <Notifications onNavigate={setView} />}
-            {view === 'reminders' && <Reminders onNavigate={setView} />}
+            {view === 'settings' && <Settings onNavigate={handleNavigate} />}
+            {view === 'notifications' && <Notifications onNavigate={handleNavigate} />}
+            {view === 'reminders' && <Reminders onNavigate={handleNavigate} />}
             {view === 'iteminspection' && (
-              <ItemInspection itemId="" category="weapon" onBack={() => setView('inventory')} />
+              <ItemInspection itemId="" category="weapon" onBack={() => handleNavigate('inventory')} />
             )}
           </Suspense>
         </div>

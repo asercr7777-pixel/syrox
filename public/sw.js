@@ -24,10 +24,6 @@ const PRECACHE_URLS = [
   '/OneSignalSDKWorker.js',
 ];
 
-const CACHE_STRATEGIES = {
-  sameOrigin: new Set(['']),
-};
-
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(STATIC_CACHE).then((cache) => {
@@ -36,7 +32,8 @@ self.addEventListener('install', (event) => {
       });
     })
   );
-  self.skipWaiting();
+  // Do not skip waiting automatically. This lets the app show its
+  // "Update Available" prompt and apply the update deliberately.
 });
 
 self.addEventListener('activate', (event) => {
@@ -73,7 +70,6 @@ function isImageRequest(request) {
   return /\.(?:png|jpg|jpeg|webp|gif|ico|svg)$/i.test(url.pathname) || request.destination === 'image';
 }
 
-// Stale-while-revalidate for static assets
 async function staleWhileRevalidate(request) {
   const cache = await caches.open(RUNTIME_CACHE);
   const cachedResponse = await cache.match(request);
@@ -86,7 +82,6 @@ async function staleWhileRevalidate(request) {
   return cachedResponse || fetchPromise;
 }
 
-// Cache-first for images
 async function cacheFirst(request, cacheName) {
   const cache = await caches.open(cacheName);
   const cachedResponse = await cache.match(request);
@@ -94,7 +89,7 @@ async function cacheFirst(request, cacheName) {
   try {
     const networkResponse = await fetch(request);
     if (networkResponse && networkResponse.ok) {
-      cache.put(request, networkResponse.clone());
+      void cache.put(request, networkResponse.clone());
     }
     return networkResponse;
   } catch {
@@ -102,13 +97,12 @@ async function cacheFirst(request, cacheName) {
   }
 }
 
-// Network-first for navigation requests (with offline fallback)
 async function networkFirstWithFallback(request) {
   try {
     const networkResponse = await fetch(request);
     if (networkResponse && networkResponse.ok) {
       const cache = await caches.open(STATIC_CACHE);
-      cache.put(request, networkResponse.clone());
+      void cache.put(request, networkResponse.clone());
     }
     return networkResponse;
   } catch {
@@ -126,9 +120,7 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin) {
-    return;
-  }
+  if (url.origin !== self.location.origin) return;
 
   if (isNavigationRequest(request)) {
     event.respondWith(networkFirstWithFallback(request));
@@ -142,6 +134,5 @@ self.addEventListener('fetch', (event) => {
 
   if (isStaticAsset(request)) {
     event.respondWith(staleWhileRevalidate(request));
-    return;
   }
 });

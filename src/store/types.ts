@@ -137,6 +137,7 @@ export interface AppState {
   // Workout
   workouts: Record<'push' | 'pull' | 'leg', ExerciseEntry[]>;
   workoutsCompletedToday: number;
+  workoutRewardsClaimedToday: Record<'push' | 'pull' | 'leg', boolean>;
   lastWorkoutDate: string | null;
   workoutSessions: WorkoutSessionRecord[];
   totalWorkoutSeconds: number;

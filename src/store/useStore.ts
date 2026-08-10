@@ -71,6 +71,7 @@ function normalizeLoadedState(cloudState: AppState, def: AppState): AppState {
     chestInventory: { ...def.chestInventory, ...cloudState.chestInventory },
     bossHpRemaining: cloudState.bossHpRemaining ?? {},
     bossDefeated: cloudState.bossDefeated ?? {},
+    workoutRewardsClaimedToday: { push: false, pull: false, leg: false, ...(cloudState.workoutRewardsClaimedToday ?? {}) },
   };
 }
 
@@ -102,11 +103,12 @@ function flushSave() {
 async function saveToCloudInternal(state: AppState) {
   if (!isSupabaseConfigured() || !globalUserId) return;
   try {
-    await supabase.from('user_state').upsert({
+    const { error } = await supabase.from('user_state').upsert({
       user_id: globalUserId,
       state,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id' });
+    if (error) console.error('[saveToCloud] database error:', error);
   } catch (err) {
     console.error('[saveToCloud] error:', err);
   }
@@ -192,6 +194,7 @@ function doDailyReset() {
       dailyPoints: 0,
       lastDailyResetDate: today,
       workoutsCompletedToday: 0,
+      workoutRewardsClaimedToday: { push: false, pull: false, leg: false },
       workouts: {
         push: s.workouts.push.map((e) => ({ ...e, completed: false })),
         pull: s.workouts.pull.map((e) => ({ ...e, completed: false })),
@@ -343,9 +346,11 @@ function hashString(str: string): number {
 function calculateDisciplineScore(state: AppState): number {
   const enabledMain = state.mainTasks.filter((t) => t.enabled);
   const mainDone = enabledMain.filter((t) => state.coreCompleted[t.id]).length;
-  const extraDone = Object.values(state.customCompleted).filter(Boolean).length;
+  const activeCustomIds = new Set(state.customTasks.map((t) => t.id));
+  const extraDone = Object.entries(state.customCompleted).filter(([id, done]) => done && activeCustomIds.has(id)).length;
   const totalPossible = enabledMain.length + state.customTasks.length;
-  return totalPossible > 0 ? Math.round(((mainDone + extraDone) / totalPossible) * 100) : 0;
+  if (totalPossible <= 0) return 0;
+  return Math.max(0, Math.min(100, Math.round(((mainDone + extraDone) / totalPossible) * 100)));
 }
 
 // ---------------------------------------------------------------------------
@@ -521,7 +526,8 @@ function toggleExercise(dayId: 'push' | 'pull' | 'leg', exerciseId: string) {
     const allDone = exercises.every((e) => e.completed);
     let workoutsCompleted = s.workoutsCompletedToday;
     let lastWorkout = s.lastWorkoutDate;
-    if (allDone && !s.workouts[dayId].every((e) => e.completed)) {
+    const alreadyRewarded = s.workoutRewardsClaimedToday?.[dayId] ?? false;
+    if (allDone && !s.workouts[dayId].every((e) => e.completed) && !alreadyRewarded) {
       workoutsCompleted += 1;
       lastWorkout = todayStr();
       playSound('task');
@@ -530,6 +536,7 @@ function toggleExercise(dayId: 'push' | 'pull' | 'leg', exerciseId: string) {
         ...withXp,
         workouts: { ...s.workouts, [dayId]: exercises },
         workoutsCompletedToday: workoutsCompleted,
+        workoutRewardsClaimedToday: { ...s.workoutRewardsClaimedToday, [dayId]: true },
         lastWorkoutDate: lastWorkout,
       };
     }

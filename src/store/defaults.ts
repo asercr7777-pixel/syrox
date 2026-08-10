@@ -97,6 +97,7 @@ export function createDefaultState(): AppState {
 
     workouts,
     workoutsCompletedToday: 0,
+    workoutRewardsClaimedToday: { push: false, pull: false, leg: false },
     lastWorkoutDate: null,
     workoutSessions: [],
     totalWorkoutSeconds: 0,

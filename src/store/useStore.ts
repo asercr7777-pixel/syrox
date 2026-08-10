@@ -119,8 +119,7 @@ async function syncLeaderboardInternal(state: AppState) {
     const enabledMain = state.mainTasks.filter((t) => t.enabled);
     const mainDone = enabledMain.filter((t) => state.coreCompleted[t.id]).length;
     const extraDone = Object.values(state.customCompleted).filter(Boolean).length;
-    const totalPossible = enabledMain.length + Math.max(state.customTasks.length, 1);
-    const disciplineScore = Math.round(((mainDone + extraDone) / totalPossible) * 100);
+    const disciplineScore = calculateDisciplineScore(state);
     const tasksCompleted = state.history.reduce((acc, h) => {
       return acc + Object.values(h.coreCompleted).filter(Boolean).length + Object.values(h.customCompleted).filter(Boolean).length;
     }, 0);
@@ -262,8 +261,7 @@ function addPoints(s: AppState, xp: number, points: number): AppState {
   const allMain = enabledMain.every((t) => next.coreCompleted[t.id]);
   const mainDone = enabledMain.filter((t) => next.coreCompleted[t.id]).length;
   const extraDone = Object.values(next.customCompleted).filter(Boolean).length;
-  const totalPossible = enabledMain.length + Math.max(next.customTasks.length, 1);
-  const disciplineScore = Math.round(((mainDone + extraDone) / totalPossible) * 100);
+  const disciplineScore = calculateDisciplineScore(next);
   const existing = next.history.find((h) => h.date === today);
   const dayRecord = {
     date: today,
@@ -342,6 +340,14 @@ function hashString(str: string): number {
   return hash;
 }
 
+function calculateDisciplineScore(state: AppState): number {
+  const enabledMain = state.mainTasks.filter((t) => t.enabled);
+  const mainDone = enabledMain.filter((t) => state.coreCompleted[t.id]).length;
+  const extraDone = Object.values(state.customCompleted).filter(Boolean).length;
+  const totalPossible = enabledMain.length + state.customTasks.length;
+  return totalPossible > 0 ? Math.round(((mainDone + extraDone) / totalPossible) * 100) : 0;
+}
+
 // ---------------------------------------------------------------------------
 // Actions — module-level functions operating on globalState
 // ---------------------------------------------------------------------------
@@ -392,9 +398,13 @@ function toggleCoreTask(id: string) {
       }
       return withCoins;
     } else {
+      const coinReward = Math.max(10, Math.floor(task.points * 0.3));
+      const xp = Math.max(0, s.xp - task.points);
       return {
         ...next,
-        xp: Math.max(0, s.xp - task.points),
+        xp,
+        level: levelFromXp(xp),
+        coins: Math.max(0, s.coins - coinReward),
         totalPoints: Math.max(0, s.totalPoints - task.points),
         dailyXp: Math.max(0, s.dailyXp - task.points),
         dailyPoints: Math.max(0, s.dailyPoints - task.points),
@@ -415,9 +425,13 @@ function toggleCustomTask(id: string) {
       const withPoints = addPoints(next, task.points, task.points);
       return { ...withPoints, coins: withPoints.coins + coinReward };
     } else {
+      const coinReward = Math.max(5, Math.floor(task.points * 0.2));
+      const xp = Math.max(0, s.xp - task.points);
       return {
         ...next,
-        xp: Math.max(0, s.xp - task.points),
+        xp,
+        level: levelFromXp(xp),
+        coins: Math.max(0, s.coins - coinReward),
         totalPoints: Math.max(0, s.totalPoints - task.points),
         dailyXp: Math.max(0, s.dailyXp - task.points),
         dailyPoints: Math.max(0, s.dailyPoints - task.points),

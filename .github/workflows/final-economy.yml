@@ -1,0 +1,485 @@
+name: Final economy hardening
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  harden:
+    if: ${{ !contains(github.event.head_commit.message, '[final-economy]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply economy and reward fixes
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          store = Path("src/store/useStore.ts")
+          text = store.read_text()
+
+          def replace_func(src, start_marker, end_marker, replacement):
+              a = src.index(start_marker)
+              b = src.index(end_marker, a)
+              return src[:a] + replacement + src[b:]
+
+          if "getMarketItem, type MarketCategory" not in text:
+              text = text.replace(
+                  "import { ALL_CHAPTERS, getTotalChapters } from '../data/story';",
+                  "import { ALL_CHAPTERS, getTotalChapters } from '../data/story';\n"
+                  "import { getMarketItem, type MarketCategory } from '../data/marketplace';\n"
+                  "import { getChestById } from '../data/chests';\n"
+                  "import { getBattlePassReward } from '../data/battlepass';\n"
+                  "import { getMilestoneById } from '../data/milestones';",
+                  1,
+              )
+
+          if "const safeInventory = Array.from(" not in text:
+              anchor = """  const safeCoreCompleted = cloudState.mainTasks && cloudState.mainTasks.length > 0
+            ? Object.fromEntries(safeMainTasks.map((task) => [task.id, Boolean(cloudState.coreCompleted?.[task.id])]))
+            : def.coreCompleted;
+"""
+              insertion = anchor + """  const safeInventory = Array.from(
+            new Map(
+              (cloudState.inventory ?? []).map((item) => [`${item.type}:${item.id}`, {
+                ...item,
+                obtainedAt: Number.isFinite(item.obtainedAt) ? item.obtainedAt : Date.now(),
+                favorite: Boolean(item.favorite),
+              }])
+            ).values()
+          );
+"""
+              if anchor not in text:
+                  raise SystemExit("normalize anchor missing")
+              text = text.replace(anchor, insertion, 1)
+
+          if "coins: Math.max(0, Number.isFinite(cloudState.coins)" not in text:
+              text = text.replace(
+                  "    level: levelFromXp(Math.max(0, cloudState.xp ?? def.xp)),",
+                  """    xp: Math.max(0, Number.isFinite(cloudState.xp) ? cloudState.xp : def.xp),
+              coins: Math.max(0, Number.isFinite(cloudState.coins) ? cloudState.coins : def.coins),
+              totalPoints: Math.max(0, Number.isFinite(cloudState.totalPoints) ? cloudState.totalPoints : def.totalPoints),
+              dailyXp: Math.max(0, Math.min(Number.isFinite(cloudState.dailyXp) ? cloudState.dailyXp : 0, Number.isFinite(cloudState.dailyCap) ? cloudState.dailyCap : def.dailyCap)),
+              dailyPoints: Math.max(0, Number.isFinite(cloudState.dailyPoints) ? cloudState.dailyPoints : def.dailyPoints),
+              dailyCap: Math.max(1, Number.isFinite(cloudState.dailyCap) ? cloudState.dailyCap : def.dailyCap),
+              level: levelFromXp(Math.max(0, Number.isFinite(cloudState.xp) ? cloudState.xp : def.xp)),""",
+                  1,
+              )
+
+          if "inventory: safeInventory," not in text:
+              text = text.replace("    coreCompleted: safeCoreCompleted,\n    customCompleted:", "    coreCompleted: safeCoreCompleted,\n    inventory: safeInventory,\n    customCompleted:", 1)
+
+          if "Object.fromEntries(\n      Object.entries({ ...def.chestInventory" not in text:
+              text = text.replace(
+                  "    chestInventory: { ...def.chestInventory, ...cloudState.chestInventory },",
+                  """    chestInventory: Object.fromEntries(
+              Object.entries({ ...def.chestInventory, ...cloudState.chestInventory }).map(([id, count]) => [id, Math.max(0, Math.floor(Number(count) || 0))])
+            ),""",
+                  1,
+              )
+
+          text = replace_func(text, "function purchaseItem(", "\nfunction completeStoryMission", """function purchaseItem(itemId: string, category: string, price: number): boolean {
+            let success = false;
+            setState((s) => {
+              const marketItem = getMarketItem(itemId, category as MarketCategory);
+              if (!marketItem || price !== marketItem.price) return s;
+              if (s.xp < marketItem.xpRequired || s.coins < marketItem.price) return s;
+              const typeMap: Record<MarketCategory, InventoryItem['type']> = {
+                weapons: 'weapon', auras: 'aura', titles: 'title',
+                shields: 'shield', frames: 'frame', backgrounds: 'background',
+              };
+              const type = typeMap[marketItem.category];
+              if (s.inventory.some((i) => i.id === itemId && i.type === type)) return s;
+              success = true;
+              playSound('reward');
+              return {
+                ...s,
+                coins: s.coins - marketItem.price,
+                inventory: [...s.inventory, { id: itemId, type, obtainedAt: Date.now(), favorite: false }],
+              };
+            });
+            return success;
+          }
+""")
+
+          text = replace_func(text, "function completeStoryMission(", "\nfunction setStoryChoice", """function completeStoryMission(missionId: string, reward: { xp: number; coins: number }) {
+            setState((s) => {
+              if (s.storyCompletedMissions[missionId]) return s;
+              const mission = ALL_CHAPTERS.flatMap((chapter) => chapter.missions).find((m) => m.id === missionId);
+              const boss = mission ? undefined : ALL_CHAPTERS.map((chapter) => chapter.boss).find((b) => `boss_${b.id}` === missionId);
+              if (!mission && !boss) return s;
+              const expectedXp = mission?.xpReward ?? boss?.xpReward ?? 0;
+              const expectedCoins = mission?.coinReward ?? boss?.coinReward ?? 0;
+              if (reward.xp !== expectedXp || reward.coins !== expectedCoins) return s;
+              let next = addPoints(s, expectedXp, 0);
+              next = {
+                ...next,
+                coins: next.coins + expectedCoins,
+                storyCompletedMissions: { ...next.storyCompletedMissions, [missionId]: true },
+              };
+              return next;
+            });
+            playSound('reward');
+          }
+""")
+
+          text = replace_func(text, "function clearDungeon(", "\nfunction damageBoss", """function clearDungeon(dungeonId: string): DropResult[] {
+            let drops: DropResult[] = [];
+            setState((s) => {
+              const dungeon = DUNGEONS.find((d) => d.id === dungeonId);
+              if (!dungeon || s.dungeonClearedToday) return s;
+              if (getRankIndex(getRankByXp(s.xp).id) < getRankIndex(dungeon.rankId)) return s;
+              drops = generateDrops(dungeon.auraDropBonus);
+              let next = addPoints(s, dungeon.rewardXp, dungeon.rewardXp);
+              next = {
+                ...next,
+                coins: next.coins + dungeon.rewardCoins,
+                dungeonClearedToday: true,
+                lastDungeonDate: todayStr(),
+                dungeonsCleared: next.dungeonsCleared + 1,
+              };
+              const existing = new Set(next.inventory.map((i) => `${i.type}:${i.id}`));
+              const rewardItems: InventoryItem[] = [];
+              for (const drop of drops) {
+                if (!drop.itemId) continue;
+                const key = `${drop.type}:${drop.itemId}`;
+                if (!existing.has(key)) {
+                  existing.add(key);
+                  rewardItems.push({ id: drop.itemId, type: drop.type as InventoryItem['type'], obtainedAt: Date.now(), favorite: false });
+                }
+              }
+              for (const reward of dungeon.rewards) {
+                if (!reward.itemId || !['aura', 'title', 'weapon', 'shield', 'badge'].includes(reward.type)) continue;
+                const key = `${reward.type}:${reward.itemId}`;
+                if (!existing.has(key)) {
+                  existing.add(key);
+                  rewardItems.push({ id: reward.itemId, type: reward.type as InventoryItem['type'], obtainedAt: Date.now(), favorite: false });
+                }
+              }
+              return { ...next, inventory: [...next.inventory, ...rewardItems] };
+            });
+            playSound('rankup');
+            return drops;
+          }
+""")
+
+          text = replace_func(text, "function damageBoss(", "\nfunction clearSecretDungeon", """function damageBoss(amount: number): DropResult[] {
+            let drops: DropResult[] = [];
+            setState((s) => {
+              const bossId = 'dungeon_boss';
+              if (s.bossDefeated[bossId]) return s;
+              const currentHp = s.bossHpRemaining[bossId] ?? (BOSS_DUNGEON as any).hp;
+              const safeAmount = Math.max(0, Math.min(100, Math.floor(Number.isFinite(amount) ? amount : 0)));
+              if (safeAmount <= 0) return s;
+              const actualDamage = Math.min(safeAmount, currentHp);
+              const newHp = Math.max(0, currentHp - actualDamage);
+              let next = addPoints(s, actualDamage, actualDamage);
+              next = { ...next, bossHpRemaining: { ...next.bossHpRemaining, [bossId]: newHp } };
+              if (newHp === 0) {
+                next = { ...next, bossDefeated: { ...next.bossDefeated, [bossId]: true }, coins: next.coins + BOSS_DUNGEON.rewardCoins };
+                next = addPoints(next, BOSS_DUNGEON.rewardXp, BOSS_DUNGEON.rewardXp);
+                drops = [
+                  { type: 'aura', itemId: BOSS_DUNGEON.auraId, rarity: 'legendary', label: 'Shadow Monarch Aura' },
+                  { type: 'title', itemId: BOSS_DUNGEON.titleId, rarity: 'legendary', label: 'Shadow Monarch Title' },
+                  { type: 'badge', itemId: BOSS_DUNGEON.badgeId, rarity: 'legendary', label: 'Boss Slayer Badge' },
+                ];
+                const existing = new Set(next.inventory.map((i) => `${i.type}:${i.id}`));
+                const newItems: InventoryItem[] = drops
+                  .filter((d) => d.itemId && !existing.has(`${d.type}:${d.itemId}`))
+                  .map((d) => ({ id: d.itemId!, type: d.type as InventoryItem['type'], obtainedAt: Date.now(), favorite: false }));
+                return { ...next, inventory: [...next.inventory, ...newItems] };
+              }
+              return next;
+            });
+            playSound('task');
+            return drops;
+          }
+""")
+
+          text = replace_func(text, "function clearSecretDungeon(", "\nfunction claimLoginReward", """function clearSecretDungeon(dungeonId: string): DropResult[] {
+            let drops: DropResult[] = [];
+            setState((s) => {
+              const dungeon = SECRET_DUNGEONS.find((d) => d.id === dungeonId);
+              if (!dungeon || !s.secretDungeonAvailable || s.secretDungeonId !== dungeonId) return s;
+              if (s.secretDungeonExpiresAt !== null && s.secretDungeonExpiresAt < Date.now()) return s;
+              drops = generateDrops(0.15);
+              drops.push({ type: 'aura', itemId: dungeon.auraId, rarity: 'epic', label: 'Secret Aura' });
+              drops.push({ type: 'title', itemId: dungeon.titleId, rarity: 'epic', label: 'Secret Title' });
+              let next = addPoints(s, dungeon.rewardXp, dungeon.rewardXp);
+              next = { ...next, coins: next.coins + dungeon.rewardCoins, secretDungeonAvailable: false, secretDungeonId: null, secretDungeonExpiresAt: null, dungeonsCleared: next.dungeonsCleared + 1 };
+              const existing = new Set(next.inventory.map((i) => `${i.type}:${i.id}`));
+              const newItems = drops
+                .filter((d) => d.itemId && !existing.has(`${d.type}:${d.itemId}`))
+                .map((d) => ({ id: d.itemId!, type: d.type as InventoryItem['type'], obtainedAt: Date.now(), favorite: false }));
+              return { ...next, inventory: [...next.inventory, ...newItems] };
+            });
+            playSound('rankup');
+            return drops;
+          }
+""")
+
+          text = replace_func(text, "function attackBoss(", "\nfunction openChest", """function attackBoss(bossId: string, damage: number): DropResult[] {
+            let drops: DropResult[] = [];
+            setState((s) => {
+              if (s.bossDefeated[bossId]) return s;
+              const currentHp = s.bossHpRemaining[bossId] ?? 0;
+              const safeDamage = Math.max(0, Math.min(100, Math.floor(Number.isFinite(damage) ? damage : 0)));
+              if (safeDamage <= 0 || currentHp <= 0) return s;
+              const actualDamage = Math.min(safeDamage, currentHp);
+              const newHp = Math.max(0, currentHp - actualDamage);
+              let next = addPoints(s, actualDamage, actualDamage);
+              next = { ...next, bossHpRemaining: { ...next.bossHpRemaining, [bossId]: newHp } };
+              if (newHp === 0) {
+                next = { ...next, bossDefeated: { ...next.bossDefeated, [bossId]: true }, activeBossId: null, coins: next.coins + 500 };
+                drops = [{ type: 'coins', amount: 500, label: '500 Coins' }];
+                playSound('rankup');
+              } else {
+                playSound('task');
+              }
+              return next;
+            });
+            return drops;
+          }
+""")
+
+          text = replace_func(text, "function openChest(", "\nfunction buyChest", """function openChest(chestId: string): DropResult | null {
+            let result: DropResult | null = null;
+            setState((s) => {
+              const count = s.chestInventory[chestId] ?? 0;
+              const chest = getChestById(chestId);
+              if (count <= 0 || !chest) return s;
+              const dropType = ['coins', 'xp', 'weapon', 'aura', 'title'] as const;
+              const pick = dropType[Math.floor(Math.random() * dropType.length)];
+              if (pick === 'coins') {
+                const amt = 50 + Math.floor(Math.random() * 200);
+                result = { type: 'coins', amount: amt, label: `${amt} Coins` };
+                return { ...s, chestInventory: { ...s.chestInventory, [chestId]: count - 1 }, coins: s.coins + amt };
+              }
+              if (pick === 'xp') {
+                const amt = 50 + Math.floor(Math.random() * 150);
+                result = { type: 'xp', amount: amt, label: `${amt} XP` };
+                const next = addPoints(s, amt, 0);
+                return { ...next, chestInventory: { ...next.chestInventory, [chestId]: count - 1 } };
+              }
+              const rarity = rollRarity();
+              const pool = pick === 'weapon' ? WEAPONS : pick === 'aura' ? AURAS : TITLES;
+              const item = pickFromRarity(pool, rarity);
+              if (!item) {
+                result = { type: 'coins', amount: 100, label: '100 Coins' };
+                return { ...s, chestInventory: { ...s.chestInventory, [chestId]: count - 1 }, coins: s.coins + 100 };
+              }
+              const itemType = pick as InventoryItem['type'];
+              if (s.inventory.some((i) => i.id === item.id && i.type === itemType)) {
+                const duplicateValue = Math.max(25, Math.floor(chest.price * 0.5));
+                result = { type: 'coins', amount: duplicateValue, label: `${duplicateValue} Coins (duplicate conversion)` };
+                return { ...s, chestInventory: { ...s.chestInventory, [chestId]: count - 1 }, coins: s.coins + duplicateValue };
+              }
+              result = { type: itemType as DropResult['type'], itemId: item.id, rarity, label: item.name };
+              return {
+                ...s,
+                chestInventory: { ...s.chestInventory, [chestId]: count - 1 },
+                inventory: [...s.inventory, { id: item.id, type: itemType, obtainedAt: Date.now(), favorite: false }],
+              };
+            });
+            if (result) playSound('reward');
+            return result;
+          }
+""")
+
+          text = replace_func(text, "function buyChest(", "\nfunction equipPet", """function buyChest(chestId: string, price: number): boolean {
+            let success = false;
+            setState((s) => {
+              const chest = getChestById(chestId);
+              if (!chest || price !== chest.price || s.coins < chest.price) return s;
+              success = true;
+              playSound('click');
+              return {
+                ...s,
+                coins: s.coins - chest.price,
+                chestInventory: { ...s.chestInventory, [chestId]: (s.chestInventory[chestId] ?? 0) + 1 },
+              };
+            });
+            return success;
+          }
+""")
+
+          text = replace_func(text, "function claimLoginReward(", "\nfunction spinWheel", """function claimLoginReward(): { reward: any; newIndex: number } | null {
+            let result: { reward: any; newIndex: number } | null = null;
+            setState((s) => {
+              const today = todayStr();
+              if (s.lastLoginClaimDate === today) return s;
+              const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+              const newStreak = s.lastLoginClaimDate === yesterday ? s.loginStreak + 1 : 1;
+              const index = (newStreak - 1) % 30;
+              const reward = DAILY_LOGIN_REWARDS[index];
+              result = { reward, newIndex: index };
+              let next: AppState = { ...s, lastLoginClaimDate: today, loginStreak: newStreak };
+              if (reward.type === 'coins') next = { ...next, coins: next.coins + reward.amount };
+              else if (reward.type === 'xp') next = addPoints(next, reward.amount, 0);
+              else if (reward.type === 'chest') next = { ...next, chestInventory: { ...next.chestInventory, common_chest: (next.chestInventory.common_chest ?? 0) + reward.amount } };
+              else if (reward.type === 'aura') {
+                const pool = AURAS.filter((a) => a.rarity === reward.aura);
+                const pick = pool[Math.floor(Math.random() * pool.length)];
+                if (pick && !next.inventory.some((i) => i.id === pick.id && i.type === 'aura')) next = { ...next, inventory: [...next.inventory, { id: pick.id, type: 'aura', obtainedAt: Date.now(), favorite: false }] };
+                else if (pick) next = { ...next, coins: next.coins + 150 };
+              }
+              if (reward.shield) next = { ...next, streakShield: next.streakShield + 1 };
+              return next;
+            });
+            if (result) playSound('reward');
+            return result;
+          }
+""")
+
+          text = replace_func(text, "function spinWheel(", "\nfunction claimChallenge", """function spinWheel(): DropResult | null {
+            let result: DropResult | null = null;
+            setState((s) => {
+              const today = todayStr();
+              if (s.lastSpinDate === today) return s;
+              const totalWeight = SPIN_REWARDS.reduce((a, r) => a + r.weight, 0);
+              let roll = Math.random() * totalWeight;
+              let chosen = SPIN_REWARDS[0];
+              for (const r of SPIN_REWARDS) {
+                roll -= r.weight;
+                if (roll <= 0) { chosen = r; break; }
+              }
+              let next: AppState = { ...s, lastSpinDate: today, lastSpinRewardId: chosen.id };
+              if (chosen.type === 'coins') {
+                next = { ...next, coins: next.coins + chosen.amount };
+                result = { type: 'coins', amount: chosen.amount, label: `${chosen.amount} Coins` };
+              } else if (chosen.type === 'xp') {
+                next = addPoints(next, chosen.amount, 0);
+                result = { type: 'xp', amount: chosen.amount, label: `${chosen.amount} XP` };
+              } else if (chosen.type === 'shards') {
+                const coins = chosen.amount * 10;
+                next = { ...next, coins: next.coins + coins };
+                result = { type: 'coins', amount: coins, label: `${coins} Coins (Aura Shards converted)` };
+              } else if (chosen.type === 'double_xp') {
+                next = { ...next, doubleXpUntil: Date.now() + 3600 * 1000 };
+                result = { type: 'xp', amount: 0, label: 'Double XP for 1 hour' };
+              } else if (chosen.type === 'chest') {
+                next = { ...next, chestInventory: { ...next.chestInventory, common_chest: (next.chestInventory.common_chest ?? 0) + 1 } };
+                result = { type: 'chest', amount: 1, label: 'Mystery Chest' };
+              } else if (chosen.type === 'weapon' || chosen.type === 'aura') {
+                const pool = chosen.type === 'weapon' ? WEAPONS : AURAS;
+                const rarity = rollRarity();
+                const item = pickFromRarity(pool, rarity);
+                if (item && !next.inventory.some((i) => i.id === item.id && i.type === chosen.type)) {
+                  next = { ...next, inventory: [...next.inventory, { id: item.id, type: chosen.type, obtainedAt: Date.now(), favorite: false }] };
+                  result = { type: chosen.type, itemId: item.id, rarity, label: item.name };
+                } else {
+                  const coins = chosen.type === 'weapon' ? 100 : 150;
+                  next = { ...next, coins: next.coins + coins };
+                  result = { type: 'coins', amount: coins, label: `${coins} Coins (duplicate conversion)` };
+                }
+              }
+              return next;
+            });
+            playSound('reward');
+            return result;
+          }
+""")
+
+          text = replace_func(text, "function equipItem(", "\nfunction unequipItem", """function equipItem(type: 'aura' | 'weapon' | 'title' | 'shield' | 'frame' | 'background', itemId: string) {
+            setState((s) => {
+              if (!s.inventory.some((item) => item.id === itemId && item.type === type)) return s;
+              return { ...s, equipped: { ...s.equipped, [type]: itemId } };
+            });
+          }
+""")
+
+          text = replace_func(text, "function claimBattlePassReward(", "\nfunction claimDailyFortune", """function claimBattlePassReward(tier: number, premium: boolean) {
+            setState((s) => {
+              const rewardTier = getBattlePassReward(tier);
+              if (!rewardTier || tier > s.battlePassTier) return s;
+              if (premium && !s.battlePassPremium) return s;
+              const claimed = premium ? s.battlePassClaimedPremium : s.battlePassClaimedFree;
+              if (claimed.includes(tier)) return s;
+              const reward = premium ? rewardTier.premiumReward : rewardTier.freeReward;
+              let next = { ...s };
+              if (reward.type === 'coins') next = { ...next, coins: next.coins + (reward.amount ?? 0) };
+              else if (reward.type === 'xp') next = addPoints(next, reward.amount ?? 0, 0);
+              else if (reward.type === 'item' && reward.itemId) {
+                const itemType: InventoryItem['type'] = reward.itemId.includes('aura') ? 'aura' : reward.itemId.includes('weapon') ? 'weapon' : 'title';
+                if (!next.inventory.some((i) => i.id === reward.itemId && i.type === itemType)) next = { ...next, inventory: [...next.inventory, { id: reward.itemId, type: itemType, obtainedAt: Date.now(), favorite: false }] };
+              }
+              playSound('reward');
+              return premium ? { ...next, battlePassClaimedPremium: [...next.battlePassClaimedPremium, tier] } : { ...next, battlePassClaimedFree: [...next.battlePassClaimedFree, tier] };
+            });
+          }
+""")
+
+          text = replace_func(text, "function claimMilestone(", "\nfunction prestige", """function claimMilestone(milestoneId: string) {
+            setState((s) => {
+              if (s.milestoneClaimed.includes(milestoneId)) return s;
+              const milestone = getMilestoneById(milestoneId);
+              if (!milestone) return s;
+              let next = addPoints(s, milestone.reward.xp, 0);
+              next = { ...next, coins: next.coins + milestone.reward.coins };
+              const existing = new Set(next.inventory.map((i) => `${i.type}:${i.id}`));
+              const rewardItems: InventoryItem[] = [];
+              if (milestone.reward.badgeId && !existing.has(`badge:${milestone.reward.badgeId}`)) rewardItems.push({ id: milestone.reward.badgeId, type: 'badge', obtainedAt: Date.now(), favorite: false });
+              if (milestone.reward.auraId && !existing.has(`aura:${milestone.reward.auraId}`)) rewardItems.push({ id: milestone.reward.auraId, type: 'aura', obtainedAt: Date.now(), favorite: false });
+              playSound('rankup');
+              return { ...next, inventory: [...next.inventory, ...rewardItems], milestoneClaimed: [...next.milestoneClaimed, milestoneId] };
+            });
+          }
+""")
+
+          if ".filter((r) => r.type !== 'title')" in text:
+              text = text.replace("const newItems: InventoryItem[] = rank.rewards\n      .filter((r) => r.type !== 'title')\n      .map", "const newItems: InventoryItem[] = rank.rewards\n      .map", 1)
+
+          store.write_text(text)
+
+          market = Path("src/views/Marketplace.tsx")
+          m = market.read_text()
+          m = m.replace("import { useState, useMemo, useRef, useEffect } from 'react';", "import { useState, useMemo } from 'react';", 1)
+          m = re.sub(r"\n  const purchaseTimerRef = useRef<.*?\n  useEffect\(\(\) => \{\n    return \(\) => \{\n      if \(purchaseTimerRef\.current\) clearTimeout\(purchaseTimerRef\.current\);\n    \};\n  \}, \[\]\);\n", "\n", m, count=1, flags=re.S)
+          m = re.sub(r"  const handlePurchase = \(item: MarketItem\) => \{.*?\n  \};", """  const handlePurchase = (item: MarketItem) => {
+            if (ownedIds.has(item.id)) {
+              toast({ title: 'Already owned', message: `${item.name} is already in your inventory.`, type: 'info' });
+              return;
+            }
+            if (state.xp < item.xpRequired) {
+              toast({ title: 'Locked', message: `You need ${item.xpRequired.toLocaleString()} XP to unlock this item.`, type: 'error' });
+              playSound('error');
+              return;
+            }
+            if (state.coins < item.price) {
+              toast({ title: 'Not enough coins', message: `You need ${item.price.toLocaleString()} coins.`, type: 'error' });
+              playSound('error');
+              return;
+            }
+            setPurchasing(item.id);
+            playSound('whoosh');
+            const success = purchaseItem(item.id, item.category, item.price);
+            setPurchasing(null);
+            if (success) toast({ title: 'Purchase Successful!', message: `${item.name} added to your inventory.`, type: 'reward', icon: '🪙' });
+            else {
+              toast({ title: 'Purchase failed', message: 'The item could not be purchased. Your balance was not changed.', type: 'error' });
+              playSound('error');
+            }
+          };""", m, count=1, flags=re.S)
+          market.write_text(m)
+      - name: Validate
+        run: |
+          npm ci
+          npm run typecheck
+          npm run lint
+          npm run build
+      - name: Commit hardened project and remove workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/store/useStore.ts src/views/Marketplace.tsx
+          git rm .github/workflows/final-economy.yml
+          git commit -m "Harden economy, rewards and progression [final-economy]"
+          git push

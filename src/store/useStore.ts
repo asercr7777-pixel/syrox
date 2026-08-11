@@ -141,8 +141,6 @@ async function syncLeaderboardInternal(state: AppState) {
   try {
     const rank = getRankByXp(state.xp);
     const enabledMain = state.mainTasks.filter((t) => t.enabled);
-    const mainDone = enabledMain.filter((t) => state.coreCompleted[t.id]).length;
-    const extraDone = Object.values(state.customCompleted).filter(Boolean).length;
     const disciplineScore = calculateDisciplineScore(state);
     const tasksCompleted = state.history.reduce((acc, h) => {
       return acc + Object.values(h.coreCompleted).filter(Boolean).length + Object.values(h.customCompleted).filter(Boolean).length;
@@ -284,8 +282,6 @@ function addPoints(s: AppState, xp: number, points: number): AppState {
   const today = todayStr();
   const enabledMain = next.mainTasks.filter((t) => t.enabled);
   const allMain = enabledMain.every((t) => next.coreCompleted[t.id]);
-  const mainDone = enabledMain.filter((t) => next.coreCompleted[t.id]).length;
-  const extraDone = Object.values(next.customCompleted).filter(Boolean).length;
   const disciplineScore = calculateDisciplineScore(next);
   const existing = next.history.find((h) => h.date === today);
   const dayRecord = {
@@ -367,9 +363,7 @@ function hashString(str: string): number {
 
 function calculateDisciplineScore(state: AppState): number {
   const enabledMain = state.mainTasks.filter((t) => t.enabled);
-  const mainDone = enabledMain.filter((t) => state.coreCompleted[t.id]).length;
   const activeCustomIds = new Set(state.customTasks.map((t) => t.id));
-  const extraDone = Object.entries(state.customCompleted).filter(([id, done]) => done && activeCustomIds.has(id)).length;
   const totalPossible = enabledMain.length + state.customTasks.length;
   if (totalPossible <= 0) return 0;
   return Math.max(0, Math.min(100, Math.round(((mainDone + extraDone) / totalPossible) * 100)));
@@ -754,7 +748,7 @@ function spinWheel(): DropResult | null {
     } else if (chosen.type === 'weapon' || chosen.type === 'aura') {
       const pool = chosen.type === 'weapon' ? WEAPONS : AURAS;
       const rarity = rollRarity();
-      const item = pickFromRarity(pool, rarity);
+      const item = pickFromRarity(pool as any, rarity);
       if (item && !next.inventory.some((i) => i.id === item.id && i.type === chosen.type)) {
         next = { ...next, inventory: [...next.inventory, { id: item.id, type: chosen.type, obtainedAt: Date.now(), favorite: false }] };
         result = { type: chosen.type, itemId: item.id, rarity, label: item.name };

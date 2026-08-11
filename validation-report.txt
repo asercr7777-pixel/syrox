@@ -1,5 +1,9 @@
+npm_ci_exit=0
+typecheck_exit=2
+lint_exit=1
+build_exit=0
 
-added 332 packages in 6s
+added 332 packages in 7s
 
 > vite-react-typescript-starter@0.0.0 typecheck
 > tsc --noEmit -p tsconfig.app.json
@@ -7,13 +11,11 @@ added 332 packages in 6s
 src/store/useStore.ts(96,35): error TS2783: 'push' is specified more than once, so this usage will be overwritten.
 src/store/useStore.ts(96,48): error TS2783: 'pull' is specified more than once, so this usage will be overwritten.
 src/store/useStore.ts(96,61): error TS2783: 'leg' is specified more than once, so this usage will be overwritten.
-src/store/useStore.ts(144,11): error TS6133: 'mainDone' is declared but its value is never read.
-src/store/useStore.ts(145,11): error TS6133: 'extraDone' is declared but its value is never read.
-src/store/useStore.ts(287,9): error TS6133: 'mainDone' is declared but its value is never read.
-src/store/useStore.ts(288,9): error TS6133: 'extraDone' is declared but its value is never read.
-src/store/useStore.ts(757,35): error TS2345: Argument of type 'Aura[] | Weapon[]' is not assignable to parameter of type 'Aura[]'.
-  Type 'Weapon[]' is not assignable to type 'Aura[]'.
-    Type 'Weapon' is missing the following properties from type 'Aura': color, intensity, description
+src/store/useStore.ts(143,11): error TS6133: 'enabledMain' is declared but its value is never read.
+src/store/useStore.ts(366,9): error TS6133: 'activeCustomIds' is declared but its value is never read.
+src/store/useStore.ts(369,49): error TS2304: Cannot find name 'mainDone'.
+src/store/useStore.ts(369,60): error TS2304: Cannot find name 'extraDone'.
+src/store/useStore.ts(754,76): error TS2339: Property 'name' does not exist on type '{ rarity: Rarity; id: string; }'.
 
 > vite-react-typescript-starter@0.0.0 lint
 > eslint .
@@ -63,11 +65,9 @@ src/store/useStore.ts(757,35): error TS2345: Argument of type 'Aura[] | Weapon[]
   7:10  warning  Fast refresh only works when a file has exports. Move your component(s) to a separate file  react-refresh/only-export-components
 
 /home/runner/work/syrox/syrox/src/store/useStore.ts
-   144:11  error    'mainDone' is assigned a value but never used. Allowed unused vars must match /^_/u                                                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
-   145:11  error    'extraDone' is assigned a value but never used. Allowed unused vars must match /^_/u                                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
-   287:9   error    'mainDone' is assigned a value but never used. Allowed unused vars must match /^_/u                                                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
-   288:9   error    'extraDone' is assigned a value but never used. Allowed unused vars must match /^_/u                                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
-  1446:6   warning  React Hook useEffect has unnecessary dependencies: 'globalState.equipped.aura', 'globalState.streak', 'globalState.totalPoints', 'globalState.username', and 'globalState.xp'. Either exclude them or remove the dependency array. Outer scope values like 'globalState.xp' aren't valid dependencies because mutating them doesn't re-render the component  react-hooks/exhaustive-deps
+   143:11  error    'enabledMain' is assigned a value but never used. Allowed unused vars must match /^_/u                                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   366:9   error    'activeCustomIds' is assigned a value but never used. Allowed unused vars must match /^_/u                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+  1440:6   warning  React Hook useEffect has unnecessary dependencies: 'globalState.equipped.aura', 'globalState.streak', 'globalState.totalPoints', 'globalState.username', and 'globalState.xp'. Either exclude them or remove the dependency array. Outer scope values like 'globalState.xp' aren't valid dependencies because mutating them doesn't re-render the component  react-hooks/exhaustive-deps
 
 /home/runner/work/syrox/syrox/src/views/Achievements.tsx
   83:6  warning  React Hook useEffect has a missing dependency: 'state'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
@@ -81,7 +81,7 @@ src/store/useStore.ts(757,35): error TS2345: Argument of type 'Aura[] | Weapon[]
 /home/runner/work/syrox/syrox/src/views/StoryMode.tsx
   119:6  warning  React Hook useCallback has an unnecessary dependency: 'currentChapterNum'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
 
-✖ 32 problems (4 errors, 28 warnings)
+✖ 30 problems (2 errors, 28 warnings)
 
 
 > vite-react-typescript-starter@0.0.0 build
@@ -98,27 +98,27 @@ computing gzip size...
 [2mdist/[22m[32mindex.html                         [39m[1m[2m  7.68 kB[22m[1m[22m[2m │ gzip:   2.41 kB[22m
 [2mdist/[22m[2massets/[22m[35mindex-DVsOkKS9.css          [39m[1m[2m 63.42 kB[22m[1m[22m[2m │ gzip:  11.57 kB[22m
 [2mdist/[22m[2massets/[22m[36mModal-CGv8KwpB.js           [39m[1m[2m  1.75 kB[22m[1m[22m[2m │ gzip:   0.83 kB[22m
-[2mdist/[22m[2massets/[22m[36mInventory-B23EgP8N.js       [39m[1m[2m  6.27 kB[22m[1m[22m[2m │ gzip:   2.38 kB[22m
-[2mdist/[22m[2massets/[22m[36mAchievements-dHHjKLff.js    [39m[1m[2m  6.82 kB[22m[1m[22m[2m │ gzip:   2.54 kB[22m
-[2mdist/[22m[2massets/[22m[36mNotifications-FBbFCFSX.js   [39m[1m[2m  7.90 kB[22m[1m[22m[2m │ gzip:   2.71 kB[22m
-[2mdist/[22m[2massets/[22m[36mItemInspection-DMfzMfuf.js  [39m[1m[2m  8.08 kB[22m[1m[22m[2m │ gzip:   2.62 kB[22m
-[2mdist/[22m[2massets/[22m[36mAuth-DFxC0i6A.js            [39m[1m[2m  8.55 kB[22m[1m[22m[2m │ gzip:   2.71 kB[22m
-[2mdist/[22m[2massets/[22m[36mReminders-CqSAbsd1.js       [39m[1m[2m  9.76 kB[22m[1m[22m[2m │ gzip:   3.07 kB[22m
-[2mdist/[22m[2massets/[22m[36mWorkout-Dig73o0h.js         [39m[1m[2m 10.40 kB[22m[1m[22m[2m │ gzip:   3.41 kB[22m
-[2mdist/[22m[2massets/[22m[36mDungeons-ikbpO5xu.js        [39m[1m[2m 11.27 kB[22m[1m[22m[2m │ gzip:   3.20 kB[22m
-[2mdist/[22m[2massets/[22m[36mTasks-DoKA2dGU.js           [39m[1m[2m 11.50 kB[22m[1m[22m[2m │ gzip:   3.16 kB[22m
-[2mdist/[22m[2massets/[22m[36mLeaderboard-CwSsklSN.js     [39m[1m[2m 13.09 kB[22m[1m[22m[2m │ gzip:   4.36 kB[22m
-[2mdist/[22m[2massets/[22m[36mMarketplace-DgKwFPy4.js     [39m[1m[2m 14.91 kB[22m[1m[22m[2m │ gzip:   4.37 kB[22m
-[2mdist/[22m[2massets/[22m[36mSettings-BEYdLDE3.js        [39m[1m[2m 16.63 kB[22m[1m[22m[2m │ gzip:   4.57 kB[22m
-[2mdist/[22m[2massets/[22m[36mDashboard-C5X-XAB7.js       [39m[1m[2m 22.91 kB[22m[1m[22m[2m │ gzip:   6.41 kB[22m
+[2mdist/[22m[2massets/[22m[36mInventory-B_GIsxoi.js       [39m[1m[2m  6.27 kB[22m[1m[22m[2m │ gzip:   2.38 kB[22m
+[2mdist/[22m[2massets/[22m[36mAchievements-Bi2NTysT.js    [39m[1m[2m  6.82 kB[22m[1m[22m[2m │ gzip:   2.54 kB[22m
+[2mdist/[22m[2massets/[22m[36mNotifications-tP9E_VPy.js   [39m[1m[2m  7.90 kB[22m[1m[22m[2m │ gzip:   2.71 kB[22m
+[2mdist/[22m[2massets/[22m[36mItemInspection-Dh93SdYD.js  [39m[1m[2m  8.08 kB[22m[1m[22m[2m │ gzip:   2.62 kB[22m
+[2mdist/[22m[2massets/[22m[36mAuth-C2qSJzEW.js            [39m[1m[2m  8.55 kB[22m[1m[22m[2m │ gzip:   2.71 kB[22m
+[2mdist/[22m[2massets/[22m[36mReminders-1f8so8yt.js       [39m[1m[2m  9.76 kB[22m[1m[22m[2m │ gzip:   3.07 kB[22m
+[2mdist/[22m[2massets/[22m[36mWorkout-mwKI5MWJ.js         [39m[1m[2m 10.40 kB[22m[1m[22m[2m │ gzip:   3.41 kB[22m
+[2mdist/[22m[2massets/[22m[36mDungeons-ay2kTPzz.js        [39m[1m[2m 11.27 kB[22m[1m[22m[2m │ gzip:   3.20 kB[22m
+[2mdist/[22m[2massets/[22m[36mTasks-DbG1z_eg.js           [39m[1m[2m 11.50 kB[22m[1m[22m[2m │ gzip:   3.16 kB[22m
+[2mdist/[22m[2massets/[22m[36mLeaderboard-BNmq7_UH.js     [39m[1m[2m 13.09 kB[22m[1m[22m[2m │ gzip:   4.36 kB[22m
+[2mdist/[22m[2massets/[22m[36mMarketplace-Dx3QMjPC.js     [39m[1m[2m 14.91 kB[22m[1m[22m[2m │ gzip:   4.37 kB[22m
+[2mdist/[22m[2massets/[22m[36mSettings-BtvDERnE.js        [39m[1m[2m 16.63 kB[22m[1m[22m[2m │ gzip:   4.57 kB[22m
+[2mdist/[22m[2massets/[22m[36mDashboard-UE2YV4uZ.js       [39m[1m[2m 22.91 kB[22m[1m[22m[2m │ gzip:   6.41 kB[22m
 [2mdist/[22m[2massets/[22m[36micons-D-1usKa1.js           [39m[1m[2m 32.25 kB[22m[1m[22m[2m │ gzip:   6.63 kB[22m
-[2mdist/[22m[2massets/[22m[36mStoryMode-brd-oDwk.js       [39m[1m[2m 36.82 kB[22m[1m[22m[2m │ gzip:   9.69 kB[22m
-[2mdist/[22m[2massets/[22m[36mProfile-CHS0kTNt.js         [39m[1m[2m 38.16 kB[22m[1m[22m[2m │ gzip:  10.70 kB[22m
+[2mdist/[22m[2massets/[22m[36mStoryMode-C0Vk9GQH.js       [39m[1m[2m 36.82 kB[22m[1m[22m[2m │ gzip:   9.69 kB[22m
+[2mdist/[22m[2massets/[22m[36mProfile-DvkLn1UK.js         [39m[1m[2m 38.16 kB[22m[1m[22m[2m │ gzip:  10.70 kB[22m
 [2mdist/[22m[2massets/[22m[36mBackgroundArt-ChdC1jgb.js   [39m[1m[2m 50.26 kB[22m[1m[22m[2m │ gzip:   9.06 kB[22m
-[2mdist/[22m[2massets/[22m[36mShadow-BN05V1_Q.js          [39m[1m[2m 53.93 kB[22m[1m[22m[2m │ gzip:  20.07 kB[22m
+[2mdist/[22m[2massets/[22m[36mShadow-BbsBTWh4.js          [39m[1m[2m 53.93 kB[22m[1m[22m[2m │ gzip:  20.07 kB[22m
 [2mdist/[22m[2massets/[22m[36msupabase-B97IpV4F.js        [39m[1m[2m124.10 kB[22m[1m[22m[2m │ gzip:  34.14 kB[22m
 [2mdist/[22m[2massets/[22m[36mframer-motion-BOrjXUtJ.js   [39m[1m[2m128.83 kB[22m[1m[22m[2m │ gzip:  42.84 kB[22m
 [2mdist/[22m[2massets/[22m[36mreact-vendor-Ddhs0tPk.js    [39m[1m[2m141.83 kB[22m[1m[22m[2m │ gzip:  45.57 kB[22m
-[2mdist/[22m[2massets/[22m[36mindex-DwGWVHx1.js           [39m[1m[2m186.14 kB[22m[1m[22m[2m │ gzip:  53.21 kB[22m
+[2mdist/[22m[2massets/[22m[36mindex-CL5-GTFx.js           [39m[1m[2m185.83 kB[22m[1m[22m[2m │ gzip:  53.17 kB[22m
 [2mdist/[22m[2massets/[22m[36mrecharts-CRJ47S8N.js        [39m[1m[2m436.90 kB[22m[1m[22m[2m │ gzip: 123.82 kB[22m
-[32m✓ built in 6.48s[39m
+[32m✓ built in 6.46s[39m

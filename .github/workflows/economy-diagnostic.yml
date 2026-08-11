@@ -1,0 +1,41 @@
+name: Economy diagnostic
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  diagnose:
+    if: ${{ !contains(github.event.head_commit.message, '[economy-diagnostic]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply repairs
+        run: |
+          cat .github/econ/01.py .github/econ/02.py .github/econ/03.py .github/econ/04.py .github/econ/05.py .github/econ/06.py .github/econ/07.py > /tmp/econ.py
+          python /tmp/econ.py
+      - name: Diagnose
+        shell: bash
+        run: |
+          set +e
+          npm ci --no-audit --no-fund > /tmp/npm-ci.txt 2>&1
+          echo "npm_ci_exit=$?" > /tmp/diagnostic.txt
+          npm run typecheck > /tmp/typecheck.txt 2>&1
+          echo "typecheck_exit=$?" >> /tmp/diagnostic.txt
+          npm run lint > /tmp/lint.txt 2>&1
+          echo "lint_exit=$?" >> /tmp/diagnostic.txt
+          npm run build > /tmp/build.txt 2>&1
+          echo "build_exit=$?" >> /tmp/diagnostic.txt
+          cat /tmp/npm-ci.txt /tmp/typecheck.txt /tmp/lint.txt /tmp/build.txt > validation-report.txt
+          cat /tmp/diagnostic.txt
+      - name: Commit repairs and report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/store/useStore.ts src/views/Marketplace.tsx validation-report.txt
+          git rm -r .github/econ .github/patch
+          git rm .github/workflows/economy-diagnostic.yml
+          git commit -m "Apply economy hardening and diagnostic report [economy-diagnostic]"
+          git push

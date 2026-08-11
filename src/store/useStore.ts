@@ -93,7 +93,7 @@ function normalizeLoadedState(cloudState: AppState, def: AppState): AppState {
     ),
     bossHpRemaining: cloudState.bossHpRemaining ?? {},
     bossDefeated: cloudState.bossDefeated ?? {},
-    workoutRewardsClaimedToday: { push: false, pull: false, leg: false, ...(cloudState.workoutRewardsClaimedToday ?? {}) },
+    workoutRewardsClaimedToday: { ...(cloudState.workoutRewardsClaimedToday ?? {}), push: cloudState.workoutRewardsClaimedToday?.push ?? false, pull: cloudState.workoutRewardsClaimedToday?.pull ?? false, leg: cloudState.workoutRewardsClaimedToday?.leg ?? false },
   };
 }
 
@@ -140,7 +140,6 @@ async function syncLeaderboardInternal(state: AppState) {
   if (!isSupabaseConfigured() || !globalUserId) return;
   try {
     const rank = getRankByXp(state.xp);
-    const enabledMain = state.mainTasks.filter((t) => t.enabled);
     const disciplineScore = calculateDisciplineScore(state);
     const tasksCompleted = state.history.reduce((acc, h) => {
       return acc + Object.values(h.coreCompleted).filter(Boolean).length + Object.values(h.customCompleted).filter(Boolean).length;
@@ -363,7 +362,8 @@ function hashString(str: string): number {
 
 function calculateDisciplineScore(state: AppState): number {
   const enabledMain = state.mainTasks.filter((t) => t.enabled);
-  const activeCustomIds = new Set(state.customTasks.map((t) => t.id));
+  const mainDone = enabledMain.filter((t) => Boolean(state.coreCompleted[t.id])).length;
+  const extraDone = state.customTasks.filter((t) => Boolean(state.customCompleted[t.id])).length;
   const totalPossible = enabledMain.length + state.customTasks.length;
   if (totalPossible <= 0) return 0;
   return Math.max(0, Math.min(100, Math.round(((mainDone + extraDone) / totalPossible) * 100)));
@@ -748,7 +748,7 @@ function spinWheel(): DropResult | null {
     } else if (chosen.type === 'weapon' || chosen.type === 'aura') {
       const pool = chosen.type === 'weapon' ? WEAPONS : AURAS;
       const rarity = rollRarity();
-      const item = pickFromRarity(pool as any, rarity);
+      const item = pickFromRarity(pool as any, rarity) as any;
       if (item && !next.inventory.some((i) => i.id === item.id && i.type === chosen.type)) {
         next = { ...next, inventory: [...next.inventory, { id: item.id, type: chosen.type, obtainedAt: Date.now(), favorite: false }] };
         result = { type: chosen.type, itemId: item.id, rarity, label: item.name };

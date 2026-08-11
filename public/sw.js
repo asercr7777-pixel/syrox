@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2.0.1';
+const CACHE_VERSION = 'v2.0.0';
 const STATIC_CACHE = `discipline-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `discipline-runtime-${CACHE_VERSION}`;
 const IMAGE_CACHE = `discipline-images-${CACHE_VERSION}`;
@@ -26,27 +26,33 @@ const PRECACHE_URLS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) =>
-      cache.addAll(PRECACHE_URLS).catch((err) => {
+    caches.open(STATIC_CACHE).then((cache) => {
+      return cache.addAll(PRECACHE_URLS).catch((err) => {
         console.warn('[SW] Some precache URLs failed:', err.message);
-      })
-    )
+      });
+    })
   );
-  // Updates are applied silently; the UI no longer shows update prompts.
-  self.skipWaiting();
+  // Do not skip waiting automatically. This lets the app show its
+  // "Update Available" prompt and apply the update deliberately.
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
+    caches.keys().then((keys) => {
+      return Promise.all(
         keys
           .filter((key) => !key.endsWith(CACHE_VERSION))
           .map((key) => caches.delete(key))
-      )
-    )
+      );
+    })
   );
   self.clients.claim();
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 function isNavigationRequest(request) {
@@ -68,7 +74,9 @@ async function staleWhileRevalidate(request) {
   const cache = await caches.open(RUNTIME_CACHE);
   const cachedResponse = await cache.match(request);
   const fetchPromise = fetch(request).then((networkResponse) => {
-    if (networkResponse?.ok) void cache.put(request, networkResponse.clone());
+    if (networkResponse && networkResponse.ok) {
+      void cache.put(request, networkResponse.clone());
+    }
     return networkResponse;
   }).catch(() => cachedResponse);
   return cachedResponse || fetchPromise;
@@ -80,29 +88,35 @@ async function cacheFirst(request, cacheName) {
   if (cachedResponse) return cachedResponse;
   try {
     const networkResponse = await fetch(request);
-    if (networkResponse?.ok) void cache.put(request, networkResponse.clone());
+    if (networkResponse && networkResponse.ok) {
+      void cache.put(request, networkResponse.clone());
+    }
     return networkResponse;
   } catch {
-    return Response.error();
+    return cachedResponse || Response.error();
   }
 }
 
 async function networkFirstWithFallback(request) {
   try {
     const networkResponse = await fetch(request);
-    if (networkResponse?.ok) {
+    if (networkResponse && networkResponse.ok) {
       const cache = await caches.open(STATIC_CACHE);
       void cache.put(request, networkResponse.clone());
     }
     return networkResponse;
   } catch {
     const cache = await caches.open(STATIC_CACHE);
-    return (await cache.match(request)) || (await cache.match('/index.html')) || Response.error();
+    const cached = await cache.match(request);
+    if (cached) return cached;
+    const fallback = await cache.match('/index.html');
+    return fallback || Response.error();
   }
 }
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
+
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
@@ -112,10 +126,12 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(networkFirstWithFallback(request));
     return;
   }
+
   if (isImageRequest(request)) {
     event.respondWith(cacheFirst(request, IMAGE_CACHE));
     return;
   }
+
   if (isStaticAsset(request)) {
     event.respondWith(staleWhileRevalidate(request));
   }

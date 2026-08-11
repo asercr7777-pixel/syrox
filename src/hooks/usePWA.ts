@@ -9,6 +9,8 @@ export function usePWA() {
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isInstallable, setIsInstallable] = useState(false);
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
 
   useEffect(() => {
     const checkInstalled = () => {
@@ -30,14 +32,35 @@ export function usePWA() {
       setInstallPromptEvent(null);
     };
 
-    const onControllerChange = () => window.location.reload();
+    const onControllerChange = () => {
+      window.location.reload();
+    };
 
     window.addEventListener('beforeinstallprompt', onBeforeInstall);
     window.addEventListener('appinstalled', onAppInstalled);
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
-      navigator.serviceWorker.register('/sw.js').catch((err) => {
+      navigator.serviceWorker.register('/sw.js').then((reg) => {
+        setRegistration(reg);
+
+        const checkForWaitingWorker = () => {
+          if (reg.waiting && navigator.serviceWorker.controller) {
+            setUpdateAvailable(true);
+          }
+        };
+
+        checkForWaitingWorker();
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              setUpdateAvailable(true);
+            }
+          });
+        });
+      }).catch((err) => {
         console.warn('[PWA] SW registration failed:', err);
       });
     }
@@ -63,9 +86,19 @@ export function usePWA() {
     return choice?.outcome === 'accepted';
   }, [installPromptEvent]);
 
+  const applyUpdate = useCallback(() => {
+    if (registration?.waiting) {
+      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      return;
+    }
+    window.location.reload();
+  }, [registration]);
+
   return {
     isInstalled,
     isInstallable,
+    updateAvailable,
     promptInstall,
+    applyUpdate,
   };
 }

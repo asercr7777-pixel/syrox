@@ -10,6 +10,7 @@ import { usePWA } from './hooks/usePWA';
 import { InstallButton } from './components/pwa/InstallButton';
 import { UpdateNotification } from './components/pwa/UpdateNotification';
 import { Loader2 } from 'lucide-react';
+import './performance.css';
 
 const Dashboard = lazy(() => import('./views/Dashboard').then((m) => ({ default: m.Dashboard })));
 const Tasks = lazy(() => import('./views/Tasks').then((m) => ({ default: m.Tasks })));

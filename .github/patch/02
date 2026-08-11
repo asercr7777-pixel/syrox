@@ -1,0 +1,25 @@
+now(), favorite: false }));
+       return { ...next, inventory: [...next.inventory, ...newItems] };
+     }
+     return next;
+@@ -640,13 +689,17 @@
+   let drops: DropResult[] = [];
+   setState((s) => {
+     const dungeon = SECRET_DUNGEONS.find((d) => d.id === dungeonId);
+-    if (!dungeon) return s;
++    if (!dungeon || !s.secretDungeonAvailable || s.secretDungeonId !== dungeonId) return s;
++    if (s.secretDungeonExpiresAt !== null && s.secretDungeonExpiresAt < Date.now()) return s;
+     drops = generateDrops(0.15);
+     drops.push({ type: 'aura', itemId: dungeon.auraId, rarity: 'epic', label: 'Secret Aura' });
+     drops.push({ type: 'title', itemId: dungeon.titleId, rarity: 'epic', label: 'Secret Title' });
+     let next = addPoints(s, dungeon.rewardXp, dungeon.rewardXp);
+     next = { ...next, coins: next.coins + dungeon.rewardCoins, secretDungeonAvailable: false, secretDungeonId: null, secretDungeonExpiresAt: null, dungeonsCleared: next.dungeonsCleared + 1 };
+-    const newItems: InventoryItem[] = drops.map((d) => ({ id: d.itemId!, type: d.type as any, obtainedAt: Date.now(), favorite: false }));
++    const existing = new Set(next.inventory.map((i) => `${i.type}:${i.id}`));
++    const newItems: InventoryItem[] = drops
++      .filter((d) => d.itemId && !existing.has(`${d.type}:${d.itemId}`))
++      .map((d) => ({ id: d.itemId!, type: d.type as InventoryItem['type'], obtainedAt: Date.now(), favorite: false }));
+     return { ...next, inventory: [...next.inventory, ...newItems] };
+   });
+   playSound('rankup');
+@@ -663,19 +716,31 @@

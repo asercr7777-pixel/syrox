@@ -1,0 +1,78 @@
+     const count = s.chestInventory[chestId] ?? 0;
+-    if (count <= 0) return s;
++    const chest = getChestById(chestId);
++    if (count <= 0 || !chest) return s;
++
+     const dropType = ['coins', 'xp', 'weapon', 'aura', 'title'] as const;
+     const pick = dropType[Math.floor(Math.random() * dropType.length)];
++
+     if (pick === 'coins') {
+       const amt = 50 + Math.floor(Math.random() * 200);
+       result = { type: 'coins', amount: amt, label: `${amt} Coins` };
+       return { ...s, chestInventory: { ...s.chestInventory, [chestId]: count - 1 }, coins: s.coins + amt };
+-    } else if (pick === 'xp') {
++    }
++    if (pick === 'xp') {
+       const amt = 50 + Math.floor(Math.random() * 150);
+       result = { type: 'xp', amount: amt, label: `${amt} XP` };
+       const next = addPoints(s, amt, 0);
+-      return { ...next, chestInventory: { ...s.chestInventory, [chestId]: count - 1 } };
+-    } else {
+-      const rarity = rollRarity();
+-      const pool = pick === 'weapon' ? WEAPONS : pick === 'aura' ? AURAS : TITLES;
+-      const item = pickFromRarity(pool, rarity);
+-      if (item) {
+-        result = { type: pick as any, itemId: item.id, rarity, label: item.name };
+-        return {
+-          ...s,
+-          chestInventory: { ...s.chestInventory, [chestId]: count - 1 },
+-          inventory: [...s.inventory, { id: item.id, type: pick as any, obtainedAt: Date.now(), favorite: false }],
+-        };
+-      }
++      return { ...next, chestInventory: { ...next.chestInventory, [chestId]: count - 1 } };
++    }
++
++    const rarity = rollRarity();
++    const pool = pick === 'weapon' ? WEAPONS : pick === 'aura' ? AURAS : TITLES;
++    const item = pickFromRarity(pool, rarity);
++    if (!item) {
+       result = { type: 'coins', amount: 100, label: '100 Coins' };
+       return { ...s, chestInventory: { ...s.chestInventory, [chestId]: count - 1 }, coins: s.coins + 100 };
+     }
++
++    const itemType = pick as InventoryItem['type'];
++    if (s.inventory.some((i) => i.id === item.id && i.type === itemType)) {
++      const duplicateValue = Math.max(25, Math.floor(chest.price * 0.5));
++      result = { type: 'coins', amount: duplicateValue, label: `${duplicateValue} Coins (duplicate conversion)` };
++      return {
++        ...s,
++        chestInventory: { ...s.chestInventory, [chestId]: count - 1 },
++        coins: s.coins + duplicateValue,
++      };
++    }
++
++    result = { type: itemType as DropResult['type'], itemId: item.id, rarity, label: item.name };
++    return {
++      ...s,
++      chestInventory: { ...s.chestInventory, [chestId]: count - 1 },
++      inventory: [...s.inventory, { id: item.id, type: itemType, obtainedAt: Date.now(), favorite: false }],
++    };
+   });
+   if (result) playSound('reward');
+   return result;
+@@ -1002,12 +1144,13 @@
+ function buyChest(chestId: string, price: number): boolean {
+   let success = false;
+   setState((s) => {
+-    if (s.coins < price) return s;
++    const chest = getChestById(chestId);
++    if (!chest || price !== chest.price || s.coins < chest.price) return s;
+     success = true;
+     playSound('click');
+     return {
+       ...s,
+-      coins: s.coins - price,
++      coins: s.coins - chest.price,
+       chestInventory: { ...s.chestInventory, [chestId]: (s.chestInventory[chestId] ?? 0) + 1 },
+     };
+   });

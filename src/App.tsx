@@ -22,8 +22,6 @@ const Inventory = lazy(() => import('./views/Inventory').then((m) => ({ default:
 const Achievements = lazy(() => import('./views/Achievements').then((m) => ({ default: m.Achievements })));
 const Leaderboard = lazy(() => import('./views/Leaderboard').then((m) => ({ default: m.Leaderboard })));
 const Settings = lazy(() => import('./views/Settings').then((m) => ({ default: m.Settings })));
-const Notifications = lazy(() => import('./views/Notifications').then((m) => ({ default: m.Notifications })));
-const Reminders = lazy(() => import('./views/Reminders').then((m) => ({ default: m.Reminders })));
 const ItemInspection = lazy(() => import('./views/ItemInspection').then((m) => ({ default: m.ItemInspection })));
 const Auth = lazy(() => import('./views/Auth').then((m) => ({ default: m.Auth })));
 const Shadow = lazy(() => import('./views/Shadow').then((m) => ({ default: m.Shadow })));
@@ -31,7 +29,7 @@ const Shadow = lazy(() => import('./views/Shadow').then((m) => ({ default: m.Sha
 const VALID_VIEWS = new Set<ViewId>([
   'dashboard', 'tasks', 'story', 'workout', 'dungeons', 'profile',
   'marketplace', 'inventory', 'achievements', 'leaderboard', 'shadow',
-  'settings', 'notifications', 'reminders', 'iteminspection',
+  'settings', 'iteminspection',
 ]);
 
 function getViewFromUrl(): ViewId {
@@ -41,11 +39,7 @@ function getViewFromUrl(): ViewId {
 }
 
 function PageLoader() {
-  return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <Loader2 className="animate-spin text-ember-400" size={32} />
-    </div>
-  );
+  return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="animate-spin text-ember-400" size={32} /></div>;
 }
 
 function AppContent() {
@@ -54,16 +48,11 @@ function AppContent() {
   const [view, setView] = useState<ViewId>(getViewFromUrl);
   const { isInstalled, isInstallable, updateAvailable, promptInstall, applyUpdate } = usePWA();
 
-  useEffect(() => {
-    syncSoundFlag(state.soundEnabled);
-  }, [state.soundEnabled]);
+  useEffect(() => { syncSoundFlag(state.soundEnabled); }, [state.soundEnabled]);
 
   useEffect(() => {
-    if (user) {
-      void loadFromCloud(user.id);
-    } else {
-      setUserId(null);
-    }
+    if (user) void loadFromCloud(user.id);
+    else setUserId(null);
   }, [user, setUserId, loadFromCloud]);
 
   useEffect(() => {
@@ -81,22 +70,11 @@ function AppContent() {
   };
 
   if (loading || (user && !cloudLoaded)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-ember-400" size={40} />
-      </div>
-    );
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-ember-400" size={40} /></div>;
   }
 
   if (!user) {
-    return (
-      <>
-        <Background />
-        <Suspense fallback={<PageLoader />}>
-          <Auth />
-        </Suspense>
-      </>
-    );
+    return <><Background /><Suspense fallback={<PageLoader />}><Auth /></Suspense></>;
   }
 
   return (
@@ -107,40 +85,29 @@ function AppContent() {
       <Confetti />
       <UpdateNotification updateAvailable={updateAvailable} onApplyUpdate={applyUpdate} />
       <InstallButton isInstallable={isInstallable} isInstalled={isInstalled} onInstall={promptInstall} />
-
       <main className="lg:ml-64 pt-16 lg:pt-6 px-3 sm:px-4 pb-24 lg:pb-8 max-w-6xl mx-auto overflow-x-hidden">
-        <div key={view} className="page-enter">
-          <Suspense fallback={<PageLoader />}>
-            {view === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
-            {view === 'tasks' && <Tasks />}
-            {view === 'story' && <StoryMode />}
-            {view === 'workout' && <Workout />}
-            {view === 'dungeons' && <Dungeons />}
-            {view === 'profile' && <Profile />}
-            {view === 'marketplace' && <Marketplace />}
-            {view === 'inventory' && <Inventory />}
-            {view === 'achievements' && <Achievements />}
-            {view === 'leaderboard' && <Leaderboard />}
-            {view === 'shadow' && <Shadow />}
-            {view === 'settings' && <Settings onNavigate={handleNavigate} />}
-            {view === 'notifications' && <Notifications onNavigate={handleNavigate} />}
-            {view === 'reminders' && <Reminders onNavigate={handleNavigate} />}
-            {view === 'iteminspection' && (
-              <ItemInspection itemId="" category="weapon" onBack={() => handleNavigate('inventory')} />
-            )}
-          </Suspense>
-        </div>
+        <Suspense fallback={<PageLoader />}>
+          {view === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
+          {view === 'tasks' && <Tasks />}
+          {view === 'story' && <StoryMode />}
+          {view === 'workout' && <Workout />}
+          {view === 'dungeons' && <Dungeons />}
+          {view === 'profile' && <Profile />}
+          {view === 'marketplace' && <Marketplace />}
+          {view === 'inventory' && <Inventory />}
+          {view === 'achievements' && <Achievements />}
+          {view === 'leaderboard' && <Leaderboard />}
+          {view === 'shadow' && <Shadow />}
+          {view === 'settings' && <Settings onNavigate={handleNavigate} />}
+          {view === 'iteminspection' && <ItemInspection itemId="" category="weapon" onBack={() => handleNavigate('inventory')} />}
+        </Suspense>
       </main>
     </div>
   );
 }
 
 function App() {
-  return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
-  );
+  return <AuthProvider><AppContent /></AuthProvider>;
 }
 
 export default App;

@@ -1,0 +1,28 @@
+name: Final typecheck validation
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  fix:
+    if: ${{ !contains(github.event.head_commit.message, '[final-fix]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply final fix
+        run: python .github/final-fix.py
+      - name: Validate
+        run: |
+          npm ci
+          npm run typecheck
+          npm run lint
+          npm run build
+      - name: Commit and clean
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/store/useStore.ts
+          git rm .github/final-fix.py .github/workflows/final-fix.yml validation-report.txt
+          git commit -m "Finalize economy hardening and validation [final-fix]"
+          git push

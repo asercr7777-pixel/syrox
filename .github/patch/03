@@ -22,6 +22,7 @@
 +          ...next.chestInventory,
 +          common_chest: (next.chestInventory.common_chest ?? 0) + reward.amount,
 +        },
++      };
      } else if (reward.type === 'aura') {
        const pool = AURAS.filter((a) => a.rarity === reward.aura);
        const pick = pool[Math.floor(Math.random() * pool.length)];

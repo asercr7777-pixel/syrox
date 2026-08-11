@@ -8,6 +8,10 @@ import { DUNGEONS, SECRET_DUNGEONS, BOSS_DUNGEON } from '../data/dungeons';
 import { playSound } from '../lib/sound';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { ALL_CHAPTERS, getTotalChapters } from '../data/story';
+import { getMarketItem, type MarketCategory } from '../data/marketplace';
+import { getChestById } from '../data/chests';
+import { getBattlePassReward } from '../data/battlepass';
+import { getMilestoneById } from '../data/milestones';
 
 const ALL_STORY_CHAPTER_COUNT = getTotalChapters();
 const VALID_STORY_MISSION_IDS = new Set(ALL_CHAPTERS.flatMap((chapter) => chapter.missions.map((mission) => mission.id)));
@@ -50,11 +54,26 @@ function normalizeLoadedState(cloudState: AppState, def: AppState): AppState {
   const safeCoreCompleted = cloudState.mainTasks && cloudState.mainTasks.length > 0
     ? Object.fromEntries(safeMainTasks.map((task) => [task.id, Boolean(cloudState.coreCompleted?.[task.id])]))
     : def.coreCompleted;
+  const safeInventory = Array.from(
+    new Map(
+      (cloudState.inventory ?? []).map((item) => [`${item.type}:${item.id}`, {
+        ...item,
+        obtainedAt: Number.isFinite(item.obtainedAt) ? item.obtainedAt : Date.now(),
+        favorite: Boolean(item.favorite),
+      }])
+    ).values()
+  );
 
   return {
     ...def,
     ...cloudState,
-    level: levelFromXp(Math.max(0, cloudState.xp ?? def.xp)),
+    xp: Math.max(0, Number.isFinite(cloudState.xp) ? cloudState.xp : def.xp),
+    coins: Math.max(0, Number.isFinite(cloudState.coins) ? cloudState.coins : def.coins),
+    totalPoints: Math.max(0, Number.isFinite(cloudState.totalPoints) ? cloudState.totalPoints : def.totalPoints),
+    dailyXp: Math.max(0, Math.min(Number.isFinite(cloudState.dailyXp) ? cloudState.dailyXp : 0, Number.isFinite(cloudState.dailyCap) ? cloudState.dailyCap : def.dailyCap)),
+    dailyPoints: Math.max(0, Number.isFinite(cloudState.dailyPoints) ? cloudState.dailyPoints : def.dailyPoints),
+    dailyCap: Math.max(1, Number.isFinite(cloudState.dailyCap) ? cloudState.dailyCap : def.dailyCap),
+    level: levelFromXp(Math.max(0, Number.isFinite(cloudState.xp) ? cloudState.xp : def.xp)),
     storyChapter: Math.max(0, Math.min(cloudState.storyChapter ?? 0, ALL_STORY_CHAPTER_COUNT)),
     storyMission: Math.max(0, cloudState.storyMission ?? 0),
     storyCompletedMissions: pickValidRecord(cloudState.storyCompletedMissions, VALID_STORY_MISSION_IDS),
@@ -65,10 +84,13 @@ function normalizeLoadedState(cloudState: AppState, def: AppState): AppState {
     storyAchievements: Array.from(new Set(cloudState.storyAchievements ?? [])),
     mainTasks: safeMainTasks,
     coreCompleted: safeCoreCompleted,
+    inventory: safeInventory,
     customCompleted: cloudState.customCompleted ?? {},
     equipped: { ...def.equipped, ...cloudState.equipped },
     notifications: { ...def.notifications, ...cloudState.notifications },
-    chestInventory: { ...def.chestInventory, ...cloudState.chestInventory },
+    chestInventory: Object.fromEntries(
+      Object.entries({ ...def.chestInventory, ...cloudState.chestInventory }).map(([id, count]) => [id, Math.max(0, Math.floor(Number(count) || 0))])
+    ),
     bossHpRemaining: cloudState.bossHpRemaining ?? {},
     bossDefeated: cloudState.bossDefeated ?? {},
     workoutRewardsClaimedToday: { push: false, pull: false, leg: false, ...(cloudState.workoutRewardsClaimedToday ?? {}) },
@@ -593,18 +615,30 @@ function clearDungeon(dungeonId: string): DropResult[] {
   let drops: DropResult[] = [];
   setState((s) => {
     const dungeon = DUNGEONS.find((d) => d.id === dungeonId);
-    if (!dungeon) return s;
-    if (s.dungeonClearedToday) return s;
+    if (!dungeon || s.dungeonClearedToday) return s;
+    if (getRankIndex(getRankByXp(s.xp).id) < getRankIndex(dungeon.rankId)) return s;
     drops = generateDrops(dungeon.auraDropBonus);
     let next = addPoints(s, dungeon.rewardXp, dungeon.rewardXp);
     next = { ...next, coins: next.coins + dungeon.rewardCoins, dungeonClearedToday: true, lastDungeonDate: todayStr(), dungeonsCleared: next.dungeonsCleared + 1 };
-    const newItems: InventoryItem[] = drops.map((d) => ({ id: d.itemId!, type: d.type as any, obtainedAt: Date.now(), favorite: false }));
-    // Also grant specific dungeon rewards (auras, titles, weapons, shields, badges)
-    const rewardItems: InventoryItem[] = dungeon.rewards
-      .filter((r) => r.type === 'aura' || r.type === 'title' || r.type === 'weapon' || r.type === 'shield' || r.type === 'badge')
-      .filter((r) => r.itemId && !next.inventory.some((i) => i.id === r.itemId && i.type === (r.type as any)))
-      .map((r) => ({ id: r.itemId!, type: r.type as any, obtainedAt: Date.now(), favorite: false }));
-    return { ...next, inventory: [...next.inventory, ...newItems, ...rewardItems] };
+    const existing = new Set(next.inventory.map((i) => `${i.type}:${i.id}`));
+    const rewardItems: InventoryItem[] = [];
+    for (const drop of drops) {
+      if (!drop.itemId) continue;
+      const key = `${drop.type}:${drop.itemId}`;
+      if (!existing.has(key)) {
+        existing.add(key);
+        rewardItems.push({ id: drop.itemId, type: drop.type as InventoryItem['type'], obtainedAt: Date.now(), favorite: false });
+      }
+    }
+    for (const reward of dungeon.rewards) {
+      if (!reward.itemId || !['aura', 'title', 'weapon', 'shield', 'badge'].includes(reward.type)) continue;
+      const key = `${reward.type}:${reward.itemId}`;
+      if (!existing.has(key)) {
+        existing.add(key);
+        rewardItems.push({ id: reward.itemId, type: reward.type as InventoryItem['type'], obtainedAt: Date.now(), favorite: false });
+      }
+    }
+    return { ...next, inventory: [...next.inventory, ...rewardItems] };
   });
   playSound('rankup');
   return drops;
@@ -616,8 +650,11 @@ function damageBoss(amount: number): DropResult[] {
     const bossId = 'dungeon_boss';
     if (s.bossDefeated[bossId]) return s;
     const currentHp = s.bossHpRemaining[bossId] ?? (BOSS_DUNGEON as any).hp;
-    const newHp = Math.max(0, currentHp - amount);
-    let next = addPoints(s, amount, amount);
+    const safeAmount = Math.max(0, Math.min(100, Math.floor(Number.isFinite(amount) ? amount : 0)));
+    if (safeAmount <= 0) return s;
+    const actualDamage = Math.min(safeAmount, currentHp);
+    const newHp = Math.max(0, currentHp - actualDamage);
+    let next = addPoints(s, actualDamage, actualDamage);
     next = { ...next, bossHpRemaining: { ...next.bossHpRemaining, [bossId]: newHp } };
     if (newHp === 0) {
       next = { ...next, bossDefeated: { ...next.bossDefeated, [bossId]: true }, coins: next.coins + BOSS_DUNGEON.rewardCoins };
@@ -627,7 +664,9 @@ function damageBoss(amount: number): DropResult[] {
         { type: 'title', itemId: BOSS_DUNGEON.titleId, rarity: 'legendary', label: 'Shadow Monarch Title' },
         { type: 'badge', itemId: BOSS_DUNGEON.badgeId, rarity: 'legendary', label: 'Boss Slayer Badge' },
       ];
-      const newItems: InventoryItem[] = drops.map((d) => ({ id: d.itemId!, type: d.type as any, obtainedAt: Date.now(), favorite: false }));
+      const existing = new Set(next.inventory.map((i) => `${i.type}:${i.id}`));
+      const newItems = drops.filter((d) => d.itemId && !existing.has(`${d.type}:${d.itemId}`))
+        .map((d) => ({ id: d.itemId!, type: d.type as InventoryItem['type'], obtainedAt: Date.now(), favorite: false }));
       return { ...next, inventory: [...next.inventory, ...newItems] };
     }
     return next;
@@ -640,13 +679,16 @@ function clearSecretDungeon(dungeonId: string): DropResult[] {
   let drops: DropResult[] = [];
   setState((s) => {
     const dungeon = SECRET_DUNGEONS.find((d) => d.id === dungeonId);
-    if (!dungeon) return s;
+    if (!dungeon || !s.secretDungeonAvailable || s.secretDungeonId !== dungeonId) return s;
+    if (s.secretDungeonExpiresAt !== null && s.secretDungeonExpiresAt < Date.now()) return s;
     drops = generateDrops(0.15);
     drops.push({ type: 'aura', itemId: dungeon.auraId, rarity: 'epic', label: 'Secret Aura' });
     drops.push({ type: 'title', itemId: dungeon.titleId, rarity: 'epic', label: 'Secret Title' });
     let next = addPoints(s, dungeon.rewardXp, dungeon.rewardXp);
     next = { ...next, coins: next.coins + dungeon.rewardCoins, secretDungeonAvailable: false, secretDungeonId: null, secretDungeonExpiresAt: null, dungeonsCleared: next.dungeonsCleared + 1 };
-    const newItems: InventoryItem[] = drops.map((d) => ({ id: d.itemId!, type: d.type as any, obtainedAt: Date.now(), favorite: false }));
+    const existing = new Set(next.inventory.map((i) => `${i.type}:${i.id}`));
+    const newItems = drops.filter((d) => d.itemId && !existing.has(`${d.type}:${d.itemId}`))
+      .map((d) => ({ id: d.itemId!, type: d.type as InventoryItem['type'], obtainedAt: Date.now(), favorite: false }));
     return { ...next, inventory: [...next.inventory, ...newItems] };
   });
   playSound('rankup');
@@ -666,15 +708,12 @@ function claimLoginReward(): { reward: any; newIndex: number } | null {
     let next: AppState = { ...s, lastLoginClaimDate: today, loginStreak: newStreak };
     if (reward.type === 'coins') next = { ...next, coins: next.coins + reward.amount };
     else if (reward.type === 'xp') next = addPoints(next, reward.amount, 0);
-    else if (reward.type === 'shards') next = { ...next, coins: next.coins + reward.amount * 10 };
-    else if (reward.type === 'chest') {
-      const drops = generateDrops(0.05);
-      const newItems: InventoryItem[] = drops.map((d) => ({ id: d.itemId!, type: d.type as any, obtainedAt: Date.now(), favorite: false }));
-      next = { ...next, inventory: [...next.inventory, ...newItems] };
-    } else if (reward.type === 'aura') {
+    else if (reward.type === 'chest') next = { ...next, chestInventory: { ...next.chestInventory, common_chest: (next.chestInventory.common_chest ?? 0) + reward.amount } };
+    else if (reward.type === 'aura') {
       const pool = AURAS.filter((a) => a.rarity === reward.aura);
       const pick = pool[Math.floor(Math.random() * pool.length)];
-      if (pick) next = { ...next, inventory: [...next.inventory, { id: pick.id, type: 'aura', obtainedAt: Date.now(), favorite: false }] };
+      if (pick && !next.inventory.some((i) => i.id === pick.id && i.type === 'aura')) next = { ...next, inventory: [...next.inventory, { id: pick.id, type: 'aura', obtainedAt: Date.now(), favorite: false }] };
+      else if (pick) next = { ...next, coins: next.coins + 150 };
     }
     if (reward.shield) next = { ...next, streakShield: next.streakShield + 1 };
     return next;
@@ -695,18 +734,34 @@ function spinWheel(): DropResult | null {
       roll -= r.weight;
       if (roll <= 0) { chosen = r; break; }
     }
-    result = { type: chosen.type as any, amount: chosen.amount, label: chosen.label } as DropResult;
     let next: AppState = { ...s, lastSpinDate: today, lastSpinRewardId: chosen.id };
-    if (chosen.type === 'coins') next = { ...next, coins: next.coins + chosen.amount };
-    else if (chosen.type === 'xp') next = addPoints(next, chosen.amount, 0);
-    else if (chosen.type === 'shards') next = { ...next, coins: next.coins + chosen.amount * 10 };
-    else if (chosen.type === 'double_xp') next = { ...next, doubleXpUntil: Date.now() + 3600 * 1000 };
-    else if (chosen.type === 'chest' || chosen.type === 'weapon' || chosen.type === 'aura') {
-      const drops = generateDrops(chosen.type === 'aura' ? 0.1 : 0);
-      if (drops.length > 0) {
-        const newItems: InventoryItem[] = drops.map((d) => ({ id: d.itemId!, type: d.type as any, obtainedAt: Date.now(), favorite: false }));
-        next = { ...next, inventory: [...next.inventory, ...newItems] };
-        result = drops[0];
+    if (chosen.type === 'coins') {
+      next = { ...next, coins: next.coins + chosen.amount };
+      result = { type: 'coins', amount: chosen.amount, label: `${chosen.amount} Coins` };
+    } else if (chosen.type === 'xp') {
+      next = addPoints(next, chosen.amount, 0);
+      result = { type: 'xp', amount: chosen.amount, label: `${chosen.amount} XP` };
+    } else if (chosen.type === 'shards') {
+      const coins = chosen.amount * 10;
+      next = { ...next, coins: next.coins + coins };
+      result = { type: 'coins', amount: coins, label: `${coins} Coins (Aura Shards converted)` };
+    } else if (chosen.type === 'double_xp') {
+      next = { ...next, doubleXpUntil: Date.now() + 3600 * 1000 };
+      result = { type: 'xp', amount: 0, label: 'Double XP for 1 hour' };
+    } else if (chosen.type === 'chest') {
+      next = { ...next, chestInventory: { ...next.chestInventory, common_chest: (next.chestInventory.common_chest ?? 0) + 1 } };
+      result = { type: 'chest', amount: 1, label: 'Mystery Chest' };
+    } else if (chosen.type === 'weapon' || chosen.type === 'aura') {
+      const pool = chosen.type === 'weapon' ? WEAPONS : AURAS;
+      const rarity = rollRarity();
+      const item = pickFromRarity(pool, rarity);
+      if (item && !next.inventory.some((i) => i.id === item.id && i.type === chosen.type)) {
+        next = { ...next, inventory: [...next.inventory, { id: item.id, type: chosen.type, obtainedAt: Date.now(), favorite: false }] };
+        result = { type: chosen.type, itemId: item.id, rarity, label: item.name };
+      } else {
+        const coins = chosen.type === 'weapon' ? 100 : 150;
+        next = { ...next, coins: next.coins + coins };
+        result = { type: 'coins', amount: coins, label: `${coins} Coins (duplicate conversion)` };
       }
     }
     return next;
@@ -729,7 +784,10 @@ function claimChallenge(challengeId: string) {
 }
 
 function equipItem(type: 'aura' | 'weapon' | 'title' | 'shield' | 'frame' | 'background', itemId: string) {
-  setState((s) => ({ ...s, equipped: { ...s.equipped, [type]: itemId } }));
+  setState((s) => {
+    if (!s.inventory.some((item) => item.id === itemId && item.type === type)) return s;
+    return { ...s, equipped: { ...s.equipped, [type]: itemId } };
+  });
 }
 
 function unequipItem(type: 'aura' | 'weapon' | 'title' | 'shield' | 'frame' | 'background') {
@@ -821,14 +879,20 @@ function resetAll() {
 function purchaseItem(itemId: string, category: string, price: number): boolean {
   let success = false;
   setState((s) => {
-    if (s.coins < price) return s;
-    const type = category as InventoryItem['type'];
+    const marketItem = getMarketItem(itemId, category as MarketCategory);
+    if (!marketItem || price !== marketItem.price) return s;
+    if (s.xp < marketItem.xpRequired || s.coins < marketItem.price) return s;
+    const typeMap: Record<MarketCategory, InventoryItem['type']> = {
+      weapons: 'weapon', auras: 'aura', titles: 'title',
+      shields: 'shield', frames: 'frame', backgrounds: 'background',
+    };
+    const type = typeMap[marketItem.category];
     if (s.inventory.some((i) => i.id === itemId && i.type === type)) return s;
     success = true;
     playSound('reward');
     return {
       ...s,
-      coins: s.coins - price,
+      coins: s.coins - marketItem.price,
       inventory: [...s.inventory, { id: itemId, type, obtainedAt: Date.now(), favorite: false }],
     };
   });
@@ -838,12 +902,15 @@ function purchaseItem(itemId: string, category: string, price: number): boolean 
 function completeStoryMission(missionId: string, reward: { xp: number; coins: number }) {
   setState((s) => {
     if (s.storyCompletedMissions[missionId]) return s;
-    let next = addPoints(s, reward.xp, 0);
-    next = { ...next, coins: next.coins + reward.coins };
-    return {
-      ...next,
-      storyCompletedMissions: { ...next.storyCompletedMissions, [missionId]: true },
-    };
+    const mission = ALL_CHAPTERS.flatMap((chapter) => chapter.missions).find((m) => m.id === missionId);
+    const boss = mission ? undefined : ALL_CHAPTERS.map((chapter) => chapter.boss).find((b) => `boss_${b.id}` === missionId);
+    if (!mission && !boss) return s;
+    const expectedXp = mission?.xpReward ?? boss?.xpReward ?? 0;
+    const expectedCoins = mission?.coinReward ?? boss?.coinReward ?? 0;
+    if (reward.xp !== expectedXp || reward.coins !== expectedCoins) return s;
+    let next = addPoints(s, expectedXp, 0);
+    next = { ...next, coins: next.coins + expectedCoins, storyCompletedMissions: { ...next.storyCompletedMissions, [missionId]: true } };
+    return next;
   });
   playSound('reward');
 }
@@ -947,17 +1014,19 @@ function engageBoss(bossId: string) {
 function attackBoss(bossId: string, damage: number): DropResult[] {
   let drops: DropResult[] = [];
   setState((s) => {
+    if (s.bossDefeated[bossId]) return s;
     const currentHp = s.bossHpRemaining[bossId] ?? 0;
-    const newHp = Math.max(0, currentHp - damage);
-    let next = addPoints(s, damage, damage);
+    const safeDamage = Math.max(0, Math.min(100, Math.floor(Number.isFinite(damage) ? damage : 0)));
+    if (safeDamage <= 0 || currentHp <= 0) return s;
+    const actualDamage = Math.min(safeDamage, currentHp);
+    const newHp = Math.max(0, currentHp - actualDamage);
+    let next = addPoints(s, actualDamage, actualDamage);
     next = { ...next, bossHpRemaining: { ...next.bossHpRemaining, [bossId]: newHp } };
-    if (newHp === 0 && !s.bossDefeated[bossId]) {
-      next = { ...next, bossDefeated: { ...next.bossDefeated, [bossId]: true }, activeBossId: null };
+    if (newHp === 0) {
+      next = { ...next, bossDefeated: { ...next.bossDefeated, [bossId]: true }, activeBossId: null, coins: next.coins + 500 };
       drops = [{ type: 'coins', amount: 500, label: '500 Coins' }];
       playSound('rankup');
-    } else {
-      playSound('task');
-    }
+    } else playSound('task');
     return next;
   });
   return drops;
@@ -967,33 +1036,36 @@ function openChest(chestId: string): DropResult | null {
   let result: DropResult | null = null;
   setState((s) => {
     const count = s.chestInventory[chestId] ?? 0;
-    if (count <= 0) return s;
+    const chest = getChestById(chestId);
+    if (count <= 0 || !chest) return s;
     const dropType = ['coins', 'xp', 'weapon', 'aura', 'title'] as const;
     const pick = dropType[Math.floor(Math.random() * dropType.length)];
     if (pick === 'coins') {
       const amt = 50 + Math.floor(Math.random() * 200);
       result = { type: 'coins', amount: amt, label: `${amt} Coins` };
       return { ...s, chestInventory: { ...s.chestInventory, [chestId]: count - 1 }, coins: s.coins + amt };
-    } else if (pick === 'xp') {
+    }
+    if (pick === 'xp') {
       const amt = 50 + Math.floor(Math.random() * 150);
       result = { type: 'xp', amount: amt, label: `${amt} XP` };
       const next = addPoints(s, amt, 0);
-      return { ...next, chestInventory: { ...s.chestInventory, [chestId]: count - 1 } };
-    } else {
-      const rarity = rollRarity();
-      const pool = pick === 'weapon' ? WEAPONS : pick === 'aura' ? AURAS : TITLES;
-      const item = pickFromRarity(pool, rarity);
-      if (item) {
-        result = { type: pick as any, itemId: item.id, rarity, label: item.name };
-        return {
-          ...s,
-          chestInventory: { ...s.chestInventory, [chestId]: count - 1 },
-          inventory: [...s.inventory, { id: item.id, type: pick as any, obtainedAt: Date.now(), favorite: false }],
-        };
-      }
+      return { ...next, chestInventory: { ...next.chestInventory, [chestId]: count - 1 } };
+    }
+    const rarity = rollRarity();
+    const pool = pick === 'weapon' ? WEAPONS : pick === 'aura' ? AURAS : TITLES;
+    const item = pickFromRarity(pool, rarity);
+    if (!item) {
       result = { type: 'coins', amount: 100, label: '100 Coins' };
       return { ...s, chestInventory: { ...s.chestInventory, [chestId]: count - 1 }, coins: s.coins + 100 };
     }
+    const itemType = pick as InventoryItem['type'];
+    if (s.inventory.some((i) => i.id === item.id && i.type === itemType)) {
+      const duplicateValue = Math.max(25, Math.floor(chest.price * 0.5));
+      result = { type: 'coins', amount: duplicateValue, label: `${duplicateValue} Coins (duplicate conversion)` };
+      return { ...s, chestInventory: { ...s.chestInventory, [chestId]: count - 1 }, coins: s.coins + duplicateValue };
+    }
+    result = { type: itemType as DropResult['type'], itemId: item.id, rarity, label: item.name };
+    return { ...s, chestInventory: { ...s.chestInventory, [chestId]: count - 1 }, inventory: [...s.inventory, { id: item.id, type: itemType, obtainedAt: Date.now(), favorite: false }] };
   });
   if (result) playSound('reward');
   return result;
@@ -1002,14 +1074,11 @@ function openChest(chestId: string): DropResult | null {
 function buyChest(chestId: string, price: number): boolean {
   let success = false;
   setState((s) => {
-    if (s.coins < price) return s;
+    const chest = getChestById(chestId);
+    if (!chest || price !== chest.price || s.coins < chest.price) return s;
     success = true;
     playSound('click');
-    return {
-      ...s,
-      coins: s.coins - price,
-      chestInventory: { ...s.chestInventory, [chestId]: (s.chestInventory[chestId] ?? 0) + 1 },
-    };
+    return { ...s, coins: s.coins - chest.price, chestInventory: { ...s.chestInventory, [chestId]: (s.chestInventory[chestId] ?? 0) + 1 } };
   });
   return success;
 }
@@ -1026,14 +1095,21 @@ function unequipPet() {
 
 function claimBattlePassReward(tier: number, premium: boolean) {
   setState((s) => {
-    if (tier > s.battlePassTier) return s;
+    const rewardTier = getBattlePassReward(tier);
+    if (!rewardTier || tier > s.battlePassTier) return s;
+    if (premium && !s.battlePassPremium) return s;
     const claimed = premium ? s.battlePassClaimedPremium : s.battlePassClaimedFree;
     if (claimed.includes(tier)) return s;
-    playSound('reward');
-    if (premium) {
-      return { ...s, battlePassClaimedPremium: [...s.battlePassClaimedPremium, tier], coins: s.coins + tier * 50 };
+    const reward = premium ? rewardTier.premiumReward : rewardTier.freeReward;
+    let next = { ...s };
+    if (reward.type === 'coins') next = { ...next, coins: next.coins + (reward.amount ?? 0) };
+    else if (reward.type === 'xp') next = addPoints(next, reward.amount ?? 0, 0);
+    else if (reward.type === 'item' && reward.itemId) {
+      const itemType: InventoryItem['type'] = reward.itemId.includes('aura') ? 'aura' : reward.itemId.includes('weapon') ? 'weapon' : 'title';
+      if (!next.inventory.some((i) => i.id === reward.itemId && i.type === itemType)) next = { ...next, inventory: [...next.inventory, { id: reward.itemId, type: itemType, obtainedAt: Date.now(), favorite: false }] };
     }
-    return { ...s, battlePassClaimedFree: [...s.battlePassClaimedFree, tier], coins: s.coins + tier * 20 };
+    playSound('reward');
+    return premium ? { ...next, battlePassClaimedPremium: [...next.battlePassClaimedPremium, tier] } : { ...next, battlePassClaimedFree: [...next.battlePassClaimedFree, tier] };
   });
 }
 
@@ -1059,8 +1135,16 @@ function claimDailyFortune() {
 function claimMilestone(milestoneId: string) {
   setState((s) => {
     if (s.milestoneClaimed.includes(milestoneId)) return s;
+    const milestone = getMilestoneById(milestoneId);
+    if (!milestone) return s;
+    let next = addPoints(s, milestone.reward.xp, 0);
+    next = { ...next, coins: next.coins + milestone.reward.coins };
+    const existing = new Set(next.inventory.map((i) => `${i.type}:${i.id}`));
+    const rewardItems: InventoryItem[] = [];
+    if (milestone.reward.badgeId && !existing.has(`badge:${milestone.reward.badgeId}`)) rewardItems.push({ id: milestone.reward.badgeId, type: 'badge', obtainedAt: Date.now(), favorite: false });
+    if (milestone.reward.auraId && !existing.has(`aura:${milestone.reward.auraId}`)) rewardItems.push({ id: milestone.reward.auraId, type: 'aura', obtainedAt: Date.now(), favorite: false });
     playSound('rankup');
-    return { ...s, milestoneClaimed: [...s.milestoneClaimed, milestoneId], coins: s.coins + 500 };
+    return { ...next, inventory: [...next.inventory, ...rewardItems], milestoneClaimed: [...next.milestoneClaimed, milestoneId] };
   });
 }
 
@@ -1124,7 +1208,6 @@ function claimRankReward(rankId: string) {
     if (s.xp < rank.xpRequired) return s;
     playSound('rankup');
     const newItems: InventoryItem[] = rank.rewards
-      .filter((r) => r.type !== 'title')
       .map((r) => ({ id: r.itemId, type: r.type as InventoryItem['type'], obtainedAt: Date.now(), favorite: false }));
     const existing = new Set(s.inventory.map((i) => `${i.type}:${i.id}`));
     const toAdd = newItems.filter((i) => !existing.has(`${i.type}:${i.id}`));

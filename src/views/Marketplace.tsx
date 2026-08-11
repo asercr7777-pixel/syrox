@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import { RARITY_META, type Rarity } from '../data/collections';
 import { MARKET_ITEMS, CATEGORY_LABELS, type MarketCategory, type MarketItem } from '../data/marketplace';
@@ -33,13 +33,6 @@ export function Marketplace() {
   const [previewItem, setPreviewItem] = useState<MarketItem | null>(null);
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [filterRarity, setFilterRarity] = useState<Rarity | 'all'>('all');
-  const purchaseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (purchaseTimerRef.current) clearTimeout(purchaseTimerRef.current);
-    };
-  }, []);
 
   const items = useMemo(() => {
     let list = MARKET_ITEMS.filter((m) => m.category === category);
@@ -71,6 +64,10 @@ export function Marketplace() {
   }, [state.equipped, category]);
 
   const handlePurchase = (item: MarketItem) => {
+    if (ownedIds.has(item.id)) {
+      toast({ title: 'Already owned', message: `${item.name} is already in your inventory.`, type: 'info' });
+      return;
+    }
     if (state.xp < item.xpRequired) {
       toast({ title: 'Locked', message: `You need ${item.xpRequired.toLocaleString()} XP to unlock this item.`, type: 'error' });
       playSound('error');
@@ -83,16 +80,13 @@ export function Marketplace() {
     }
     setPurchasing(item.id);
     playSound('whoosh');
-    if (purchaseTimerRef.current) clearTimeout(purchaseTimerRef.current);
-    purchaseTimerRef.current = setTimeout(() => {
-      const success = purchaseItem(item.id, item.category, item.price);
-      setPurchasing(null);
-      if (success) {
-        toast({ title: 'Purchase Successful!', message: `${item.name} added to your inventory.`, type: 'reward', icon: '🪙' });
-      } else {
-        toast({ title: 'Purchase failed', type: 'error' });
-      }
-    }, 800);
+    const success = purchaseItem(item.id, item.category, item.price);
+    setPurchasing(null);
+    if (success) toast({ title: 'Purchase Successful!', message: `${item.name} added to your inventory.`, type: 'reward', icon: '🪙' });
+    else {
+      toast({ title: 'Purchase failed', message: 'The item could not be purchased. Your balance was not changed.', type: 'error' });
+      playSound('error');
+    }
   };
 
   const handleEquip = (item: MarketItem) => {

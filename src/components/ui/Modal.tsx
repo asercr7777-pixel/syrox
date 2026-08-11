@@ -20,10 +20,11 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
   useEffect(() => {
     if (!open) return;
     window.addEventListener('keydown', handleEsc);
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       window.removeEventListener('keydown', handleEsc);
-      document.body.style.overflow = '';
+      document.body.style.overflow = previousOverflow;
     };
   }, [open, handleEsc]);
 
@@ -37,23 +38,22 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
   }[size];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative w-full ${sizeClass} card p-5 max-h-[90vh] overflow-y-auto animate-slide-up`}>
-        {title && (
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-display text-lg font-bold">{title}</h3>
-            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10 transition">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 animate-fade-in">
+      <div className="absolute inset-0 bg-black/75" onClick={onClose} />
+      <div className={`relative w-full ${sizeClass} max-h-[calc(100vh-1rem)] sm:max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-2xl bg-ink-950/95 border border-white/10 shadow-2xl p-4 sm:p-5 animate-slide-up`}>
+        {title ? (
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <h3 className="font-display text-lg font-bold min-w-0 truncate">{title}</h3>
+            <button aria-label="Close modal" onClick={onClose} className="p-2 rounded-lg hover:bg-white/10 transition flex-shrink-0">
               <X size={18} />
             </button>
           </div>
-        )}
-        {!title && (
-          <button onClick={onClose} className="absolute top-3 right-3 p-1.5 rounded-lg hover:bg-white/10 transition z-10">
+        ) : (
+          <button aria-label="Close modal" onClick={onClose} className="absolute top-3 right-3 p-2 rounded-lg hover:bg-white/10 transition z-10">
             <X size={18} />
           </button>
         )}
-        {children}
+        <div className="min-w-0">{children}</div>
       </div>
     </div>
   );
@@ -73,14 +73,9 @@ export function ConfirmModal({ open, onClose, onConfirm, title, message, confirm
   return (
     <Modal open={open} onClose={onClose} title={title} size="sm">
       <p className="text-ink-200 mb-5">{message}</p>
-      <div className="flex gap-2 justify-end">
+      <div className="flex gap-2 justify-end flex-wrap">
         <button onClick={onClose} className="btn-ghost">Cancel</button>
-        <button
-          onClick={() => { onConfirm(); onClose(); }}
-          className={danger ? 'btn-danger' : 'btn-primary'}
-        >
-          {confirmLabel}
-        </button>
+        <button onClick={() => { onConfirm(); onClose(); }} className={danger ? 'btn-danger' : 'btn-primary'}>{confirmLabel}</button>
       </div>
     </Modal>
   );

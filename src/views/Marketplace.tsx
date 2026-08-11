@@ -12,6 +12,7 @@ import { ShieldArt } from '../art/ShieldArt';
 import { FrameArt } from '../art/FrameArt';
 import { BackgroundArt } from '../art/BackgroundArt';
 import { Search, Coins, Lock, Check, Sparkles } from 'lucide-react';
+import '../styles/marketplace.css';
 
 const CATEGORIES: MarketCategory[] = ['weapons', 'auras', 'titles', 'shields', 'frames', 'backgrounds'];
 
@@ -119,12 +120,12 @@ export function Marketplace() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="marketplace-shell space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4 page-enter">
         <div>
-          <h1 className="section-title">Marketplace</h1>
-          <p className="text-sm text-ink-300">Purchase unique items with coins. Each item has its own artwork.</p>
+          <h1 className="section-title marketplace-title">Marketplace</h1>
+          <p className="text-sm text-ink-300 marketplace-subtitle">Purchase unique items with coins. Each item has its own artwork.</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="card-premium px-4 py-2.5 flex items-center gap-2">
@@ -190,7 +191,7 @@ export function Marketplace() {
           <p className="text-ink-300">No items found.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        <div className="marketplace-grid grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {items.map((item, idx) => {
             const meta = RARITY_META[item.rarity];
             const owned = ownedIds.has(item.id);

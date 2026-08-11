@@ -1,0 +1,23 @@
+/* Lightweight UI overrides: preserve the visual language while reducing paint/compositing cost. */
+.glass { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+.glass-soft { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+.card { box-shadow: 0 4px 18px rgba(0,0,0,0.28); }
+.card-hover, .card-premium { transition-duration: 150ms !important; }
+.card-hover:hover, .card-premium:hover { transform: none !important; }
+.btn { transition-duration: 120ms !important; }
+.btn-primary { box-shadow: 0 4px 14px rgba(255,122,24,0.14); }
+.aura-glow::before, .energy-pulse, .xp-bar-fill, .boss-hp, .skeleton-shimmer { animation: none !important; }
+.glow-ring::before { transition: opacity 120ms ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .card { box-shadow: 0 3px 14px rgba(0,0,0,0.24); }
+}

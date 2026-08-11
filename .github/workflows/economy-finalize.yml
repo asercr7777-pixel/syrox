@@ -1,0 +1,33 @@
+name: Final economy repair
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  repair:
+    if: ${{ !contains(github.event.head_commit.message, '[economy-finalize]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply repairs
+        run: |
+          cat .github/econ/01.py .github/econ/02.py .github/econ/03.py .github/econ/04.py .github/econ/05.py .github/econ/06.py .github/econ/07.py > /tmp/econ.py
+          python /tmp/econ.py
+      - name: Validate
+        run: |
+          npm ci
+          npm run typecheck
+          npm run lint
+          npm run build
+      - name: Commit and clean up
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/store/useStore.ts src/views/Marketplace.tsx
+          git rm -r .github/econ .github/patch
+          git rm .github/workflows/economy-finalize.yml
+          git commit -m "Harden economy rewards and progression [economy-finalize]"
+          git push

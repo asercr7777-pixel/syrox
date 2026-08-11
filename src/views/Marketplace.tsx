@@ -13,6 +13,7 @@ import { FrameArt } from '../art/FrameArt';
 import { BackgroundArt } from '../art/BackgroundArt';
 import { Search, Coins, Lock, Check, Sparkles } from 'lucide-react';
 import '../styles/marketplace.css';
+import '../styles/marketplace.css';
 
 const CATEGORIES: MarketCategory[] = ['weapons', 'auras', 'titles', 'shields', 'frames', 'backgrounds'];
 

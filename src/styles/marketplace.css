@@ -1,33 +1,25 @@
-.marketplace-shell{position:relative;isolation:isolate;overflow-x:clip;min-width:0}
+.marketplace-shell{position:relative;isolation:isolate}
 .marketplace-shell:before{content:"";position:absolute;inset:-40px -24px auto;height:260px;z-index:-1;pointer-events:none;background:radial-gradient(circle at 15% 25%,rgba(245,158,11,.11),transparent 35%),radial-gradient(circle at 85% 10%,rgba(99,102,241,.09),transparent 34%);filter:blur(18px)}
 .marketplace-title{letter-spacing:-.035em;text-shadow:0 0 28px rgba(245,158,11,.12)}
 .marketplace-subtitle{max-width:680px}
 .marketplace-shell .card-premium{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
-.marketplace-shell .marketplace-grid{min-width:0}
-.marketplace-shell .marketplace-grid>.card-premium{overflow:hidden;min-width:0;min-height:285px;transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
+.marketplace-shell .marketplace-grid>.card-premium{overflow:hidden;min-height:285px;transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
 .marketplace-shell .marketplace-grid>.card-premium:hover{transform:translateY(-4px);box-shadow:0 18px 42px rgba(0,0,0,.32),0 0 28px color-mix(in srgb,var(--glow-color,#f59e0b) 16%,transparent)}
 .marketplace-shell .marketplace-grid>.card-premium:active{transform:translateY(-1px)}
 .marketplace-shell .marketplace-grid button:focus-visible,.marketplace-shell button:focus-visible,.marketplace-shell input:focus-visible,.marketplace-shell select:focus-visible{outline:2px solid rgba(245,158,11,.7);outline-offset:2px}
-.marketplace-shell .marketplace-grid .group>button:first-of-type{min-height:166px;min-width:0;padding:18px 4px 8px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.035),transparent 72%);border:1px solid rgba(255,255,255,.045)}
+.marketplace-shell .marketplace-grid .group>button:first-of-type{min-height:166px;padding:8px 4px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.035),transparent 72%);border:1px solid rgba(255,255,255,.045)}
 .marketplace-shell .marketplace-grid .group>button:first-of-type:hover{background:linear-gradient(180deg,rgba(255,255,255,.07),transparent 72%)}
 .marketplace-shell .marketplace-grid .group>button:first-of-type p:first-of-type{max-width:92%;text-shadow:0 2px 10px rgba(0,0,0,.4)}
 .marketplace-shell .marketplace-grid .group>div:last-child{position:relative;z-index:2}
-.marketplace-shell .marketplace-grid .group>div.absolute{max-width:calc(100% - 16px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.marketplace-shell .input{background:rgba(8,10,16,.72);border-color:rgba(255,255,255,.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.025),0 8px 24px rgba(0,0,0,.12);min-width:0}
+.marketplace-shell .input{background:rgba(8,10,16,.72);border-color:rgba(255,255,255,.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.025),0 8px 24px rgba(0,0,0,.12)}
 .marketplace-shell .input:hover{border-color:rgba(255,255,255,.14)}
 .marketplace-shell select.input{min-height:42px}
 .marketplace-shell .glow-ring{box-shadow:0 0 0 1px color-mix(in srgb,var(--glow-color,#f59e0b) 12%,transparent),0 10px 32px rgba(0,0,0,.22)}
-.marketplace-shell .card-premium{max-width:100%}
 @media (max-width:639px){
   .marketplace-shell{margin-inline:-2px}
   .marketplace-shell:before{inset:-20px -10px auto;height:190px}
   .marketplace-shell .marketplace-grid{gap:10px}
-  .marketplace-shell .marketplace-grid>.card-premium{min-height:0;padding:10px}
-  .marketplace-shell .marketplace-grid .group>button:first-of-type{min-height:150px;padding-top:16px}
-  .marketplace-shell .marketplace-grid .group>button:first-of-type p:first-of-type{font-size:.78rem}
-}
-@media (max-width:400px){
-  .marketplace-shell .marketplace-grid{grid-template-columns:1fr}
-  .marketplace-shell .marketplace-grid>.card-premium{min-height:290px}
+  .marketplace-shell .marketplace-grid>.card-premium{min-height:270px;padding:10px}
+  .marketplace-shell .marketplace-grid .group>button:first-of-type{min-height:150px}
 }
 @media (prefers-reduced-motion:reduce){.marketplace-shell .marketplace-grid>.card-premium,.marketplace-shell .marketplace-grid>.card-premium:hover{transition:none;transform:none}.marketplace-shell .marketplace-grid .group>button:first-of-type{transition:none}}

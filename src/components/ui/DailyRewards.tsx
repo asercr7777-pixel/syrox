@@ -46,8 +46,9 @@ export function DailyRewards() {
 
   const today = new Date().toISOString().slice(0, 10);
   const claimedToday = state.lastLoginClaimDate === today;
-  const cycleDay = state.loginStreak > 0 ? ((state.loginStreak - 1) % 30) + 1 : 1;
-  const nextDay = claimedToday ? (cycleDay % 30) + 1 : cycleDay;
+  const claimedCycleDay = state.loginStreak > 0 ? ((state.loginStreak - 1) % 30) + 1 : 1;
+  const currentDay = claimedToday ? claimedCycleDay : Math.max(1, claimedCycleDay);
+  const nextDay = claimedToday ? (currentDay % 30) + 1 : currentDay;
   const nextReward = DAILY_LOGIN_REWARDS[nextDay - 1] ?? DAILY_LOGIN_REWARDS[0];
   const nextRewardTime = useMemo(() => getNextRewardTime(state.lastLoginClaimDate), [state.lastLoginClaimDate]);
 
@@ -71,14 +72,14 @@ export function DailyRewards() {
     }
   };
 
-  // Show the current cycle around the player's progress instead of always showing Days 1–7.
+  // Show a stable 7-day window centered around the current cycle day.
   const visibleRewards = useMemo(() => {
-    const start = Math.max(0, Math.min(29, cycleDay - 3));
+    const start = Math.max(0, Math.min(29, currentDay - 3));
     return Array.from({ length: 7 }, (_, offset) => {
       const dayIndex = (start + offset) % 30;
       return { reward: DAILY_LOGIN_REWARDS[dayIndex], dayNumber: dayIndex + 1 };
     });
-  }, [cycleDay]);
+  }, [currentDay]);
 
   return (
     <>
@@ -103,7 +104,7 @@ export function DailyRewards() {
               })()}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-ink-400">{claimedToday ? `Next Reward (Day ${nextDay})` : `Today's Reward (Day ${cycleDay})`}</p>
+              <p className="text-xs text-ink-400">{claimedToday ? `Next Reward (Day ${nextDay})` : `Today's Reward (Day ${currentDay})`}</p>
               <p className="text-sm font-semibold text-ink-100 truncate">{nextReward.label}</p>
             </div>
             {claimedToday ? (
@@ -121,21 +122,21 @@ export function DailyRewards() {
 
           <div className="grid grid-cols-7 gap-1.5">
             {visibleRewards.map(({ reward, dayNumber }) => {
-              const isClaimed = state.loginStreak > 0 && dayNumber < cycleDay;
-              const isCurrent = dayNumber === cycleDay;
+              const isClaimed = claimedToday ? dayNumber <= currentDay : dayNumber < currentDay;
+              const isCurrent = dayNumber === currentDay && !claimedToday;
               const color = REWARD_COLORS[reward.type] ?? '#fbbf24';
               const Icon = REWARD_ICONS[reward.type] ?? Coins;
               return (
                 <div key={dayNumber} className={`relative p-2 rounded-lg border text-center transition-all ${
                   isClaimed ? 'bg-emerald2-500/10 border-emerald2-500/30' :
-                  isCurrent && !claimedToday ? 'bg-gold-500/10 border-gold-500/40' :
+                  isCurrent ? 'bg-gold-500/10 border-gold-500/40' :
                   'bg-ink-950/40 border-white/5'
                 }`}>
                   <div className="text-[10px] text-ink-400 mb-1">D{dayNumber}</div>
                   <Icon size={14} className="mx-auto mb-0.5" style={{ color }} />
                   <div className="text-[9px] text-ink-300 truncate">{reward.label.split(' ')[0]}</div>
                   {isClaimed && <Check size={10} className="absolute top-0.5 right-0.5 text-emerald2-400" />}
-                  {dayNumber > cycleDay && <div className="absolute inset-0 flex items-center justify-center bg-ink-950/55 rounded-lg"><Lock size={10} className="text-ink-500" /></div>}
+                  {!isClaimed && dayNumber > currentDay && <div className="absolute inset-0 flex items-center justify-center bg-ink-950/55 rounded-lg"><Lock size={10} className="text-ink-500" /></div>}
                 </div>
               );
             })}
@@ -170,9 +171,9 @@ export function DailyRewards() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
           {DAILY_LOGIN_REWARDS.map((reward, i) => {
             const dayNumber = i + 1;
-            const completedDays = state.loginStreak > 0 ? Math.min(cycleDay - 1, 30) : 0;
+            const completedDays = state.loginStreak > 0 ? Math.min(claimedToday ? currentDay : currentDay - 1, 30) : 0;
             const isClaimed = dayNumber <= completedDays;
-            const isCurrent = dayNumber === cycleDay && !claimedToday;
+            const isCurrent = dayNumber === currentDay && !claimedToday;
             const color = REWARD_COLORS[reward.type] ?? '#fbbf24';
             const Icon = REWARD_ICONS[reward.type] ?? Coins;
             return (

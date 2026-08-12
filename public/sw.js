@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2.0.0';
+const CACHE_VERSION = 'v2.0.1';
 const STATIC_CACHE = `discipline-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `discipline-runtime-${CACHE_VERSION}`;
 const IMAGE_CACHE = `discipline-images-${CACHE_VERSION}`;
@@ -20,8 +20,7 @@ const PRECACHE_URLS = [
   '/icons/icon-512x512-maskable.png',
   '/icons/apple-touch-icon.png',
   '/robots.txt',
-  '/sitemap.xml',
-  '/OneSignalSDKWorker.js',
+  '/sitemap.xml'
 ];
 
 self.addEventListener('install', (event) => {
@@ -32,8 +31,7 @@ self.addEventListener('install', (event) => {
       });
     })
   );
-  // Do not skip waiting automatically. This lets the app show its
-  // "Update Available" prompt and apply the update deliberately.
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -116,7 +114,6 @@ async function networkFirstWithFallback(request) {
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);

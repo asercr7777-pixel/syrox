@@ -14,14 +14,12 @@ jobs:
         run: |
           from pathlib import Path
           import re
-
           auth = Path('src/lib/auth.tsx')
           text = auth.read_text()
           text = re.sub(r"^import \{ setExternalUserId, removeExternalUserId \} from './onesignal';\n", "", text, flags=re.M)
           text = re.sub(r"\n\s*if \(data\.session\?\.user\) \{\s*void setExternalUserId\(data\.session\.user\.id\);\s*\}", "", text)
           text = re.sub(r"\n\s*\(async \(\) => \{.*?removeExternalUserId\(\);.*?\}\)\(\);", "", text, flags=re.S)
           auth.write_text(text)
-
           settings = Path('src/views/Settings.tsx')
           text = settings.read_text()
           text = re.sub(r"import \{\n\s*Upload, Trash2, Volume2, VolumeX, Bell, Palette, User as UserIcon,\n\s*Image as ImageIcon, Video, Sparkles, LogOut, Sun, Moon, Shield, Eye,\n\s*BellRing, BellOff, Loader2, ChevronRight, AlarmClock,\n\s*\} from 'lucide-react';", "import {\n  Upload, Trash2, Volume2, VolumeX, Palette, User as UserIcon,\n  Image as ImageIcon, Video, Sparkles, LogOut, Sun, Moon, Shield, Eye,\n} from 'lucide-react';", text)
@@ -30,21 +28,17 @@ jobs:
           text = re.sub(r"\n\s*const \[pushLoading, setPushLoading\] = useState\(false\);\n\s*const \[pushEnabled, setPushEnabled\] = useState\(false\);", "", text)
           text = re.sub(r"\n\s*useEffect\(\(\) => \{\s*if \(!isOneSignalConfigured\(\)\) return;.*?\}, \[\]\);", "", text, flags=re.S)
           text = re.sub(r"\n\s*const handleTogglePush = async \(\) => \{.*?\n\s*\};", "", text, flags=re.S)
-          text = re.sub(r"\n\s*const handleSignOut = async \(\) => \{.*?\n\s*\};", "", text, flags=re.S)
           text = re.sub(r"export function Settings\(\{ onNavigate \}: \{ onNavigate\?: \(v: any\) => void \}\)", "export function Settings()", text)
           text = re.sub(r"\n\s*\{\/\* Notifications \*\/\}.*?(?=\n\s*\{\/\* Sounds \*\/\})", "\n", text, flags=re.S)
-          text = text.replace('onClick={() => handleSignOut()}', 'onClick={() => signOut()}')
-          text = text.replace('  const { signOut, user } = useAuth();', '  const { signOut, user } = useAuth();')
+          if 'const handleSignOut = async () =>' not in text:
+            text = text.replace('  const { signOut, user } = useAuth();', "  const { signOut, user } = useAuth();\n  const handleSignOut = async () => { playSound('click'); await signOut(); };")
           settings.write_text(text)
-
           app = Path('src/App.tsx')
           text = app.read_text().replace('<Settings onNavigate={handleNavigate} />', '<Settings />')
           app.write_text(text)
-
           for name in ['public/OneSignalSDK-v16-ServiceWorker.zip', 'src/lib/onesignal.ts', 'src/components/pwa/UpdateNotification.tsx']:
             p = Path(name)
             if p.exists(): p.unlink()
-
       - name: Validate
         run: |
           npm ci

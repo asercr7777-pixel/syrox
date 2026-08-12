@@ -1,0 +1,55 @@
+name: Cleanup notification UI
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove obsolete notification code
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          auth = Path('src/lib/auth.tsx')
+          text = auth.read_text()
+          text = text.replace("import { setExternalUserId, removeExternalUserId } from './onesignal';\n", "")
+          text = re.sub(r"\n\s*if \(data\.session\?\.user\) \{\n\s*void setExternalUserId\(data\.session\.user\.id\);\n\s*\}", "", text)
+          text = re.sub(r"\n\s*\(async \(\) => \{\n\s*if \(sess\?\.user\) \{\n\s*await setExternalUserId\(sess\.user\.id\);\n\s*\} else \{\n\s*await removeExternalUserId\(\);\n\s*\}\n\s*\}\)\(\);", "", text)
+          auth.write_text(text)
+
+          settings = Path('src/views/Settings.tsx')
+          text = settings.read_text()
+          text = text.replace("  Upload, Trash2, Volume2, VolumeX, Bell, Palette, User as UserIcon,\n  Image as ImageIcon, Video, Sparkles, LogOut, Sun, Moon, Shield, Eye,\n  BellRing, BellOff, Loader2, ChevronRight, AlarmClock,\n", "  Upload, Trash2, Volume2, VolumeX, Palette, User as UserIcon,\n  Image as ImageIcon, Video, Sparkles, LogOut, Sun, Moon, Shield, Eye,\n  Loader2, ChevronRight,\n")
+          text = text.replace("import { isOneSignalConfigured, subscribeToPush, unsubscribeFromPush, isPushSubscribed } from '../lib/onesignal';\n", "")
+          text = text.replace("    toggleSound, updateNotifications, resetAll, syncLeaderboard,\n", "    toggleSound, resetAll, syncLeaderboard,\n")
+          text = re.sub(r"\n\s*const \[pushLoading, setPushLoading\] = useState\(false\);\n\s*const \[pushEnabled, setPushEnabled\] = useState\(false\);", "", text)
+          text = re.sub(r"\n\s*useEffect\(\(\) => \{\n\s*if \(!isOneSignalConfigured\(\)\) return;\n\s*isPushSubscribed\(\)\.then\(\(subscribed\) => \{\n\s*if \(isMountedRef\.current\) setPushEnabled\(subscribed\);\n\s*\}\);\n\s*\}, \[\]\);", "", text)
+          text = re.sub(r"\n\s*const handleTogglePush = async \(\) => \{.*?\n\s*\};\n", "\n", text, flags=re.S)
+          text = re.sub(r"\n\s*\{\/\* Notifications \*\/\}.*?(?=\n\s*\{\/\*|\n\s*<ConfirmModal)", "\n", text, flags=re.S)
+          settings.write_text(text)
+
+          p = Path('public/OneSignalSDK-v16-ServiceWorker.zip')
+          if p.exists(): p.unlink()
+          p = Path('src/lib/onesignal.ts')
+          if p.exists(): p.unlink()
+          p = Path('src/components/pwa/UpdateNotification.tsx')
+          if p.exists(): p.unlink()
+
+      - name: Validate
+        run: |
+          npm ci
+          npm run typecheck
+          npm run lint
+          npm run build
+      - name: Commit cleanup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "Remove obsolete notification code"
+          git push

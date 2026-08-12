@@ -97,7 +97,7 @@ function AppContent() {
           {view === 'achievements' && <Achievements />}
           {view === 'leaderboard' && <Leaderboard />}
           {view === 'shadow' && <Shadow />}
-          {view === 'settings' && <Settings onNavigate={handleNavigate} />}
+          {view === 'settings' && <Settings />}
           {view === 'iteminspection' && <ItemInspection itemId="" category="weapon" onBack={() => handleNavigate('inventory')} />}
         </Suspense>
       </main>

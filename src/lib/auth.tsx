@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from './supabase';
-import { setExternalUserId, removeExternalUserId } from './onesignal';
 
 interface AuthContextValue {
   user: User | null;
@@ -22,21 +21,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
-      if (data.session?.user) {
-        void setExternalUserId(data.session.user.id);
-      }
       setLoading(false);
     });
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
       setSession(sess);
-      (async () => {
-        if (sess?.user) {
-          await setExternalUserId(sess.user.id);
-        } else {
-          await removeExternalUserId();
-        }
-      })();
     });
 
     return () => {

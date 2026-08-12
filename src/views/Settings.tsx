@@ -6,14 +6,12 @@ import { BACKGROUNDS, AURAS } from '../data/collections';
 import { getRankByXp } from '../data/ranks';
 import { RankBadge } from '../components/ui/RankBadge';
 import {
-  Upload, Trash2, Volume2, VolumeX, Bell, Palette, User as UserIcon,
+  Upload, Trash2, Volume2, VolumeX, Palette, User as UserIcon,
   Image as ImageIcon, Video, Sparkles, LogOut, Sun, Moon, Shield, Eye,
-  BellRing, BellOff, Loader2, ChevronRight, AlarmClock,
 } from 'lucide-react';
 import { toast } from '../components/ui/Toast';
 import { playSound } from '../lib/sound';
 import { uploadBackground } from '../lib/backgroundUpload';
-import { isOneSignalConfigured, subscribeToPush, unsubscribeFromPush, isPushSubscribed } from '../lib/onesignal';
 
 const AVATARS = ['🐺', '😈', '👑', '🔥', '⚡', '🌑', '🗡️', '🛡️', '⚔️', '🐉', '👻', '🦅', '🦁', '🐍', '🦊', '🐲', '💀', '🤴', '🥷', '🧙'];
 const NAME_COLORS = ['#fbbf24', '#ff7a18', '#a855f7', '#06b6d4', '#10b981', '#f43f5e', '#3b82f6', '#ec4899'];
@@ -24,18 +22,16 @@ type BgType = 'default' | 'image' | 'video' | 'animated';
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/ogg'];
 
-export function Settings({ onNavigate }: { onNavigate?: (v: any) => void }) {
+export function Settings() {
   const {
     state, updateProfile, setCustomBackground, setBackgroundVideo, setBackgroundType,
     setBackgroundBlur, setBackgroundDarken, setBackgroundBrightness, setSelectedBackground,
-    toggleSound, updateNotifications, resetAll, syncLeaderboard,
+    toggleSound, resetAll, syncLeaderboard,
   } = useStore();
   const { signOut, user } = useAuth();
   const [resetOpen, setResetOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [pushLoading, setPushLoading] = useState(false);
-  const [pushEnabled, setPushEnabled] = useState(false);
   const imageRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
   const isMountedRef = useRef(true);
@@ -43,13 +39,6 @@ export function Settings({ onNavigate }: { onNavigate?: (v: any) => void }) {
   useEffect(() => {
     isMountedRef.current = true;
     return () => { isMountedRef.current = false; };
-  }, []);
-
-  useEffect(() => {
-    if (!isOneSignalConfigured()) return;
-    isPushSubscribed().then((subscribed) => {
-      if (isMountedRef.current) setPushEnabled(subscribed);
-    });
   }, []);
   const rank = getRankByXp(state.xp);
   const aura = state.equipped.aura ? AURAS.find((a) => a.id === state.equipped.aura) : null;
@@ -141,30 +130,6 @@ export function Settings({ onNavigate }: { onNavigate?: (v: any) => void }) {
   const handleSignOut = async () => {
     playSound('click');
     await signOut();
-  };
-
-  const handleTogglePush = async () => {
-    if (pushLoading) return;
-    setPushLoading(true);
-    try {
-      if (pushEnabled) {
-        await unsubscribeFromPush();
-        setPushEnabled(false);
-        toast({ title: 'Notifications off', message: 'You will not receive push notifications.', type: 'info' });
-      } else {
-        const success = await subscribeToPush();
-        if (success) {
-          setPushEnabled(true);
-          toast({ title: 'Notifications on', message: 'You will receive push notifications even when the app is closed.', type: 'success' });
-        } else {
-          toast({ title: 'Permission denied', message: 'Notification permission was denied. You can change this in your browser settings.', type: 'error' });
-        }
-      }
-    } catch {
-      toast({ title: 'Notification error', message: 'Could not change notification settings. Please try again.', type: 'error' });
-    } finally {
-      if (isMountedRef.current) setPushLoading(false);
-    }
   };
 
   return (
@@ -383,82 +348,6 @@ export function Settings({ onNavigate }: { onNavigate?: (v: any) => void }) {
         </div>
       </div>
 
-      {/* Notifications */}
-      <div className="card p-5">
-        <h2 className="font-display text-lg font-bold mb-4 flex items-center gap-2">
-          <Bell size={18} /> Notifications
-        </h2>
-
-        {/* Push notifications (OneSignal) */}
-        {isOneSignalConfigured() && (
-          <div className="mb-4 p-4 rounded-xl bg-ink-950/40 border border-white/5">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 pr-4">
-                <div className="flex items-center gap-2 mb-1">
-                  {pushEnabled ? <BellRing size={16} className="text-ember-400" /> : <BellOff size={16} className="text-ink-400" />}
-                  <span className="font-medium text-sm">Push Notifications</span>
-                </div>
-                <p className="text-xs text-ink-400">
-                  {pushEnabled
-                    ? 'Active. You will receive notifications even when the app is closed.'
-                    : 'Get notified about events even when the app is closed.'}
-                </p>
-              </div>
-              <button
-                onClick={handleTogglePush}
-                disabled={pushLoading}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition disabled:opacity-50 ${
-                  pushEnabled
-                    ? 'bg-ink-800 text-ink-200 hover:bg-ink-700'
-                    : 'bg-ember-500/20 text-ember-400 hover:bg-ember-500/30'
-                }`}
-              >
-                {pushLoading && <Loader2 size={14} className="animate-spin" />}
-                {pushEnabled ? 'Disable' : 'Enable'}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Links to notification settings + reminders */}
-        {onNavigate && (
-          <div className="space-y-2 mb-4">
-            <button
-              onClick={() => onNavigate('notifications')}
-              className="w-full flex items-center justify-between p-3 rounded-xl bg-ink-950/40 border border-white/5 hover:bg-white/5 transition"
-            >
-              <span className="flex items-center gap-2 text-sm font-medium">
-                <BellRing size={16} className="text-ember-400" /> Notification Settings
-              </span>
-              <ChevronRight size={16} className="text-ink-400" />
-            </button>
-            <button
-              onClick={() => onNavigate('reminders')}
-              className="w-full flex items-center justify-between p-3 rounded-xl bg-ink-950/40 border border-white/5 hover:bg-white/5 transition"
-            >
-              <span className="flex items-center gap-2 text-sm font-medium">
-                <AlarmClock size={16} className="text-ember-400" /> Custom Reminders
-              </span>
-              <ChevronRight size={16} className="text-ink-400" />
-            </button>
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 gap-2">
-          {(Object.keys(state.notifications) as (keyof typeof state.notifications)[]).map((k) => (
-            <button
-              key={k}
-              onClick={() => updateNotifications({ [k]: !state.notifications[k] })}
-              className="flex items-center justify-between p-2 rounded-lg bg-ink-900/60 border border-white/5 hover:bg-white/5"
-            >
-              <span className="text-sm capitalize">{k}</span>
-              <span className={`w-9 h-5 rounded-full relative transition ${state.notifications[k] ? 'bg-ember-500' : 'bg-ink-700'}`}>
-                <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition ${state.notifications[k] ? 'left-4' : 'left-0.5'}`} />
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* Sounds */}
       <div className="card p-5">

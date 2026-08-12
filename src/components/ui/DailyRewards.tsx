@@ -23,14 +23,14 @@ const REWARD_COLORS: Record<string, string> = {
 
 function getNextRewardTime(lastClaimDate: string | null): Date | null {
   if (!lastClaimDate) return null;
-  const last = new Date(lastClaimDate + 'T00:00:00');
-  last.setDate(last.getDate() + 1);
-  return last;
+  const [y, m, d] = lastClaimDate.split('-').map(Number);
+  const next = new Date(y, m - 1, d);
+  next.setDate(next.getDate() + 1);
+  return next;
 }
 
 function formatCountdown(target: Date): string {
-  const now = new Date();
-  const diff = target.getTime() - now.getTime();
+  const diff = target.getTime() - Date.now();
   if (diff <= 0) return 'Available now';
   const h = Math.floor(diff / 3600000);
   const m = Math.floor((diff % 3600000) / 60000);
@@ -46,28 +46,39 @@ export function DailyRewards() {
 
   const today = new Date().toISOString().slice(0, 10);
   const claimedToday = state.lastLoginClaimDate === today;
+  const cycleDay = state.loginStreak > 0 ? ((state.loginStreak - 1) % 30) + 1 : 1;
+  const nextDay = claimedToday ? (cycleDay % 30) + 1 : cycleDay;
+  const nextReward = DAILY_LOGIN_REWARDS[nextDay - 1] ?? DAILY_LOGIN_REWARDS[0];
   const nextRewardTime = useMemo(() => getNextRewardTime(state.lastLoginClaimDate), [state.lastLoginClaimDate]);
 
   useEffect(() => {
-    if (!nextRewardTime) return;
+    if (!nextRewardTime || !claimedToday) {
+      setCountdown('');
+      return;
+    }
     const update = () => setCountdown(formatCountdown(nextRewardTime));
     update();
-    const interval = setInterval(update, 1000);
-    return () => clearInterval(interval);
-  }, [nextRewardTime]);
+    const interval = window.setInterval(update, 1000);
+    return () => window.clearInterval(interval);
+  }, [nextRewardTime, claimedToday]);
 
   const handleClaim = () => {
     const result = claimLoginReward();
     if (result) {
       setClaimedReward(result.reward);
-      setShowModal(false);
-      triggerConfetti(60);
-      setTimeout(() => setClaimedReward(null), 5000);
+      triggerConfetti(40);
+      window.setTimeout(() => setClaimedReward(null), 4000);
     }
   };
 
-  const currentStreakIndex = state.loginStreak > 0 ? (state.loginStreak - 1) % 30 : 0;
-  const nextReward = DAILY_LOGIN_REWARDS[currentStreakIndex];
+  // Show the current cycle around the player's progress instead of always showing Days 1–7.
+  const visibleRewards = useMemo(() => {
+    const start = Math.max(0, Math.min(29, cycleDay - 3));
+    return Array.from({ length: 7 }, (_, offset) => {
+      const dayIndex = (start + offset) % 30;
+      return { reward: DAILY_LOGIN_REWARDS[dayIndex], dayNumber: dayIndex + 1 };
+    });
+  }, [cycleDay]);
 
   return (
     <>
@@ -79,14 +90,11 @@ export function DailyRewards() {
               <Flame size={18} className="text-gold-400" />
               <h2 className="section-title">Daily Rewards</h2>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="chip bg-gold-500/15 text-gold-400 border border-gold-500/30">
-                {state.loginStreak} day streak
-              </span>
-            </div>
+            <span className="chip bg-gold-500/15 text-gold-400 border border-gold-500/30">
+              {state.loginStreak} day streak
+            </span>
           </div>
 
-          {/* Next reward preview */}
           <div className="flex items-center gap-3 p-3 rounded-xl bg-ink-950/40 border border-white/5 mb-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${REWARD_COLORS[nextReward.type]}20` }}>
               {(() => {
@@ -95,11 +103,11 @@ export function DailyRewards() {
               })()}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-ink-400">Next Reward (Day {state.loginStreak + 1})</p>
+              <p className="text-xs text-ink-400">{claimedToday ? `Next Reward (Day ${nextDay})` : `Today's Reward (Day ${cycleDay})`}</p>
               <p className="text-sm font-semibold text-ink-100 truncate">{nextReward.label}</p>
             </div>
             {claimedToday ? (
-              <div className="text-right">
+              <div className="text-right flex-shrink-0">
                 <div className="flex items-center gap-1 text-emerald2-400">
                   <Check size={14} />
                   <span className="text-xs font-semibold">Claimed</span>
@@ -107,51 +115,32 @@ export function DailyRewards() {
                 <p className="text-xs text-ink-400 tabular-nums mt-0.5">{countdown}</p>
               </div>
             ) : (
-              <button onClick={handleClaim} className="btn-primary btn-sheen text-xs px-3 py-2">
-                Claim
-              </button>
+              <button onClick={handleClaim} className="btn-primary btn-sheen text-xs px-3 py-2 flex-shrink-0">Claim</button>
             )}
           </div>
 
-          {/* 7-day strip */}
           <div className="grid grid-cols-7 gap-1.5">
-            {DAILY_LOGIN_REWARDS.slice(0, 7).map((reward, i) => {
-              const isClaimed = i < (state.loginStreak % 30 || state.loginStreak > 0 ? state.loginStreak % 7 : 0);
-              const isCurrent = i === (state.loginStreak % 7);
-              const isLocked = i > state.loginStreak;
+            {visibleRewards.map(({ reward, dayNumber }) => {
+              const isClaimed = state.loginStreak > 0 && dayNumber < cycleDay;
+              const isCurrent = dayNumber === cycleDay;
               const color = REWARD_COLORS[reward.type] ?? '#fbbf24';
               const Icon = REWARD_ICONS[reward.type] ?? Coins;
-
               return (
-                <div
-                  key={i}
-                  className={`relative p-2 rounded-lg border text-center transition-all ${
-                    isClaimed
-                      ? 'bg-emerald2-500/10 border-emerald2-500/30'
-                      : isCurrent && !claimedToday
-                        ? 'bg-gold-500/10 border-gold-500/40 animate-pulse'
-                        : 'bg-ink-950/40 border-white/5'
-                  }`}
-                >
-                  <div className="text-[10px] text-ink-400 mb-1">D{i + 1}</div>
+                <div key={dayNumber} className={`relative p-2 rounded-lg border text-center transition-all ${
+                  isClaimed ? 'bg-emerald2-500/10 border-emerald2-500/30' :
+                  isCurrent && !claimedToday ? 'bg-gold-500/10 border-gold-500/40' :
+                  'bg-ink-950/40 border-white/5'
+                }`}>
+                  <div className="text-[10px] text-ink-400 mb-1">D{dayNumber}</div>
                   <Icon size={14} className="mx-auto mb-0.5" style={{ color }} />
                   <div className="text-[9px] text-ink-300 truncate">{reward.label.split(' ')[0]}</div>
-                  {isClaimed && (
-                    <div className="absolute top-0.5 right-0.5">
-                      <Check size={10} className="text-emerald2-400" />
-                    </div>
-                  )}
-                  {isLocked && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-ink-950/60 rounded-lg">
-                      <Lock size={10} className="text-ink-500" />
-                    </div>
-                  )}
+                  {isClaimed && <Check size={10} className="absolute top-0.5 right-0.5 text-emerald2-400" />}
+                  {dayNumber > cycleDay && <div className="absolute inset-0 flex items-center justify-center bg-ink-950/55 rounded-lg"><Lock size={10} className="text-ink-500" /></div>}
                 </div>
               );
             })}
           </div>
 
-          {/* Countdown timer */}
           {claimedToday && nextRewardTime && (
             <div className="mt-3 text-center">
               <p className="text-xs text-ink-400">Next reward in</p>
@@ -159,49 +148,36 @@ export function DailyRewards() {
             </div>
           )}
 
-          {/* View all rewards */}
           <button onClick={() => setShowModal(true)} className="w-full mt-3 text-xs text-ink-300 hover:text-ember-400 transition-colors flex items-center justify-center gap-1">
             View 30-day rewards <ChevronRight size={12} />
           </button>
         </div>
       </div>
 
-      {/* Claimed reward popup */}
       {claimedReward && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 stagger-in">
-          <div className="card-premium px-6 py-4 flex items-center gap-3" style={{ boxShadow: '0 0 40px rgba(251,191,36,0.4)' }}>
+          <div className="card-premium px-6 py-4 flex items-center gap-3" style={{ boxShadow: '0 0 40px rgba(251,191,36,0.25)' }}>
             {(() => {
               const Icon = REWARD_ICONS[claimedReward.type] ?? Coins;
               return <Icon size={24} style={{ color: REWARD_COLORS[claimedReward.type] }} />;
             })()}
-            <div>
-              <p className="text-xs text-ink-400">Reward Claimed!</p>
-              <p className="text-sm font-bold text-gold-400">{claimedReward.label}</p>
-            </div>
+            <div><p className="text-xs text-ink-400">Reward Claimed!</p><p className="text-sm font-bold text-gold-400">{claimedReward.label}</p></div>
           </div>
         </div>
       )}
 
-      {/* Full 30-day rewards modal */}
       <Modal open={showModal} onClose={() => setShowModal(false)} title="30-Day Login Rewards" size="lg">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
           {DAILY_LOGIN_REWARDS.map((reward, i) => {
-            const isClaimed = i < (state.loginStreak % 30);
-            const isCurrent = i === (state.loginStreak % 30);
+            const dayNumber = i + 1;
+            const completedDays = state.loginStreak > 0 ? Math.min(cycleDay - 1, 30) : 0;
+            const isClaimed = dayNumber <= completedDays;
+            const isCurrent = dayNumber === cycleDay && !claimedToday;
             const color = REWARD_COLORS[reward.type] ?? '#fbbf24';
             const Icon = REWARD_ICONS[reward.type] ?? Coins;
             return (
-              <div
-                key={i}
-                className={`p-3 rounded-xl border text-center transition-all ${
-                  isClaimed
-                    ? 'bg-emerald2-500/10 border-emerald2-500/30'
-                    : isCurrent && !claimedToday
-                      ? 'bg-gold-500/10 border-gold-500/40'
-                      : 'bg-ink-950/40 border-white/5'
-                }`}
-              >
-                <div className="text-xs text-ink-400 mb-1">Day {i + 1}</div>
+              <div key={i} className={`p-3 rounded-xl border text-center transition-all ${isClaimed ? 'bg-emerald2-500/10 border-emerald2-500/30' : isCurrent ? 'bg-gold-500/10 border-gold-500/40' : 'bg-ink-950/40 border-white/5'}`}>
+                <div className="text-xs text-ink-400 mb-1">Day {dayNumber}</div>
                 <Icon size={20} className="mx-auto mb-1" style={{ color }} />
                 <p className="text-xs font-medium text-ink-200">{reward.label}</p>
                 {reward.shield && <p className="text-[10px] text-emerald2-400 mt-0.5">+ Shield</p>}

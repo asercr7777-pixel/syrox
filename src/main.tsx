@@ -12,6 +12,19 @@ function Root() {
     if (seen) {
       setShowSplash(false);
     }
+
+    // Remove any legacy OneSignal service worker left by older builds.
+    // Push notifications are intentionally disabled for Discipline.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach((registration) => {
+          const scriptUrl = registration.active?.scriptURL || registration.installing?.scriptURL || registration.waiting?.scriptURL || '';
+          if (scriptUrl.includes('OneSignalSDKWorker.js') || scriptUrl.includes('OneSignalSDK.sw.js')) {
+            registration.unregister().catch(() => undefined);
+          }
+        });
+      }).catch(() => undefined);
+    }
   }, []);
 
   const handleSplashComplete = () => {

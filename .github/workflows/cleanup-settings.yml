@@ -30,15 +30,12 @@ jobs:
           text = re.sub(r"\n\s*const \[pushLoading, setPushLoading\] = useState\(false\);\n\s*const \[pushEnabled, setPushEnabled\] = useState\(false\);", "", text)
           text = re.sub(r"\n\s*useEffect\(\(\) => \{\n\s*if \(!isOneSignalConfigured\(\)\) return;\n\s*isPushSubscribed\(\)\.then\(\(subscribed\) => \{\n\s*if \(isMountedRef\.current\) setPushEnabled\(subscribed\);\n\s*\}\);\n\s*\}, \[\]\);", "", text)
           text = re.sub(r"\n\s*const handleTogglePush = async \(\) => \{.*?\n\s*\};\n", "\n", text, flags=re.S)
-          text = re.sub(r"\n\s*\{\/\* Notifications \*\/\}.*?(?=\n\s*\{\/\*|\n\s*<ConfirmModal)", "\n", text, flags=re.S)
+          text = re.sub(r"\n\s*\{\/\* Notifications \*\/\}.*?(?=\n\s*\{\/\* Sounds \*\/\})", "\n", text, flags=re.S)
           settings.write_text(text)
 
-          p = Path('public/OneSignalSDK-v16-ServiceWorker.zip')
-          if p.exists(): p.unlink()
-          p = Path('src/lib/onesignal.ts')
-          if p.exists(): p.unlink()
-          p = Path('src/components/pwa/UpdateNotification.tsx')
-          if p.exists(): p.unlink()
+          for name in ['public/OneSignalSDK-v16-ServiceWorker.zip', 'src/lib/onesignal.ts', 'src/components/pwa/UpdateNotification.tsx']:
+            p = Path(name)
+            if p.exists(): p.unlink()
 
       - name: Validate
         run: |

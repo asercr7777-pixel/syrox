@@ -47,7 +47,6 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 interface NavigationProps { current: ViewId; onNavigate: (v: ViewId) => void; }
-const MENTALIST_URL = 'https://mentalist.bolt.host/';
 
 export function Navigation({ current, onNavigate }: NavigationProps) {
   const { state } = useStore();
@@ -91,9 +90,9 @@ export function Navigation({ current, onNavigate }: NavigationProps) {
           <div className="flex items-center gap-3">
             <RankBadge rank={rank} size="sm" auraColor={aura?.color} />
             <div className="min-w-0">
-              <a href={MENTALIST_URL} aria-label="Open Mentalist" className="font-display font-bold text-sm truncate block cursor-pointer hover:text-ember-400 transition-colors">
+              <span aria-label="Username" className="font-display font-bold text-sm truncate block">
                 {state.username}
-              </a>
+              </span>
               {title && <p className="text-[10px] font-semibold uppercase tracking-wider truncate" style={{ color: titleMeta?.color }}>{title.name}</p>}
               <p className="text-xs text-ink-300">{rank.name} {rank.emoji}</p>
             </div>
@@ -113,7 +112,7 @@ export function Navigation({ current, onNavigate }: NavigationProps) {
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <RankBadge rank={rank} size="sm" auraColor={aura?.color} />
             <div className="min-w-0">
-              <a href={MENTALIST_URL} aria-label="Open Mentalist" className="font-display font-bold text-xs leading-tight truncate block hover:text-ember-400 transition-colors">{state.username}</a>
+              <span aria-label="Username" className="font-display font-bold text-xs leading-tight truncate block">{state.username}</span>
               {title && <p className="text-[9px] font-semibold uppercase tracking-wider leading-tight truncate" style={{ color: titleMeta?.color }}>{title.name}</p>}
               <p className="text-[10px] text-ink-300 leading-tight truncate">{rank.name} · Lvl {state.level}</p>
             </div>

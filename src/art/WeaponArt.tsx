@@ -2,35 +2,39 @@ import type { Rarity } from '../data/collections';
 
 interface ArtProps { id: string; name: string; rarity: Rarity; size?: number; }
 
-const PAL: Record<Rarity,{metal:string;dark:string;accent:string;glow:string}> = {
-  common:{metal:'#d1d5db',dark:'#4b5563',accent:'#9ca3af',glow:'rgba(156,163,175,.28)'},
-  rare:{metal:'#bfdbfe',dark:'#1e3a8a',accent:'#60a5fa',glow:'rgba(59,130,246,.5)'},
-  epic:{metal:'#e9d5ff',dark:'#581c87',accent:'#c084fc',glow:'rgba(168,85,247,.58)'},
-  legendary:{metal:'#fef3c7',dark:'#78350f',accent:'#fbbf24',glow:'rgba(245,158,11,.7)'},
-  mythic:{metal:'#fce7f3',dark:'#831843',accent:'#f472b6',glow:'rgba(236,72,153,.75)'},
-  secret:{metal:'#fef9c3',dark:'#713f12',accent:'#fde047',glow:'rgba(251,191,36,.9)'}
+type Pal = { metal:string; dark:string; accent:string; glow:string };
+const PAL: Record<Rarity, Pal> = {
+  common:{metal:'#d7dce5',dark:'#202633',accent:'#9aa6b8',glow:'rgba(156,166,184,.28)'},
+  rare:{metal:'#dbeafe',dark:'#172554',accent:'#60a5fa',glow:'rgba(59,130,246,.5)'},
+  epic:{metal:'#f3e8ff',dark:'#3b0764',accent:'#c084fc',glow:'rgba(168,85,247,.6)'},
+  legendary:{metal:'#fff7d6',dark:'#451a03',accent:'#fbbf24',glow:'rgba(245,158,11,.72)'},
+  mythic:{metal:'#ffe4f1',dark:'#500724',accent:'#f472b6',glow:'rgba(236,72,153,.78)'},
+  secret:{metal:'#fffbd1',dark:'#29210a',accent:'#fde047',glow:'rgba(251,191,36,.92)'}
 };
 
-function kind(n:string){const x=n.toLowerCase(); if(x.includes('greatsword')||x.includes('cleaver'))return'great'; if(x.includes('katana'))return'katana'; if(x.includes('dagger')||x.includes('knife'))return'dagger'; if(x.includes('axe'))return'axe'; if(x.includes('hammer'))return'hammer'; if(x.includes('spear')||x.includes('lance'))return'spear'; if(x.includes('bow'))return'bow'; if(x.includes('scythe'))return'scythe'; if(x.includes('staff'))return'staff'; return'sword';}
+function hash(s:string){let h=2166136261;for(let i=0;i<s.length;i++)h=Math.imul(h^s.charCodeAt(i),16777619);return h>>>0;}
+function kind(n:string){const x=n.toLowerCase();if(x.includes('greatsword')||x.includes('cleaver'))return'great';if(x.includes('katana'))return'katana';if(x.includes('dagger')||x.includes('knife'))return'dagger';if(x.includes('axe'))return'axe';if(x.includes('hammer'))return'hammer';if(x.includes('spear')||x.includes('lance'))return'spear';if(x.includes('bow'))return'bow';if(x.includes('scythe'))return'scythe';if(x.includes('staff'))return'staff';return'sword';}
 
 export function WeaponArt({id,name,rarity,size=120}:ArtProps){
- const p=PAL[rarity], k=kind(name), u=`nw-${id.replace(/[^a-z0-9]/gi,'')}`, high=['legendary','mythic','secret'].includes(rarity);
+ const p=PAL[rarity],k=kind(name),h=hash(id+name),rot=(h%31)-15,scale=.82+(h%24)/100,u=`nw-${id.replace(/[^a-z0-9]/gi,'')}`,high=['legendary','mythic','secret'].includes(rarity);
  return <svg viewBox="0 0 120 120" width={size} height={size} className="overflow-visible">
-  <defs><linearGradient id={`${u}m`} x1="0" y1="0" x2="1" y2="1"><stop stopColor={p.metal}/><stop offset=".48" stopColor="#fff" stopOpacity=".72"/><stop offset="1" stopColor={p.dark}/></linearGradient><radialGradient id={`${u}g`}><stop stopColor={p.accent} stopOpacity=".55"/><stop offset="1" stopColor={p.accent} stopOpacity="0"/></radialGradient><filter id={`${u}b`}><feGaussianBlur stdDeviation="3"/></filter></defs>
-  <circle cx="60" cy="60" r="52" fill={`url(#${u}g)`}/>
-  {high&&<circle cx="60" cy="60" r="43" fill="none" stroke={p.accent} strokeOpacity=".22" strokeDasharray="2 5"/>}
-  <g transform="translate(60 60) rotate(-8)">{k==='sword'&&<Sword p={p} u={u}/>} {k==='great'&&<Great p={p} u={u}/>} {k==='katana'&&<Katana p={p} u={u}/>} {k==='dagger'&&<Dagger p={p} u={u}/>} {k==='axe'&&<Axe p={p} u={u}/>} {k==='hammer'&&<Hammer p={p} u={u}/>} {k==='spear'&&<Spear p={p} u={u}/>} {k==='bow'&&<Bow p={p} u={u}/>} {k==='scythe'&&<Scythe p={p} u={u}/>} {k==='staff'&&<Staff p={p} u={u}/>}</g>
-  {high&&[0,1,2,3,4,5].map(i=><circle key={i} cx={60+Math.cos(i*Math.PI/3)*43} cy={60+Math.sin(i*Math.PI/3)*43} r="1.2" fill={p.accent} opacity=".8"/>)}
+  <defs><linearGradient id={`${u}m`} x1="0" y1="0" x2="1" y2="1"><stop stopColor={p.metal}/><stop offset=".45" stopColor="#fff" stopOpacity=".85"/><stop offset="1" stopColor={p.dark}/></linearGradient><radialGradient id={`${u}g`}><stop stopColor={p.accent} stopOpacity=".58"/><stop offset="1" stopColor={p.accent} stopOpacity="0"/></radialGradient><filter id={`${u}b`}><feGaussianBlur stdDeviation="3.5"/></filter></defs>
+  <circle cx="60" cy="60" r="53" fill={`url(#${u}g)`} opacity=".72" filter={`url(#${u}b)`}/>
+  <circle cx="60" cy="60" r={42+(h%8)} fill="none" stroke={p.accent} strokeOpacity=".16" strokeDasharray={`${2+(h%4)} ${4+(h%5)}`} />
+  <g transform={`translate(60 60) rotate(${rot}) scale(${scale})`}>
+   {k==='sword'&&<Sword p={p} u={u} h={h}/>} {k==='great'&&<Great p={p} u={u} h={h}/>} {k==='katana'&&<Katana p={p} u={u} h={h}/>} {k==='dagger'&&<Dagger p={p} u={u} h={h}/>} {k==='axe'&&<Axe p={p} u={u} h={h}/>} {k==='hammer'&&<Hammer p={p} u={u} h={h}/>} {k==='spear'&&<Spear p={p} u={u} h={h}/>} {k==='bow'&&<Bow p={p} u={u} h={h}/>} {k==='scythe'&&<Scythe p={p} u={u} h={h}/>} {k==='staff'&&<Staff p={p} u={u} h={h}/>} 
+  </g>
+  {Array.from({length:high?8:4},(_,i)=>{const a=(i/ (high?8:4))*Math.PI*2+(h%10)/10;const r=44+(h%4);return <circle key={i} cx={60+Math.cos(a)*r} cy={60+Math.sin(a)*r} r={1+(h+i)%2*.5} fill={p.accent} opacity=".8"/>})}
  </svg>;
 }
-const base=(p:any,u:string)=><><rect x="-2.5" y="7" width="5" height="25" rx="1.5" fill={p.dark}/><path d="M-3 10h6M-3 16h6M-3 22h6M-3 28h6" stroke={p.accent} strokeWidth=".6" opacity=".65"/><circle cy="35" r="4" fill={`url(#${u}m)`} stroke={p.dark} strokeWidth=".8"/><circle cy="35" r="1.5" fill={p.accent}/></>;
-function Sword({p,u}:{p:any,u:string}){return <><path d="M0-50L-7 3H7Z" fill={`url(#${u}m)`} stroke={p.dark}/><path d="M0-47V1" stroke="#fff" strokeOpacity=".55"/><path d="M-18 5Q0 0 18 5" fill="none" stroke={p.accent} strokeWidth="4" strokeLinecap="round"/>{base(p,u)}</>}
-function Great({p,u}:{p:any,u:string}){return <><path d="M-8-52L-11 7H11L8-52Z" fill={`url(#${u}m)`} stroke={p.dark}/><path d="M0-49V5" stroke="#fff" strokeOpacity=".45"/><path d="M-25 8H25" stroke={p.accent} strokeWidth="5" strokeLinecap="round"/>{base(p,u)}</>}
-function Katana({p,u}:{p:any,u:string}){return <><path d="M-2-52Q12-25 5 5L-1 8Q4-25-4-50Z" fill={`url(#${u}m)`} stroke={p.dark}/><ellipse cy="7" rx="8" ry="3" fill={p.accent} stroke={p.dark}/>{base(p,u)}</>}
-function Dagger({p,u}:{p:any,u:string}){return <><path d="M0-48L-9 7H9Z" fill={`url(#${u}m)`} stroke={p.dark}/><path d="M-15 8H15" stroke={p.accent} strokeWidth="4" strokeLinecap="round"/>{base(p,u)}</>}
-function Axe({p,u}:{p:any,u:string}){return <><rect x="-2" y="-38" width="4" height="72" rx="2" fill={p.dark}/><path d="M0-35Q-28-28-27 2Q-18 13 0 4Z" fill={`url(#${u}m)`} stroke={p.dark}/><path d="M-20-18Q-8-22 0-18" stroke={p.accent} fill="none" strokeWidth="2"/><circle cy="35" r="4" fill={p.accent}/></>}
-function Hammer({p,u}:{p:any,u:string}){return <><rect x="-2.5" y="-28" width="5" height="64" rx="2" fill={p.dark}/><rect x="-25" y="-38" width="50" height="20" rx="4" fill={`url(#${u}m)`} stroke={p.dark}/><path d="M-18-34H18" stroke="#fff" strokeOpacity=".45"/>{base(p,u)}</>}
-function Spear({p,u}:{p:any,u:string}){return <><rect x="-1.5" y="-30" width="3" height="66" fill={p.dark}/><path d="M0-52L-10-27L0-34L10-27Z" fill={`url(#${u}m)`} stroke={p.dark}/><path d="M0-46V-31" stroke="#fff" strokeOpacity=".5"/>{base(p,u)}</>}
-function Bow({p}:{p:any;u:string}){return <><path d="M-22-40Q-42 0-22 40" fill="none" stroke={p.accent} strokeWidth="4"/><path d="M-22-40L22 40M-22 40L22-40" stroke={p.dark} strokeWidth="2"/><path d="M-22 0H27" stroke={`url(#${'x'}m)`} strokeWidth="2" opacity="0"/></>}
-function Scythe({p}:{p:any;u:string}){return <><path d="M-2-35H2V38H-2Z" fill={p.dark}/><path d="M0-34Q-38-38-32-3Q-27-20 0-18" fill={`url(#${'x'}m)`} stroke={p.dark}/><circle cy="37" r="4" fill={p.accent}/></>}
-function Staff({p,u}:{p:any;u:string}){return <><rect x="-2" y="-25" width="4" height="62" rx="2" fill={p.dark}/><circle cy="-32" r="10" fill={`url(#${u}m)`} stroke={p.dark}/><circle cy="-32" r="4" fill={p.accent}/><circle cy="-32" r="16" fill="none" stroke={p.accent} strokeOpacity=".45" strokeDasharray="2 3"/></>}
+function base(p:Pal,u:string,h:number){return <><rect x="-2.6" y="7" width="5.2" height={23+(h%8)} rx="1.5" fill={p.dark}/><path d="M-3 11h6M-3 17h6M-3 23h6M-3 29h6" stroke={p.accent} strokeWidth=".65" opacity=".7"/><circle cy={34+(h%6)} r="4.3" fill={`url(#${u}m)`} stroke={p.dark} strokeWidth=".8"/><circle cy={34+(h%6)} r="1.5" fill={p.accent}/></>}
+function Sword({p,u,h}:{p:Pal;u:string;h:number}){const w=5+(h%4);return <><path d={`M0-${48+h%8}L-${w} 3H${w}Z`} fill={`url(#${u}m)`} stroke={p.dark}/><path d="M0-46V1" stroke="#fff" strokeOpacity=".58"/><path d="M-18 5Q0 0 18 5" fill="none" stroke={p.accent} strokeWidth="4" strokeLinecap="round"/>{base(p,u,h)}</>}
+function Great({p,u,h}:{p:Pal;u:string;h:number}){return <><path d={`M-${9+h%3}-${50+h%5}L-12 7H12L${9+h%3}-${50+h%5}Z`} fill={`url(#${u}m)`} stroke={p.dark}/><path d="M0-48V5" stroke="#fff" strokeOpacity=".48"/><path d="M-25 8H25" stroke={p.accent} strokeWidth="5" strokeLinecap="round"/>{base(p,u,h)}</>}
+function Katana({p,u,h}:{p:Pal;u:string;h:number}){return <><path d={`M-2-${51+h%5}Q${12+h%4}-25 5 5L-1 8Q4-25 -4-${49+h%4}Z`} fill={`url(#${u}m)`} stroke={p.dark}/><path d="M-4-44Q5-20 2 2" stroke="#fff" strokeOpacity=".5" fill="none"/><ellipse cy="7" rx={8+h%3} ry="3" fill={p.accent} stroke={p.dark}/>{base(p,u,h)}</>}
+function Dagger({p,u,h}:{p:Pal;u:string;h:number}){return <><path d={`M0-${43+h%8}L-${8+h%3} 7H${8+h%3}Z`} fill={`url(#${u}m)`} stroke={p.dark}/><path d="M-15 8H15" stroke={p.accent} strokeWidth="4" strokeLinecap="round"/>{base(p,u,h)}</>}
+function Axe({p,u,h}:{p:Pal;u:string;h:number}){return <><rect x="-2" y="-38" width="4" height="72" rx="2" fill={p.dark}/><path d={`M0-35Q-${28+h%6}-${30+h%6}-${27-h%4} 2Q-18 14 0 4Z`} fill={`url(#${u}m)`} stroke={p.dark}/><path d="M-20-18Q-8-22 0-18" stroke={p.accent} fill="none" strokeWidth="2"/><circle cy="35" r="4" fill={p.accent}/></>}
+function Hammer({p,u,h}:{p:Pal;u:string;h:number}){return <><rect x="-2.5" y="-28" width="5" height="64" rx="2" fill={p.dark}/><rect x={-25-(h%4)} y="-38" width={50+(h%8)} height="20" rx="4" fill={`url(#${u}m)`} stroke={p.dark}/><path d="M-18-34H18" stroke="#fff" strokeOpacity=".48"/>{base(p,u,h)}</>}
+function Spear({p,u,h}:{p:Pal;u:string;h:number}){return <><rect x="-1.5" y="-30" width="3" height="66" fill={p.dark}/><path d={`M0-${52+h%7}L-${9+h%3}-27L0-${34+h%4}L${10+h%3}-27Z`} fill={`url(#${u}m)`} stroke={p.dark}/><path d="M0-46V-31" stroke="#fff" strokeOpacity=".5"/>{base(p,u,h)}</>}
+function Bow({p,h}:{p:Pal;u:string;h:number}){return <><path d={`M-22-${40+h%5}Q-42 0 -22 ${40+h%5}`} fill="none" stroke={p.accent} strokeWidth="4"/><path d="M-22-40L22 40M-22 40L22-40" stroke={p.dark} strokeWidth="2"/><path d="M-22 0H27" stroke={p.metal} strokeWidth="1.8"/><circle cx="27" cy="0" r="2" fill={p.accent}/></>}
+function Scythe({p,u,h}:{p:Pal;u:string;h:number}){return <><path d="M-2-35H2V38H-2Z" fill={p.dark}/><path d={`M0-${34+h%4}Q-${38+h%6}-38 -32-3Q-27-20 0-18`} fill={`url(#${u}m)`} stroke={p.dark}/><path d="M-25-23Q-12-31 0-28" stroke={p.accent} fill="none"/><circle cy="37" r="4" fill={p.accent}/></>}
+function Staff({p,u,h}:{p:Pal;u:string;h:number}){return <><rect x="-2" y="-25" width="4" height="62" rx="2" fill={p.dark}/><circle cy={-32-(h%5)} r={10+(h%3)} fill={`url(#${u}m)`} stroke={p.dark}/><circle cy={-32-(h%5)} r="4" fill={p.accent}/><circle cy={-32-(h%5)} r="16" fill="none" stroke={p.accent} strokeOpacity=".5" strokeDasharray="2 3"/></>}

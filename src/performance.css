@@ -8,9 +8,6 @@
 .aura-glow::before, .energy-pulse, .xp-bar-fill, .boss-hp, .skeleton-shimmer { animation: none !important; }
 .glow-ring::before { transition: opacity 100ms ease; }
 
-/* Dashboard: remove the oversized username/rank hero. The compact identity card in the sidebar remains the single profile header. */
-.dashboard-page > .space-y-6 > .card-premium:first-child { display: none !important; }
-
 /* World Map: simple vertical chapter road with minimal paint cost. */
 [style*="aspect-ratio: 2 / 1"] {
   aspect-ratio: auto !important;

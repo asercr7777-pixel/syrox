@@ -85,7 +85,7 @@ function AppContent() {
       <ToastContainer />
       <Confetti />
       <InstallButton isInstallable={isInstallable} isInstalled={isInstalled} onInstall={promptInstall} />
-      <main className={`lg:ml-64 pt-16 lg:pt-6 px-3 sm:px-4 pb-24 lg:pb-8 max-w-6xl mx-auto overflow-x-hidden ${view === 'dashboard' ? 'dashboard-page' : ''}`}>
+      <main className="lg:ml-64 pt-16 lg:pt-6 px-3 sm:px-4 pb-24 lg:pb-8 max-w-6xl mx-auto overflow-x-hidden">
         <Suspense fallback={<PageLoader />}>
           {view === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
           {view === 'tasks' && <Tasks />}

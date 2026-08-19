@@ -15,6 +15,7 @@ const Dashboard = lazy(() => import('./views/Dashboard').then((m) => ({ default:
 const Tasks = lazy(() => import('./views/Tasks').then((m) => ({ default: m.Tasks })));
 const StoryMode = lazy(() => import('./views/StoryMode').then((m) => ({ default: m.default })));
 const SkillTree = lazy(() => import('./views/SkillTree').then((m) => ({ default: m.SkillTree })));
+const WorldMap = lazy(() => import('./views/WorldMap').then((m) => ({ default: m.WorldMap })));
 const Workout = lazy(() => import('./views/Workout').then((m) => ({ default: m.Workout })));
 const Dungeons = lazy(() => import('./views/Dungeons').then((m) => ({ default: m.Dungeons })));
 const Profile = lazy(() => import('./views/Profile').then((m) => ({ default: m.Profile })));
@@ -28,7 +29,7 @@ const Auth = lazy(() => import('./views/Auth').then((m) => ({ default: m.Auth })
 const Shadow = lazy(() => import('./views/Shadow').then((m) => ({ default: m.Shadow })));
 
 const VALID_VIEWS = new Set<ViewId>([
-  'dashboard', 'tasks', 'story', 'workout', 'dungeons', 'profile',
+  'dashboard', 'tasks', 'story', 'workout', 'dungeons', 'worldmap', 'profile',
   'marketplace', 'inventory', 'achievements', 'leaderboard', 'shadow',
   'skilltree', 'settings', 'iteminspection',
 ]);
@@ -91,6 +92,7 @@ function AppContent() {
           {view === 'tasks' && <Tasks />}
           {view === 'story' && <StoryMode />}
           {view === 'skilltree' && <SkillTree />}
+          {view === 'worldmap' && <WorldMap />}
           {view === 'workout' && <Workout />}
           {view === 'dungeons' && <Dungeons />}
           {view === 'profile' && <Profile />}

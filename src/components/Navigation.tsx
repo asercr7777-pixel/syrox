@@ -37,16 +37,32 @@ export function Navigation({ current, onNavigate }: NavigationProps) {
   const titleMeta = title ? RARITY_META[title.rarity] : null;
   const handleNav = (v: ViewId) => { playSound('click'); onNavigate(v); setMobileOpen(false); };
   const handleSignOut = async () => { playSound('click'); await signOut(); };
-  const brand = <div className="font-black text-white tracking-[0.28em] leading-none text-[1.15rem] sm:text-[1.25rem]">FORGED</div>;
-  const navButton = (item: NavItem, mobile = false) => { const Icon = item.icon; const active = current === item.id; return <button key={item.id} onClick={() => handleNav(item.id)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 ${mobile ? 'mb-1' : ''} ${active ? 'bg-ember-500/10 text-ember-400 border border-ember-500/25' : 'text-ink-300 hover:bg-white/5 hover:text-ink-100'}`}><Icon size={18} className={active ? 'text-ember-400' : ''} /><span>{item.label}</span></button>; };
+  const brand = <div className="select-none font-black text-white tracking-[0.34em] leading-none text-[1.2rem] sm:text-[1.3rem]">FORGED</div>;
+  const navButton = (item: NavItem, mobile = false) => {
+    const Icon = item.icon;
+    const active = current === item.id;
+    return <button key={item.id} onClick={() => handleNav(item.id)} className={`group w-full flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200 ${mobile ? 'mb-1.5 px-3 py-3' : 'px-3 py-2.5'} ${active ? 'bg-gradient-to-r from-ember-500/15 via-ember-500/8 to-transparent text-ember-300 border border-ember-500/25 shadow-[inset_3px_0_0_rgba(255,122,24,0.9),0_6px_20px_rgba(0,0,0,0.16)]' : 'text-ink-300 border border-transparent hover:bg-white/[0.045] hover:text-white hover:border-white/[0.06]'}`}><Icon size={18} strokeWidth={active ? 2.3 : 1.8} className={`shrink-0 transition-transform duration-200 ${active ? 'text-ember-400' : 'text-ink-500 group-hover:text-ink-200 group-hover:scale-105'}`} /><span>{item.label}</span></button>;
+  };
   return <>
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-white/10 bg-black/70 p-4 backdrop-blur-xl lg:block">
-      <div className="mb-6 px-2">{brand}<div className="mt-1 text-[10px] uppercase tracking-[0.22em] text-ink-500">Discipline System</div></div>
-      <div className="mb-5 rounded-2xl border border-white/10 bg-white/[0.03] p-3"><div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-xl">{state.avatar}</div><div className="min-w-0"><div className="truncate text-sm font-bold text-white">{state.username}</div><div className="flex items-center gap-2 text-xs text-ink-400"><RankBadge rank={rank} compact /> <span>{state.streak}🔥</span></div></div></div><XpBar xp={state.xp} className="mt-3" />{title && <div className="mt-2 text-xs" style={{ color: titleMeta?.color }}>{title.name}</div>}{aura && <div className="mt-1 text-[10px] text-ink-500">{aura.name}</div>}</div>
-      <nav className="space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 260px)' }}>{NAV_ITEMS.map((item) => navButton(item))}</nav>
-      <button onClick={handleSignOut} className="absolute bottom-4 left-4 right-4 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-400 hover:bg-white/5 hover:text-white"><LogOut size={18} /> Sign out</button>
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-white/[0.08] bg-black/78 p-4 backdrop-blur-2xl lg:block">
+      <div className="mb-8 px-2 pt-1">
+        {brand}
+        <div className="mt-3 h-px w-10 bg-gradient-to-r from-ember-500 to-transparent" />
+        <div className="mt-2 text-[9px] font-semibold uppercase tracking-[0.28em] text-ink-500">Discipline System</div>
+      </div>
+      <div className="mb-5 rounded-2xl border border-white/[0.08] bg-gradient-to-br from-white/[0.055] via-white/[0.025] to-transparent p-3.5 shadow-[0_12px_35px_rgba(0,0,0,0.22)]">
+        <div className="flex items-center gap-3">
+          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-ember-500/20 bg-ember-500/10 text-xl shadow-[0_0_22px_rgba(255,122,24,0.08)]">{state.avatar}</div>
+          <div className="min-w-0"><div className="truncate text-sm font-bold text-white">{state.username}</div><div className="mt-1 flex items-center gap-2 text-xs text-ink-400"><RankBadge rank={rank} compact /> <span>{state.streak}🔥</span></div></div>
+        </div>
+        <XpBar xp={state.xp} className="mt-3.5" />
+        {title && <div className="mt-3 truncate text-xs font-semibold" style={{ color: titleMeta?.color }}>{title.name}</div>}
+        {aura && <div className="mt-1 truncate text-[10px] text-ink-500">{aura.name}</div>}
+      </div>
+      <nav className="space-y-1 overflow-y-auto pr-1" style={{ maxHeight: 'calc(100vh - 285px)' }}>{NAV_ITEMS.map((item) => navButton(item))}</nav>
+      <button onClick={handleSignOut} className="absolute bottom-4 left-4 right-4 flex items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-sm text-ink-500 transition hover:border-white/[0.06] hover:bg-white/[0.04] hover:text-white"><LogOut size={18} /> Sign out</button>
     </aside>
-    <div className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-center border-b border-white/10 bg-black/75 px-4 backdrop-blur-xl lg:hidden"><div className="flex items-center">{brand}</div><button aria-label="Open menu" onClick={() => setMobileOpen((v) => !v)} className="absolute right-4 rounded-xl p-2 text-ink-300 hover:bg-white/10">{mobileOpen ? <X size={22} /> : <Menu size={22} />}</button></div>
-    {mobileOpen && <div className="fixed inset-0 z-40 bg-black/70 pt-16 lg:hidden"><nav className="border-b border-white/10 bg-black/95 p-4">{NAV_ITEMS.map((item) => navButton(item, true))}<button onClick={handleSignOut} className="mt-2 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-400"><LogOut size={18} /> Sign out</button></nav></div>}
+    <div className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-center border-b border-white/[0.08] bg-black/82 px-4 shadow-[0_8px_30px_rgba(0,0,0,0.18)] backdrop-blur-2xl lg:hidden"><div className="flex items-center">{brand}</div><button aria-label="Open menu" onClick={() => setMobileOpen((v) => !v)} className="absolute right-4 rounded-xl border border-white/[0.06] bg-white/[0.025] p-2 text-ink-300 transition hover:bg-white/[0.07] hover:text-white">{mobileOpen ? <X size={22} /> : <Menu size={22} />}</button></div>
+    {mobileOpen && <div className="fixed inset-0 z-40 bg-black/75 pt-16 backdrop-blur-sm lg:hidden"><nav className="max-h-[calc(100vh-4rem)] overflow-y-auto border-b border-white/[0.08] bg-black/95 p-4 shadow-2xl">{NAV_ITEMS.map((item) => navButton(item, true))}<button onClick={handleSignOut} className="mt-2 flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-3 text-sm text-ink-500 transition hover:border-white/[0.06] hover:bg-white/[0.04] hover:text-white"><LogOut size={18} /> Sign out</button></nav></div>}
   </>;
 }

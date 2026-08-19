@@ -14,6 +14,7 @@ import './performance.css';
 const Dashboard = lazy(() => import('./views/Dashboard').then((m) => ({ default: m.Dashboard })));
 const Tasks = lazy(() => import('./views/Tasks').then((m) => ({ default: m.Tasks })));
 const StoryMode = lazy(() => import('./views/StoryMode').then((m) => ({ default: m.default })));
+const SkillTree = lazy(() => import('./views/SkillTree').then((m) => ({ default: m.SkillTree })));
 const Workout = lazy(() => import('./views/Workout').then((m) => ({ default: m.Workout })));
 const Dungeons = lazy(() => import('./views/Dungeons').then((m) => ({ default: m.Dungeons })));
 const Profile = lazy(() => import('./views/Profile').then((m) => ({ default: m.Profile })));
@@ -29,7 +30,7 @@ const Shadow = lazy(() => import('./views/Shadow').then((m) => ({ default: m.Sha
 const VALID_VIEWS = new Set<ViewId>([
   'dashboard', 'tasks', 'story', 'workout', 'dungeons', 'profile',
   'marketplace', 'inventory', 'achievements', 'leaderboard', 'shadow',
-  'settings', 'iteminspection',
+  'skilltree', 'settings', 'iteminspection',
 ]);
 
 function getViewFromUrl(): ViewId {
@@ -40,6 +41,15 @@ function getViewFromUrl(): ViewId {
 
 function PageLoader() {
   return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="animate-spin text-ember-400" size={32} /></div>;
+}
+
+function SkillTreeShortcut({ points, onOpen }: { points: number; onOpen: () => void }) {
+  return (
+    <button onClick={onOpen} className="mb-4 flex w-full items-center justify-between rounded-2xl border border-ember-500/20 bg-black/40 px-4 py-3 text-left backdrop-blur-xl transition hover:border-ember-500/40 hover:bg-ember-500/5">
+      <div><div className="text-xs font-bold uppercase tracking-[0.22em] text-ember-400">🌳 Skill Tree</div><div className="mt-1 text-sm text-ink-300">You have <span className="font-black text-white">{points}</span> Skill Points to spend.</div></div>
+      <span className="rounded-lg bg-ember-500/15 px-3 py-2 text-xs font-black text-ember-300">OPEN</span>
+    </button>
+  );
 }
 
 function AppContent() {
@@ -69,6 +79,8 @@ function AppContent() {
     window.history.replaceState({}, '', url);
   };
 
+  const earnedSkillPoints = state.history.reduce((total, day) => total + Object.values(day.coreCompleted ?? {}).filter(Boolean).length + Object.values(day.customCompleted ?? {}).filter(Boolean).length, 0);
+
   if (loading || (user && !cloudLoaded)) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-ember-400" size={40} /></div>;
   }
@@ -86,9 +98,11 @@ function AppContent() {
       <InstallButton isInstallable={isInstallable} isInstalled={isInstalled} onInstall={promptInstall} />
       <main className="lg:ml-64 pt-16 lg:pt-6 px-3 sm:px-4 pb-24 lg:pb-8 max-w-6xl mx-auto overflow-x-hidden">
         <Suspense fallback={<PageLoader />}>
+          {view === 'dashboard' && <SkillTreeShortcut points={earnedSkillPoints} onOpen={() => handleNavigate('skilltree')} />}
           {view === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
           {view === 'tasks' && <Tasks />}
           {view === 'story' && <StoryMode />}
+          {view === 'skilltree' && <SkillTree />}
           {view === 'workout' && <Workout />}
           {view === 'dungeons' && <Dungeons />}
           {view === 'profile' && <Profile />}

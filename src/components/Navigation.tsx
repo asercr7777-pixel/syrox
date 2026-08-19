@@ -1,4 +1,4 @@
-import { LayoutDashboard, CheckSquare, BookOpen, Dumbbell, User, Store, Backpack, Trophy, Users, Settings, Menu, X, LogOut, Sparkles, Swords } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, BookOpen, Dumbbell, User, Store, Backpack, Trophy, Users, Settings, Menu, X, LogOut, Sparkles, Swords, Map, Network } from 'lucide-react';
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { getRankByXp } from '../data/ranks';
@@ -8,7 +8,7 @@ import { getAuraById, getTitleById, RARITY_META } from '../data/collections';
 import { playSound } from '../lib/sound';
 import { useAuth } from '../lib/auth';
 
-export type ViewId = 'dashboard' | 'tasks' | 'story' | 'workout' | 'dungeons' | 'profile' | 'marketplace' | 'inventory' | 'achievements' | 'leaderboard' | 'shadow' | 'skilltree' | 'settings' | 'iteminspection';
+export type ViewId = 'dashboard' | 'tasks' | 'story' | 'workout' | 'dungeons' | 'profile' | 'marketplace' | 'inventory' | 'achievements' | 'leaderboard' | 'shadow' | 'skilltree' | 'worldmap' | 'settings' | 'iteminspection';
 interface NavItem { id: ViewId; label: string; icon: typeof LayoutDashboard; }
 const NAV_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -16,6 +16,8 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'story', label: 'Story Mode', icon: BookOpen },
   { id: 'workout', label: 'Workout', icon: Dumbbell },
   { id: 'dungeons', label: 'Dungeons', icon: Swords },
+  { id: 'worldmap', label: 'World Map', icon: Map },
+  { id: 'skilltree', label: 'Skill Tree', icon: Network },
   { id: 'profile', label: 'Hunter Profile', icon: User },
   { id: 'marketplace', label: 'Marketplace', icon: Store },
   { id: 'inventory', label: 'Inventory', icon: Backpack },
@@ -44,9 +46,7 @@ export function Navigation({ current, onNavigate }: NavigationProps) {
   };
   return <>
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-white/[0.08] bg-black/90 p-4 lg:block">
-      <div className="mb-8 px-2 pt-1">
-        {brand}
-      </div>
+      <div className="mb-8 px-2 pt-1">{brand}</div>
       <div className="mb-5 rounded-2xl border border-white/[0.08] bg-black/60 p-3.5">
         <div className="flex items-center gap-3">
           <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-ember-500/20 bg-ember-500/10 text-xl">{state.avatar}</div>

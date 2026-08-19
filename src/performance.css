@@ -9,59 +9,137 @@
 .aura-glow::before, .energy-pulse, .xp-bar-fill, .boss-hp, .skeleton-shimmer { animation: none !important; }
 .glow-ring::before { transition: opacity 120ms ease; }
 
-/* World Map: keep the map on a stable canvas so chapter nodes never collapse into each other. */
+/* World Map: a clean vertical chapter road. Each chapter gets its own lane and a connector to the next. */
 [style*="aspect-ratio: 2 / 1"] {
-  overflow-x: auto !important;
-  overflow-y: hidden !important;
   aspect-ratio: auto !important;
-  min-height: 500px !important;
+  height: auto !important;
+  min-height: 760px !important;
   max-width: 100%;
-  overscroll-behavior-x: contain;
-  touch-action: pan-x pan-y;
-  scrollbar-width: thin;
+  overflow: hidden !important;
+  touch-action: pan-y;
 }
 
 [style*="aspect-ratio: 2 / 1"] > .absolute.inset-0 {
-  min-height: 500px;
-  min-width: 900px;
+  position: relative !important;
+  inset: auto !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  min-height: 760px !important;
+  height: auto !important;
+  padding: 28px 12px 40px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 22px !important;
+  overflow: visible !important;
 }
 
+/* Keep the decorative map layers behind the chapter road. */
+[style*="aspect-ratio: 2 / 1"] > .absolute.inset-0 > div.absolute.inset-0 {
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+
+/* Chapter buttons become independent, non-overlapping nodes. */
 [style*="aspect-ratio: 2 / 1"] button.group {
-  z-index: 2;
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  z-index: 3 !important;
+  flex: 0 0 82px !important;
+  width: min(220px, 78vw) !important;
+  height: 82px !important;
+  margin: 0 !important;
+  padding: 0 10px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
 }
 
+/* Remove the old SVG connector system; the road below supplies one clean connector per chapter. */
+[style*="aspect-ratio: 2 / 1"] button.group > svg {
+  display: none !important;
+}
+
+/* Chapter label stays inside its own lane instead of overlapping the next chapter. */
 [style*="aspect-ratio: 2 / 1"] button.group > div:last-child {
-  pointer-events: none;
+  position: static !important;
+  transform: none !important;
+  margin-top: 7px !important;
+  width: 100% !important;
+  max-width: 210px !important;
+  min-height: 18px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  pointer-events: none !important;
+  z-index: 4 !important;
+}
+
+/* One visible path segment connects each chapter to the next. */
+[style*="aspect-ratio: 2 / 1"] button.group:not(:last-of-type)::after {
+  content: '' !important;
+  position: absolute !important;
+  z-index: -1 !important;
+  left: 50% !important;
+  top: 58px !important;
+  width: 2px !important;
+  height: 46px !important;
+  transform: translateX(-50%) !important;
+  background: linear-gradient(to bottom, rgba(255,122,24,0.75), rgba(255,255,255,0.14)) !important;
+  box-shadow: 0 0 8px rgba(255,122,24,0.18) !important;
+}
+
+[style*="aspect-ratio: 2 / 1"] button.group .relative.w-12.h-12 {
+  flex: 0 0 auto !important;
 }
 
 @media (max-width: 1023px) {
   .card { box-shadow: 0 3px 14px rgba(0,0,0,0.24); }
 
-  /* Tablet/mobile get a larger virtual map canvas and horizontal scrolling instead of overlap. */
   [style*="aspect-ratio: 2 / 1"] {
-    min-height: 520px !important;
-    -webkit-overflow-scrolling: touch;
+    min-height: 780px !important;
   }
 
   [style*="aspect-ratio: 2 / 1"] > .absolute.inset-0 {
-    min-width: 920px;
-    min-height: 520px;
+    min-height: 780px !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    gap: 24px !important;
+  }
+
+  [style*="aspect-ratio: 2 / 1"] button.group {
+    width: min(210px, 76vw) !important;
   }
 }
 
 @media (max-width: 640px) {
   [style*="aspect-ratio: 2 / 1"] {
-    min-height: 540px !important;
+    min-height: 820px !important;
+    border-radius: 14px;
   }
 
   [style*="aspect-ratio: 2 / 1"] > .absolute.inset-0 {
-    min-width: 960px;
-    min-height: 540px;
+    min-height: 820px !important;
+    padding: 24px 8px 36px !important;
+    gap: 26px !important;
   }
 
-  [style*="aspect-ratio: 2 / 1"] button.group .whitespace-nowrap {
-    font-size: 0.68rem;
-    line-height: 1;
+  [style*="aspect-ratio: 2 / 1"] button.group {
+    width: min(190px, 74vw) !important;
+    flex-basis: 82px !important;
+  }
+
+  [style*="aspect-ratio: 2 / 1"] button.group > div:last-child {
+    max-width: 180px !important;
+    font-size: 0.7rem !important;
+    line-height: 1rem !important;
   }
 }
 

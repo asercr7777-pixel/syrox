@@ -1,4 +1,4 @@
-import { LayoutDashboard, CheckSquare, BookOpen, Dumbbell, User, Store, Backpack, Trophy, Users, Settings, Menu, X, LogOut, Sparkles, Swords, TreePine } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, BookOpen, Dumbbell, User, Store, Backpack, Trophy, Users, Settings, Menu, X, LogOut, Sparkles, Swords } from 'lucide-react';
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { getRankByXp } from '../data/ranks';
@@ -14,7 +14,6 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'tasks', label: 'Tasks', icon: CheckSquare },
   { id: 'story', label: 'Story Mode', icon: BookOpen },
-  { id: 'skilltree', label: 'Skill Tree', icon: TreePine },
   { id: 'workout', label: 'Workout', icon: Dumbbell },
   { id: 'dungeons', label: 'Dungeons', icon: Swords },
   { id: 'profile', label: 'Hunter Profile', icon: User },
@@ -44,15 +43,13 @@ export function Navigation({ current, onNavigate }: NavigationProps) {
     return <button key={item.id} onClick={() => handleNav(item.id)} className={`group w-full flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200 ${mobile ? 'mb-1.5 px-3 py-3' : 'px-3 py-2.5'} ${active ? 'bg-gradient-to-r from-ember-500/15 via-ember-500/8 to-transparent text-ember-300 border border-ember-500/25 shadow-[inset_3px_0_0_rgba(255,122,24,0.9),0_6px_20px_rgba(0,0,0,0.16)]' : 'text-ink-300 border border-transparent hover:bg-white/[0.045] hover:text-white hover:border-white/[0.06]'}`}><Icon size={18} strokeWidth={active ? 2.3 : 1.8} className={`shrink-0 transition-transform duration-200 ${active ? 'text-ember-400' : 'text-ink-500 group-hover:text-ink-200 group-hover:scale-105'}`} /><span>{item.label}</span></button>;
   };
   return <>
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-white/[0.08] bg-black/78 p-4 backdrop-blur-2xl lg:block">
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-white/[0.08] bg-black/90 p-4 lg:block">
       <div className="mb-8 px-2 pt-1">
         {brand}
-        <div className="mt-3 h-px w-10 bg-gradient-to-r from-ember-500 to-transparent" />
-        <div className="mt-2 text-[9px] font-semibold uppercase tracking-[0.28em] text-ink-500">Discipline System</div>
       </div>
-      <div className="mb-5 rounded-2xl border border-white/[0.08] bg-gradient-to-br from-white/[0.055] via-white/[0.025] to-transparent p-3.5 shadow-[0_12px_35px_rgba(0,0,0,0.22)]">
+      <div className="mb-5 rounded-2xl border border-white/[0.08] bg-black/60 p-3.5">
         <div className="flex items-center gap-3">
-          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-ember-500/20 bg-ember-500/10 text-xl shadow-[0_0_22px_rgba(255,122,24,0.08)]">{state.avatar}</div>
+          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-ember-500/20 bg-ember-500/10 text-xl">{state.avatar}</div>
           <div className="min-w-0"><div className="truncate text-sm font-bold text-white">{state.username}</div><div className="mt-1 flex items-center gap-2 text-xs text-ink-400"><RankBadge rank={rank} compact /> <span>{state.streak}🔥</span></div></div>
         </div>
         <XpBar xp={state.xp} className="mt-3.5" />
@@ -62,7 +59,7 @@ export function Navigation({ current, onNavigate }: NavigationProps) {
       <nav className="space-y-1 overflow-y-auto pr-1" style={{ maxHeight: 'calc(100vh - 285px)' }}>{NAV_ITEMS.map((item) => navButton(item))}</nav>
       <button onClick={handleSignOut} className="absolute bottom-4 left-4 right-4 flex items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-sm text-ink-500 transition hover:border-white/[0.06] hover:bg-white/[0.04] hover:text-white"><LogOut size={18} /> Sign out</button>
     </aside>
-    <div className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-center border-b border-white/[0.08] bg-black/82 px-4 shadow-[0_8px_30px_rgba(0,0,0,0.18)] backdrop-blur-2xl lg:hidden"><div className="flex items-center">{brand}</div><button aria-label="Open menu" onClick={() => setMobileOpen((v) => !v)} className="absolute right-4 rounded-xl border border-white/[0.06] bg-white/[0.025] p-2 text-ink-300 transition hover:bg-white/[0.07] hover:text-white">{mobileOpen ? <X size={22} /> : <Menu size={22} />}</button></div>
-    {mobileOpen && <div className="fixed inset-0 z-40 bg-black/75 pt-16 backdrop-blur-sm lg:hidden"><nav className="max-h-[calc(100vh-4rem)] overflow-y-auto border-b border-white/[0.08] bg-black/95 p-4 shadow-2xl">{NAV_ITEMS.map((item) => navButton(item, true))}<button onClick={handleSignOut} className="mt-2 flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-3 text-sm text-ink-500 transition hover:border-white/[0.06] hover:bg-white/[0.04] hover:text-white"><LogOut size={18} /> Sign out</button></nav></div>}
+    <div className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-center border-b border-white/[0.08] bg-black/95 px-4 shadow-[0_8px_20px_rgba(0,0,0,0.16)] lg:hidden"><div className="flex items-center">{brand}</div><button aria-label="Open menu" onClick={() => setMobileOpen((v) => !v)} className="absolute right-4 rounded-xl border border-white/[0.06] bg-white/[0.025] p-2 text-ink-300 transition hover:bg-white/[0.07] hover:text-white">{mobileOpen ? <X size={22} /> : <Menu size={22} />}</button></div>
+    {mobileOpen && <div className="fixed inset-0 z-40 bg-black/90 pt-16 lg:hidden"><nav className="max-h-[calc(100vh-4rem)] overflow-y-auto border-b border-white/[0.08] bg-black/95 p-4 shadow-2xl">{NAV_ITEMS.map((item) => navButton(item, true))}<button onClick={handleSignOut} className="mt-2 flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-3 text-sm text-ink-500 transition hover:border-white/[0.06] hover:bg-white/[0.04] hover:text-white"><LogOut size={18} /> Sign out</button></nav></div>}
   </>;
 }

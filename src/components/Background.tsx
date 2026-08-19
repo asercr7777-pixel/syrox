@@ -11,9 +11,9 @@ export function Background() {
   useEffect(() => { setVideoError(false); }, [state.backgroundVideo]);
 
   const brightness = state.backgroundBrightness / 100;
-  const blur = Math.min(state.backgroundBlur, 6);
+  const blur = Math.min(state.backgroundBlur, 4);
   const blurFilter = blur > 0 ? `blur(${blur}px)` : 'none';
-  const transform = blur > 0 ? 'scale(1.015)' : 'none';
+  const transform = blur > 0 ? 'scale(1.01)' : 'none';
   const handleImgError = useCallback(() => setImgError(true), []);
   const handleVideoError = useCallback(() => setVideoError(true), []);
 
@@ -21,16 +21,10 @@ export function Background() {
     if (state.backgroundType === 'video' && state.backgroundVideo && !videoError) {
       return (
         <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
+          autoPlay muted loop playsInline preload="metadata"
           className="fixed inset-0 h-full w-full object-cover"
           style={{ filter: `brightness(${brightness}) ${blurFilter}`, transform, zIndex: -20 }}
-          src={state.backgroundVideo}
-          onError={handleVideoError}
-          aria-hidden="true"
+          src={state.backgroundVideo} onError={handleVideoError} aria-hidden="true"
         />
       );
     }
@@ -39,10 +33,8 @@ export function Background() {
       return (
         <div
           className="fixed inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url("${state.customBackground}")`, filter: `brightness(${brightness}) ${blurFilter}`, transform, zIndex: -20 }}
-          role="img"
-          aria-label="Custom background"
-          onError={handleImgError as never}
+          style={{ backgroundImage: `url(\"${state.customBackground}\")`, filter: `brightness(${brightness}) ${blurFilter}`, transform, zIndex: -20 }}
+          role="img" aria-label="Custom background" onError={handleImgError as never}
         />
       );
     }
@@ -62,7 +54,7 @@ export function Background() {
       <div
         className="fixed inset-0 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse 75% 55% at 42% 8%, rgba(245,158,11,0.105), transparent 62%), linear-gradient(115deg, rgba(255,255,255,0.018), transparent 42%, rgba(0,0,0,0.2))',
+          background: 'radial-gradient(ellipse 75% 55% at 42% 8%, rgba(245,158,11,0.08), transparent 62%), linear-gradient(115deg, rgba(255,255,255,0.012), transparent 42%, rgba(0,0,0,0.16))',
           zIndex: -15,
         }}
       />

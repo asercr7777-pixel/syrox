@@ -13,65 +13,43 @@ export interface SkillNode {
 }
 
 export const SKILL_BRANCHES: { id: SkillBranch; name: string; description: string; icon: string }[] = [
-  { id: 'strength', name: 'Strength', description: 'Build physical power and training mastery.', icon: '💪' },
-  { id: 'focus', name: 'Focus', description: 'Sharpen concentration and mental control.', icon: '🧠' },
-  { id: 'discipline', name: 'Discipline', description: 'Turn completed tasks into lasting growth.', icon: '🔥' },
-  { id: 'knowledge', name: 'Knowledge', description: 'Convert learning into practical mastery.', icon: '📚' },
+  { id: 'strength', name: 'Strength', description: 'Build a stronger physical foundation.', icon: '💪' },
+  { id: 'focus', name: 'Focus', description: 'Sharpen attention and mental control.', icon: '🧠' },
+  { id: 'discipline', name: 'Discipline', description: 'Turn completed tasks into stronger progression.', icon: '🔥' },
+  { id: 'knowledge', name: 'Knowledge', description: 'Turn learning into long-term growth.', icon: '📚' },
   { id: 'consistency', name: 'Consistency', description: 'Build momentum that survives difficult days.', icon: '⚡' },
-  { id: 'defense', name: 'Defense', description: 'Protect your progress from setbacks.', icon: '🛡️' },
-  { id: 'agility', name: 'Agility', description: 'Improve speed, movement, and adaptability.', icon: '🏃' },
-  { id: 'awareness', name: 'Awareness', description: 'Notice patterns, opportunities, and risks.', icon: '👁️' },
-  { id: 'leadership', name: 'Leadership', description: 'Develop initiative, responsibility, and influence.', icon: '👑' },
-  { id: 'shadow', name: 'Shadow', description: 'Master the hidden path of the Syrox Hunter.', icon: '🌑' },
+  { id: 'defense', name: 'Defense', description: 'Develop resilience against setbacks.', icon: '🛡️' },
+  { id: 'agility', name: 'Agility', description: 'Improve speed, adaptation and movement.', icon: '🏃' },
+  { id: 'awareness', name: 'Awareness', description: 'See patterns and make better decisions.', icon: '👁️' },
+  { id: 'leadership', name: 'Leadership', description: 'Develop initiative and personal command.', icon: '👑' },
+  { id: 'shadow', name: 'Shadow', description: 'Master the hidden path of the Forged.', icon: '🌑' },
 ];
 
-const BRANCH_META: Record<SkillBranch, { icon: string; adjective: string }> = {
-  strength: { icon: '💪', adjective: 'physical' },
-  focus: { icon: '🧠', adjective: 'mental' },
-  discipline: { icon: '🔥', adjective: 'discipline' },
-  knowledge: { icon: '📚', adjective: 'knowledge' },
-  consistency: { icon: '⚡', adjective: 'consistency' },
-  defense: { icon: '🛡️', adjective: 'defensive' },
-  agility: { icon: '🏃', adjective: 'agility' },
-  awareness: { icon: '👁️', adjective: 'awareness' },
-  leadership: { icon: '👑', adjective: 'leadership' },
-  shadow: { icon: '🌑', adjective: 'shadow' },
+const prefix: Record<SkillBranch, string> = {
+  strength: 'Power', focus: 'Focus', discipline: 'Forge', knowledge: 'Lore', consistency: 'Momentum',
+  defense: 'Guard', agility: 'Swift', awareness: 'Sight', leadership: 'Command', shadow: 'Shadow',
 };
 
-const PREFIXES = ['Awakening', 'Foundation', 'Rising', 'Forged', 'Focused', 'Relentless', 'Veteran', 'Mastery', 'Ascendant', 'Legendary'];
-const ACTIONS = ['Control', 'Pulse', 'Resolve', 'Rhythm', 'Instinct', 'Will', 'Precision', 'Momentum', 'Command', 'Mastery'];
+const iconFor = (branch: SkillBranch) => SKILL_BRANCHES.find((item) => item.id === branch)!.icon;
 
-/** 10 branches × 1,000 nodes = 10,000 total skills. Generated deterministically to keep the bundle small. */
-export const SKILL_NODES: SkillNode[] = SKILL_BRANCHES.flatMap((branch) => {
-  const meta = BRANCH_META[branch.id];
-  return Array.from({ length: 1000 }, (_, zeroIndex) => {
-    const index = zeroIndex + 1;
-    const tier = Math.floor(zeroIndex / 10) + 1;
-    const stage = Math.floor(zeroIndex / 100);
-    const prefix = PREFIXES[stage];
-    const action = ACTIONS[zeroIndex % ACTIONS.length];
+export const SKILL_NODES: SkillNode[] = SKILL_BRANCHES.flatMap(({ id: branch }) =>
+  Array.from({ length: 1000 }, (_, i) => {
+    const index = i + 1;
+    const tier = Math.ceil(index / 10);
     return {
-      id: `${branch.id}_${index}`,
-      branch: branch.id,
-      name: `${prefix} ${action} ${index}`,
-      description: `Tier ${tier} ${meta.adjective} specialization. Strengthen this part of your Hunter development path.`,
-      cost: Math.min(25, 1 + Math.floor(zeroIndex / 40)),
-      requires: index === 1 ? undefined : `${branch.id}_${index - 1}`,
-      icon: meta.icon,
+      id: `${branch}_${index}`,
+      branch,
+      name: `${prefix[branch]} ${index}`,
+      description: `${prefix[branch]} path skill ${index}. Advance through the path one step at a time.`,
+      cost: index,
+      requires: index === 1 ? undefined : `${branch}_${index - 1}`,
+      icon: iconFor(branch),
       tier,
       index,
     };
-  });
-});
-
-export const SKILL_NODE_COUNT = SKILL_NODES.length;
-export const SKILLS_PER_BRANCH = 1000;
+  })
+);
 
 export function getSkillNode(id: string): SkillNode | undefined {
-  const [branch, rawIndex] = id.split('_');
-  const index = Number(rawIndex);
-  if (!branch || !Number.isInteger(index) || index < 1 || index > 1000) return undefined;
-  const branchExists = SKILL_BRANCHES.some((item) => item.id === branch);
-  if (!branchExists) return undefined;
-  return SKILL_NODES[(SKILL_BRANCHES.findIndex((item) => item.id === branch) * 1000) + index - 1];
+  return SKILL_NODES.find((node) => node.id === id);
 }

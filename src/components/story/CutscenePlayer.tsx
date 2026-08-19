@@ -18,7 +18,7 @@ interface CutscenePlayerProps {
 }
 
 export function CutscenePlayer({
-  lines, onComplete, bgGradient, chapterEmoji, chapterTitle, shadowGuide = false,
+  lines, onComplete, bgGradient, chapterEmoji, chapterTitle, shadowGuide = true,
 }: CutscenePlayerProps) {
   const [index, setIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState('');

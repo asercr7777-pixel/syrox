@@ -1,4 +1,4 @@
-import { LayoutDashboard, CheckSquare, BookOpen, Dumbbell, User, Store, Backpack, Trophy, Users, Settings, Menu, X, LogOut, Sparkles, Swords, Network, Palette } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, BookOpen, Dumbbell, User, Store, Backpack, Trophy, Users, Settings, Menu, X, LogOut, Sparkles, Swords, Palette } from 'lucide-react';
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { getRankByXp } from '../data/ranks';
@@ -18,7 +18,6 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'story', label: 'Story Mode', icon: BookOpen },
   { id: 'workout', label: 'Workout', icon: Dumbbell },
   { id: 'dungeons', label: 'Dungeons', icon: Swords },
-  { id: 'skilltree', label: 'Skill Tree', icon: Network },
   { id: 'profile', label: 'Hunter Profile', icon: User },
   { id: 'marketplace', label: 'Marketplace', icon: Store },
   { id: 'inventory', label: 'Inventory', icon: Backpack },
@@ -65,16 +64,10 @@ export function Navigation({ current, onNavigate }: NavigationProps) {
   return <>
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-white/[0.08] bg-black/90 p-4 lg:flex lg:flex-col">
       <div className="shrink-0 px-2 pt-1 pb-5">{brand}</div>
-
       <div className="shrink-0 rounded-2xl border border-white/[0.08] bg-black/60 p-3.5">
         <div className="flex items-center gap-3">
-          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-ember-500/20 bg-ember-500/10 text-xl">
-            {avatarImage ? <img src={state.avatar} alt="Profile" className="h-full w-full object-cover" /> : state.avatar}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-bold text-white">{state.username}</div>
-            <div className="mt-1 flex items-center gap-2 text-xs text-ink-400"><RankBadge rank={rank} compact /> <span>{state.streak}🔥</span></div>
-          </div>
+          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-ember-500/20 bg-ember-500/10 text-xl">{avatarImage ? <img src={state.avatar} alt="Profile" className="h-full w-full object-cover" /> : state.avatar}</div>
+          <div className="min-w-0 flex-1"><div className="truncate text-sm font-bold text-white">{state.username}</div><div className="mt-1 flex items-center gap-2 text-xs text-ink-400"><RankBadge rank={rank} compact /> <span>{state.streak}🔥</span></div></div>
           <button onClick={() => setThemeOpen((v) => !v)} className="shrink-0 rounded-lg p-1.5 text-ink-500 hover:bg-white/5 hover:text-ink-100" title="Change theme"><Palette size={15} /></button>
         </div>
         <XpBar xp={state.xp} className="mt-3.5" />
@@ -82,25 +75,10 @@ export function Navigation({ current, onNavigate }: NavigationProps) {
         {aura && <div className="mt-1 truncate text-[10px] text-ink-500">{aura.name}</div>}
         {themeOpen && <div className="mt-3 grid grid-cols-4 gap-1.5 rounded-xl border border-white/10 bg-black/80 p-2">{THEMES.map((t) => <button key={t.id} onClick={() => { updateProfile({ theme: t.id }); playSound('click'); setThemeOpen(false); }} title={t.name} className={`h-7 rounded-lg border ${state.theme === t.id ? 'border-white' : 'border-white/10'}`} style={{ background: t.colors }} />)}</div>}
       </div>
-
-      <nav className="mt-4 min-h-0 flex-1 space-y-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-        {NAV_ITEMS.map((item) => navButton(item))}
-      </nav>
-
-      <div className="shrink-0 border-t border-white/[0.08] pt-3 mt-3">
-        <button onClick={handleSignOut} className="flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-sm text-ink-500 transition hover:border-white/[0.06] hover:bg-white/[0.04] hover:text-white"><LogOut size={18} /> Sign out</button>
-      </div>
+      <nav className="mt-4 min-h-0 flex-1 space-y-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">{NAV_ITEMS.map((item) => navButton(item))}</nav>
+      <div className="shrink-0 border-t border-white/[0.08] pt-3 mt-3"><button onClick={handleSignOut} className="flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-sm text-ink-500 transition hover:border-white/[0.06] hover:bg-white/[0.04] hover:text-white"><LogOut size={18} /> Sign out</button></div>
     </aside>
-
-    <div className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-center border-b border-white/[0.08] bg-black/95 px-4 shadow-[0_8px_20px_rgba(0,0,0,0.16)] lg:hidden">
-      <div className="flex items-center">{brand}</div>
-      <button aria-label="Open menu" onClick={() => setMobileOpen((v) => !v)} className="absolute right-4 rounded-xl border border-white/[0.06] bg-white/[0.025] p-2 text-ink-300 transition hover:bg-white/[0.07] hover:text-white">{mobileOpen ? <X size={22} /> : <Menu size={22} />}</button>
-    </div>
-
-    {mobileOpen && <div className="fixed inset-0 z-40 bg-black/90 pt-16 lg:hidden"><nav className="flex max-h-[calc(100vh-4rem)] flex-col overflow-y-auto border-b border-white/[0.08] bg-black/95 p-4 shadow-2xl">
-      <div className="mb-3 shrink-0 rounded-xl border border-white/10 bg-black/60 p-3"><div className="flex items-center justify-between"><span className="text-xs text-ink-400">Theme</span><div className="flex gap-1">{THEMES.map((t) => <button key={t.id} onClick={() => updateProfile({ theme: t.id })} title={t.name} className={`h-6 w-6 rounded-md border ${state.theme === t.id ? 'border-white' : 'border-white/10'}`} style={{ background: t.colors }} />)}</div></div></div>
-      <div className="min-h-0 flex-1 overflow-y-auto">{NAV_ITEMS.map((item) => navButton(item, true))}</div>
-      <div className="mt-2 shrink-0 border-t border-white/[0.08] pt-2"><button onClick={handleSignOut} className="flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-3 text-sm text-ink-500 transition hover:border-white/[0.06] hover:bg-white/[0.04] hover:text-white"><LogOut size={18} /> Sign out</button></div>
-    </nav></div>}
+    <div className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-center border-b border-white/[0.08] bg-black/95 px-4 shadow-[0_8px_20px_rgba(0,0,0,0.16)] lg:hidden"><div className="flex items-center">{brand}</div><button aria-label="Open menu" onClick={() => setMobileOpen((v) => !v)} className="absolute right-4 rounded-xl border border-white/[0.06] bg-white/[0.025] p-2 text-ink-300 transition hover:bg-white/[0.07] hover:text-white">{mobileOpen ? <X size={22} /> : <Menu size={22} />}</button></div>
+    {mobileOpen && <div className="fixed inset-0 z-40 bg-black/90 pt-16 lg:hidden"><nav className="flex max-h-[calc(100vh-4rem)] flex-col overflow-y-auto border-b border-white/[0.08] bg-black/95 p-4 shadow-2xl"><div className="mb-3 shrink-0 rounded-xl border border-white/10 bg-black/60 p-3"><div className="flex items-center justify-between"><span className="text-xs text-ink-400">Theme</span><div className="flex gap-1">{THEMES.map((t) => <button key={t.id} onClick={() => updateProfile({ theme: t.id })} title={t.name} className={`h-6 w-6 rounded-md border ${state.theme === t.id ? 'border-white' : 'border-white/10'}`} style={{ background: t.colors }} />)}</div></div></div><div className="min-h-0 flex-1 overflow-y-auto">{NAV_ITEMS.map((item) => navButton(item, true))}</div><div className="mt-2 shrink-0 border-t border-white/[0.08] pt-2"><button onClick={handleSignOut} className="flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-3 text-sm text-ink-500 transition hover:border-white/[0.06] hover:bg-white/[0.04] hover:text-white"><LogOut size={18} /> Sign out</button></div></nav></div>}
   </>;
 }

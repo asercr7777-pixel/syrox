@@ -15,7 +15,7 @@ import {
   Swords,
   Target,
   Trophy,
-  WandSparkles,
+  Wand2,
   Zap,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -43,7 +43,7 @@ const rankIcons: Record<string, LucideIcon> = {
   SHADOW_HUNTER: Crosshair,
   SHADOW_MONARCH: Crown,
   ELITE_SLAYER: Axe,
-  NIGHTMARE_BRINGER: WandSparkles,
+  NIGHTMARE_BRINGER: Wand2,
   DOOM_BRINGER: Flame,
   EXECUTIONER: Skull,
   MYTHIC_ONE: Sparkles,
@@ -88,7 +88,6 @@ export function RankBadge({ rank, size = 'md', auraColor, showRing = true }: Ran
 
   return (
     <div className={`relative ${sizes[size]} flex items-center justify-center ${motion}`}>
-      {/* ambient energy */}
       <div
         className="absolute -inset-[22%] rounded-full opacity-40 blur-xl"
         style={{ background: `radial-gradient(circle, ${rank.color} 0%, transparent 68%)` }}
@@ -105,7 +104,6 @@ export function RankBadge({ rank, size = 'md', auraColor, showRing = true }: Ran
         />
       )}
 
-      {/* unique rank crest */}
       <div
         className={`relative ${shape} flex items-center justify-center border-2 ${rank.tier === 'monarch' ? 'border-[3px]' : ''}`}
         style={{
@@ -128,7 +126,6 @@ export function RankBadge({ rank, size = 'md', auraColor, showRing = true }: Ran
         />
       </div>
 
-      {/* tiny orbit sparks */}
       {(rank.tier === 'fire' || rank.tier === 'lightning' || rank.tier === 'shadow' || rank.tier === 'monarch') && (
         <>
           <span className="absolute w-1 h-1 rounded-full animate-ping" style={{ backgroundColor: rank.color, top: '8%', left: '22%' }} />

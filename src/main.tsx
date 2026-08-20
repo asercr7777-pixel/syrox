@@ -9,12 +9,10 @@ function Root() {
 
   useEffect(() => {
     const seen = sessionStorage.getItem('splash-seen');
-    if (seen) {
-      setShowSplash(false);
-    }
+    if (seen) setShowSplash(false);
 
-    // Remove any legacy OneSignal service worker left by older builds.
-    // Push notifications are intentionally disabled for Discipline.
+    // Remove legacy notification workers left by older builds.
+    // Notifications are intentionally disabled in Forged.
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then((registrations) => {
         registrations.forEach((registration) => {
@@ -32,9 +30,7 @@ function Root() {
     setShowSplash(false);
   };
 
-  if (showSplash) {
-    return <SplashScreen onComplete={handleSplashComplete} />;
-  }
+  if (showSplash) return <SplashScreen onComplete={handleSplashComplete} />;
 
   return (
     <StrictMode>

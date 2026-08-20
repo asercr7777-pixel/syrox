@@ -23,20 +23,18 @@
 [data-theme] .bg-gold-500 { background-color: rgb(var(--gold-500)) !important; }
 [data-theme] .border-gold-500 { border-color: rgb(var(--gold-500)) !important; }
 
-/* Common gradients used throughout the app. */
 [data-theme] .from-ember-500 { --tw-gradient-from: rgb(var(--accent-500)) var(--tw-gradient-from-position) !important; --tw-gradient-to: rgb(var(--accent-500) / 0) var(--tw-gradient-to-position) !important; }
+[data-theme] .via-ember-500\/8 { --tw-gradient-stops: var(--tw-gradient-from), rgb(var(--accent-500) / 8%) var(--tw-gradient-via-position), var(--tw-gradient-to) !important; }
 [data-theme] .to-shadow-500 { --tw-gradient-to: rgb(var(--shadow-500)) var(--tw-gradient-to-position) !important; }
+[data-theme] .to-gold-500 { --tw-gradient-to: rgb(var(--gold-500)) var(--tw-gradient-to-position) !important; }
 
-/* Reduce accidental hard-coded Ember accents in interactive controls. */
 [data-theme] .btn-primary { background: linear-gradient(135deg, rgb(var(--accent-500)), rgb(var(--accent-600))) !important; border-color: rgb(var(--accent-500) / 35%) !important; }
 [data-theme] .btn-primary:hover { filter: brightness(1.08); }
 
-/* Accessible focus state that follows the active theme. */
 [data-theme] button:focus-visible,
 [data-theme] a:focus-visible,
 [data-theme] input:focus-visible,
 [data-theme] select:focus-visible,
 [data-theme] textarea:focus-visible { outline: 2px solid rgb(var(--accent-400)); outline-offset: 2px; }
 
-/* Keep theme changes smooth without animating layout-heavy properties. */
 [data-theme] .theme-transition { transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease; }

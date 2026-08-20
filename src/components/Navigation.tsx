@@ -18,7 +18,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'dungeons', label: 'Dungeons', icon: Swords }, { id: 'profile', label: 'Hunter Profile', icon: User },
   { id: 'marketplace', label: 'Marketplace', icon: Store }, { id: 'inventory', label: 'Inventory', icon: Backpack },
   { id: 'achievements', label: 'Achievements', icon: Trophy }, { id: 'leaderboard', label: 'Leaderboard', icon: Users },
-  { id: 'shadow', label: 'Shadow AI', icon: Sparkles }, { id: 'skilltree', label: 'Skill Tree', icon: Sparkles }, { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'shadow', label: 'Shadow AI', icon: Sparkles }, { id: 'settings', label: 'Settings', icon: Settings },
 ];
 const THEMES: { id: SiteTheme; name: string; colors: string }[] = [
   { id: 'shadow', name: 'Shadow', colors: 'linear-gradient(135deg,#8b5cf6,#111827)' }, { id: 'ember', name: 'Ember', colors: 'linear-gradient(135deg,#ff7a18,#431407)' },

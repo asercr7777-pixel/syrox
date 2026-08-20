@@ -1,55 +1,12 @@
 export type SkillBranch = 'strength' | 'focus' | 'discipline' | 'knowledge' | 'consistency' | 'defense' | 'agility' | 'awareness' | 'leadership' | 'shadow';
-
-export interface SkillNode {
-  id: string;
-  branch: SkillBranch;
-  name: string;
-  description: string;
-  cost: number;
-  requires?: string;
-  icon: string;
-  tier: number;
-  index: number;
-}
-
+export interface SkillNode { id: string; branch: SkillBranch; name: string; description: string; cost: number; requires?: string; icon: string; tier: number; index: number; }
 export const SKILL_BRANCHES: { id: SkillBranch; name: string; description: string; icon: string }[] = [
-  { id: 'strength', name: 'Strength', description: 'Build a stronger physical foundation.', icon: '💪' },
-  { id: 'focus', name: 'Focus', description: 'Sharpen attention and mental control.', icon: '🧠' },
-  { id: 'discipline', name: 'Discipline', description: 'Turn completed tasks into stronger progression.', icon: '🔥' },
-  { id: 'knowledge', name: 'Knowledge', description: 'Turn learning into long-term growth.', icon: '📚' },
-  { id: 'consistency', name: 'Consistency', description: 'Build momentum that survives difficult days.', icon: '⚡' },
-  { id: 'defense', name: 'Defense', description: 'Develop resilience against setbacks.', icon: '🛡️' },
-  { id: 'agility', name: 'Agility', description: 'Improve speed, adaptation and movement.', icon: '🏃' },
-  { id: 'awareness', name: 'Awareness', description: 'See patterns and make better decisions.', icon: '👁️' },
-  { id: 'leadership', name: 'Leadership', description: 'Develop initiative and personal command.', icon: '👑' },
-  { id: 'shadow', name: 'Shadow', description: 'Master the hidden path of the Forged.', icon: '🌑' },
+  { id: 'strength', name: 'Strength', description: 'Build a stronger physical foundation.', icon: '💪' }, { id: 'focus', name: 'Focus', description: 'Sharpen attention and mental control.', icon: '🧠' }, { id: 'discipline', name: 'Discipline', description: 'Turn completed tasks into stronger progression.', icon: '🔥' }, { id: 'knowledge', name: 'Knowledge', description: 'Turn learning into long-term growth.', icon: '📚' }, { id: 'consistency', name: 'Consistency', description: 'Build momentum that survives difficult days.', icon: '⚡' }, { id: 'defense', name: 'Defense', description: 'Develop resilience against setbacks.', icon: '🛡️' }, { id: 'agility', name: 'Agility', description: 'Improve speed, adaptation and movement.', icon: '🏃' }, { id: 'awareness', name: 'Awareness', description: 'See patterns and make better decisions.', icon: '👁️' }, { id: 'leadership', name: 'Leadership', description: 'Develop initiative and personal command.', icon: '👑' }, { id: 'shadow', name: 'Shadow', description: 'Master the hidden path of the Forged.', icon: '🌑' },
 ];
-
-const prefix: Record<SkillBranch, string> = {
-  strength: 'Power', focus: 'Focus', discipline: 'Forge', knowledge: 'Lore', consistency: 'Momentum',
-  defense: 'Guard', agility: 'Swift', awareness: 'Sight', leadership: 'Command', shadow: 'Shadow',
+const prefix: Record<SkillBranch, string> = { strength: 'Power', focus: 'Focus', discipline: 'Forge', knowledge: 'Lore', consistency: 'Momentum', defense: 'Guard', agility: 'Swift', awareness: 'Sight', leadership: 'Command', shadow: 'Shadow' };
+const descriptions: Record<SkillBranch, string[]> = {
+  strength: ['Your foundation grows stronger.', 'Your body answers with more control.', 'Power becomes consistent instead of occasional.'], focus: ['Distractions lose their grip.', 'Your attention stays where you place it.', 'Your mind becomes harder to pull away.'], discipline: ['You keep the promise after motivation fades.', 'Routine becomes part of your identity.', 'You act because you decided to act.'], knowledge: ['You turn information into understanding.', 'You connect what you learn to action.', 'Knowledge becomes a weapon of clarity.'], consistency: ['One more day becomes momentum.', 'Your streak becomes evidence of control.', 'You stop negotiating with the next step.'], defense: ['Setbacks become lessons, not endings.', 'You recover faster after difficult days.', 'Your discipline holds under pressure.'], agility: ['You adapt without losing direction.', 'Change becomes something you can use.', 'You move with purpose instead of panic.'], awareness: ['You notice the pattern before it repeats.', 'Small signals become useful information.', 'Clarity arrives before the decision.'], leadership: ['You take responsibility for the next move.', 'Your actions make the standard visible.', 'Command begins with command of yourself.'], shadow: ['The hidden path opens one step at a time.', 'You learn to move without needing applause.', 'Shadow follows discipline, never replaces it.'],
 };
-
 const iconFor = (branch: SkillBranch) => SKILL_BRANCHES.find((item) => item.id === branch)!.icon;
-
-export const SKILL_NODES: SkillNode[] = SKILL_BRANCHES.flatMap(({ id: branch }) =>
-  Array.from({ length: 1000 }, (_, i) => {
-    const index = i + 1;
-    const tier = Math.ceil(index / 10);
-    return {
-      id: `${branch}_${index}`,
-      branch,
-      name: `${prefix[branch]} ${index}`,
-      description: `${prefix[branch]} path skill ${index}. Advance through the path one step at a time.`,
-      cost: index,
-      requires: index === 1 ? undefined : `${branch}_${index - 1}`,
-      icon: iconFor(branch),
-      tier,
-      index,
-    };
-  })
-);
-
-export function getSkillNode(id: string): SkillNode | undefined {
-  return SKILL_NODES.find((node) => node.id === id);
-}
+export const SKILL_NODES: SkillNode[] = SKILL_BRANCHES.flatMap(({ id: branch }) => Array.from({ length: 500 }, (_, i) => { const index = i + 1; return { id: `${branch}_${index}`, branch, name: `${prefix[branch]} ${index}`, description: descriptions[branch][(index - 1) % descriptions[branch].length], cost: index, requires: index === 1 ? undefined : `${branch}_${index - 1}`, icon: iconFor(branch), tier: Math.ceil(index / 10), index }; }));
+export function getSkillNode(id: string): SkillNode | undefined { return SKILL_NODES.find((node) => node.id === id); }

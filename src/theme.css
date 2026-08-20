@@ -1,0 +1,19 @@
+:root,
+[data-theme='shadow'] {
+  --site-bg: #05060a; --ink-950:#05060a; --ink-900:#0a0c14; --ink-800:#11141f; --ink-700:#1a1e2e; --ink-600:#262b40; --ink-500:#3a4159; --ink-400:#5b6480; --ink-300:#8a93b0; --ink-200:#c2c9dd; --ink-100:#e6eaf5;
+  --accent-400:#c4b5fd; --accent-500:#8b5cf6; --accent-600:#6d28d9; --frost-400:#93c5fd; --frost-500:#60a5fa; --frost-600:#2563eb; --shadow-400:#c4b5fd; --shadow-500:#8b5cf6; --shadow-600:#6d28d9; --gold-400:#fbbf24; --gold-500:#f59e0b; --gold-600:#d97706;
+}
+[data-theme='ember'] { --site-bg:#080604; --accent-400:#ffb27a; --accent-500:#ff7a18; --accent-600:#e85d00; --frost-400:#67e8f9; --frost-500:#06b6d4; --frost-600:#0891b2; --shadow-400:#fdba74; --shadow-500:#f97316; --shadow-600:#c2410c; --gold-400:#fde68a; --gold-500:#f59e0b; --gold-600:#b45309; }
+[data-theme='frost'] { --site-bg:#03070b; --accent-400:#7dd3fc; --accent-500:#38bdf8; --accent-600:#0284c7; --frost-400:#a5f3fc; --frost-500:#22d3ee; --frost-600:#0891b2; --shadow-400:#93c5fd; --shadow-500:#3b82f6; --shadow-600:#1d4ed8; --gold-400:#bae6fd; --gold-500:#38bdf8; --gold-600:#0369a1; }
+[data-theme='ocean'] { --site-bg:#02070c; --accent-400:#60a5fa; --accent-500:#2563eb; --accent-600:#1d4ed8; --frost-400:#67e8f9; --frost-500:#06b6d4; --frost-600:#0891b2; --shadow-400:#a5b4fc; --shadow-500:#6366f1; --shadow-600:#4338ca; --gold-400:#93c5fd; --gold-500:#3b82f6; --gold-600:#1e40af; }
+[data-theme='emerald'] { --site-bg:#030805; --accent-400:#6ee7b7; --accent-500:#10b981; --accent-600:#059669; --frost-400:#99f6e4; --frost-500:#14b8a6; --frost-600:#0f766e; --shadow-400:#86efac; --shadow-500:#22c55e; --shadow-600:#15803d; --gold-400:#bef264; --gold-500:#84cc16; --gold-600:#4d7c0f; }
+[data-theme='crimson'] { --site-bg:#090304; --accent-400:#fda4af; --accent-500:#e11d48; --accent-600:#be123c; --frost-400:#f9a8d4; --frost-500:#ec4899; --frost-600:#be185d; --shadow-400:#f0abfc; --shadow-500:#c026d3; --shadow-600:#a21caf; --gold-400:#fca5a5; --gold-500:#ef4444; --gold-600:#b91c1c; }
+[data-theme='royal'] { --site-bg:#05030b; --accent-400:#a5b4fc; --accent-500:#6366f1; --accent-600:#4338ca; --frost-400:#c4b5fd; --frost-500:#8b5cf6; --frost-600:#6d28d9; --shadow-400:#ddd6fe; --shadow-500:#a78bfa; --shadow-600:#7c3aed; --gold-400:#f0abfc; --gold-500:#d946ef; --gold-600:#a21caf; }
+[data-theme='gold'] { --site-bg:#080703; --accent-400:#fde68a; --accent-500:#f59e0b; --accent-600:#d97706; --frost-400:#fef08a; --frost-500:#eab308; --frost-600:#ca8a04; --shadow-400:#fcd34d; --shadow-500:#d97706; --shadow-600:#b45309; --gold-400:#fef3c7; --gold-500:#fbbf24; --gold-600:#d97706; }
+
+html, body, #root { background-color: var(--site-bg); }
+body { transition: background-color 180ms ease; }
+.theme-surface { border-color: color-mix(in srgb, var(--accent-500) 18%, transparent) !important; }
+.theme-accent { color: var(--accent-400) !important; }
+.theme-accent-bg { background: color-mix(in srgb, var(--accent-500) 14%, transparent) !important; }
+.theme-accent-border { border-color: color-mix(in srgb, var(--accent-500) 35%, transparent) !important; }

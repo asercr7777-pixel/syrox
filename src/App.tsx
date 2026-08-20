@@ -3,6 +3,7 @@ import { Navigation, type ViewId } from './components/Navigation';
 import { Background } from './components/Background';
 import { ToastContainer } from './components/ui/Toast';
 import { Confetti } from './components/ui/Confetti';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { AuthProvider, useAuth } from './lib/auth';
 import { useStore } from './store/useStore';
 import { syncSoundFlag } from './lib/sound';
@@ -27,9 +28,8 @@ const Leaderboard = lazy(() => import('./views/Leaderboard').then((m) => ({ defa
 const Settings = lazy(() => import('./views/Settings').then((m) => ({ default: m.Settings })));
 const ItemInspection = lazy(() => import('./views/ItemInspection').then((m) => ({ default: m.ItemInspection })));
 const Auth = lazy(() => import('./views/Auth').then((m) => ({ default: m.Auth })));
-const Shadow = lazy(() => import('./views/Shadow').then((m) => ({ default: m.Shadow })));
 
-const VALID_VIEWS = new Set<ViewId>(['dashboard', 'tasks', 'story', 'workout', 'dungeons', 'profile', 'marketplace', 'inventory', 'achievements', 'leaderboard', 'shadow', 'skilltree', 'settings', 'iteminspection']);
+const VALID_VIEWS = new Set<ViewId>(['dashboard', 'tasks', 'story', 'workout', 'dungeons', 'profile', 'marketplace', 'inventory', 'achievements', 'leaderboard', 'skilltree', 'settings', 'iteminspection']);
 
 function getViewFromUrl(): ViewId {
   if (typeof window === 'undefined') return 'dashboard';
@@ -38,7 +38,9 @@ function getViewFromUrl(): ViewId {
   return requested && VALID_VIEWS.has(requested as ViewId) ? requested as ViewId : 'dashboard';
 }
 
-function PageLoader() { return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="animate-spin text-ember-400" size={32} /></div>; }
+function PageLoader() {
+  return <div className="flex min-h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-[rgb(var(--accent-400))]" size={32} /></div>;
+}
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -60,7 +62,7 @@ function AppContent() {
     window.history.replaceState({}, '', url);
   };
 
-  if (loading || (user && !cloudLoaded)) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-ember-400" size={40} /></div>;
+  if (loading || (user && !cloudLoaded)) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-[rgb(var(--accent-400))]" size={40} /></div>;
   if (!user) return <><Background /><Suspense fallback={<PageLoader />}><Auth /></Suspense></>;
 
   return <div className="min-h-screen" data-theme={state.theme} style={{ backgroundColor: 'rgb(var(--site-bg))' }}>
@@ -79,7 +81,6 @@ function AppContent() {
         {view === 'inventory' && <Inventory />}
         {view === 'achievements' && <Achievements />}
         {view === 'leaderboard' && <Leaderboard />}
-        {view === 'shadow' && <Shadow />}
         {view === 'settings' && <Settings />}
         {view === 'iteminspection' && <ItemInspection itemId="" category="weapon" onBack={() => handleNavigate('inventory')} />}
       </Suspense>
@@ -87,5 +88,8 @@ function AppContent() {
   </div>;
 }
 
-function App() { return <AuthProvider><AppContent /></AuthProvider>; }
+function App() {
+  return <ErrorBoundary><AuthProvider><AppContent /></AuthProvider></ErrorBoundary>;
+}
+
 export default App;

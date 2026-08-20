@@ -27,12 +27,10 @@ export function RankBadge({ rank, size = 'md', auraColor, showRing = true }: Ran
       {showRing && (
         <div
           className="absolute inset-0 rank-ring"
-          style={
-            {
-              '--ring-color': rank.color,
-              '--ring-pct': '75%',
-            } as React.CSSProperties
-          }
+          style={{
+            '--ring-color': rank.color,
+            '--ring-pct': '75%',
+          } as React.CSSProperties}
         />
       )}
       {auraColor && (
@@ -42,10 +40,25 @@ export function RankBadge({ rank, size = 'md', auraColor, showRing = true }: Ran
         />
       )}
       <div
-        className={`relative ${inner[size]} rounded-full flex items-center justify-center bg-ink-950 border-2`}
-        style={{ borderColor: rank.color, boxShadow: `0 0 20px ${rank.glow}` }}
+        className="absolute inset-[10%] rounded-full opacity-30"
+        style={{
+          background: `radial-gradient(circle, ${rank.color}45 0%, transparent 68%)`,
+          boxShadow: `0 0 28px ${rank.glow}`,
+        }}
+      />
+      <div
+        className={`relative ${inner[size]} rounded-full flex items-center justify-center bg-ink-950/95 border-2 overflow-hidden`}
+        style={{
+          borderColor: rank.color,
+          boxShadow: `inset 0 0 14px ${rank.color}25, 0 0 20px ${rank.glow}`,
+        }}
       >
-        <span>{rank.emoji}</span>
+        <span
+          className="font-black leading-none select-none"
+          style={{ color: rank.color, textShadow: `0 0 12px ${rank.color}, 0 0 24px ${rank.glow}` }}
+        >
+          {rank.emoji}
+        </span>
       </div>
     </div>
   );

@@ -1,108 +1,35 @@
 {
-  "name": "Discipline",
-  "short_name": "Discipline",
-  "description": "A gamified self-improvement RPG. Complete tasks, train your body, climb ranks, conquer dungeons, and become the Shadow Monarch. Transform your daily discipline into an epic journey.",
+  "name": "Forged",
+  "short_name": "Forged",
+  "description": "A gamified self-improvement RPG. Complete tasks, train your body, climb ranks, conquer dungeons, and build unstoppable discipline.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#0a0c14",
   "background_color": "#0a0c14",
-  "categories": ["productivity", "lifestyle", "health", "games", "education"],
+  "categories": ["productivity", "lifestyle", "games", "education"],
   "lang": "en",
   "dir": "ltr",
   "id": "/",
   "icons": [
-    {
-      "src": "/icons/icon-72x72.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-96x96.png",
-      "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-128x128.png",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-144x144.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-152x152.png",
-      "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-192x192-maskable.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/icons/icon-384x384.png",
-      "sizes": "384x384",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-512x512-maskable.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
+    { "src": "/icons/icon-72x72.png", "sizes": "72x72", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-96x96.png", "sizes": "96x96", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-128x128.png", "sizes": "128x128", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-144x144.png", "sizes": "144x144", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-152x152.png", "sizes": "152x152", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-192x192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/icon-384x384.png", "sizes": "384x384", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512x512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    {
-      "name": "Dashboard",
-      "short_name": "Home",
-      "description": "View your daily dashboard",
-      "url": "/?view=dashboard",
-      "icons": [{ "src": "/icons/shortcut-dashboard.png", "sizes": "96x96", "type": "image/png" }]
-    },
-    {
-      "name": "Tasks",
-      "short_name": "Tasks",
-      "description": "Complete your daily tasks",
-      "url": "/?view=tasks",
-      "icons": [{ "src": "/icons/shortcut-tasks.png", "sizes": "96x96", "type": "image/png" }]
-    },
-    {
-      "name": "Story Mode",
-      "short_name": "Story",
-      "description": "Continue your journey in The Broken Reality",
-      "url": "/?view=story",
-      "icons": [{ "src": "/icons/shortcut-quests.png", "sizes": "96x96", "type": "image/png" }]
-    },
-    {
-      "name": "Dungeons",
-      "short_name": "Dungeons",
-      "description": "Enter dungeons and fight bosses",
-      "url": "/?view=dungeons",
-      "icons": [{ "src": "/icons/shortcut-dungeons.png", "sizes": "96x96", "type": "image/png" }]
-    }
+    { "name": "Dashboard", "short_name": "Home", "description": "View your daily dashboard", "url": "/?view=dashboard", "icons": [{ "src": "/icons/shortcut-dashboard.png", "sizes": "96x96", "type": "image/png" }] },
+    { "name": "Tasks", "short_name": "Tasks", "description": "Complete your daily tasks", "url": "/?view=tasks", "icons": [{ "src": "/icons/shortcut-tasks.png", "sizes": "96x96", "type": "image/png" }] },
+    { "name": "Story Mode", "short_name": "Story", "description": "Continue your journey", "url": "/?view=story", "icons": [{ "src": "/icons/shortcut-quests.png", "sizes": "96x96", "type": "image/png" }] },
+    { "name": "Dungeons", "short_name": "Dungeons", "description": "Enter dungeons and fight bosses", "url": "/?view=dungeons", "icons": [{ "src": "/icons/shortcut-dungeons.png", "sizes": "96x96", "type": "image/png" }] },
+    { "name": "Community", "short_name": "Community", "description": "Open the live community chat", "url": "/?view=community", "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96", "type": "image/png" }] }
   ],
   "screenshots": [],
   "prefer_related_applications": false

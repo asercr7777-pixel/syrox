@@ -1,4 +1,4 @@
-import { LayoutDashboard, CheckSquare, BookOpen, Dumbbell, User, Store, Backpack, Trophy, Users, Settings, Menu, X, LogOut, Palette, MessageCircle } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, BookOpen, Dumbbell, User, Store, Backpack, Trophy, Users, Settings, Menu, X, LogOut, Palette, MessageCircle, Swords } from 'lucide-react';
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { getRankByXp } from '../data/ranks';
@@ -15,7 +15,7 @@ interface NavItem { id: ViewId; label: string; icon: typeof LayoutDashboard; }
 const NAV_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard }, { id: 'tasks', label: 'Tasks', icon: CheckSquare },
   { id: 'story', label: 'Story Mode', icon: BookOpen }, { id: 'workout', label: 'Workout', icon: Dumbbell },
-  { id: 'dungeons', label: 'Dungeons', icon: require('lucide-react').Swords }, { id: 'profile', label: 'Hunter Profile', icon: User },
+  { id: 'dungeons', label: 'Dungeons', icon: Swords }, { id: 'profile', label: 'Hunter Profile', icon: User },
   { id: 'marketplace', label: 'Marketplace', icon: Store }, { id: 'inventory', label: 'Inventory', icon: Backpack },
   { id: 'achievements', label: 'Achievements', icon: Trophy }, { id: 'leaderboard', label: 'Leaderboard', icon: Users },
   { id: 'community', label: 'Community', icon: MessageCircle }, { id: 'settings', label: 'Settings', icon: Settings },

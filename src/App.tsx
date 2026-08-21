@@ -10,6 +10,7 @@ import { syncSoundFlag } from './lib/sound';
 import { usePWA } from './hooks/usePWA';
 import { InstallButton } from './components/pwa/InstallButton';
 import { Loader2 } from 'lucide-react';
+import { ShadowAI } from './views/ShadowAI';
 import './performance.css'; import './theme.css'; import './theme-overrides.css'; import './mobile.css';
 
 const Dashboard = lazy(() => import('./views/Dashboard').then((m) => ({ default: m.Dashboard })));
@@ -25,7 +26,6 @@ const Achievements = lazy(() => import('./views/Achievements').then((m) => ({ de
 const Leaderboard = lazy(() => import('./views/Leaderboard').then((m) => ({ default: m.Leaderboard })));
 const Community = lazy(() => import('./views/Community').then((m) => ({ default: m.Community })));
 const Settings = lazy(() => import('./views/Settings').then((m) => ({ default: m.Settings })));
-const ShadowAI = lazy(() => import('./views/ShadowAI').then((m) => ({ default: m.ShadowAI })));
 const ItemInspection = lazy(() => import('./views/ItemInspection').then((m) => ({ default: m.ItemInspection })));
 const Auth = lazy(() => import('./views/Auth').then((m) => ({ default: m.Auth })));
 

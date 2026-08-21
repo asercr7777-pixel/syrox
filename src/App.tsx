@@ -10,7 +10,7 @@ import { syncSoundFlag } from './lib/sound';
 import { usePWA } from './hooks/usePWA';
 import { InstallButton } from './components/pwa/InstallButton';
 import { Loader2 } from 'lucide-react';
-import './performance.css'; import './theme.css'; import './theme-overrides.css';
+import './performance.css'; import './theme.css'; import './theme-overrides.css'; import './mobile.css';
 
 const Dashboard = lazy(() => import('./views/Dashboard').then((m) => ({ default: m.Dashboard })));
 const Tasks = lazy(() => import('./views/Tasks').then((m) => ({ default: m.Tasks })));

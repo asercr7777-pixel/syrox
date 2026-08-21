@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, Check, Circle, MessageCircle, Send, ShieldCheck, Users, Wifi, WifiOff } from 'lucide-react';
-import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
 import { toast } from '../components/ui/Toast';
@@ -34,7 +33,7 @@ export function Community() {
   const [online, setOnline] = useState(1);
   const [reported, setReported] = useState<Set<string>>(new Set());
   const scrollRef = useRef<HTMLDivElement>(null);
-  const channelRef = useRef<RealtimeChannel | null>(null);
+  const didInitialScroll = useRef(false);
 
   const canSend = useMemo(() => Boolean(user && draft.trim().length > 0 && draft.length <= 500 && !sending), [user, draft, sending]);
 
@@ -49,19 +48,14 @@ export function Community() {
         .order('created_at', { ascending: false })
         .limit(MAX_MESSAGES);
       if (!active) return;
-      if (error) {
-        toast({ title: 'Community unavailable', message: error.message, type: 'error' });
-      } else {
-        setMessages((data ?? []).reverse() as CommunityMessage[]);
-      }
+      if (error) toast({ title: 'Community unavailable', message: error.message, type: 'error' });
+      else setMessages((data ?? []).reverse() as CommunityMessage[]);
       setLoading(false);
     };
 
     void load();
 
     const channel = supabase.channel('community-live', { config: { presence: { key: user.id } } });
-    channelRef.current = channel;
-
     channel
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'community_messages' }, (payload) => {
         const incoming = payload.new as CommunityMessage;
@@ -86,14 +80,18 @@ export function Community() {
 
     return () => {
       active = false;
-      channelRef.current = null;
       void supabase.removeChannel(channel);
     };
   }, [user]);
 
   useEffect(() => {
     const el = scrollRef.current;
-    if (!el) return;
+    if (!el || !messages.length) return;
+    if (!didInitialScroll.current) {
+      el.scrollTop = el.scrollHeight;
+      didInitialScroll.current = true;
+      return;
+    }
     const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
     if (distanceFromBottom < 180) el.scrollTop = el.scrollHeight;
   }, [messages]);

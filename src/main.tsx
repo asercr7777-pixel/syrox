@@ -4,15 +4,20 @@ import App from './App.tsx';
 import { SplashScreen } from './components/pwa/SplashScreen.tsx';
 import './index.css';
 
+function safeSessionGet(key: string) {
+  try { return window.sessionStorage.getItem(key); } catch { return null; }
+}
+
+function safeSessionSet(key: string, value: string) {
+  try { window.sessionStorage.setItem(key, value); } catch { /* storage may be blocked */ }
+}
+
 function Root() {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(() => safeSessionGet('splash-seen') !== 'true');
 
   useEffect(() => {
-    const seen = sessionStorage.getItem('splash-seen');
-    if (seen) setShowSplash(false);
+    if (safeSessionGet('splash-seen')) setShowSplash(false);
 
-    // Remove legacy notification workers left by older builds.
-    // Notifications are intentionally disabled in Forged.
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then((registrations) => {
         registrations.forEach((registration) => {
@@ -26,7 +31,7 @@ function Root() {
   }, []);
 
   const handleSplashComplete = () => {
-    sessionStorage.setItem('splash-seen', 'true');
+    safeSessionSet('splash-seen', 'true');
     setShowSplash(false);
   };
 
@@ -39,4 +44,5 @@ function Root() {
   );
 }
 
-createRoot(document.getElementById('root')!).render(<Root />);
+const root = document.getElementById('root');
+if (root) createRoot(root).render(<Root />);

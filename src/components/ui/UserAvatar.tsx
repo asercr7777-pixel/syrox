@@ -26,7 +26,7 @@ export function UserAvatar({ avatar, rank, size = 'md', className = '', showRank
       <div className={`relative shrink-0 ${sizes[size]} ${className}`}>
         <div className="absolute -inset-1 rounded-2xl opacity-60" style={{ background: `radial-gradient(circle, ${rank.glow}, transparent 68%)` }} />
         <div className="relative h-full w-full overflow-hidden rounded-2xl border-2 bg-ink-950" style={{ borderColor: `${rank.color}90`, boxShadow: `0 0 22px ${rank.glow}` }}>
-          <img src={avatar} alt="Profile" className="h-full w-full object-cover" loading="lazy" decoding="async" fetchPriority="low" />
+          <img src={avatar} alt="Profile" className="h-full w-full object-cover" loading="lazy" />
         </div>
       </div>
     );

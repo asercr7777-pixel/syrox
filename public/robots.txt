@@ -3,4 +3,4 @@ Allow: /
 Disallow: /api/
 Disallow: /functions/
 
-Sitemap: https://syrox.bolt.host/sitemap.xml
+Sitemap: https://discipline.app/sitemap.xml

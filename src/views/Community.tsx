@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, Check, Circle, MessageCircle, Send, ShieldCheck, Users, Wifi, WifiOff } from 'lucide-react';
+import { AlertTriangle, Check, Circle, MessageCircle, Send, ShieldCheck, Trash2, Users, Wifi, WifiOff } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
 import { toast } from '../components/ui/Toast';
@@ -91,6 +91,10 @@ export function Community() {
         if (!incoming.id) return;
         setMessages((current) => current.some((m) => m.id === incoming.id) ? current : [...current, incoming].slice(-MAX_MESSAGES));
       })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'community_messages' }, (payload) => {
+        const id = String((payload.old as Partial<CommunityMessage>).id ?? '');
+        if (id) setMessages((current) => current.filter((message) => message.id !== id));
+      })
       .on('presence', { event: 'sync' }, () => {
         const state = channel.presenceState();
         setOnline(Math.max(1, Object.keys(state).length));
@@ -129,16 +133,42 @@ export function Community() {
   const sendMessage = async () => {
     if (!user || !canSend) return;
     const body = draft.trim();
-    setSending(true);
     const username = getDisplayName(user);
     const avatar = getAvatar(user);
-    const { error } = await supabase.from('community_messages').insert({ user_id: user.id, username, avatar, body });
+    const tempId = `local-${crypto.randomUUID()}`;
+    const optimistic: CommunityMessage = { id: tempId, user_id: user.id, username, avatar, body, created_at: new Date().toISOString() };
+
+    setDraft('');
+    setMessages((current) => [...current, optimistic].slice(-MAX_MESSAGES));
+    setSending(true);
+
+    const { data, error } = await supabase
+      .from('community_messages')
+      .insert({ user_id: user.id, username, avatar, body })
+      .select('id,user_id,username,avatar,body,created_at')
+      .single();
+
     setSending(false);
     if (error) {
+      setMessages((current) => current.filter((message) => message.id !== tempId));
+      setDraft(body);
       toast({ title: 'Message not sent', message: error.message, type: 'error' });
       return;
     }
-    setDraft('');
+
+    if (data) {
+      setMessages((current) => current.map((message) => message.id === tempId ? data as CommunityMessage : message));
+    }
+  };
+
+  const deleteMessage = async (message: CommunityMessage) => {
+    if (!user || message.user_id !== user.id) return;
+    setMessages((current) => current.filter((item) => item.id !== message.id));
+    const { error } = await supabase.from('community_messages').delete().eq('id', message.id).eq('user_id', user.id);
+    if (error) {
+      setMessages((current) => [...current, message].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()).slice(-MAX_MESSAGES));
+      toast({ title: 'Delete failed', message: error.message, type: 'error' });
+    }
   };
 
   const reportMessage = async (messageId: string) => {
@@ -176,15 +206,16 @@ export function Community() {
         {loading ? <div className="flex h-full items-center justify-center text-sm text-ink-500"><Circle className="mr-2 animate-pulse" size={12} />Loading community…</div> : messages.length === 0 ? <div className="flex h-full flex-col items-center justify-center px-6 text-center"><div className="mb-3 rounded-2xl border border-cyan-300/10 bg-cyan-300/[0.04] p-4 text-cyan-200"><MessageCircle size={26} /></div><p className="font-bold text-ink-200">The Forge is quiet.</p><p className="mt-1 max-w-xs text-xs leading-5 text-ink-500">Start the conversation with the first message.</p></div> : <div className="space-y-2.5">
           {messages.map((message) => {
             const mine = message.user_id === user?.id;
+            const pending = message.id.startsWith('local-');
             return <article key={message.id} className={`group flex gap-2.5 rounded-2xl p-2.5 transition ${mine ? 'bg-cyan-300/[0.035]' : 'hover:bg-white/[0.025]'}`}>
               <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.04] text-base">
                 {isImageAvatar(message.avatar) ? <img src={message.avatar} alt="" className="h-full w-full object-cover" loading="lazy" /> : <span>{message.avatar || '🐺'}</span>}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex min-w-0 items-baseline gap-2"><span className={`truncate text-xs font-bold ${mine ? 'text-cyan-200' : 'text-ink-200'}`}>{message.username || 'Hunter'}</span><span className="shrink-0 text-[9px] text-ink-700">{formatTime(message.created_at)}</span></div>
+                <div className="flex min-w-0 items-baseline gap-2"><span className={`truncate text-xs font-bold ${mine ? 'text-cyan-200' : 'text-ink-200'}`}>{message.username || 'Hunter'}</span><span className="shrink-0 text-[9px] text-ink-700">{pending ? 'Sending…' : formatTime(message.created_at)}</span></div>
                 <p className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-5 text-ink-300">{message.body}</p>
               </div>
-              {!mine && <button type="button" onClick={() => void reportMessage(message.id)} disabled={reported.has(message.id)} aria-label="Report message" title="Report message" className="self-start rounded-lg p-1.5 text-ink-700 opacity-0 transition hover:bg-rose-400/10 hover:text-rose-300 focus:opacity-100 group-hover:opacity-100 disabled:text-emerald-300 sm:opacity-0">{reported.has(message.id) ? <Check size={13} /> : <AlertTriangle size={13} />}</button>}
+              {mine ? <button type="button" onClick={() => void deleteMessage(message)} disabled={pending} aria-label="Delete message" title="Delete message" className="self-start rounded-lg p-1.5 text-ink-700 opacity-0 transition hover:bg-rose-400/10 hover:text-rose-300 focus:opacity-100 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-20"><Trash2 size={13} /></button> : <button type="button" onClick={() => void reportMessage(message.id)} disabled={reported.has(message.id)} aria-label="Report message" title="Report message" className="self-start rounded-lg p-1.5 text-ink-700 opacity-0 transition hover:bg-rose-400/10 hover:text-rose-300 focus:opacity-100 group-hover:opacity-100 disabled:text-emerald-300 sm:opacity-0">{reported.has(message.id) ? <Check size={13} /> : <AlertTriangle size={13} />}</button>}
             </article>;
           })}
         </div>}

@@ -1,10 +1,11 @@
--- Forged Community: canonical message schema
+-- Forged Community: canonical and backwards-compatible message schema
 create table if not exists public.community_messages (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete cascade,
-  username text not null default 'Hunter',
-  avatar text not null default '🐺',
+  username text default 'Hunter',
+  avatar text default '🐺',
   body text,
+  content text,
   created_at timestamptz not null default now()
 );
 
@@ -12,11 +13,30 @@ alter table public.community_messages add column if not exists user_id uuid refe
 alter table public.community_messages add column if not exists username text;
 alter table public.community_messages add column if not exists avatar text;
 alter table public.community_messages add column if not exists body text;
+alter table public.community_messages add column if not exists content text;
 alter table public.community_messages add column if not exists created_at timestamptz not null default now();
 
 alter table public.community_messages alter column username set default 'Hunter';
 alter table public.community_messages alter column avatar set default '🐺';
 alter table public.community_messages alter column body set default '';
+
+-- Keep old content-based rows readable by the new UI.
+update public.community_messages
+set body = coalesce(nullif(body, ''), nullif(content, ''), '')
+where body is null or body = '';
+
+update public.community_messages
+set content = body
+where content is null or content = '';
+
+update public.community_messages
+set username = coalesce(nullif(username, ''), 'Hunter'),
+    avatar = coalesce(nullif(avatar, ''), '🐺')
+where username is null or username = '' or avatar is null or avatar = '';
+
+alter table public.community_messages alter column username set not null;
+alter table public.community_messages alter column avatar set not null;
+alter table public.community_messages alter column body set not null;
 
 alter table public.community_messages enable row level security;
 
@@ -36,13 +56,6 @@ on public.community_messages for select to authenticated using (true);
 create policy "users can send community messages"
 on public.community_messages for insert to authenticated
 with check (auth.uid() = user_id);
-
--- Backfill profile display data for existing rows.
-update public.community_messages cm
-set username = coalesce(nullif(cm.username, ''), p.username, 'Hunter'),
-    avatar = coalesce(nullif(cm.avatar, ''), p.avatar, '🐺')
-from public.profiles p
-where p.id = cm.user_id;
 
 -- Realtime: add the table only when it is not already a member.
 do $$

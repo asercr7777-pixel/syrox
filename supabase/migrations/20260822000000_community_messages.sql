@@ -20,7 +20,6 @@ alter table public.community_messages alter column username set default 'Hunter'
 alter table public.community_messages alter column avatar set default '🐺';
 alter table public.community_messages alter column body set default '';
 
--- Keep old content-based rows readable by the new UI.
 update public.community_messages
 set body = coalesce(nullif(body, ''), nullif(content, ''), '')
 where body is null or body = '';
@@ -49,6 +48,7 @@ drop policy if exists "community messages are readable" on public.community_mess
 drop policy if exists "users can send community messages" on public.community_messages;
 drop policy if exists "community messages select" on public.community_messages;
 drop policy if exists "community messages insert" on public.community_messages;
+drop policy if exists "community messages delete" on public.community_messages;
 
 create policy "community messages are readable"
 on public.community_messages for select to authenticated using (true);
@@ -57,7 +57,10 @@ create policy "users can send community messages"
 on public.community_messages for insert to authenticated
 with check (auth.uid() = user_id);
 
--- Realtime: add the table only when it is not already a member.
+create policy "community messages delete"
+on public.community_messages for delete to authenticated
+using (auth.uid() = user_id);
+
 do $$
 begin
   if not exists (

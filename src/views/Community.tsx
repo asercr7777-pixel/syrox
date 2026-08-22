@@ -23,6 +23,16 @@ function isImageAvatar(value: string) {
   return /^https?:\/\//.test(value) || value.startsWith('data:image/');
 }
 
+function getDisplayName(user: { user_metadata?: Record<string, unknown> } | null) {
+  const meta = user?.user_metadata ?? {};
+  return String(meta.username ?? meta.display_name ?? meta.name ?? 'Hunter').trim() || 'Hunter';
+}
+
+function getAvatar(user: { user_metadata?: Record<string, unknown> } | null) {
+  const meta = user?.user_metadata ?? {};
+  return String(meta.avatar_url ?? meta.avatar ?? '🐺').trim() || '🐺';
+}
+
 export function Community() {
   const { user } = useAuth();
   const [messages, setMessages] = useState<CommunityMessage[]>([]);
@@ -42,14 +52,25 @@ export function Community() {
     let active = true;
 
     const load = async () => {
+      setLoading(true);
       const { data, error } = await supabase
         .from('community_messages')
         .select('id,user_id,username,avatar,body,created_at')
         .order('created_at', { ascending: false })
         .limit(MAX_MESSAGES);
       if (!active) return;
-      if (error) toast({ title: 'Community unavailable', message: error.message, type: 'error' });
-      else setMessages((data ?? []).reverse() as CommunityMessage[]);
+      if (error) {
+        console.error('[Community] load failed:', error);
+        toast({ title: 'Community unavailable', message: error.message, type: 'error' });
+        setMessages([]);
+      } else {
+        setMessages((data ?? []).map((row) => ({
+          ...row,
+          username: row.username || 'Hunter',
+          avatar: row.avatar || '🐺',
+          body: row.body || '',
+        })).reverse() as CommunityMessage[]);
+      }
       setLoading(false);
     };
 
@@ -58,7 +79,16 @@ export function Community() {
     const channel = supabase.channel('community-live', { config: { presence: { key: user.id } } });
     channel
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'community_messages' }, (payload) => {
-        const incoming = payload.new as CommunityMessage;
+        const raw = payload.new as Partial<CommunityMessage>;
+        const incoming: CommunityMessage = {
+          id: String(raw.id ?? ''),
+          user_id: String(raw.user_id ?? ''),
+          username: raw.username || 'Hunter',
+          avatar: raw.avatar || '🐺',
+          body: raw.body || '',
+          created_at: raw.created_at || new Date().toISOString(),
+        };
+        if (!incoming.id) return;
         setMessages((current) => current.some((m) => m.id === incoming.id) ? current : [...current, incoming].slice(-MAX_MESSAGES));
       })
       .on('presence', { event: 'sync' }, () => {
@@ -100,7 +130,9 @@ export function Community() {
     if (!user || !canSend) return;
     const body = draft.trim();
     setSending(true);
-    const { error } = await supabase.from('community_messages').insert({ user_id: user.id, body });
+    const username = getDisplayName(user);
+    const avatar = getAvatar(user);
+    const { error } = await supabase.from('community_messages').insert({ user_id: user.id, username, avatar, body });
     setSending(false);
     if (error) {
       toast({ title: 'Message not sent', message: error.message, type: 'error' });

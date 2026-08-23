@@ -35,7 +35,7 @@ export function RankBadge({ rank, size = 'md', auraColor, showRing = true, compa
   const shape = rankShapes[rank.id] ?? 'rounded-full';
   const motion = tierMotion[rank.tier] ?? '';
   const glow = auraColor || rank.color;
-  return <div className={`relative ${sizes[actualSize]} flex items-center justify-center ${motion}`}>
+  return <div className={`rank-badge relative ${sizes[actualSize]} shrink-0 flex items-center justify-center ${motion}`}>
     <div className="absolute -inset-[22%] rounded-full opacity-35 blur-xl" style={{ background: `radial-gradient(circle, ${glow} 0%, transparent 68%)` }} />
     {!compact && <div className="absolute -inset-[10%] rounded-full opacity-25 blur-md" style={{ background: `conic-gradient(from 0deg, transparent, ${glow}, transparent, ${glow}, transparent)` }} />}
     {showRing && <div className="absolute inset-0 rounded-full border-2 border-dashed opacity-65" style={{ borderColor: glow, boxShadow: `0 0 16px ${rank.glow}` }} />}

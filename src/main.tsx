@@ -12,26 +12,11 @@ function safeSessionSet(key: string, value: string) {
   try { window.sessionStorage.setItem(key, value); } catch { /* storage may be blocked */ }
 }
 
-async function clearLegacyWorkers() {
-  if (!('serviceWorker' in navigator)) return;
-  try {
-    const registrations = await navigator.serviceWorker.getRegistrations();
-    await Promise.all(registrations.map((registration) => registration.unregister().catch(() => false)));
-  } catch { /* service worker access may be blocked */ }
-  try {
-    if ('caches' in window) {
-      const keys = await caches.keys();
-      await Promise.all(keys.map((key) => caches.delete(key).catch(() => false)));
-    }
-  } catch { /* cache access may be blocked */ }
-}
-
 function Root() {
   const [showSplash, setShowSplash] = useState(() => safeSessionGet('splash-seen') !== 'true');
 
   useEffect(() => {
     if (safeSessionGet('splash-seen')) setShowSplash(false);
-    void clearLegacyWorkers();
   }, []);
 
   const handleSplashComplete = () => {

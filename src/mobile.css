@@ -86,10 +86,119 @@
     -webkit-user-select: none;
     user-select: none;
   }
+
+  /* Community: mobile-only layout corrections. Desktop remains unchanged. */
+  section.mx-auto.w-full.max-w-4xl {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding-inline: 0;
+  }
+
+  section.mx-auto.w-full.max-w-4xl > header {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  section.mx-auto.w-full.max-w-4xl > header > div:first-child {
+    min-width: 0;
+  }
+
+  section.mx-auto.w-full.max-w-4xl > header > div:first-child > div:last-child {
+    flex-shrink: 0;
+  }
+
+  section.mx-auto.w-full.max-w-4xl > div {
+    width: 100%;
+    min-width: 0;
+  }
+
+  section.mx-auto.w-full.max-w-4xl > div > div:first-child {
+    min-width: 0;
+    height: min(64dvh, 620px);
+    max-height: 620px;
+  }
+
+  section.mx-auto.w-full.max-w-4xl article {
+    width: 100%;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) 30px;
+    align-items: start;
+    column-gap: 8px;
+    overflow: hidden;
+  }
+
+  section.mx-auto.w-full.max-w-4xl article > div:nth-child(2) {
+    min-width: 0;
+    width: 100%;
+  }
+
+  section.mx-auto.w-full.max-w-4xl article > div:nth-child(2) > div {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  section.mx-auto.w-full.max-w-4xl article > div:nth-child(2) > p {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  section.mx-auto.w-full.max-w-4xl article > button {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    padding: 0;
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    justify-self: end;
+    align-self: start;
+  }
+
+  section.mx-auto.w-full.max-w-4xl article > div:first-child {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+  }
+
+  section.mx-auto.w-full.max-w-4xl > div > div:last-child {
+    min-width: 0;
+    width: 100%;
+  }
+
+  section.mx-auto.w-full.max-w-4xl textarea {
+    min-width: 0;
+    width: 100%;
+  }
+
+  section.mx-auto.w-full.max-w-4xl textarea + div {
+    flex-shrink: 0;
+  }
 }
 
 @media (max-width: 380px) {
   .section-title {
     font-size: 1.15rem;
+  }
+
+  section.mx-auto.w-full.max-w-4xl article {
+    grid-template-columns: 34px minmax(0, 1fr) 28px;
+    column-gap: 6px;
+  }
+
+  section.mx-auto.w-full.max-w-4xl article > div:first-child {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+  }
+
+  section.mx-auto.w-full.max-w-4xl article > button {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
   }
 }

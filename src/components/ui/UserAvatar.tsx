@@ -20,12 +20,15 @@ export function UserAvatar({ avatar, rank, size = 'md', className = '', showRank
 
   if (isImage) {
     return (
-      <div className={`relative shrink-0 ${sizes[size]} ${className}`}>
-        {showRankGlow && <div className="pointer-events-none absolute -inset-1 rounded-2xl opacity-25" style={{ background: `radial-gradient(circle, ${rank.glow}, transparent 68%)` }} />}
-        <div className="relative h-full w-full overflow-hidden rounded-2xl border border-white/10 bg-ink-950">
-          <img src={avatar} alt="Profile" className="h-full w-full object-cover" loading="lazy" />
+      <>
+        <style>{`.rank-badge:has(+ .user-avatar-image), .user-avatar-image + .rank-badge { display: none !important; }`}</style>
+        <div className={`user-avatar-image relative shrink-0 ${sizes[size]} ${className}`}>
+          {showRankGlow && <div className="pointer-events-none absolute -inset-1 rounded-2xl opacity-25" style={{ background: `radial-gradient(circle, ${rank.glow}, transparent 68%)` }} />}
+          <div className="relative h-full w-full overflow-hidden rounded-2xl border border-white/10 bg-ink-950">
+            <img src={avatar} alt="Profile" className="h-full w-full object-cover" loading="lazy" />
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 

@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, SkipForward, RotateCcw, Volume2, VolumeX, Eye } from 'lucide-react';
+import { Play, SkipForward, RotateCcw, Volume2, VolumeX, Eye } from 'lucide-react';
 import type { DialogueLine } from '../../data/story/types';
 import { narrate, pauseNarration, resumeNarration, stopNarration, setVoiceEnabled, isVoiceEnabled, duckMusic, playSfx, type SfxType } from '../../lib/audioEngine';
 

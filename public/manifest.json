@@ -2,8 +2,8 @@
   "name": "Forged",
   "short_name": "Forged",
   "description": "A gamified self-improvement RPG. Complete tasks, train your body, climb ranks, conquer dungeons, and build unstoppable discipline.",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#0a0c14",
@@ -11,21 +11,21 @@
   "categories": ["productivity", "lifestyle", "games", "education"],
   "lang": "en",
   "dir": "ltr",
-  "id": "/",
+  "id": "./",
   "icons": [
     {
-      "src": "/icons/ChatGPT%20Image%20Aug%2023%2C%202026%2C%2012_50_30%20PM.png",
+      "src": "icons/ChatGPT%20Image%20Aug%2023%2C%202026%2C%2012_50_30%20PM.png",
       "sizes": "any",
       "type": "image/png",
       "purpose": "any maskable"
     }
   ],
   "shortcuts": [
-    { "name": "Dashboard", "short_name": "Home", "description": "View your daily dashboard", "url": "/?view=dashboard", "icons": [{ "src": "/icons/ChatGPT%20Image%20Aug%2023%2C%202026%2C%2012_50_30%20PM.png", "sizes": "any", "type": "image/png" }] },
-    { "name": "Tasks", "short_name": "Tasks", "description": "Complete your daily tasks", "url": "/?view=tasks", "icons": [{ "src": "/icons/ChatGPT%20Image%20Aug%2023%2C%202026%2C%2012_50_30%20PM.png", "sizes": "any", "type": "image/png" }] },
-    { "name": "Story Mode", "short_name": "Story", "description": "Continue your journey", "url": "/?view=story", "icons": [{ "src": "/icons/ChatGPT%20Image%20Aug%2023%2C%202026%2C%2012_50_30%20PM.png", "sizes": "any", "type": "image/png" }] },
-    { "name": "Dungeons", "short_name": "Dungeons", "description": "Enter dungeons and fight bosses", "url": "/?view=dungeons", "icons": [{ "src": "/icons/ChatGPT%20Image%20Aug%2023%2C%202026%2C%2012_50_30%20PM.png", "sizes": "any", "type": "image/png" }] },
-    { "name": "Community", "short_name": "Community", "description": "Open the live community chat", "url": "/?view=community", "icons": [{ "src": "/icons/ChatGPT%20Image%20Aug%2023%2C%202026%2C%2012_50_30%20PM.png", "sizes": "any", "type": "image/png" }] }
+    { "name": "Dashboard", "short_name": "Home", "description": "View your daily dashboard", "url": "./?view=dashboard", "icons": [{ "src": "icons/ChatGPT%20Image%20Aug%2023%2C%202026%2C%2012_50_30%20PM.png", "sizes": "any", "type": "image/png" }] },
+    { "name": "Tasks", "short_name": "Tasks", "description": "Complete your daily tasks", "url": "./?view=tasks", "icons": [{ "src": "icons/ChatGPT%20Image%20Aug%2023%2C%202026%2C%2012_50_30%20PM.png", "sizes": "any", "type": "image/png" }] },
+    { "name": "Story Mode", "short_name": "Story", "description": "Continue your journey", "url": "./?view=story", "icons": [{ "src": "icons/ChatGPT%20Image%20Aug%2023%2C%202026%2C%2012_50_30%20PM.png", "sizes": "any", "type": "image/png" }] },
+    { "name": "Dungeons", "short_name": "Dungeons", "description": "Enter dungeons and fight bosses", "url": "./?view=dungeons", "icons": [{ "src": "icons/ChatGPT%20Image%20Aug%2023%2C%202026%2C%2012_50_30%20PM.png", "sizes": "any", "type": "image/png" }] },
+    { "name": "Community", "short_name": "Community", "description": "Open the live community chat", "url": "./?view=community", "icons": [{ "src": "icons/ChatGPT%20Image%20Aug%2023%2C%202026%2C%2012_50_30%20PM.png", "sizes": "any", "type": "image/png" }] }
   ],
   "screenshots": [],
   "prefer_related_applications": false

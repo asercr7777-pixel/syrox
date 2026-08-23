@@ -1,16 +1,19 @@
-const CACHE_VERSION = 'v2.0.2';
+const CACHE_VERSION = 'v2.0.3';
 const STATIC_CACHE = `forged-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `forged-runtime-${CACHE_VERSION}`;
 const IMAGE_CACHE = `forged-images-${CACHE_VERSION}`;
 
+const BASE_PATH = new URL('./', self.registration.scope).pathname;
+const withBase = (path) => `${BASE_PATH}${path.replace(/^\//, '')}`;
+
 const PRECACHE_URLS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon.svg',
-  '/icons/ChatGPT%20Image%20Aug%2023%2C%202026%2C%2012_50_30%20PM.png',
-  '/robots.txt',
-  '/sitemap.xml'
+  withBase(''),
+  withBase('index.html'),
+  withBase('manifest.json'),
+  withBase('icon.svg'),
+  withBase('icons/ChatGPT%20Image%20Aug%2023%2C%202026%2C%2012_50_30%20PM.png'),
+  withBase('robots.txt'),
+  withBase('sitemap.xml')
 ];
 
 self.addEventListener('install', (event) => {
@@ -41,13 +44,13 @@ function isNavigationRequest(request) {
 
 function isStaticAsset(request) {
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin) return false;
+  if (url.origin !== self.location.origin || !url.pathname.startsWith(BASE_PATH)) return false;
   return /\.(?:js|css|woff2?|ttf|eot|svg|png|jpg|jpeg|webp|gif|ico)$/i.test(url.pathname);
 }
 
 function isImageRequest(request) {
   const url = new URL(request.url);
-  return /\.(?:png|jpg|jpeg|webp|gif|ico|svg)$/i.test(url.pathname) || request.destination === 'image';
+  return url.pathname.startsWith(BASE_PATH) && (/\.(?:png|jpg|jpeg|webp|gif|ico|svg)$/i.test(url.pathname) || request.destination === 'image');
 }
 
 async function staleWhileRevalidate(request) {
@@ -83,7 +86,7 @@ async function networkFirstWithFallback(request) {
     return networkResponse;
   } catch {
     const cache = await caches.open(STATIC_CACHE);
-    return (await cache.match(request)) || (await cache.match('/index.html')) || Response.error();
+    return (await cache.match(request)) || (await cache.match(withBase('index.html'))) || Response.error();
   }
 }
 
@@ -91,7 +94,7 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin) return;
+  if (url.origin !== self.location.origin || !url.pathname.startsWith(BASE_PATH)) return;
 
   if (isNavigationRequest(request)) {
     event.respondWith(networkFirstWithFallback(request));

@@ -30,7 +30,9 @@ interface ChapterSeed {
   lore: string;
 }
 
-const themes: Record<string, { mission: string; description: string; voice: DialogueLine[] }> = {
+type MissionTheme = 'tasks' | 'pray' | 'workout' | 'read_book' | 'streak' | 'dungeon';
+
+const themes: Record<MissionTheme, { mission: string; description: string; voice: DialogueLine[] }> = {
   tasks: { mission: 'Complete 6 core tasks today.', description: 'Prove that your discipline still belongs to you.', voice: [S('Do not wait for motivation. The next door opens when you act.', 'serious')] },
   pray: { mission: 'Pray on time today.', description: 'Hold onto your spiritual discipline while the world shifts around you.', voice: [S('When everything becomes uncertain, return to what grounds you.', 'mysterious')] },
   workout: { mission: 'Complete a workout today.', description: 'Build strength without letting the new power control you.', voice: [L('Strength is useful only when the person holding it remains in control.', 'serious')] },
@@ -39,9 +41,9 @@ const themes: Record<string, { mission: string; description: string; voice: Dial
   dungeon: { mission: 'Complete a dungeon today.', description: 'Enter the hidden chamber and recover evidence about the Broken Reality.', voice: [L('The dungeon is not a punishment. It is a place where the truth stopped hiding.', 'serious')] },
 };
 
-function mission(chapterId: string, index: number, type: keyof typeof themes, title: string, unlocks: string | null): StoryMission {
+function mission(chapterId: string, index: number, type: MissionTheme, title: string, unlocks: string | null): StoryMission {
   const t = themes[type];
-  const target = type === 'tasks' ? 6 : type === 'streak' ? 1 : 1;
+  const target = type === 'tasks' ? 6 : 1;
   return {
     id: `${chapterId}_m0${index}`,
     chapterId,
@@ -59,7 +61,7 @@ function mission(chapterId: string, index: number, type: keyof typeof themes, ti
 
 function buildChapter(seed: ChapterSeed): StoryChapter {
   const id = `ch${String(seed.number).padStart(2, '0')}`;
-  const types: (keyof typeof themes)[] = ['tasks', 'pray', 'workout', 'read_book', 'streak', 'dungeon'];
+  const types: MissionTheme[] = ['tasks', 'pray', 'workout', 'read_book', 'streak', 'dungeon'];
   const titles = ['The First Signal', 'The Discipline Within', 'A Door of Truth', 'The Hidden Record', 'The Test of Continuity', 'The Buried Chamber'];
   const missions = types.map((type, i) => mission(id, i + 1, type, titles[i], i === 5 ? null : `${id}_m0${i + 2}`));
 

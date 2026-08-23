@@ -11,6 +11,15 @@ dist
 dist-ssr
 *.local
 
+# Vite temporary/generated config snapshots
+*.timestamp-*.mjs
+vite.config.*.timestamp-*.mjs
+
+# Build and tool caches
+.vite
+.cache
+.turbo
+
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -21,3 +30,5 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.env.*
+!.env.example

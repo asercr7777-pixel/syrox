@@ -5,8 +5,8 @@
   main, section, article, header, footer, nav, form, [role='dialog'] { min-width: 0; max-width: 100%; }
   img, video, canvas { max-width: 100%; height: auto; }
   svg.lucide { flex-shrink: 0; }
-  button, a, input, select, textarea { touch-action: manipulation; }
-  input, select, textarea { min-width: 0; font-size: 16px; max-width: 100%; }
+  button, a, input, select, textarea { touch-action: manipulation; min-width: 0; }
+  input, select, textarea { font-size: 16px; max-width: 100%; }
   textarea { max-width: 100%; }
   table { max-width: 100%; }
   pre, code { max-width: 100%; overflow-x: auto; }
@@ -33,30 +33,55 @@
 
   /* Marketplace */
   .marketplace-shell { width: 100%; max-width: 100%; min-width: 0; margin-inline: 0; overflow: visible; }
-  .marketplace-shell > div:first-child { min-width: 0; }
+  .marketplace-shell > div:first-child { min-width: 0; width: 100%; }
   .marketplace-shell > div:first-child > div:last-child { width: 100%; min-width: 0; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
   .marketplace-shell > div:first-child > div:last-child > div { min-width: 0; width: 100%; justify-content: center; padding-inline: 8px; }
   .marketplace-shell .marketplace-grid { width: 100%; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; min-width: 0; }
-  .marketplace-shell .marketplace-grid > .card-premium { min-width: 0; min-height: 0; height: auto; padding: 10px; }
+  .marketplace-shell .marketplace-grid > .card-premium { min-width: 0; min-height: 0; height: auto; padding: 10px; overflow: hidden; }
   .marketplace-shell .marketplace-grid .group > button:first-of-type { min-height: 0; height: auto; padding: 8px 4px; }
-  .marketplace-shell .marketplace-grid .group > button:first-of-type > div { max-width: 100%; }
-  .marketplace-shell .marketplace-grid .group > button:first-of-type p { max-width: 100%; }
+  .marketplace-shell .marketplace-grid .group > button:first-of-type > div { max-width: 100%; min-width: 0; }
+  .marketplace-shell .marketplace-grid .group > button:first-of-type p { max-width: 100%; min-width: 0; }
   .marketplace-shell .marketplace-grid .group > div:last-child { min-width: 0; }
-  .marketplace-shell .marketplace-grid button { min-width: 0; }
+  .marketplace-shell .marketplace-grid button { min-width: 0; max-width: 100%; }
   .marketplace-shell .input { width: 100%; min-width: 0; }
+  .marketplace-shell .marketplace-grid .absolute { max-width: calc(100% - 8px); }
 
-  /* Inventory */
-  main:has(.section-title) .grid { min-width: 0; }
-  main:has(.section-title) .grid > .card { min-width: 0; max-width: 100%; }
+  /* Inventory - scoped to the Inventory view's card grid. */
+  main:has(.section-title) > div > .grid.grid-cols-1.min-\[380px\]\:grid-cols-2.sm\:grid-cols-3.md\:grid-cols-4.lg\:grid-cols-5 { width: 100%; min-width: 0; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  main:has(.section-title) > div > .grid.grid-cols-1.min-\[380px\]\:grid-cols-2.sm\:grid-cols-3.md\:grid-cols-4.lg\:grid-cols-5 > * { min-width: 0; max-width: 100%; overflow: hidden; }
+  main:has(.section-title) > div > .grid.grid-cols-1.min-\[380px\]\:grid-cols-2.sm\:grid-cols-3.md\:grid-cols-4.lg\:grid-cols-5 .card { min-width: 0; width: 100%; }
+  main:has(.section-title) .grid.grid-cols-1.sm\:flex.sm\:flex-wrap { width: 100%; min-width: 0; }
+  main:has(.section-title) .grid.grid-cols-1.sm\:flex.sm\:flex-wrap > * { min-width: 0; max-width: 100%; }
 
-  /* Tasks: compact rows without squeezing the task text. */
-  main:has(.section-title) .grid-cols-\[auto_1fr_auto\] { grid-template-columns: auto minmax(0,1fr) auto; }
-  main:has(.section-title) .grid-cols-\[auto_1fr_auto\] > button:last-child { min-width: 24px; }
+  /* Tasks - force both task row variants to real mobile grids. */
+  main:has(.section-title) .grid-cols-\[auto_1fr_auto\] { display: grid !important; grid-template-columns: auto minmax(0,1fr) auto !important; align-items: center; width: 100%; min-width: 0; }
+  main:has(.section-title) .grid-cols-\[auto_1fr_auto\] > button:nth-child(2) { min-width: 0; width: 100%; }
+  main:has(.section-title) .grid-cols-\[auto_1fr_auto\] > div:last-child { min-width: 0; display: flex; flex-wrap: nowrap; }
+  main:has(.section-title) .grid-cols-\[1fr_auto\] { display: grid !important; grid-template-columns: minmax(0,1fr) auto !important; align-items: center; width: 100%; min-width: 0; }
+  main:has(.section-title) .grid-cols-\[1fr_auto\] > button:first-child { min-width: 0; width: 100%; }
+  main:has(.section-title) .grid-cols-\[1fr_auto\] > div:last-child { min-width: 0; display: flex; flex-wrap: nowrap; }
 
-  /* Dashboard / Story: allow flex content to shrink instead of creating horizontal overflow. */
-  .card-premium, .card { min-width: 0; max-width: 100%; }
+  /* Dashboard - stop hero/title/stat rows from squeezing each other. */
+  main:has(.card-premium) .card-premium { min-width: 0; max-width: 100%; overflow: hidden; }
+  main:has(.card-premium) .card-premium > .relative { min-width: 0; max-width: 100%; }
+  main:has(.card-premium) .card-premium h1 { min-width: 0; max-width: 100%; }
+  main:has(.card-premium) .card-premium .chip { max-width: 100%; }
+  main:has(.card-premium) .grid { min-width: 0; }
+  main:has(.card-premium) .grid > * { min-width: 0; max-width: 100%; }
+
+  /* Story Mode - the map and mission cards have nested flex content. */
+  main:has(.shadow-guide) { width: 100%; max-width: 100%; min-width: 0; overflow-x: hidden; }
+  main:has(.shadow-guide) section, main:has(.shadow-guide) > div, main:has(.shadow-guide) > section { min-width: 0; max-width: 100%; width: 100%; }
+  main:has(.shadow-guide) .grid { min-width: 0; max-width: 100%; }
+  main:has(.shadow-guide) .grid > * { min-width: 0; max-width: 100%; }
+  main:has(.shadow-guide) .flex { min-width: 0; }
+  main:has(.shadow-guide) h1, main:has(.shadow-guide) h2, main:has(.shadow-guide) h3, main:has(.shadow-guide) p { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+  main:has(.shadow-guide) img { display: block; max-width: 100%; height: auto; }
+  main:has(.shadow-guide) .btn-primary, main:has(.shadow-guide) .btn-ghost { max-width: 100%; }
+
+  /* Shared card safety. */
+  .card-premium, .card, .page-enter { min-width: 0; max-width: 100%; }
   .card-premium .min-w-0, .card .min-w-0 { min-width: 0; }
-  .page-enter { min-width: 0; max-width: 100%; }
 }
 
 @media (max-width: 380px) {
@@ -67,6 +92,9 @@
   .marketplace-shell .marketplace-grid { gap: 8px; }
   .marketplace-shell .marketplace-grid > .card-premium { padding: 8px; }
   .marketplace-shell > div:first-child > div:last-child { grid-template-columns: 1fr 1fr; }
+  main:has(.section-title) .grid.grid-cols-1.min-\[380px\]\:grid-cols-2.sm\:grid-cols-3.md\:grid-cols-4.lg\:grid-cols-5 { grid-template-columns: 1fr; }
+  main:has(.section-title) .grid-cols-\[auto_1fr_auto\] { grid-template-columns: auto minmax(0,1fr) auto !important; }
+  main:has(.section-title) .grid-cols-\[1fr_auto\] { grid-template-columns: minmax(0,1fr) auto !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {

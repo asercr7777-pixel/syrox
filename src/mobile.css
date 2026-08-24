@@ -6,101 +6,66 @@
   img, video, canvas { max-width: 100%; height: auto; }
   svg.lucide { flex-shrink: 0; }
   button, a, input, select, textarea { touch-action: manipulation; min-width: 0; }
-  input, select, textarea { font-size: 16px; max-width: 100%; }
-  textarea { max-width: 100%; }
-  table { max-width: 100%; }
+  input, select, textarea { font-size: 16px; max-width: 100%; box-sizing: border-box; }
   pre, code { max-width: 100%; overflow-x: auto; }
   [role='dialog'] { max-height: calc(100dvh - 2rem); overflow-y: auto; overscroll-behavior: contain; }
   h1, h2, h3, h4, p, span, label, button { overflow-wrap: anywhere; }
-  button[aria-label]:not([aria-label='']) { -webkit-user-select: none; user-select: none; }
 
-  /* Community */
-  section.mx-auto.w-full.max-w-4xl { width: 100%; max-width: 100%; min-width: 0; padding-inline: 0; }
-  section.mx-auto.w-full.max-w-4xl > header { width: 100%; min-width: 0; overflow: hidden; }
-  section.mx-auto.w-full.max-w-4xl > header > div:first-child { min-width: 0; }
-  section.mx-auto.w-full.max-w-4xl > header > div:first-child > div:last-child { flex-shrink: 0; }
-  section.mx-auto.w-full.max-w-4xl > div { width: 100%; min-width: 0; }
-  section.mx-auto.w-full.max-w-4xl > div > div:first-child { min-width: 0; height: min(64dvh, 620px); max-height: 620px; }
-  section.mx-auto.w-full.max-w-4xl article { width: 100%; min-width: 0; display: grid; grid-template-columns: 36px minmax(0, 1fr) 30px; align-items: start; column-gap: 8px; overflow: hidden; }
-  section.mx-auto.w-full.max-w-4xl article > div:nth-child(2) { min-width: 0; width: 100%; }
-  section.mx-auto.w-full.max-w-4xl article > div:nth-child(2) > div { min-width: 0; max-width: 100%; }
-  section.mx-auto.w-full.max-w-4xl article > div:nth-child(2) > p { max-width: 100%; overflow-wrap: anywhere; word-break: break-word; }
-  section.mx-auto.w-full.max-w-4xl article > button { width: 30px; height: 30px; min-width: 30px; padding: 0; margin: 0; display: inline-flex; align-items: center; justify-content: center; justify-self: end; align-self: start; }
-  section.mx-auto.w-full.max-w-4xl article > div:first-child { width: 36px; height: 36px; min-width: 36px; }
-  section.mx-auto.w-full.max-w-4xl > div > div:last-child { min-width: 0; width: 100%; }
-  section.mx-auto.w-full.max-w-4xl textarea { min-width: 0; width: 100%; }
-  section.mx-auto.w-full.max-w-4xl textarea + div { flex-shrink: 0; }
-
-  /* Marketplace: category selectors are always visible and wrap into a grid. */
+  /* Marketplace */
   .marketplace-shell { width: 100%; max-width: 100%; min-width: 0; margin-inline: 0; overflow: visible; }
   .marketplace-shell > div:nth-child(2) { width: 100%; min-width: 0; display: grid !important; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; overflow: visible !important; }
   .marketplace-shell > div:nth-child(2) > button { min-width: 0 !important; width: 100%; max-width: 100%; justify-content: center; white-space: normal !important; }
   .marketplace-shell .marketplace-grid { width: 100%; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; min-width: 0; }
-  .marketplace-shell .marketplace-grid > .card-premium { min-width: 0; min-height: 0; height: auto; padding: 10px; overflow: hidden; }
+  .marketplace-shell .marketplace-grid > .card-premium { min-width: 0; height: auto; padding: 10px; overflow: hidden; }
   .marketplace-shell .marketplace-grid button { min-width: 0; max-width: 100%; }
   .marketplace-shell .input { width: 100%; min-width: 0; }
-  .marketplace-shell .marketplace-grid .absolute { max-width: calc(100% - 8px); }
   .marketplace-shell .overflow-x-auto,
-  .marketplace-shell [class*='overflow-x-auto'] { overflow-x: visible !important; overflow-y: visible !important; width: 100% !important; max-width: 100% !important; flex-wrap: wrap !important; }
+  .marketplace-shell [class*='overflow-x-auto'] { overflow: visible !important; width: 100% !important; max-width: 100% !important; display: grid !important; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px !important; }
   .marketplace-shell .overflow-x-auto > *,
-  .marketplace-shell [class*='overflow-x-auto'] > * { flex: 1 1 calc(50% - 8px) !important; min-width: 0 !important; max-width: none !important; white-space: normal !important; }
+  .marketplace-shell [class*='overflow-x-auto'] > * { width: 100% !important; min-width: 0 !important; max-width: 100% !important; white-space: normal !important; }
 
-  /* Inventory: category selectors wrap; never require horizontal dragging. */
+  /* Inventory */
   main > div.space-y-6 > div:nth-child(2).overflow-x-auto,
-  main > div.space-y-6 > div:nth-child(2)[class*='overflow-x-auto'] { display: flex !important; flex-wrap: wrap !important; overflow: visible !important; width: 100% !important; gap: 8px !important; }
+  main > div.space-y-6 > div:nth-child(2)[class*='overflow-x-auto'] { display: grid !important; grid-template-columns: repeat(2,minmax(0,1fr)); overflow: visible !important; width: 100% !important; gap: 8px !important; }
   main > div.space-y-6 > div:nth-child(2).overflow-x-auto > *,
-  main > div.space-y-6 > div:nth-child(2)[class*='overflow-x-auto'] > * { flex: 1 1 calc(50% - 8px) !important; min-width: 0 !important; max-width: none !important; white-space: normal !important; }
-  main > div.space-y-6 > div:nth-child(4) .grid { min-width: 0; }
-  main > div.space-y-6 > div:nth-child(4) .grid > * { min-width: 0; max-width: 100%; }
+  main > div.space-y-6 > div:nth-child(2)[class*='overflow-x-auto'] > * { width: 100% !important; min-width: 0 !important; max-width: 100% !important; white-space: normal !important; }
+  main > div.space-y-6 .grid { min-width: 0; }
+  main > div.space-y-6 .grid > * { min-width: 0; max-width: 100%; }
 
-  /* Tasks */
-  main:has(.section-title) .grid-cols-\[auto_1fr_auto\] { display: grid !important; grid-template-columns: auto minmax(0,1fr) auto !important; align-items: center; width: 100%; min-width: 0; }
-  main:has(.section-title) .grid-cols-\[auto_1fr_auto\] > button:nth-child(2) { min-width: 0; width: 100%; }
-  main:has(.section-title) .grid-cols-\[auto_1fr_auto\] > div:last-child { min-width: 0; display: flex; flex-wrap: nowrap; }
-  main:has(.section-title) .grid-cols-\[1fr_auto\] { display: grid !important; grid-template-columns: minmax(0,1fr) auto !important; align-items: center; width: 100%; min-width: 0; }
-  main:has(.section-title) .grid-cols-\[1fr_auto\] > button:first-child { min-width: 0; width: 100%; }
-  main:has(.section-title) .grid-cols-\[1fr_auto\] > div:last-child { min-width: 0; display: flex; flex-wrap: nowrap; }
+  /* Tasks / Dashboard / shared cards */
+  .card-premium, .card, .page-enter { min-width: 0; max-width: 100%; }
+  main .grid { min-width: 0; }
+  main .grid > * { min-width: 0; max-width: 100%; }
 
-  /* Dashboard */
-  main:has(.card-premium) .card-premium { min-width: 0; max-width: 100%; overflow: hidden; }
-  main:has(.card-premium) .grid { min-width: 0; }
-  main:has(.card-premium) .grid > * { min-width: 0; max-width: 100%; }
-
-  /* Story Mode */
+  /* Story */
   main:has(.shadow-guide) { width: 100%; max-width: 100%; min-width: 0; overflow-x: hidden; }
-  main:has(.shadow-guide) section, main:has(.shadow-guide) > div, main:has(.shadow-guide) > section { min-width: 0; max-width: 100%; width: 100%; }
+  main:has(.shadow-guide) section, main:has(.shadow-guide) > div { min-width: 0; max-width: 100%; width: 100%; }
   main:has(.shadow-guide) .grid { min-width: 0; max-width: 100%; }
   main:has(.shadow-guide) .grid > * { min-width: 0; max-width: 100%; }
   main:has(.shadow-guide) .flex { min-width: 0; }
   main:has(.shadow-guide) h1, main:has(.shadow-guide) h2, main:has(.shadow-guide) h3, main:has(.shadow-guide) p { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
   main:has(.shadow-guide) img { display: block; max-width: 100%; height: auto; }
-  main:has(.shadow-guide) .btn-primary, main:has(.shadow-guide) .btn-ghost { max-width: 100%; }
-  main:has(.shadow-guide) [class*='overflow-x-auto'] { overflow-x: visible !important; flex-wrap: wrap !important; width: 100% !important; }
-  main:has(.shadow-guide) [class*='overflow-x-auto'] > * { flex: 1 1 calc(50% - 8px) !important; min-width: 0 !important; }
+  main:has(.shadow-guide) [class*='overflow-x-auto'] { overflow: visible !important; display: grid !important; grid-template-columns: repeat(2,minmax(0,1fr)); width: 100% !important; }
+  main:has(.shadow-guide) [class*='overflow-x-auto'] > * { width: 100% !important; min-width: 0 !important; }
 
   /* Auth / Sign Up */
   form .relative > input.pl-10 { padding-left: 2.9rem !important; }
   form .relative > input.pr-10 { padding-right: 2.9rem !important; }
   form .relative > svg { pointer-events: none; z-index: 2; left: 0.9rem !important; }
   form .relative > button[aria-label] { z-index: 3; right: 0.35rem !important; }
-  form .relative:has(> input.pl-10) { min-width: 0; width: 100%; }
+  form .relative { min-width: 0; width: 100%; }
   form .relative > input { min-width: 0; width: 100%; box-sizing: border-box; }
-
-  /* Shared card safety. */
-  .card-premium, .card, .page-enter { min-width: 0; max-width: 100%; }
 }
 
 @media (max-width: 380px) {
   .section-title { font-size: 1.15rem; }
-  section.mx-auto.w-full.max-w-4xl article { grid-template-columns: 34px minmax(0,1fr) 28px; column-gap: 6px; }
-  section.mx-auto.w-full.max-w-4xl article > div:first-child { width: 34px; height: 34px; min-width: 34px; }
-  section.mx-auto.w-full.max-w-4xl article > button { width: 28px; height: 28px; min-width: 28px; }
   .marketplace-shell .marketplace-grid { gap: 8px; }
   .marketplace-shell .marketplace-grid > .card-premium { padding: 8px; }
-  .marketplace-shell > div:nth-child(2) { grid-template-columns: 1fr 1fr; }
-  .marketplace-shell [class*='overflow-x-auto'] > *,
-  main > div.space-y-6 > div:nth-child(2)[class*='overflow-x-auto'] > *,
-  main:has(.shadow-guide) [class*='overflow-x-auto'] > * { flex-basis: 100% !important; }
+  .marketplace-shell > div:nth-child(2),
+  .marketplace-shell .overflow-x-auto,
+  .marketplace-shell [class*='overflow-x-auto'],
+  main > div.space-y-6 > div:nth-child(2)[class*='overflow-x-auto'],
+  main:has(.shadow-guide) [class*='overflow-x-auto'] { grid-template-columns: 1fr 1fr !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {

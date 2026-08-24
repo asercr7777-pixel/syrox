@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import { SplashScreen } from './components/pwa/SplashScreen.tsx';
 import './index.css';
+import './performance.css';
 
 function safeSessionGet(key: string) {
   try { return window.sessionStorage.getItem(key); } catch { return null; }

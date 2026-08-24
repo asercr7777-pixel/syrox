@@ -31,37 +31,29 @@
   section.mx-auto.w-full.max-w-4xl textarea { min-width: 0; width: 100%; }
   section.mx-auto.w-full.max-w-4xl textarea + div { flex-shrink: 0; }
 
-  /* Marketplace: category selectors are a visible responsive grid, never a horizontal scroller. */
+  /* Marketplace: category selectors are always visible and wrap into a grid. */
   .marketplace-shell { width: 100%; max-width: 100%; min-width: 0; margin-inline: 0; overflow: visible; }
-  .marketplace-shell > div:first-child { min-width: 0; width: 100%; }
-  .marketplace-shell > div:first-child > div:last-child { width: 100%; min-width: 0; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
-  .marketplace-shell > div:first-child > div:last-child > div { min-width: 0; width: 100%; justify-content: center; padding-inline: 8px; }
+  .marketplace-shell > div:nth-child(2) { width: 100%; min-width: 0; display: grid !important; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; overflow: visible !important; }
+  .marketplace-shell > div:nth-child(2) > button { min-width: 0 !important; width: 100%; max-width: 100%; justify-content: center; white-space: normal !important; }
   .marketplace-shell .marketplace-grid { width: 100%; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; min-width: 0; }
   .marketplace-shell .marketplace-grid > .card-premium { min-width: 0; min-height: 0; height: auto; padding: 10px; overflow: hidden; }
-  .marketplace-shell .marketplace-grid .group > button:first-of-type { min-height: 0; height: auto; padding: 8px 4px; }
-  .marketplace-shell .marketplace-grid .group > button:first-of-type > div { max-width: 100%; min-width: 0; }
-  .marketplace-shell .marketplace-grid .group > button:first-of-type p { max-width: 100%; min-width: 0; }
-  .marketplace-shell .marketplace-grid .group > div:last-child { min-width: 0; }
   .marketplace-shell .marketplace-grid button { min-width: 0; max-width: 100%; }
   .marketplace-shell .input { width: 100%; min-width: 0; }
   .marketplace-shell .marketplace-grid .absolute { max-width: calc(100% - 8px); }
-
-  /* Any Marketplace category/tab row: wrap all choices into visible rows. */
   .marketplace-shell .overflow-x-auto,
-  .marketplace-shell [class*='overflow-x-auto'] { overflow-x: visible !important; overflow-y: visible !important; width: 100% !important; max-width: 100% !important; }
+  .marketplace-shell [class*='overflow-x-auto'] { overflow-x: visible !important; overflow-y: visible !important; width: 100% !important; max-width: 100% !important; flex-wrap: wrap !important; }
   .marketplace-shell .overflow-x-auto > *,
   .marketplace-shell [class*='overflow-x-auto'] > * { flex: 1 1 calc(50% - 8px) !important; min-width: 0 !important; max-width: none !important; white-space: normal !important; }
 
-  /* Inventory: selectors stay visible and wrap; item grid remains responsive. */
-  main:has(.section-title) > div > .grid.grid-cols-1.min-\[380px\]\:grid-cols-2.sm\:grid-cols-3.md\:grid-cols-4.lg\:grid-cols-5 { width: 100%; min-width: 0; grid-template-columns: repeat(2,minmax(0,1fr)); }
-  main:has(.section-title) > div > .grid.grid-cols-1.min-\[380px\]\:grid-cols-2.sm\:grid-cols-3.md\:grid-cols-4.lg\:grid-cols-5 > * { min-width: 0; max-width: 100%; overflow: hidden; }
-  main:has(.section-title) > div > .grid.grid-cols-1.min-\[380px\]\:grid-cols-2.sm\:grid-cols-3.md\:grid-cols-4.lg\:grid-cols-5 .card { min-width: 0; width: 100%; }
-  main:has(.section-title) .grid.grid-cols-1.sm\:flex.sm\:flex-wrap { width: 100%; min-width: 0; }
-  main:has(.section-title) .grid.grid-cols-1.sm\:flex.sm\:flex-wrap > * { min-width: 0; max-width: 100%; }
-  main:has(.section-title) [class*='overflow-x-auto'] { overflow-x: visible !important; overflow-y: visible !important; flex-wrap: wrap !important; width: 100% !important; }
-  main:has(.section-title) [class*='overflow-x-auto'] > * { flex: 1 1 calc(50% - 8px) !important; min-width: 0 !important; max-width: none !important; white-space: normal !important; }
+  /* Inventory: category selectors wrap; never require horizontal dragging. */
+  main > div.space-y-6 > div:nth-child(2).overflow-x-auto,
+  main > div.space-y-6 > div:nth-child(2)[class*='overflow-x-auto'] { display: flex !important; flex-wrap: wrap !important; overflow: visible !important; width: 100% !important; gap: 8px !important; }
+  main > div.space-y-6 > div:nth-child(2).overflow-x-auto > *,
+  main > div.space-y-6 > div:nth-child(2)[class*='overflow-x-auto'] > * { flex: 1 1 calc(50% - 8px) !important; min-width: 0 !important; max-width: none !important; white-space: normal !important; }
+  main > div.space-y-6 > div:nth-child(4) .grid { min-width: 0; }
+  main > div.space-y-6 > div:nth-child(4) .grid > * { min-width: 0; max-width: 100%; }
 
-  /* Tasks - force both task row variants to real mobile grids. */
+  /* Tasks */
   main:has(.section-title) .grid-cols-\[auto_1fr_auto\] { display: grid !important; grid-template-columns: auto minmax(0,1fr) auto !important; align-items: center; width: 100%; min-width: 0; }
   main:has(.section-title) .grid-cols-\[auto_1fr_auto\] > button:nth-child(2) { min-width: 0; width: 100%; }
   main:has(.section-title) .grid-cols-\[auto_1fr_auto\] > div:last-child { min-width: 0; display: flex; flex-wrap: nowrap; }
@@ -71,9 +63,6 @@
 
   /* Dashboard */
   main:has(.card-premium) .card-premium { min-width: 0; max-width: 100%; overflow: hidden; }
-  main:has(.card-premium) .card-premium > .relative { min-width: 0; max-width: 100%; }
-  main:has(.card-premium) .card-premium h1 { min-width: 0; max-width: 100%; }
-  main:has(.card-premium) .card-premium .chip { max-width: 100%; }
   main:has(.card-premium) .grid { min-width: 0; }
   main:has(.card-premium) .grid > * { min-width: 0; max-width: 100%; }
 
@@ -89,7 +78,7 @@
   main:has(.shadow-guide) [class*='overflow-x-auto'] { overflow-x: visible !important; flex-wrap: wrap !important; width: 100% !important; }
   main:has(.shadow-guide) [class*='overflow-x-auto'] > * { flex: 1 1 calc(50% - 8px) !important; min-width: 0 !important; }
 
-  /* Auth / Sign Up: reserve dedicated space for leading and trailing icons. */
+  /* Auth / Sign Up */
   form .relative > input.pl-10 { padding-left: 2.9rem !important; }
   form .relative > input.pr-10 { padding-right: 2.9rem !important; }
   form .relative > svg { pointer-events: none; z-index: 2; left: 0.9rem !important; }
@@ -99,7 +88,6 @@
 
   /* Shared card safety. */
   .card-premium, .card, .page-enter { min-width: 0; max-width: 100%; }
-  .card-premium .min-w-0, .card .min-w-0 { min-width: 0; }
 }
 
 @media (max-width: 380px) {
@@ -109,13 +97,10 @@
   section.mx-auto.w-full.max-w-4xl article > button { width: 28px; height: 28px; min-width: 28px; }
   .marketplace-shell .marketplace-grid { gap: 8px; }
   .marketplace-shell .marketplace-grid > .card-premium { padding: 8px; }
-  .marketplace-shell > div:first-child > div:last-child { grid-template-columns: 1fr 1fr; }
+  .marketplace-shell > div:nth-child(2) { grid-template-columns: 1fr 1fr; }
   .marketplace-shell [class*='overflow-x-auto'] > *,
-  main:has(.section-title) [class*='overflow-x-auto'] > *,
+  main > div.space-y-6 > div:nth-child(2)[class*='overflow-x-auto'] > *,
   main:has(.shadow-guide) [class*='overflow-x-auto'] > * { flex-basis: 100% !important; }
-  main:has(.section-title) .grid.grid-cols-1.min-\[380px\]\:grid-cols-2.sm\:grid-cols-3.md\:grid-cols-4.lg\:grid-cols-5 { grid-template-columns: 1fr; }
-  main:has(.section-title) .grid-cols-\[auto_1fr_auto\] { grid-template-columns: auto minmax(0,1fr) auto !important; }
-  main:has(.section-title) .grid-cols-\[1fr_auto\] { grid-template-columns: minmax(0,1fr) auto !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {

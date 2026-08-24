@@ -4,6 +4,7 @@ import App from './App.tsx';
 import { SplashScreen } from './components/pwa/SplashScreen.tsx';
 import './index.css';
 import './performance.css';
+import './mobile.css';
 
 function safeSessionGet(key: string) {
   try { return window.sessionStorage.getItem(key); } catch { return null; }

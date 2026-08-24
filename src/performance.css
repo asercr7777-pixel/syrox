@@ -87,6 +87,67 @@
 
 [style*="aspect-ratio: 2 / 1"] button.group .relative.w-12.h-12 { flex: 0 0 auto !important; }
 
+/* Mobile collection/category selectors: keep every option full-size and scrollable. */
+@media (max-width: 639px) {
+  .marketplace-shell > div.flex.gap-2.overflow-x-auto,
+  .space-y-6 > div.flex.gap-2.overflow-x-auto {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding: 2px 2px 8px !important;
+  }
+
+  .marketplace-shell > div.flex.gap-2.overflow-x-auto::-webkit-scrollbar,
+  .space-y-6 > div.flex.gap-2.overflow-x-auto::-webkit-scrollbar { display: none !important; }
+
+  .marketplace-shell > div.flex.gap-2.overflow-x-auto > button,
+  .space-y-6 > div.flex.gap-2.overflow-x-auto > button {
+    flex: 0 0 auto !important;
+    width: max-content !important;
+    min-width: 112px !important;
+    min-height: 44px !important;
+    white-space: nowrap !important;
+  }
+
+  /* Inventory item cards: never let the card content become narrower than its controls. */
+  .space-y-6 .grid.grid-cols-1.min\:\[380px\]\:grid-cols-2 {
+    min-width: 0 !important;
+  }
+
+  .space-y-6 .grid.grid-cols-1.min\:\[380px\]\:grid-cols-2 > .card {
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .space-y-6 .grid.grid-cols-1.min\:\[380px\]\:grid-cols-2 > .card button {
+    min-width: 0 !important;
+  }
+
+  /* Story chapter controls/cards: give each chapter room instead of squeezing text into tiny cells. */
+  .space-y-6 button.group,
+  .space-y-6 button[class*="chapter"] {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 379px) {
+  .marketplace-shell > div.flex.gap-2.overflow-x-auto > button,
+  .space-y-6 > div.flex.gap-2.overflow-x-auto > button {
+    min-width: 118px !important;
+  }
+
+  .space-y-6 .grid.grid-cols-1.min\:\[380px\]\:grid-cols-2 {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
 @media (max-width: 1023px) {
   [style*="aspect-ratio: 2 / 1"] > .absolute.inset-0 { padding-left: 8px !important; padding-right: 8px !important; gap: 20px !important; }
 }

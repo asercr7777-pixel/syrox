@@ -31,7 +31,7 @@
   section.mx-auto.w-full.max-w-4xl textarea { min-width: 0; width: 100%; }
   section.mx-auto.w-full.max-w-4xl textarea + div { flex-shrink: 0; }
 
-  /* Marketplace */
+  /* Marketplace: category selectors are a visible responsive grid, never a horizontal scroller. */
   .marketplace-shell { width: 100%; max-width: 100%; min-width: 0; margin-inline: 0; overflow: visible; }
   .marketplace-shell > div:first-child { min-width: 0; width: 100%; }
   .marketplace-shell > div:first-child > div:last-child { width: 100%; min-width: 0; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
@@ -46,12 +46,20 @@
   .marketplace-shell .input { width: 100%; min-width: 0; }
   .marketplace-shell .marketplace-grid .absolute { max-width: calc(100% - 8px); }
 
-  /* Inventory - scoped to the Inventory view's card grid. */
+  /* Any Marketplace category/tab row: wrap all choices into visible rows. */
+  .marketplace-shell .overflow-x-auto,
+  .marketplace-shell [class*='overflow-x-auto'] { overflow-x: visible !important; overflow-y: visible !important; width: 100% !important; max-width: 100% !important; }
+  .marketplace-shell .overflow-x-auto > *,
+  .marketplace-shell [class*='overflow-x-auto'] > * { flex: 1 1 calc(50% - 8px) !important; min-width: 0 !important; max-width: none !important; white-space: normal !important; }
+
+  /* Inventory: selectors stay visible and wrap; item grid remains responsive. */
   main:has(.section-title) > div > .grid.grid-cols-1.min-\[380px\]\:grid-cols-2.sm\:grid-cols-3.md\:grid-cols-4.lg\:grid-cols-5 { width: 100%; min-width: 0; grid-template-columns: repeat(2,minmax(0,1fr)); }
   main:has(.section-title) > div > .grid.grid-cols-1.min-\[380px\]\:grid-cols-2.sm\:grid-cols-3.md\:grid-cols-4.lg\:grid-cols-5 > * { min-width: 0; max-width: 100%; overflow: hidden; }
   main:has(.section-title) > div > .grid.grid-cols-1.min-\[380px\]\:grid-cols-2.sm\:grid-cols-3.md\:grid-cols-4.lg\:grid-cols-5 .card { min-width: 0; width: 100%; }
   main:has(.section-title) .grid.grid-cols-1.sm\:flex.sm\:flex-wrap { width: 100%; min-width: 0; }
   main:has(.section-title) .grid.grid-cols-1.sm\:flex.sm\:flex-wrap > * { min-width: 0; max-width: 100%; }
+  main:has(.section-title) [class*='overflow-x-auto'] { overflow-x: visible !important; overflow-y: visible !important; flex-wrap: wrap !important; width: 100% !important; }
+  main:has(.section-title) [class*='overflow-x-auto'] > * { flex: 1 1 calc(50% - 8px) !important; min-width: 0 !important; max-width: none !important; white-space: normal !important; }
 
   /* Tasks - force both task row variants to real mobile grids. */
   main:has(.section-title) .grid-cols-\[auto_1fr_auto\] { display: grid !important; grid-template-columns: auto minmax(0,1fr) auto !important; align-items: center; width: 100%; min-width: 0; }
@@ -61,7 +69,7 @@
   main:has(.section-title) .grid-cols-\[1fr_auto\] > button:first-child { min-width: 0; width: 100%; }
   main:has(.section-title) .grid-cols-\[1fr_auto\] > div:last-child { min-width: 0; display: flex; flex-wrap: nowrap; }
 
-  /* Dashboard - stop hero/title/stat rows from squeezing each other. */
+  /* Dashboard */
   main:has(.card-premium) .card-premium { min-width: 0; max-width: 100%; overflow: hidden; }
   main:has(.card-premium) .card-premium > .relative { min-width: 0; max-width: 100%; }
   main:has(.card-premium) .card-premium h1 { min-width: 0; max-width: 100%; }
@@ -69,7 +77,7 @@
   main:has(.card-premium) .grid { min-width: 0; }
   main:has(.card-premium) .grid > * { min-width: 0; max-width: 100%; }
 
-  /* Story Mode - the map and mission cards have nested flex content. */
+  /* Story Mode */
   main:has(.shadow-guide) { width: 100%; max-width: 100%; min-width: 0; overflow-x: hidden; }
   main:has(.shadow-guide) section, main:has(.shadow-guide) > div, main:has(.shadow-guide) > section { min-width: 0; max-width: 100%; width: 100%; }
   main:has(.shadow-guide) .grid { min-width: 0; max-width: 100%; }
@@ -78,6 +86,16 @@
   main:has(.shadow-guide) h1, main:has(.shadow-guide) h2, main:has(.shadow-guide) h3, main:has(.shadow-guide) p { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
   main:has(.shadow-guide) img { display: block; max-width: 100%; height: auto; }
   main:has(.shadow-guide) .btn-primary, main:has(.shadow-guide) .btn-ghost { max-width: 100%; }
+  main:has(.shadow-guide) [class*='overflow-x-auto'] { overflow-x: visible !important; flex-wrap: wrap !important; width: 100% !important; }
+  main:has(.shadow-guide) [class*='overflow-x-auto'] > * { flex: 1 1 calc(50% - 8px) !important; min-width: 0 !important; }
+
+  /* Auth / Sign Up: reserve dedicated space for leading and trailing icons. */
+  form .relative > input.pl-10 { padding-left: 2.9rem !important; }
+  form .relative > input.pr-10 { padding-right: 2.9rem !important; }
+  form .relative > svg { pointer-events: none; z-index: 2; left: 0.9rem !important; }
+  form .relative > button[aria-label] { z-index: 3; right: 0.35rem !important; }
+  form .relative:has(> input.pl-10) { min-width: 0; width: 100%; }
+  form .relative > input { min-width: 0; width: 100%; box-sizing: border-box; }
 
   /* Shared card safety. */
   .card-premium, .card, .page-enter { min-width: 0; max-width: 100%; }
@@ -92,6 +110,9 @@
   .marketplace-shell .marketplace-grid { gap: 8px; }
   .marketplace-shell .marketplace-grid > .card-premium { padding: 8px; }
   .marketplace-shell > div:first-child > div:last-child { grid-template-columns: 1fr 1fr; }
+  .marketplace-shell [class*='overflow-x-auto'] > *,
+  main:has(.section-title) [class*='overflow-x-auto'] > *,
+  main:has(.shadow-guide) [class*='overflow-x-auto'] > * { flex-basis: 100% !important; }
   main:has(.section-title) .grid.grid-cols-1.min-\[380px\]\:grid-cols-2.sm\:grid-cols-3.md\:grid-cols-4.lg\:grid-cols-5 { grid-template-columns: 1fr; }
   main:has(.section-title) .grid-cols-\[auto_1fr_auto\] { grid-template-columns: auto minmax(0,1fr) auto !important; }
   main:has(.section-title) .grid-cols-\[1fr_auto\] { grid-template-columns: minmax(0,1fr) auto !important; }

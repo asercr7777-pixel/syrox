@@ -1,204 +1,74 @@
 /* Cross-site mobile safety layer. Keep layout changes scoped to small screens. */
 @media (max-width: 640px) {
-  html,
-  body {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
-    -webkit-text-size-adjust: 100%;
-  }
+  html, body { width: 100%; max-width: 100%; overflow-x: hidden; -webkit-text-size-adjust: 100%; }
+  body { overscroll-behavior-x: none; }
+  main, section, article, header, footer, nav, form, [role='dialog'] { min-width: 0; max-width: 100%; }
+  img, video, canvas { max-width: 100%; height: auto; }
+  svg.lucide { flex-shrink: 0; }
+  button, a, input, select, textarea { touch-action: manipulation; }
+  input, select, textarea { min-width: 0; font-size: 16px; max-width: 100%; }
+  textarea { max-width: 100%; }
+  table { max-width: 100%; }
+  pre, code { max-width: 100%; overflow-x: auto; }
+  [role='dialog'] { max-height: calc(100dvh - 2rem); overflow-y: auto; overscroll-behavior: contain; }
+  h1, h2, h3, h4, p, span, label, button { overflow-wrap: anywhere; }
+  button[aria-label]:not([aria-label='']) { -webkit-user-select: none; user-select: none; }
 
-  body {
-    overscroll-behavior-x: none;
-  }
+  /* Community */
+  section.mx-auto.w-full.max-w-4xl { width: 100%; max-width: 100%; min-width: 0; padding-inline: 0; }
+  section.mx-auto.w-full.max-w-4xl > header { width: 100%; min-width: 0; overflow: hidden; }
+  section.mx-auto.w-full.max-w-4xl > header > div:first-child { min-width: 0; }
+  section.mx-auto.w-full.max-w-4xl > header > div:first-child > div:last-child { flex-shrink: 0; }
+  section.mx-auto.w-full.max-w-4xl > div { width: 100%; min-width: 0; }
+  section.mx-auto.w-full.max-w-4xl > div > div:first-child { min-width: 0; height: min(64dvh, 620px); max-height: 620px; }
+  section.mx-auto.w-full.max-w-4xl article { width: 100%; min-width: 0; display: grid; grid-template-columns: 36px minmax(0, 1fr) 30px; align-items: start; column-gap: 8px; overflow: hidden; }
+  section.mx-auto.w-full.max-w-4xl article > div:nth-child(2) { min-width: 0; width: 100%; }
+  section.mx-auto.w-full.max-w-4xl article > div:nth-child(2) > div { min-width: 0; max-width: 100%; }
+  section.mx-auto.w-full.max-w-4xl article > div:nth-child(2) > p { max-width: 100%; overflow-wrap: anywhere; word-break: break-word; }
+  section.mx-auto.w-full.max-w-4xl article > button { width: 30px; height: 30px; min-width: 30px; padding: 0; margin: 0; display: inline-flex; align-items: center; justify-content: center; justify-self: end; align-self: start; }
+  section.mx-auto.w-full.max-w-4xl article > div:first-child { width: 36px; height: 36px; min-width: 36px; }
+  section.mx-auto.w-full.max-w-4xl > div > div:last-child { min-width: 0; width: 100%; }
+  section.mx-auto.w-full.max-w-4xl textarea { min-width: 0; width: 100%; }
+  section.mx-auto.w-full.max-w-4xl textarea + div { flex-shrink: 0; }
 
-  main,
-  section,
-  article,
-  header,
-  footer,
-  nav,
-  form,
-  [role='dialog'] {
-    min-width: 0;
-    max-width: 100%;
-  }
+  /* Marketplace */
+  .marketplace-shell { width: 100%; max-width: 100%; min-width: 0; margin-inline: 0; overflow: visible; }
+  .marketplace-shell > div:first-child { min-width: 0; }
+  .marketplace-shell > div:first-child > div:last-child { width: 100%; min-width: 0; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+  .marketplace-shell > div:first-child > div:last-child > div { min-width: 0; width: 100%; justify-content: center; padding-inline: 8px; }
+  .marketplace-shell .marketplace-grid { width: 100%; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; min-width: 0; }
+  .marketplace-shell .marketplace-grid > .card-premium { min-width: 0; min-height: 0; height: auto; padding: 10px; }
+  .marketplace-shell .marketplace-grid .group > button:first-of-type { min-height: 0; height: auto; padding: 8px 4px; }
+  .marketplace-shell .marketplace-grid .group > button:first-of-type > div { max-width: 100%; }
+  .marketplace-shell .marketplace-grid .group > button:first-of-type p { max-width: 100%; }
+  .marketplace-shell .marketplace-grid .group > div:last-child { min-width: 0; }
+  .marketplace-shell .marketplace-grid button { min-width: 0; }
+  .marketplace-shell .input { width: 100%; min-width: 0; }
 
-  img,
-  video,
-  canvas {
-    max-width: 100%;
-  }
+  /* Inventory */
+  main:has(.section-title) .grid { min-width: 0; }
+  main:has(.section-title) .grid > .card { min-width: 0; max-width: 100%; }
 
-  svg.lucide {
-    flex-shrink: 0;
-  }
+  /* Tasks: compact rows without squeezing the task text. */
+  main:has(.section-title) .grid-cols-\[auto_1fr_auto\] { grid-template-columns: auto minmax(0,1fr) auto; }
+  main:has(.section-title) .grid-cols-\[auto_1fr_auto\] > button:last-child { min-width: 24px; }
 
-  button,
-  a,
-  input,
-  select,
-  textarea {
-    touch-action: manipulation;
-  }
-
-  input,
-  select,
-  textarea {
-    min-width: 0;
-    font-size: 16px;
-  }
-
-  textarea {
-    max-width: 100%;
-  }
-
-  table {
-    max-width: 100%;
-  }
-
-  pre,
-  code {
-    max-width: 100%;
-    overflow-x: auto;
-  }
-
-  [role='dialog'] {
-    max-height: calc(100dvh - 2rem);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-
-  /* Prevent long usernames, emails and item names from forcing a wider card. */
-  h1,
-  h2,
-  h3,
-  h4,
-  p,
-  span,
-  label,
-  button {
-    overflow-wrap: anywhere;
-  }
-
-  /* Keep icon-only controls compact while still being comfortable to tap. */
-  button[aria-label]:not([aria-label='']) {
-    -webkit-user-select: none;
-    user-select: none;
-  }
-
-  /* Community: mobile-only layout corrections. Desktop remains unchanged. */
-  section.mx-auto.w-full.max-w-4xl {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    padding-inline: 0;
-  }
-
-  section.mx-auto.w-full.max-w-4xl > header {
-    width: 100%;
-    min-width: 0;
-    overflow: hidden;
-  }
-
-  section.mx-auto.w-full.max-w-4xl > header > div:first-child {
-    min-width: 0;
-  }
-
-  section.mx-auto.w-full.max-w-4xl > header > div:first-child > div:last-child {
-    flex-shrink: 0;
-  }
-
-  section.mx-auto.w-full.max-w-4xl > div {
-    width: 100%;
-    min-width: 0;
-  }
-
-  section.mx-auto.w-full.max-w-4xl > div > div:first-child {
-    min-width: 0;
-    height: min(64dvh, 620px);
-    max-height: 620px;
-  }
-
-  section.mx-auto.w-full.max-w-4xl article {
-    width: 100%;
-    min-width: 0;
-    display: grid;
-    grid-template-columns: 36px minmax(0, 1fr) 30px;
-    align-items: start;
-    column-gap: 8px;
-    overflow: hidden;
-  }
-
-  section.mx-auto.w-full.max-w-4xl article > div:nth-child(2) {
-    min-width: 0;
-    width: 100%;
-  }
-
-  section.mx-auto.w-full.max-w-4xl article > div:nth-child(2) > div {
-    min-width: 0;
-    max-width: 100%;
-  }
-
-  section.mx-auto.w-full.max-w-4xl article > div:nth-child(2) > p {
-    max-width: 100%;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-  }
-
-  section.mx-auto.w-full.max-w-4xl article > button {
-    width: 30px;
-    height: 30px;
-    min-width: 30px;
-    padding: 0;
-    margin: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    justify-self: end;
-    align-self: start;
-  }
-
-  section.mx-auto.w-full.max-w-4xl article > div:first-child {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-  }
-
-  section.mx-auto.w-full.max-w-4xl > div > div:last-child {
-    min-width: 0;
-    width: 100%;
-  }
-
-  section.mx-auto.w-full.max-w-4xl textarea {
-    min-width: 0;
-    width: 100%;
-  }
-
-  section.mx-auto.w-full.max-w-4xl textarea + div {
-    flex-shrink: 0;
-  }
+  /* Dashboard / Story: allow flex content to shrink instead of creating horizontal overflow. */
+  .card-premium, .card { min-width: 0; max-width: 100%; }
+  .card-premium .min-w-0, .card .min-w-0 { min-width: 0; }
+  .page-enter { min-width: 0; max-width: 100%; }
 }
 
 @media (max-width: 380px) {
-  .section-title {
-    font-size: 1.15rem;
-  }
+  .section-title { font-size: 1.15rem; }
+  section.mx-auto.w-full.max-w-4xl article { grid-template-columns: 34px minmax(0,1fr) 28px; column-gap: 6px; }
+  section.mx-auto.w-full.max-w-4xl article > div:first-child { width: 34px; height: 34px; min-width: 34px; }
+  section.mx-auto.w-full.max-w-4xl article > button { width: 28px; height: 28px; min-width: 28px; }
+  .marketplace-shell .marketplace-grid { gap: 8px; }
+  .marketplace-shell .marketplace-grid > .card-premium { padding: 8px; }
+  .marketplace-shell > div:first-child > div:last-child { grid-template-columns: 1fr 1fr; }
+}
 
-  section.mx-auto.w-full.max-w-4xl article {
-    grid-template-columns: 34px minmax(0, 1fr) 28px;
-    column-gap: 6px;
-  }
-
-  section.mx-auto.w-full.max-w-4xl article > div:first-child {
-    width: 34px;
-    height: 34px;
-    min-width: 34px;
-  }
-
-  section.mx-auto.w-full.max-w-4xl article > button {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-  }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
 }

@@ -3,11 +3,12 @@ import { Brain, Dumbbell, Apple, Moon, ShieldCheck, Sparkles, ChevronRight, Rota
 
 type Difficulty = 'beginner' | 'intermediate' | 'advanced' | 'extreme';
 type Goal = 'strength' | 'fitness' | 'mobility' | 'sports';
+type Gender = 'male' | 'female';
 
 const difficultyMeta: Record<Difficulty, { label: string; note: string }> = {
   beginner: { label: 'Beginner', note: 'Foundation and technique' },
   intermediate: { label: 'Intermediate', note: 'More volume and challenge' },
-  advanced: { label: 'Advanced', note: 'High-skill progression' },
+  advanced: { label: 'Advanced', note: 'Higher-skill progression' },
   extreme: { label: 'Extreme', note: 'Only for experienced users' },
 };
 
@@ -15,6 +16,7 @@ const goalMeta: Record<Goal, string> = { strength: 'Strength', fitness: 'Fitness
 
 export function ShadowAI() {
   const [difficulty, setDifficulty] = useState<Difficulty>('beginner');
+  const [gender, setGender] = useState<Gender | ''>('');
   const [goal, setGoal] = useState<Goal>('fitness');
   const [days, setDays] = useState(3);
   const [minutes, setMinutes] = useState(45);
@@ -27,11 +29,16 @@ export function ShadowAI() {
     const baseSets = difficulty === 'beginner' ? 2 : difficulty === 'intermediate' ? 3 : 3;
     const repRange = difficulty === 'beginner' ? '8–12' : difficulty === 'intermediate' ? '8–15' : '6–12';
     const daysText = days === 1 ? 'Full body' : days === 2 ? 'Full body A / B' : `${days}-day split`;
-    return { baseSets, repRange, daysText };
-  }, [difficulty, days]);
+    const genderNote = gender === 'female'
+      ? 'Female profile: recovery, strength and training volume are adjusted conservatively and progressively.'
+      : gender === 'male'
+        ? 'Male profile: strength, recovery and training volume are adjusted progressively for the selected level.'
+        : 'Choose a gender to personalize the training guidance.';
+    return { baseSets, repRange, daysText, genderNote };
+  }, [difficulty, days, gender]);
 
   const generate = () => setGenerated(true);
-  const reset = () => { setGenerated(false); setDifficulty('beginner'); setGoal('fitness'); setDays(3); setMinutes(45); setEquipment('bodyweight'); setAge(''); setPreferences(''); };
+  const reset = () => { setGenerated(false); setDifficulty('beginner'); setGender(''); setGoal('fitness'); setDays(3); setMinutes(45); setEquipment('bodyweight'); setAge(''); setPreferences(''); };
 
   return (
     <div className="space-y-6">
@@ -56,23 +63,25 @@ export function ShadowAI() {
       <section className="card p-4 sm:p-6">
         <div className="mb-5 flex items-center gap-2"><Dumbbell size={19} className="text-ember-400" /><h2 className="font-display text-lg font-bold">2. Personal setup</h2></div>
         <div className="grid gap-4 md:grid-cols-2">
+          <label className="text-sm text-ink-300">Gender<select value={gender} onChange={e => setGender(e.target.value as Gender | '')} className="mt-1.5 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-white outline-none focus:border-ember-500/50"><option value="">Select gender</option><option value="male">Male</option><option value="female">Female</option></select></label>
           <label className="text-sm text-ink-300">Age (optional)<input value={age} onChange={e => setAge(e.target.value.replace(/\D/g, '').slice(0, 3))} inputMode="numeric" placeholder="Age" className="mt-1.5 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-white outline-none focus:border-ember-500/50" /></label>
           <label className="text-sm text-ink-300">Goal<select value={goal} onChange={e => setGoal(e.target.value as Goal)} className="mt-1.5 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-white outline-none"><option value="strength">Strength</option><option value="fitness">Fitness</option><option value="mobility">Mobility</option><option value="sports">Sports performance</option></select></label>
           <label className="text-sm text-ink-300">Training days: <b className="text-white">{days}</b><input type="range" min="1" max="6" value={days} onChange={e => setDays(Number(e.target.value))} className="mt-2 w-full accent-orange-500" /></label>
           <label className="text-sm text-ink-300">Session time: <b className="text-white">{minutes} min</b><input type="range" min="20" max="90" step="5" value={minutes} onChange={e => setMinutes(Number(e.target.value))} className="mt-2 w-full accent-orange-500" /></label>
           <label className="text-sm text-ink-300">Equipment<select value={equipment} onChange={e => setEquipment(e.target.value)} className="mt-1.5 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-white outline-none"><option value="bodyweight">Bodyweight</option><option value="home">Home equipment</option><option value="gym">Gym</option></select></label>
-          <label className="text-sm text-ink-300">Food preferences / allergies (optional)<input value={preferences} onChange={e => setPreferences(e.target.value)} placeholder="e.g. vegetarian, foods to avoid" className="mt-1.5 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-white outline-none focus:border-ember-500/50" /></label>
+          <label className="text-sm text-ink-300 md:col-span-2">Food preferences / allergies (optional)<input value={preferences} onChange={e => setPreferences(e.target.value)} placeholder="e.g. vegetarian, foods to avoid" className="mt-1.5 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-white outline-none focus:border-ember-500/50" /></label>
         </div>
-        <button onClick={generate} className="btn-primary mt-5 w-full justify-center sm:w-auto"><Sparkles size={17} /> Generate my plan <ChevronRight size={17} /></button>
+        <button onClick={generate} disabled={!gender} className="btn-primary mt-5 w-full justify-center disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"><Sparkles size={17} /> Generate my plan <ChevronRight size={17} /></button>
       </section>
 
       {generated && <>
         <section className="card p-4 sm:p-6">
-          <div className="mb-4 flex items-center justify-between gap-3"><div><h2 className="font-display text-lg font-bold">Your gradual training plan</h2><p className="text-xs text-ink-400">{difficultyMeta[difficulty].label} · {goalMeta[goal]} · {plan.daysText} · {minutes} min</p></div><Dumbbell className="text-ember-400" size={21} /></div>
+          <div className="mb-4 flex items-center justify-between gap-3"><div><h2 className="font-display text-lg font-bold">Your gradual training plan</h2><p className="text-xs text-ink-400">{gender === 'male' ? 'Male' : 'Female'} · {difficultyMeta[difficulty].label} · {goalMeta[goal]} · {plan.daysText} · {minutes} min</p></div><Dumbbell className="text-ember-400" size={21} /></div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[['Warm-up', '5–10 min', 'Easy movement + mobility'], ['Main training', `${plan.baseSets} sets × ${plan.repRange}`, equipment === 'bodyweight' ? 'Controlled bodyweight movements' : 'Choose a suitable resistance'], ['Cool-down', '5–10 min', 'Easy movement + relaxed stretching']].map(([title, dose, note]) => <div key={title} className="rounded-xl border border-white/5 bg-ink-950/40 p-4"><p className="font-semibold">{title}</p><p className="mt-1 text-ember-400 text-sm font-medium">{dose}</p><p className="mt-1 text-xs text-ink-400">{note}</p></div>)}
           </div>
           <div className="mt-4 rounded-xl border border-white/5 bg-black/20 p-4 text-sm text-ink-300"><b className="text-white">Progression:</b> keep the same level until the current workload feels controlled, then increase difficulty gradually. If it feels too hard, reduce volume or use an easier variation.</div>
+          <p className="mt-3 text-xs text-ink-400">{plan.genderNote}</p>
         </section>
 
         <section className="card p-4 sm:p-6">

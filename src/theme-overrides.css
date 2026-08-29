@@ -1,5 +1,7 @@
-/* Global theme bridge */
-[data-theme] .text-ember-300,[data-theme] .text-ember-400,[data-theme] .text-ember-500 { color: rgb(var(--accent-400)) !important; }
+/* Global theme bridge: turns the existing visual system into a true site-wide theme. */
+[data-theme] .text-ember-300,
+[data-theme] .text-ember-400,
+[data-theme] .text-ember-500 { color: rgb(var(--accent-400)) !important; }
 [data-theme] .bg-ember-500\/5 { background-color: rgb(var(--accent-500) / 5%) !important; }
 [data-theme] .bg-ember-500\/8 { background-color: rgb(var(--accent-500) / 8%) !important; }
 [data-theme] .bg-ember-500\/10 { background-color: rgb(var(--accent-500) / 10%) !important; }
@@ -20,51 +22,19 @@
 [data-theme] .text-gold-500 { color: rgb(var(--gold-500)) !important; }
 [data-theme] .bg-gold-500 { background-color: rgb(var(--gold-500)) !important; }
 [data-theme] .border-gold-500 { border-color: rgb(var(--gold-500)) !important; }
+
 [data-theme] .from-ember-500 { --tw-gradient-from: rgb(var(--accent-500)) var(--tw-gradient-from-position) !important; --tw-gradient-to: rgb(var(--accent-500) / 0) var(--tw-gradient-to-position) !important; }
+[data-theme] .via-ember-500\/8 { --tw-gradient-stops: var(--tw-gradient-from), rgb(var(--accent-500) / 8%) var(--tw-gradient-via-position), var(--tw-gradient-to) !important; }
 [data-theme] .to-shadow-500 { --tw-gradient-to: rgb(var(--shadow-500)) var(--tw-gradient-to-position) !important; }
 [data-theme] .to-gold-500 { --tw-gradient-to: rgb(var(--gold-500)) var(--tw-gradient-to-position) !important; }
+
 [data-theme] .btn-primary { background: linear-gradient(135deg, rgb(var(--accent-500)), rgb(var(--accent-600))) !important; border-color: rgb(var(--accent-500) / 35%) !important; }
 [data-theme] .btn-primary:hover { filter: brightness(1.08); }
-[data-theme] button:focus-visible,[data-theme] a:focus-visible,[data-theme] input:focus-visible,[data-theme] select:focus-visible,[data-theme] textarea:focus-visible { outline: 2px solid rgb(var(--accent-400)); outline-offset: 2px; }
+
+[data-theme] button:focus-visible,
+[data-theme] a:focus-visible,
+[data-theme] input:focus-visible,
+[data-theme] select:focus-visible,
+[data-theme] textarea:focus-visible { outline: 2px solid rgb(var(--accent-400)); outline-offset: 2px; }
+
 [data-theme] .theme-transition { transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease; }
-
-/* Eight complete visual identities. These affect surfaces, controls, borders, shadows and page atmosphere — not only accent colors. */
-[data-theme] { --theme-radius: 18px; --theme-border: 1px solid rgb(var(--accent-500) / 16%); --theme-surface: rgb(var(--ink-900) / 72%); --theme-shadow: 0 12px 38px rgb(0 0 0 / 34%); --theme-grid: none; }
-[data-theme] .card { border-radius: var(--theme-radius) !important; border: var(--theme-border) !important; background: var(--theme-surface) !important; box-shadow: var(--theme-shadow) !important; backdrop-filter: blur(18px); }
-[data-theme] .glass,[data-theme] .glass-soft { border-color: rgb(var(--accent-500) / 14%) !important; background: var(--theme-surface) !important; }
-[data-theme] .btn,[data-theme] .input { border-radius: calc(var(--theme-radius) - 5px) !important; }
-[data-theme] .btn-ghost { border-color: rgb(var(--accent-500) / 15%) !important; background: rgb(var(--ink-900) / 58%) !important; }
-[data-theme] .input { border-color: rgb(var(--accent-500) / 15%) !important; background: rgb(var(--site-bg) / 62%) !important; }
-[data-theme] .card-hover:hover { transform: translateY(-2px); border-color: rgb(var(--accent-400) / 30%) !important; }
-
-/* Shadow — dark, angular, tactical */
-[data-theme='shadow'] { --theme-radius: 10px; --theme-border: 1px solid rgb(var(--accent-500) / 24%); --theme-surface: linear-gradient(145deg, rgb(15 16 27 / 92%), rgb(7 8 13 / 90%)); --theme-shadow: 0 14px 44px rgb(0 0 0 / 52%); }
-[data-theme='shadow'] .card { clip-path: polygon(0 7px,7px 0,calc(100% - 7px) 0,100% 7px,100% calc(100% - 7px),calc(100% - 7px) 100%,7px 100%,0 calc(100% - 7px)); }
-
-/* Ember — aggressive forge / heat */
-[data-theme='ember'] { --theme-radius: 22px; --theme-border: 1px solid rgb(var(--accent-500) / 25%); --theme-surface: linear-gradient(145deg, rgb(30 14 6 / 88%), rgb(12 9 8 / 94%)); --theme-shadow: 0 16px 42px rgb(255 80 0 / 12%); }
-[data-theme='ember'] .card { box-shadow: 0 0 0 1px rgb(var(--accent-500) / 8%), var(--theme-shadow) !important; }
-
-/* Frost — clean crystalline glass */
-[data-theme='frost'] { --theme-radius: 26px; --theme-border: 1px solid rgb(var(--accent-400) / 22%); --theme-surface: linear-gradient(145deg, rgb(13 29 42 / 76%), rgb(5 12 20 / 82%)); --theme-shadow: 0 18px 50px rgb(0 180 255 / 10%); }
-[data-theme='frost'] .card { backdrop-filter: blur(24px) saturate(130%); }
-
-/* Ocean — deep holographic interface */
-[data-theme='ocean'] { --theme-radius: 16px; --theme-border: 1px solid rgb(var(--accent-500) / 28%); --theme-surface: linear-gradient(135deg, rgb(5 18 32 / 88%), rgb(4 10 19 / 94%)); --theme-shadow: 0 14px 42px rgb(0 90 255 / 14%); }
-[data-theme='ocean'] .card { background-image: linear-gradient(135deg, rgb(var(--accent-500) / 5%), transparent 45%) !important; }
-
-/* Emerald — natural dark / status-board */
-[data-theme='emerald'] { --theme-radius: 14px; --theme-border: 1px solid rgb(var(--accent-500) / 22%); --theme-surface: linear-gradient(145deg, rgb(7 24 17 / 90%), rgb(5 13 9 / 94%)); --theme-shadow: 0 14px 38px rgb(0 180 110 / 10%); }
-[data-theme='emerald'] .card { border-left-width: 3px !important; }
-
-/* Crimson — boss arena / sharp red */
-[data-theme='crimson'] { --theme-radius: 8px; --theme-border: 1px solid rgb(var(--accent-500) / 30%); --theme-surface: linear-gradient(145deg, rgb(34 7 11 / 91%), rgb(12 5 7 / 95%)); --theme-shadow: 0 16px 48px rgb(220 20 60 / 15%); }
-[data-theme='crimson'] .card { box-shadow: inset 0 1px 0 rgb(255 255 255 / 4%), var(--theme-shadow) !important; }
-
-/* Royal — premium fantasy */
-[data-theme='royal'] { --theme-radius: 20px; --theme-border: 1px solid rgb(var(--accent-500) / 26%); --theme-surface: linear-gradient(145deg, rgb(20 13 40 / 90%), rgb(8 6 17 / 95%)); --theme-shadow: 0 18px 52px rgb(110 80 255 / 16%); }
-[data-theme='royal'] .card { border-style: double !important; border-width: 3px !important; }
-
-/* Gold — luxury system / achievement hall */
-[data-theme='gold'] { --theme-radius: 12px; --theme-border: 1px solid rgb(var(--gold-500) / 28%); --theme-surface: linear-gradient(145deg, rgb(32 25 8 / 90%), rgb(12 10 5 / 95%)); --theme-shadow: 0 16px 48px rgb(245 158 11 / 13%); }
-[data-theme='gold'] .card { background-image: linear-gradient(145deg, rgb(var(--gold-500) / 5%), transparent 55%) !important; }

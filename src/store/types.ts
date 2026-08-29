@@ -5,7 +5,6 @@ export interface CustomTask { id: string; label: string; emoji: string; points: 
 export interface MainTask { id: string; label: string; emoji: string; points: number; description?: string; category: 'body' | 'mind' | 'spirit' | 'work'; enabled: boolean; order: number; }
 export interface ExerciseEntry { id: string; name: string; sets: number; reps: string; section: 'stretching' | 'main' | 'plyometric'; completed: boolean; }
 export interface WorkoutDayState { dayId: 'push' | 'pull' | 'leg'; exercises: ExerciseEntry[]; }
-export interface CustomWorkoutDay { id: string; name: string; emoji: string; exercises: ExerciseEntry[]; }
 export interface ScheduleSlot { id: string; start: string; end: string; label: string; color: string; completed: boolean; }
 export interface InventoryItem { id: string; type: 'aura' | 'weapon' | 'title' | 'shield' | 'frame' | 'background' | 'badge'; obtainedAt: number; favorite: boolean; }
 export interface DayRecord { date: string; coreCompleted: Record<string, boolean>; customCompleted: Record<string, boolean>; xpGained: number; pointsGained: number; workoutCompleted: boolean; dungeonCleared: boolean; allMainDone: boolean; disciplineScore: number; }
@@ -22,7 +21,7 @@ export interface AppState {
   xp: number; level: number; coins: number; totalPoints: number; streak: number; bestStreak: number; lastActiveDate: string | null; streakShield: number;
   coreCompleted: Record<string, boolean>; customCompleted: Record<string, boolean>; dailyXp: number; dailyPoints: number; dailyCap: number; lastDailyResetDate: string | null;
   mainTasks: MainTask[]; customTasks: CustomTask[];
-  workouts: Record<'push' | 'pull' | 'leg', ExerciseEntry[]>; customWorkoutDays: CustomWorkoutDay[]; workoutsCompletedToday: number; workoutRewardsClaimedToday: Record<'push' | 'pull' | 'leg', boolean>; lastWorkoutDate: string | null; workoutSessions: WorkoutSessionRecord[]; totalWorkoutSeconds: number;
+  workouts: Record<'push' | 'pull' | 'leg', ExerciseEntry[]>; workoutsCompletedToday: number; workoutRewardsClaimedToday: Record<'push' | 'pull' | 'leg', boolean>; lastWorkoutDate: string | null; workoutSessions: WorkoutSessionRecord[]; totalWorkoutSeconds: number;
   schedule: ScheduleSlot[];
   dungeonClearedToday: boolean; lastDungeonDate: string | null; dungeonsCleared: number; secretDungeonAvailable: boolean; secretDungeonId: string | null; secretDungeonExpiresAt: number | null;
   lastLoginClaimDate: string | null; loginStreak: number; lastSpinDate: string | null; lastSpinRewardId: string | null;

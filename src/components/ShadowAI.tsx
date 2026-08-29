@@ -1,202 +1,73 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Apple, ArrowRight, BarChart3, Brain, Check, ChevronRight, Clock3, Dumbbell, Flame, Info, Pause, Play, RotateCcw, ShieldCheck, Sparkles, Target, Trophy, X } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Brain, Check, Dumbbell, Flame, RefreshCw, Sparkles, Target, Zap } from 'lucide-react';
+import { useStore } from '../store/useStore';
+import type { CustomWorkoutDay, ExerciseEntry } from '../store/types';
 
-type Difficulty = 'beginner' | 'intermediate' | 'advanced' | 'extreme';
-type Goal = 'strength' | 'fitness' | 'mobility' | 'sports';
-type Gender = 'male' | 'female';
+type Goal = 'strength' | 'muscle' | 'fitness' | 'vertical' | 'athletic';
+type Level = 'beginner' | 'intermediate' | 'advanced';
 type Equipment = 'bodyweight' | 'home' | 'gym';
-type Mode = 'standard' | 'basketball';
-type Group = 'push' | 'pull' | 'leg' | 'core' | 'conditioning' | 'mobility' | 'plyometric';
-type Exercise = { name: string; group: Group; target: string; equipment: Equipment[]; reps: string; rest: number; cue: string; how: string };
 
-type PlanDay = { day: number; title: string; items: Exercise[] };
-
-const difficultyMeta: Record<Difficulty, { label: string; volume: number; note: string }> = {
-  beginner: { label: 'Beginner', volume: 1, note: 'Build technique and consistency' },
-  intermediate: { label: 'Intermediate', volume: 2, note: 'Build strength and work capacity' },
-  advanced: { label: 'Advanced', volume: 3, note: 'Higher training demand' },
-  extreme: { label: 'Extreme', volume: 4, note: 'Highest challenge and workload' },
+const BANK: Record<string, Array<{ name: string; reps: string }>> = {
+  push: [{name:'Push-up',reps:'8–15'},{name:'Diamond Push-up',reps:'6–12'},{name:'Pike Push-up',reps:'6–12'},{name:'Wide Push-up',reps:'8–15'}],
+  pull: [{name:'Backpack Row',reps:'8–15'},{name:'Towel Row Isometric',reps:'20–30s'},{name:'Prone Y-T Raise',reps:'10–15'},{name:'Reverse Snow Angel',reps:'10–15'}],
+  legs: [{name:'Bodyweight Squat',reps:'12–20'},{name:'Reverse Lunge',reps:'8–12/side'},{name:'Bulgarian Split Squat',reps:'8–12/side'},{name:'Glute Bridge',reps:'12–20'},{name:'Single-Leg Calf Raise',reps:'12–20/side'}],
+  core: [{name:'Dead Bug',reps:'8–12/side'},{name:'Front Plank',reps:'30–60s'},{name:'Side Plank',reps:'20–45s/side'},{name:'Hollow Hold',reps:'20–40s'}],
+  mobility: [{name:'World’s Greatest Stretch',reps:'3–5/side'},{name:'Ankle Mobility',reps:'10/side'},{name:'Hip 90/90 Flow',reps:'6–10/side'}],
+  plyo: [{name:'Pogo Hops',reps:'3 × 15s'},{name:'Snap-down',reps:'3 × 5'},{name:'Squat Jump',reps:'3 × 5'},{name:'Lateral Bound',reps:'3 × 5/side'},{name:'Broad Jump',reps:'3 × 4'}],
 };
+const emojis = ['🔥','⚡','🦾','🗡️','👑','💀'];
+const uid = () => crypto.randomUUID();
+function makeExercise(pool: string, index: number, sets: number, section: ExerciseEntry['section']): ExerciseEntry { const e=BANK[pool][index%BANK[pool].length]; return {id:uid(),name:e.name,sets,reps:e.reps,section,completed:false}; }
 
-const exercises: Exercise[] = [
-  { name: 'Incline Push-up', group: 'push', target: 'Chest + arms', equipment: ['bodyweight','home','gym'], reps: '8–12', rest: 75, cue: 'Keep the body aligned.', how: 'Hands on a stable elevated surface. Lower your chest with control, then press away without letting the hips sag.' },
-  { name: 'Push-up', group: 'push', target: 'Chest + arms', equipment: ['bodyweight','home','gym'], reps: '6–15', rest: 75, cue: 'Use a controlled range.', how: 'Brace the core, keep a straight line from head to heels, lower under control and press back up.' },
-  { name: 'Pike Push-up', group: 'push', target: 'Shoulders + arms', equipment: ['bodyweight','home','gym'], reps: '5–12', rest: 90, cue: 'Move under control.', how: 'Start in a pike position and bend the elbows to bring the head toward the floor, then press away.' },
-  { name: 'Backpack Floor Press', group: 'push', target: 'Chest + triceps', equipment: ['home'], reps: '8–15', rest: 90, cue: 'Use only a secure load.', how: 'Lie on the floor, hold a secure backpack, lower until the upper arms touch the floor and press up.' },
-  { name: 'Backpack Row', group: 'pull', target: 'Back + arms', equipment: ['home'], reps: '8–15', rest: 75, cue: 'Pull smoothly.', how: 'Hinge at the hips with a stable back. Pull the backpack toward your torso and lower slowly.' },
-  { name: 'Band Row', group: 'pull', target: 'Back + arms', equipment: ['home'], reps: '10–15', rest: 75, cue: 'Avoid swinging.', how: 'Anchor the band safely, pull toward the ribs and squeeze the shoulder blades without shrugging.' },
-  { name: 'Assisted Pull-up', group: 'pull', target: 'Back + arms', equipment: ['gym'], reps: '5–10', rest: 105, cue: 'Keep control.', how: 'Use enough assistance to complete smooth reps. Pull the chest toward the bar and lower slowly.' },
-  { name: 'Lat Pulldown', group: 'pull', target: 'Back', equipment: ['gym'], reps: '8–12', rest: 90, cue: 'Do not swing.', how: 'Sit tall, pull the bar toward the upper chest and return it under control.' },
-  { name: 'Bodyweight Squat', group: 'leg', target: 'Quads + glutes', equipment: ['bodyweight','home','gym'], reps: '8–20', rest: 75, cue: 'Control the tempo.', how: 'Sit down between the hips while keeping the feet stable, then stand tall without collapsing inward.' },
-  { name: 'Reverse Lunge', group: 'leg', target: 'Legs + balance', equipment: ['bodyweight','home','gym'], reps: '6–12/side', rest: 75, cue: 'Stay balanced.', how: 'Step backward, lower under control, push through the front foot and return to standing.' },
-  { name: 'Split Squat', group: 'leg', target: 'Quads + glutes', equipment: ['bodyweight','home','gym'], reps: '6–12/side', rest: 90, cue: 'Use support if needed.', how: 'Take a staggered stance, lower the back knee toward the floor and drive through the front foot.' },
-  { name: 'Step-up', group: 'leg', target: 'Legs + balance', equipment: ['home','gym'], reps: '6–12/side', rest: 75, cue: 'Use a stable step.', how: 'Place the whole foot on a low stable step, stand through that leg and lower with control.' },
-  { name: 'Glute Bridge', group: 'leg', target: 'Glutes + hips', equipment: ['bodyweight','home','gym'], reps: '10–20', rest: 60, cue: 'Squeeze at the top.', how: 'Lie on your back with knees bent. Drive through the feet to lift the hips, pause, then lower.' },
-  { name: 'Calf Raise', group: 'leg', target: 'Calves', equipment: ['bodyweight','home','gym'], reps: '10–20', rest: 50, cue: 'Use a steady tempo.', how: 'Rise onto the balls of the feet, pause briefly and lower slowly through a comfortable range.' },
-  { name: 'Hip Hinge', group: 'leg', target: 'Posterior chain', equipment: ['bodyweight','home','gym'], reps: '8–15', rest: 75, cue: 'Hinge at the hips.', how: 'Push the hips back while keeping the spine neutral, then drive the hips forward to stand.' },
-  { name: 'Dead Bug', group: 'core', target: 'Core control', equipment: ['bodyweight','home','gym'], reps: '6–12/side', rest: 50, cue: 'Move slowly.', how: 'Brace the core and alternate the opposite arm and leg while keeping the lower back controlled.' },
-  { name: 'Front Plank', group: 'core', target: 'Core', equipment: ['bodyweight','home','gym'], reps: '20–60s', rest: 50, cue: 'Keep the body long.', how: 'Brace the abdomen, squeeze the glutes and maintain a straight line without holding your breath.' },
-  { name: 'Side Plank', group: 'core', target: 'Lateral stability', equipment: ['bodyweight','home','gym'], reps: '15–45s/side', rest: 50, cue: 'Keep the hips stacked.', how: 'Support yourself on the forearm and side of the foot, then hold the body in one line.' },
-  { name: 'Bird Dog', group: 'core', target: 'Core + coordination', equipment: ['bodyweight','home','gym'], reps: '6–12/side', rest: 50, cue: 'Keep the hips level.', how: 'From hands and knees, extend the opposite arm and leg slowly, pause and return without twisting.' },
-  { name: 'March in Place', group: 'conditioning', target: 'Aerobic fitness', equipment: ['bodyweight','home','gym'], reps: '45–90s', rest: 45, cue: 'Keep breathing steady.', how: 'March continuously with a controlled rhythm and upright posture.' },
-  { name: 'Mountain Climber', group: 'conditioning', target: 'Conditioning + core', equipment: ['bodyweight','home','gym'], reps: '20–45s', rest: 50, cue: 'Choose a controlled pace.', how: 'Start in a strong plank and alternate driving the knees forward while keeping the trunk stable.' },
-  { name: 'Jumping Jack', group: 'conditioning', target: 'Conditioning', equipment: ['bodyweight','home','gym'], reps: '20–45s', rest: 50, cue: 'Use a step version if needed.', how: 'Move arms and legs out and back rhythmically. Reduce impact by stepping side to side.' },
-  { name: 'Mobility Flow', group: 'mobility', target: 'Full-body mobility', equipment: ['bodyweight','home','gym'], reps: '6–10 min', rest: 30, cue: 'Never force a stretch.', how: 'Move slowly through comfortable ranges for hips, shoulders and spine while breathing normally.' },
-  { name: 'World’s Greatest Stretch', group: 'mobility', target: 'Hips + upper body', equipment: ['bodyweight','home','gym'], reps: '3–5/side', rest: 35, cue: 'Move slowly.', how: 'Step into a lunge, place the opposite hand down and rotate the upper body gently toward the front leg.' },
-  { name: 'Ankle Mobility', group: 'mobility', target: 'Ankles', equipment: ['bodyweight','home','gym'], reps: '8–12/side', rest: 30, cue: 'Stay comfortable.', how: 'Keep the heel grounded and gently drive the knee forward over the toes without forcing the range.' },
-  { name: 'Pogo Hops', group: 'plyometric', target: 'Elasticity + landing control', equipment: ['bodyweight','home','gym'], reps: '2–4 × 10–20s', rest: 75, cue: 'Land softly.', how: 'Use small springy ankle hops with quiet landings. Prioritize rhythm and control over height.' },
-  { name: 'Snap-down', group: 'plyometric', target: 'Landing mechanics', equipment: ['bodyweight','home','gym'], reps: '2–4 × 4–6', rest: 75, cue: 'Own the landing.', how: 'Rise tall, then quickly drop into a balanced athletic position and absorb the landing quietly.' },
-  { name: 'Squat Jump', group: 'plyometric', target: 'Power', equipment: ['bodyweight','home','gym'], reps: '2–4 × 4–8', rest: 105, cue: 'Landing quality first.', how: 'Dip into a controlled squat, jump vertically and land softly with knees tracking naturally.' },
-  { name: 'Lateral Bound', group: 'plyometric', target: 'Lateral power', equipment: ['bodyweight','home','gym'], reps: '2–4 × 4–8/side', rest: 105, cue: 'Control side-to-side landings.', how: 'Push laterally from one leg, land on the opposite leg and stabilize before the next repetition.' },
-  { name: 'Skater Step', group: 'plyometric', target: 'Agility + balance', equipment: ['bodyweight','home','gym'], reps: '3 × 20–40s', rest: 60, cue: 'Stay controlled.', how: 'Step or hop laterally from side to side while keeping the trunk stable and landing under control.' },
-];
-
-const pool = (groups: Group[], equipment: Equipment) => exercises.filter(e => groups.includes(e.group) && e.equipment.includes(equipment));
-const pick = (groups: Group[], equipment: Equipment, count: number, offset: number) => { const p = pool(groups, equipment); return Array.from({ length: Math.min(count, p.length) }, (_, i) => p[(i + offset) % p.length]); };
-const phaseForWeek = (week: number) => week <= 4 ? { name: 'Foundation', focus: 'Technique, movement quality and consistency', mult: 1 } : week <= 8 ? { name: 'Development', focus: 'Progressive strength, fitness and skill', mult: 1.15 } : { name: 'Performance', focus: 'Power, conditioning and sport-specific performance', mult: 1.25 };
-const optionClass = (selected: boolean) => `rounded-xl border p-3 text-left transition-all ${selected ? 'border-ember-500/60 bg-ember-500/10 shadow-[0_0_20px_rgba(255,120,0,0.08)]' : 'border-white/5 bg-black/20 hover:border-ember-500/30 hover:bg-white/[0.03]'}`;
+function buildPlan(goal: Goal, level: Level, days: number): CustomWorkoutDay[] {
+  const sets=level==='beginner'?2:level==='intermediate'?3:4;
+  const profiles: string[][] = goal==='vertical'
+    ? [['legs','core'],['push','core'],['legs','core'],['pull','core'],['legs','core'],['mobility','core']]
+    : goal==='athletic'
+    ? [['push','core'],['legs','plyo'],['pull','core'],['legs','plyo'],['push','pull'],['legs','core']]
+    : goal==='strength'||goal==='muscle'
+    ? [['push','core'],['pull','core'],['legs','core'],['push','pull'],['legs','core'],['pull','push']]
+    : [['push','core'],['legs','core'],['pull','core'],['push','pull'],['legs','plyo'],['mobility','core']];
+  const titles = goal==='vertical' ? ['Jump Force','Upper Strength','Explosive Legs','Back + Core','Power Legs','Recovery']
+    : goal==='athletic' ? ['Upper Power','Lower Power','Pull + Core','Explosive Legs','Upper Hybrid','Athletic Base']
+    : goal==='strength' ? ['Press Strength','Pull Strength','Leg Strength','Upper Strength','Lower Strength','Full Strength']
+    : goal==='muscle' ? ['Chest + Triceps','Back + Biceps','Legs','Upper Body','Lower Body','Full Body']
+    : ['Upper Engine','Lower Engine','Back + Core','Full Body','Conditioning','Mobility'];
+  return profiles.slice(0,days).map((profile,dayIndex)=>{
+    const main: ExerciseEntry[]=[];
+    profile.forEach((p,j)=>{ if(p==='push'||p==='pull'||p==='legs') main.push(makeExercise(p,dayIndex+j,sets,'main'),makeExercise(p,dayIndex+j+1,sets,'main')); else if(p==='core') main.push(makeExercise('core',dayIndex+j,sets,'main')); else if(p==='plyo') main.push(makeExercise('plyo',dayIndex+j,2,'plyometric')); else if(p==='mobility') main.push(makeExercise('mobility',dayIndex+j,1,'stretching')); });
+    const stretching=main.some(e=>e.section==='stretching')?[]:[makeExercise('mobility',dayIndex,1,'stretching')];
+    const plyo=(goal==='vertical'||goal==='athletic'||dayIndex===4)&&!main.some(e=>e.section==='plyometric')?[makeExercise('plyo',dayIndex,2,'plyometric')]:[];
+    return {id:`day${dayIndex+1}`,name:titles[dayIndex],emoji:emojis[dayIndex],exercises:[...stretching,...main,...plyo]};
+  });
+}
 
 export function ShadowAI() {
-  const [mode, setMode] = useState<Mode>('standard');
-  const [difficulty, setDifficulty] = useState<Difficulty>('beginner');
-  const [gender, setGender] = useState<Gender | ''>('');
-  const [age, setAge] = useState('');
-  const [goal, setGoal] = useState<Goal>('fitness');
-  const [days, setDays] = useState(4);
-  const [minutes, setMinutes] = useState(50);
-  const [equipment, setEquipment] = useState<Equipment>('bodyweight');
-  const [week, setWeek] = useState(1);
-  const [generated, setGenerated] = useState(false);
-  const [done, setDone] = useState<Record<string, boolean>>({});
-  const [activeDay, setActiveDay] = useState(0);
-  const [activeExercise, setActiveExercise] = useState<Exercise | null>(null);
-  const [playerIndex, setPlayerIndex] = useState(0);
-  const [setNumber, setSetNumber] = useState(1);
-  const [timer, setTimer] = useState(0);
-  const [timerRunning, setTimerRunning] = useState(false);
-  const [history, setHistory] = useState<string[]>(() => { try { return JSON.parse(localStorage.getItem('forged-shadow-history') || '[]'); } catch { return []; } });
-
-  const safeDifficulty: Difficulty = Number(age) > 0 && Number(age) < 18 && difficulty === 'extreme' ? 'advanced' : difficulty;
-  const phase = phaseForWeek(week);
-  const sets = safeDifficulty === 'beginner' ? 2 : safeDifficulty === 'intermediate' ? 3 : safeDifficulty === 'advanced' ? 4 : 5;
-
-  const schedule = useMemo<PlanDay[]>(() => {
-    const titles = days === 1 ? ['Full Body'] : days === 2 ? ['Full Body A','Full Body B'] : days === 3 ? ['Full Body','Mobility + Core','Full Body'] : days === 4 ? ['Upper Strength','Lower Strength','Recovery + Core','Full Body'] : days === 5 ? ['Push','Pull','Legs','Upper + Core','Conditioning'] : ['Push','Pull','Legs','Upper','Lower','Conditioning'];
-    return titles.slice(0, days).map((title, i) => {
-      let groups: Group[];
-      if (mode === 'basketball') {
-        if (title === 'Push') groups = ['push','core'];
-        else if (title === 'Pull') groups = ['pull','core'];
-        else if (title === 'Legs' || title === 'Lower') groups = ['leg','plyometric','mobility'];
-        else if (title.includes('Conditioning')) groups = ['conditioning','plyometric','core'];
-        else if (title.includes('Recovery')) groups = ['mobility','core'];
-        else groups = ['leg','push','pull','core'];
-      } else if (title === 'Push') groups = ['push','push','push','core'];
-      else if (title === 'Pull') groups = ['pull','pull','pull','core'];
-      else if (title === 'Legs' || title === 'Lower Strength' || title === 'Lower') groups = ['leg','leg','leg','core'];
-      else if (title.includes('Upper')) groups = ['push','pull','push','pull','core'];
-      else if (title.includes('Recovery')) groups = ['mobility','core','mobility'];
-      else groups = ['leg','push','pull','core','mobility'];
-      const count = minutes < 35 ? 5 : minutes < 55 ? 6 : 8;
-      const items = groups.flatMap((g, gi) => pick([g], equipment, 1, i + gi + week + safeDifficulty.length));
-      return { day: i + 1, title, items: items.slice(0, count) };
-    });
-  }, [days, equipment, minutes, mode, week, safeDifficulty]);
-
-  const currentDay = schedule[activeDay] || schedule[0];
-  const playerExercise = currentDay?.items[playerIndex];
-  const completedCount = Object.values(done).filter(Boolean).length;
-  const totalCount = schedule.reduce((n, d) => n + d.items.length, 0);
-  const completion = totalCount ? Math.round((completedCount / totalCount) * 100) : 0;
-
-  useEffect(() => {
-    if (!timerRunning || timer <= 0) return;
-    const id = window.setInterval(() => setTimer(t => { if (t <= 1) { setTimerRunning(false); return 0; } return t - 1; }), 1000);
-    return () => window.clearInterval(id);
-  }, [timerRunning, timer]);
-
-  const saveHistory = (name: string) => {
-    const next = [name, ...history].slice(0, 30);
-    setHistory(next);
-    localStorage.setItem('forged-shadow-history', JSON.stringify(next));
-  };
-
-  const completeSet = () => {
-    if (!playerExercise) return;
-    const key = `${week}-${currentDay.day}-${playerExercise.name}`;
-    setDone(p => ({ ...p, [key]: true }));
-    if (setNumber < sets) { setSetNumber(s => s + 1); setTimer(playerExercise.rest); setTimerRunning(true); }
-    else { saveHistory(`${mode === 'basketball' ? 'Basketball Legend' : 'Shadow AI'} · ${playerExercise.name}`); setSetNumber(1); setTimer(0); setTimerRunning(false); }
-  };
-
-  const nextExercise = () => {
-    if (!currentDay) return;
-    if (playerIndex < currentDay.items.length - 1) { setPlayerIndex(i => i + 1); setSetNumber(1); setTimer(0); setTimerRunning(false); }
-    else saveHistory(`${mode === 'basketball' ? 'Basketball Legend' : 'Shadow AI'} · Day ${currentDay.day} completed`);
-  };
-
-  const transferToWorkout = () => {
-    const planned = schedule.flatMap(d => d.items.map(e => ({ day: e.group === 'push' ? 'push' : e.group === 'pull' ? 'pull' : 'leg', name: e.name, sets, reps: e.reps, section: e.group === 'plyometric' ? 'plyometric' : e.group === 'mobility' ? 'stretching' : 'main' })));
-    localStorage.setItem('forged-shadow-ai-workout-plan', JSON.stringify({ id: `shadow-${mode}-${safeDifficulty}-${week}-${Date.now()}`, week, mode, difficulty: safeDifficulty, exercises: planned }));
-    localStorage.removeItem('forged-shadow-ai-applied');
-    const url = new URL(window.location.href); url.searchParams.set('view', 'workout'); window.history.pushState({}, '', url); window.dispatchEvent(new PopStateEvent('popstate'));
-  };
-
-  const reset = () => { setGenerated(false); setWeek(1); setMode('standard'); setDifficulty('beginner'); setGender(''); setAge(''); setGoal('fitness'); setDays(4); setMinutes(50); setEquipment('bodyweight'); setDone({}); setActiveDay(0); setPlayerIndex(0); setHistory([]); localStorage.removeItem('forged-shadow-history'); };
-
+  const { state, setNote }=useStore();
+  const [goal,setGoal]=useState<Goal>('strength');
+  const [level,setLevel]=useState<Level>('intermediate');
+  const [equipment,setEquipment]=useState<Equipment>('bodyweight');
+  const [days,setDays]=useState(6);
+  const [plan,setPlan]=useState<CustomWorkoutDay[]|null>(null);
+  const [locked,setLocked]=useState<Record<string,boolean>>({});
+  const recommendation=useMemo(()=>goal==='vertical'?'Power, landing quality and recovery are prioritized.':goal==='athletic'?'Strength, speed, coordination and plyometrics are balanced.':goal==='muscle'?'Volume is distributed across major movement patterns.':goal==='fitness'?'Balanced strength, conditioning and mobility.':'Strength-focused volume with controlled progression.',[goal]);
+  const generate=()=>setPlan(buildPlan(goal,level,days));
+  const apply=()=>{ if(!plan)return; const next=plan.map((d,i)=>locked[d.id]&&state.customWorkoutDays[i]?state.customWorkoutDays[i]:d); setNote('__six_day_workout_config__',JSON.stringify(next)); setPlan(next); };
+  const regenerateDay=(i:number)=>{ if(!plan||locked[plan[i].id])return; const fresh=buildPlan(goal,level,days)[i]; setPlan(plan.map((d,j)=>j===i?fresh:d)); };
   return <div className="space-y-6">
-    <header className="relative overflow-hidden rounded-2xl border border-ember-500/20 bg-gradient-to-br from-ember-500/10 via-black/30 to-transparent p-5 sm:p-7">
-      <div className="flex items-start gap-4"><div className="rounded-2xl border border-ember-500/30 bg-ember-500/10 p-3 text-ember-400"><Brain size={28}/></div><div><div className="flex flex-wrap items-center gap-2"><h1 className="section-title">Shadow AI</h1><span className="chip"><Sparkles size={13}/> AI Home Workout</span></div><p className="mt-1 text-sm text-ink-300">Your planner, workout player, exercise library and progress tracker in one place.</p></div></div>
-    </header>
-
-    <section className="card p-4 sm:p-6">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><button onClick={() => setMode('standard')} className={optionClass(mode === 'standard')}><Dumbbell className="mb-2 text-ember-400" size={20}/><b>Shadow AI Fitness</b><p className="mt-1 text-xs text-ink-400">Strength, fitness, mobility and conditioning.</p></button><button onClick={() => { setMode('basketball'); setGoal('sports'); }} className={`${optionClass(mode === 'basketball')} ${mode === 'basketball' ? 'border-amber-400/60 bg-amber-400/10' : ''}`}><Trophy className="mb-2 text-amber-400" size={20}/><b>Basketball Legend</b><p className="mt-1 text-xs text-ink-400">Jumping, agility, conditioning, strength and mobility.</p></button></div>
+    <header className="relative overflow-hidden rounded-2xl border border-ember-500/20 bg-gradient-to-br from-ember-500/10 via-black/30 to-transparent p-5 sm:p-7"><div className="flex items-start gap-4"><div className="rounded-2xl border border-ember-500/30 bg-ember-500/10 p-3 text-ember-400"><Brain size={28}/></div><div><div className="flex flex-wrap items-center gap-2"><h1 className="section-title">Shadow AI</h1><span className="chip"><Sparkles size={13}/> AI Workout Builder</span></div><p className="mt-1 text-sm text-ink-300">Build a personalized 6-day program, preview it, lock days, regenerate individual days, then apply it directly to Workout.</p></div></div></header>
+    <section className="card p-4 sm:p-6 space-y-5">
+      <div><div className="flex items-center gap-2 mb-3"><Target size={18} className="text-ember-400"/><h2 className="font-display text-lg font-bold">What are you training for?</h2></div><div className="grid grid-cols-2 md:grid-cols-5 gap-2">{([['strength','Strength'],['muscle','Muscle'],['fitness','Fitness'],['vertical','Vertical Jump'],['athletic','Athletic']] as const).map(([v,l])=><button key={v} onClick={()=>setGoal(v)} className={`rounded-xl border p-3 text-sm font-bold ${goal===v?'border-ember-500/60 bg-ember-500/10 text-ember-300':'border-white/5 bg-black/20'}`}>{l}</button>)}</div></div>
+      <div><p className="mb-2 text-sm text-ink-300">Experience</p><div className="grid grid-cols-3 gap-2">{(['beginner','intermediate','advanced'] as Level[]).map(v=><button key={v} onClick={()=>setLevel(v)} className={`rounded-xl border p-3 text-sm font-bold capitalize ${level===v?'border-ember-500/60 bg-ember-500/10 text-ember-300':'border-white/5 bg-black/20'}`}>{v}</button>)}</div></div>
+      <div><p className="mb-2 text-sm text-ink-300">Equipment</p><div className="grid grid-cols-3 gap-2">{([['bodyweight','No equipment'],['home','Home'],['gym','Gym']] as const).map(([v,l])=><button key={v} onClick={()=>setEquipment(v)} className={`rounded-xl border p-3 text-sm font-bold ${equipment===v?'border-ember-500/60 bg-ember-500/10 text-ember-300':'border-white/5 bg-black/20'}`}>{l}</button>)}</div></div>
+      <div><div className="flex justify-between text-sm text-ink-300"><span>Training days</span><b className="text-white">{days}</b></div><input type="range" min="1" max="6" value={days} onChange={e=>setDays(+e.target.value)} className="mt-2 w-full"/></div>
+      <div className="rounded-xl border border-ember-500/20 bg-ember-500/5 p-3 text-sm text-ink-300"><Zap size={15} className="inline mr-2 text-ember-400"/>{recommendation}</div>
+      <button onClick={generate} className="btn-primary w-full sm:w-auto"><Sparkles size={17}/> Generate AI Program</button>
     </section>
-
-    <section className="card p-4 sm:p-6">
-      <div className="mb-4 flex items-center gap-2"><Sparkles size={18} className="text-ember-400"/><h2 className="font-display text-lg font-bold">Build your program</h2></div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="md:col-span-2"><p className="mb-2 text-sm text-ink-300">Starting difficulty</p><div className="grid grid-cols-2 gap-2 md:grid-cols-4">{(Object.keys(difficultyMeta) as Difficulty[]).map(d => <button key={d} onClick={() => setDifficulty(d)} className={optionClass(difficulty === d)}><div className="flex items-center justify-between"><b className="text-sm">{difficultyMeta[d].label}</b><span className="text-[10px] text-ink-500">L{difficultyMeta[d].volume}</span></div><p className="mt-1 text-[11px] text-ink-500">{difficultyMeta[d].note}</p></button>)}</div></div>
-        <div><p className="mb-2 text-sm text-ink-300">Gender</p><div className="grid grid-cols-2 gap-2"><button type="button" onClick={() => setGender('male')} className={optionClass(gender === 'male')}><b>Male</b><p className="mt-1 text-[11px] text-ink-500">Male profile</p></button><button type="button" onClick={() => setGender('female')} className={optionClass(gender === 'female')}><b>Female</b><p className="mt-1 text-[11px] text-ink-500">Female profile</p></button></div></div>
-        <label className="text-sm text-ink-300">Age (optional)<input value={age} onChange={e => setAge(e.target.value.replace(/\D/g,'').slice(0,3))} className="mt-1.5 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-white" placeholder="Age" inputMode="numeric"/></label>
-        <div><p className="mb-2 text-sm text-ink-300">Goal</p><div className="grid grid-cols-2 gap-2">{([['strength','Strength','Build strength'],['fitness','Fitness','Improve fitness'],['mobility','Mobility','Move better'],['sports','Sports','Athletic performance']] as const).map(([v,l,n]) => <button key={v} type="button" onClick={() => setGoal(v)} className={optionClass(goal === v)}><b>{l}</b><p className="mt-1 text-[11px] text-ink-500">{n}</p></button>)}</div></div>
-        <div><p className="mb-2 text-sm text-ink-300">Equipment</p><div className="grid grid-cols-3 gap-2">{([['bodyweight','Bodyweight','No equipment'],['home','Home','Basic equipment'],['gym','Gym','Full gym']] as const).map(([v,l,n]) => <button key={v} type="button" onClick={() => setEquipment(v)} className={optionClass(equipment === v)}><b>{l}</b><p className="mt-1 text-[11px] text-ink-500">{n}</p></button>)}</div></div>
-        <label className="text-sm text-ink-300">Training days: <b className="text-white">{days}</b><input type="range" min="1" max="6" value={days} onChange={e => setDays(+e.target.value)} className="mt-2 w-full accent-orange-500"/></label>
-        <label className="text-sm text-ink-300">Session: <b className="text-white">{minutes} min</b><input type="range" min="25" max="90" step="5" value={minutes} onChange={e => setMinutes(+e.target.value)} className="mt-2 w-full accent-orange-500"/></label>
-      </div>
-      <button disabled={!gender} onClick={() => { setGenerated(true); setActiveDay(0); setPlayerIndex(0); }} className="btn-primary mt-5 w-full justify-center disabled:opacity-50 sm:w-auto"><Sparkles size={17}/> Generate 12-week program <ArrowRight size={17}/></button>
-    </section>
-
-    {generated && <>
-      <section className="card p-4 sm:p-6"><div className="flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2"><Flame className="text-ember-400" size={20}/><h2 className="font-display text-lg font-bold">{mode === 'basketball' ? 'Basketball Legend' : 'Shadow AI'} — 12 Weeks</h2></div><p className="mt-1 text-xs text-ink-400">{phase.name}: {phase.focus}</p></div><button onClick={transferToWorkout} className="btn-primary"><ArrowRight size={16}/> Add Week {week} to Workout</button></div><div className="mt-5 grid grid-cols-4 gap-2 sm:grid-cols-12">{Array.from({length:12},(_,i)=>i+1).map(w=><button key={w} onClick={()=>{setWeek(w);setActiveDay(0);setPlayerIndex(0)}} className={`rounded-lg border py-2 text-xs font-bold ${week===w ? 'border-ember-500/50 bg-ember-500/10 text-ember-300' : 'border-white/5 text-ink-400'}`}>W{w}</button>)}</div></section>
-
-      <section className="grid gap-4 md:grid-cols-3">
-        <div className="card p-4"><div className="flex items-center gap-2 text-ember-400"><Target size={18}/><span className="text-xs">Week Progress</span></div><div className="mt-2 text-2xl font-display font-bold">{completion}%</div><div className="mt-2 h-2 overflow-hidden rounded-full bg-white/5"><div className="h-full rounded-full bg-ember-500 transition-all" style={{width:`${completion}%`}}/></div></div>
-        <div className="card p-4"><div className="flex items-center gap-2 text-ember-400"><Dumbbell size={18}/><span className="text-xs">Exercises</span></div><div className="mt-2 text-2xl font-display font-bold">{completedCount}/{totalCount}</div><p className="mt-1 text-xs text-ink-500">Completed this week</p></div>
-        <div className="card p-4"><div className="flex items-center gap-2 text-amber-400"><BarChart3 size={18}/><span className="text-xs">Sessions</span></div><div className="mt-2 text-2xl font-display font-bold">{history.length}</div><p className="mt-1 text-xs text-ink-500">Saved workout events</p></div>
-      </section>
-
-      <section className="card p-4 sm:p-6"><div className="mb-4 flex items-center justify-between"><div><h2 className="font-display text-lg font-bold">Week {week} · {phase.name}</h2><p className="text-xs text-ink-500">{gender === 'male' ? 'Male' : 'Female'} · {difficultyMeta[safeDifficulty].label} · Level {difficultyMeta[safeDifficulty].volume} · {days} training days · {sets} sets</p></div><span className="chip"><Clock3 size={13}/> {minutes} min</span></div>
-        <div className="mb-4 flex gap-2 overflow-x-auto pb-1">{schedule.map((d,i)=><button key={d.day} onClick={()=>{setActiveDay(i);setPlayerIndex(0);setSetNumber(1)}} className={`shrink-0 rounded-xl border px-4 py-2 text-xs font-bold ${activeDay===i?'border-ember-500/50 bg-ember-500/10 text-ember-300':'border-white/5 text-ink-400'}`}>Day {d.day}<span className="ml-2 text-ink-500">{d.title}</span></button>)}</div>
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">{schedule.map(day=><div key={day.day} className="rounded-xl border border-white/5 bg-black/20 p-4"><div className="mb-3 flex items-center justify-between"><b>Day {day.day}</b><span className="text-xs text-ember-400">{day.title}</span></div><div className="space-y-2">{day.items.map(e=>{const key=`${week}-${day.day}-${e.name}`; return <button key={e.name} onClick={()=>{setActiveDay(day.day-1);setPlayerIndex(day.items.findIndex(x=>x.name===e.name));setSetNumber(1);setActiveExercise(e)}} className={`w-full rounded-lg border p-3 text-left transition ${done[key] ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/5 bg-ink-950/30 hover:border-ember-500/30'}`}><div className="flex items-start gap-2"><span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${done[key] ? 'border-emerald-400 text-emerald-400' : 'border-white/15'}`}>{done[key] && <Check size={13}/>}</span><span><b className="text-sm">{e.name}</b><span className="mt-0.5 block text-[11px] text-ink-500">{e.target} · {sets} × {e.reps} · {e.rest}s rest</span></span></div></button>})}</div></div>)}</div>
-      </section>
-
-      <section className="card border-ember-500/20 bg-gradient-to-br from-ember-500/[0.08] to-transparent p-4 sm:p-6"><div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2"><Play className="text-ember-400" size={19}/><h2 className="font-display text-lg font-bold">Workout Player</h2></div><p className="mt-1 text-xs text-ink-400">{currentDay?.title} · Exercise {playerIndex + 1} of {currentDay?.items.length || 0}</p></div>{playerExercise && <button onClick={()=>setActiveExercise(playerExercise)} className="btn-ghost"><Info size={16}/> Exercise details</button>}</div>
-        {playerExercise ? <div className="grid gap-4 lg:grid-cols-[1fr_auto]"><div className="rounded-2xl border border-white/5 bg-black/30 p-5"><div className="flex items-center justify-between gap-3"><div><span className="chip">{playerExercise.group}</span><h3 className="mt-2 font-display text-2xl font-bold">{playerExercise.name}</h3><p className="mt-1 text-sm text-ink-400">{playerExercise.target}</p></div><div className="text-right"><div className="text-xs text-ink-500">SET</div><div className="text-3xl font-display font-bold">{setNumber}<span className="text-lg text-ink-500">/{sets}</span></div></div></div><div className="mt-5 grid grid-cols-3 gap-2"><div className="rounded-xl border border-white/5 p-3"><span className="text-[10px] text-ink-500">REPS</span><b className="mt-1 block text-sm">{playerExercise.reps}</b></div><div className="rounded-xl border border-white/5 p-3"><span className="text-[10px] text-ink-500">REST</span><b className="mt-1 block text-sm">{playerExercise.rest}s</b></div><div className="rounded-xl border border-white/5 p-3"><span className="text-[10px] text-ink-500">FOCUS</span><b className="mt-1 block text-sm">Form</b></div></div><div className="mt-5 flex flex-wrap gap-2"><button onClick={completeSet} className="btn-primary flex-1 justify-center"><Check size={17}/> Complete Set</button><button onClick={nextExercise} className="btn-ghost">Next <ChevronRight size={16}/></button></div></div><div className="min-w-[180px] rounded-2xl border border-white/5 bg-black/30 p-5 text-center"><Clock3 className="mx-auto text-ember-400" size={24}/><div className="mt-2 font-display text-4xl font-bold tabular-nums">{Math.floor(timer/60)}:{String(timer%60).padStart(2,'0')}</div><div className="mt-3 flex justify-center gap-2"><button onClick={()=>setTimerRunning(v=>!v)} className="btn-ghost px-3">{timerRunning?<Pause size={15}/>:<Play size={15}/>}</button><button onClick={()=>{setTimer(playerExercise.rest);setTimerRunning(true)}} className="btn-ghost px-3"><RotateCcw size={15}/></button></div><p className="mt-3 text-[11px] text-ink-500">Rest timer</p></div></div> : <p className="text-sm text-ink-400">Generate a plan to start your workout.</p>}
-      </section>
-
-      <section className="card p-4 sm:p-6"><div className="mb-4 flex items-center gap-2"><Dumbbell className="text-ember-400" size={19}/><h2 className="font-display text-lg font-bold">Exercise Library</h2><span className="chip ml-auto">{exercises.length} exercises</span></div><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{exercises.filter(e=>e.equipment.includes(equipment)).map(e=><button key={e.name} onClick={()=>setActiveExercise(e)} className="rounded-xl border border-white/5 bg-black/20 p-3 text-left hover:border-ember-500/30"><div className="flex items-start justify-between gap-2"><b className="text-sm">{e.name}</b><ChevronRight size={15} className="shrink-0 text-ink-500"/></div><p className="mt-1 text-[11px] text-ink-500">{e.target} · {e.group}</p></button>)}</div></section>
-
-      {mode === 'basketball' && <section className="card border-amber-400/10 bg-amber-400/[0.03] p-4 sm:p-6"><div className="mb-4 flex items-center gap-2"><Trophy className="text-amber-400" size={20}/><h2 className="font-display text-lg font-bold">Basketball Legend specialization</h2></div><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{[['Jump & landing','Pogo hops, snap-downs and controlled jumps with landing mechanics.'],['Agility','Lateral movement, balance and change-of-direction foundations.'],['Fitness','Progressive conditioning for repeated effort on court.'],['Mobility','Ankles, hips and full-body movement quality.']].map(([title,text])=><div key={title} className="rounded-xl border border-white/5 p-4"><b>{title}</b><p className="mt-1 text-xs text-ink-400">{text}</p></div>)}</div></section>}
-
-      <section className="card p-4 sm:p-6"><div className="flex items-center gap-2 mb-4"><Apple className="text-emerald-400" size={19}/><h2 className="font-display text-lg font-bold">Nutrition & recovery</h2></div><div className="grid gap-3 md:grid-cols-3"><div className="rounded-xl border border-white/5 p-4"><b>Balanced meals</b><p className="mt-1 text-xs text-ink-400">Regular meals with varied protein foods, grains or starches, fruit or vegetables and healthy fats.</p></div><div className="rounded-xl border border-white/5 p-4"><b>Hydration</b><p className="mt-1 text-xs text-ink-400">Drink regularly and pay extra attention to fluids around exercise and heat.</p></div><div className="rounded-xl border border-white/5 p-4"><b>Recovery</b><p className="mt-1 text-xs text-ink-400">Sleep, rest days and enough food support training, growth and performance.</p></div></div></section>
-
-      <section className="card p-4 sm:p-6"><div className="flex items-center gap-2 mb-4"><BarChart3 className="text-ember-400" size={19}/><h2 className="font-display text-lg font-bold">Workout History</h2></div>{history.length ? <div className="space-y-2">{history.slice(0,8).map((h,i)=><div key={`${h}-${i}`} className="flex items-center gap-3 rounded-xl border border-white/5 p-3"><Check className="text-emerald-400" size={16}/><span className="text-sm">{h}</span></div>)}</div> : <p className="text-sm text-ink-500">Complete sets in the Workout Player and your activity will appear here.</p>}</section>
-
-      <section className="card border-amber-500/10 bg-amber-500/[0.03] p-4"><div className="flex gap-3"><ShieldCheck className="shrink-0 text-amber-400" size={19}/><p className="text-xs leading-5 text-ink-300">Shadow AI is a training planner, not a medical service. Progress gradually and keep technique first. If an exercise causes pain, stop and seek guidance from a parent or guardian or a qualified professional. For minors, the system avoids extreme dieting and focuses on health, movement and performance.</p></div></section>
-      <div className="flex justify-end"><button onClick={reset} className="btn-ghost"><RotateCcw size={16}/> Start over</button></div>
+    {plan&&<>
+      <section className="card p-4 sm:p-6"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-display text-xl font-bold">Your 6-Day Blueprint</h2><p className="text-xs text-ink-400 mt-1">{level} · {goal} · {equipment} · generated by Shadow AI</p></div><button onClick={apply} className="btn-primary"><Check size={16}/> Apply to Workout</button></div></section>
+      <div className="grid gap-4 md:grid-cols-2">{plan.map((day,i)=><section key={day.id} className="card p-4"><div className="flex items-center justify-between gap-2 mb-3"><div><span className="text-xs text-ember-400">DAY {i+1}</span><h3 className="font-display text-lg font-bold">{day.emoji} {day.name}</h3></div><div className="flex gap-1"><button onClick={()=>setLocked(p=>({...p,[day.id]:!p[day.id]}))} className="btn-ghost px-2 py-2" title="Lock day">{locked[day.id]?<Check size={15}/>:<Dumbbell size={15}/>}</button><button onClick={()=>regenerateDay(i)} className="btn-ghost px-2 py-2" title="Regenerate day"><RefreshCw size={15}/></button></div></div><div className="space-y-2">{day.exercises.map(e=><div key={e.id} className="flex items-center gap-2 rounded-lg border border-white/5 bg-black/20 p-2.5"><span className="h-2 w-2 rounded-full bg-ember-500"/><div className="min-w-0 flex-1"><b className="text-sm">{e.name}</b><p className="text-[11px] text-ink-500 capitalize">{e.section} · {e.sets} sets × {e.reps}</p></div></div>)}</div></section>)}</div>
+      <section className="card p-4"><div className="flex items-center gap-2 mb-2"><Flame size={18} className="text-ember-400"/><h3 className="font-display font-bold">How Shadow AI built it</h3></div><p className="text-sm text-ink-400">The builder distributes movement patterns across the week, adds mobility every day, uses plyometrics when your goal benefits from power, and scales sets with experience. Locked days stay protected when you regenerate.</p></section>
     </>}
-
-    {activeExercise && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={()=>setActiveExercise(null)}><div className="w-full max-w-lg rounded-2xl border border-white/10 bg-ink-950 p-5 shadow-2xl" onClick={e=>e.stopPropagation()}><div className="flex items-start justify-between gap-3"><div><span className="chip">{activeExercise.group}</span><h2 className="mt-2 font-display text-xl font-bold">{activeExercise.name}</h2><p className="mt-1 text-xs text-ink-500">{activeExercise.target}</p></div><button onClick={()=>setActiveExercise(null)} className="btn-ghost px-2"><X size={17}/></button></div><div className="mt-5 rounded-xl border border-white/5 bg-black/20 p-4"><b className="text-sm">How to perform</b><p className="mt-2 text-sm leading-6 text-ink-300">{activeExercise.how}</p></div><div className="mt-3 rounded-xl border border-ember-500/10 bg-ember-500/[0.04] p-4"><b className="text-sm text-ember-300">Form cue</b><p className="mt-1 text-sm text-ink-300">{activeExercise.cue}</p></div><button onClick={()=>{setActiveExercise(null); const idx=currentDay?.items.findIndex(e=>e.name===activeExercise.name) ?? -1; if(idx>=0)setPlayerIndex(idx)}} className="btn-primary mt-4 w-full justify-center">Use in Workout</button></div></div>}
   </div>;
 }

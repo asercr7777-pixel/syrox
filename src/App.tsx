@@ -10,49 +10,19 @@ import { useStore } from './store/useStore';
 import { syncSoundFlag } from './lib/sound';
 import { usePWA } from './hooks/usePWA';
 import { InstallButton } from './components/pwa/InstallButton';
-import { ThemeOnboarding } from './components/ThemeOnboarding';
-import { Loader2 } from 'lucide-react';
+import ThemePicker from './components/ThemePicker';
+import { Loader2, Palette, Download } from 'lucide-react';
 import './performance.css'; import './theme.css'; import './theme-overrides.css'; import './mobile.css'; import './community-scroll.css';
-
-const Dashboard = lazy(() => import('./views/Dashboard').then((m) => ({ default: m.Dashboard })));
-const Tasks = lazy(() => import('./views/Tasks').then((m) => ({ default: m.Tasks })));
-const StoryMode = lazy(() => import('./views/StoryMode').then((m) => ({ default: m.default })));
-const SkillTree = lazy(() => import('./views/SkillTree').then((m) => ({ default: m.SkillTree })));
-const WorkoutWithAIPlan = lazy(() => import('./components/WorkoutWithAIPlan').then((m) => ({ default: m.WorkoutWithAIPlan })));
-const AIWorkoutBuilder = lazy(() => import('./components/AIWorkoutBuilder').then((m) => ({ default: m.AIWorkoutBuilder })));
-const Dungeons = lazy(() => import('./views/Dungeons').then((m) => ({ default: m.Dungeons })));
-const Profile = lazy(() => import('./views/Profile').then((m) => ({ default: m.Profile })));
-const Marketplace = lazy(() => import('./views/Marketplace').then((m) => ({ default: m.Marketplace })));
-const Inventory = lazy(() => import('./views/Inventory').then((m) => ({ default: m.Inventory })));
-const Achievements = lazy(() => import('./views/Achievements').then((m) => ({ default: m.Achievements })));
-const Leaderboard = lazy(() => import('./views/Leaderboard').then((m) => ({ default: m.Leaderboard })));
-const Community = lazy(() => import('./views/Community').then((m) => ({ default: m.Community })));
-const Settings = lazy(() => import('./views/Settings').then((m) => ({ default: m.Settings })));
-const ItemInspection = lazy(() => import('./views/ItemInspection').then((m) => ({ default: m.ItemInspection })));
-const Auth = lazy(() => import('./views/Auth').then((m) => ({ default: m.Auth })));
-
-const VALID_VIEWS = new Set<ViewId>(['dashboard', 'tasks', 'story', 'workout', 'shadowai', 'dungeons', 'profile', 'marketplace', 'inventory', 'achievements', 'leaderboard', 'community', 'skilltree', 'settings', 'iteminspection']);
-function getViewFromUrl(): ViewId { if (typeof window === 'undefined') return 'dashboard'; const requested = new URLSearchParams(window.location.search).get('view'); if (requested === 'worldmap') return 'story'; return requested && VALID_VIEWS.has(requested as ViewId) ? requested as ViewId : 'dashboard'; }
-function PageLoader() { return <div className="flex min-h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-[rgb(var(--accent-400))]" size={32} /></div>; }
-function AppContent() {
-  const { user, loading } = useAuth();
-  const { state, loadFromCloud, setUserId, cloudLoaded } = useStore();
-  const [view, setView] = useState<ViewId>(getViewFromUrl);
-  const [themeOverride, setThemeOverride] = useState<SiteTheme | null>(() => { try { const t = localStorage.getItem('stryven-selected-theme'); return t && ['shadow','ember','frost','ocean','emerald','crimson','royal','gold'].includes(t) ? t as SiteTheme : null; } catch { return null; } });
-  const [showThemeOnboarding, setShowThemeOnboarding] = useState(false);
-  const { isInstalled, isInstallable, promptInstall } = usePWA();
-  useEffect(() => { syncSoundFlag(state.soundEnabled); }, [state.soundEnabled]);
-  useEffect(() => { if (user) void loadFromCloud(user.id); else setUserId(null); }, [user, setUserId, loadFromCloud]);
-  useEffect(() => { if (user && !localStorage.getItem('stryven-theme-selected')) setShowThemeOnboarding(true); }, [user]);
-  useEffect(() => { const onPopState = () => setView(getViewFromUrl()); window.addEventListener('popstate', onPopState); return () => window.removeEventListener('popstate', onPopState); }, []);
-  const handleNavigate = (v: ViewId) => { if (v === 'iteminspection') return; const target = v === 'worldmap' ? 'story' : v; setView(target); const url = new URL(window.location.href); url.searchParams.set('view', target); if (target === 'story') url.searchParams.delete('chapter'); window.history.replaceState({}, '', url); };
-  const chooseTheme = (theme: SiteTheme) => { localStorage.setItem('stryven-selected-theme', theme); setThemeOverride(theme); setShowThemeOnboarding(false); };
-  if (loading || (user && !cloudLoaded)) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-[rgb(var(--accent-400))]" size={40} /></div>;
-  if (!user) return <><Background /><Suspense fallback={<PageLoader />}><Auth /></Suspense></>;
-  const activeTheme = themeOverride ?? state.theme;
-  return <div className="min-h-screen" data-theme={activeTheme} style={{ backgroundColor: 'rgb(var(--site-bg))' }}><Background /><Navigation current={view} onNavigate={handleNavigate} /><ToastContainer /><Confetti /><InstallButton isInstallable={isInstallable} isInstalled={isInstalled} onInstall={promptInstall} /><main className="lg:ml-64 pt-16 lg:pt-6 px-3 sm:px-4 pb-24 lg:pb-8 max-w-6xl mx-auto overflow-x-hidden"><Suspense fallback={<PageLoader />}>
-    {view === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}{view === 'tasks' && <Tasks />}{view === 'story' && <StoryMode />}{view === 'skilltree' && <SkillTree />}{view === 'workout' && <WorkoutWithAIPlan />}{view === 'shadowai' && <AIWorkoutBuilder />}{view === 'dungeons' && <Dungeons />}{view === 'profile' && <Profile />}{view === 'marketplace' && <Marketplace />}{view === 'inventory' && <Inventory />}{view === 'achievements' && <Achievements />}{view === 'leaderboard' && <Leaderboard />}{view === 'community' && <Community />}{view === 'settings' && <Settings />}{view === 'iteminspection' && <ItemInspection itemId="" category="weapon" onBack={() => handleNavigate('inventory')} />}
-  </Suspense></main>{showThemeOnboarding && <ThemeOnboarding onChoose={chooseTheme} />}</div>;
+const Dashboard=lazy(()=>import('./views/Dashboard').then(m=>({default:m.Dashboard}))); const Tasks=lazy(()=>import('./views/Tasks').then(m=>({default:m.Tasks}))); const StoryMode=lazy(()=>import('./views/StoryMode').then(m=>({default:m.default}))); const SkillTree=lazy(()=>import('./views/SkillTree').then(m=>({default:m.SkillTree}))); const WorkoutWithAIPlan=lazy(()=>import('./components/WorkoutWithAIPlan').then(m=>({default:m.WorkoutWithAIPlan}))); const AIWorkoutBuilder=lazy(()=>import('./components/AIWorkoutBuilder').then(m=>({default:m.AIWorkoutBuilder}))); const Dungeons=lazy(()=>import('./views/Dungeons').then(m=>({default:m.Dungeons}))); const Profile=lazy(()=>import('./views/Profile').then(m=>({default:m.Profile}))); const Marketplace=lazy(()=>import('./views/Marketplace').then(m=>({default:m.Marketplace}))); const Inventory=lazy(()=>import('./views/Inventory').then(m=>({default:m.Inventory}))); const Achievements=lazy(()=>import('./views/Achievements').then(m=>({default:m.Achievements}))); const Leaderboard=lazy(()=>import('./views/Leaderboard').then(m=>({default:m.Leaderboard}))); const Community=lazy(()=>import('./views/Community').then(m=>({default:m.Community}))); const Settings=lazy(()=>import('./views/Settings').then(m=>({default:m.Settings}))); const ItemInspection=lazy(()=>import('./views/ItemInspection').then(m=>({default:m.ItemInspection}))); const Auth=lazy(()=>import('./views/Auth').then(m=>({default:m.Auth})));
+const VALID_VIEWS=new Set<ViewId>(['dashboard','tasks','story','workout','shadowai','dungeons','profile','marketplace','inventory','achievements','leaderboard','community','skilltree','settings','iteminspection']);
+function getViewFromUrl():ViewId{if(typeof window==='undefined')return'dashboard';const requested=new URLSearchParams(window.location.search).get('view');if(requested==='worldmap')return'story';return requested&&VALID_VIEWS.has(requested as ViewId)?requested as ViewId:'dashboard'}
+function PageLoader(){return <div className="flex min-h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-[rgb(var(--accent-400))]" size={32}/></div>}
+function AppContent(){
+ const {user,loading}=useAuth(); const {state,loadFromCloud,setUserId,cloudLoaded}=useStore(); const [view,setView]=useState<ViewId>(getViewFromUrl); const [theme,setTheme]=useState<SiteTheme>(()=>{try{const t=localStorage.getItem('stryven-selected-theme');return t&&['shadow','ember','frost','ocean','emerald','crimson','royal','gold'].includes(t)?t as SiteTheme:'shadow'}catch{return'shadow'}}); const [showThemes,setShowThemes]=useState(false); const {isInstalled,isInstallable,promptInstall}=usePWA();
+ useEffect(()=>{syncSoundFlag(state.soundEnabled)},[state.soundEnabled]); useEffect(()=>{if(user)void loadFromCloud(user.id);else setUserId(null)},[user,setUserId,loadFromCloud]); useEffect(()=>{const onPopState=()=>setView(getViewFromUrl());window.addEventListener('popstate',onPopState);return()=>window.removeEventListener('popstate',onPopState)},[]);
+ const handleNavigate=(v:ViewId)=>{if(v==='iteminspection')return;const target=v==='worldmap'?'story':v;setView(target);const url=new URL(window.location.href);url.searchParams.set('view',target);if(target==='story')url.searchParams.delete('chapter');window.history.replaceState({},'',url)};
+ const chooseTheme=(t:SiteTheme)=>{setTheme(t);try{localStorage.setItem('stryven-selected-theme',t)}catch{}};
+ if(loading||(user&&!cloudLoaded))return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-[rgb(var(--accent-400))]" size={40}/></div>; if(!user)return <><Background/><Suspense fallback={<PageLoader/>}><Auth/></Suspense></>;
+ return <div className="min-h-screen" data-theme={theme} style={{backgroundColor:'rgb(var(--site-bg))'}}><Background/><Navigation current={view} onNavigate={handleNavigate}/><ToastContainer/><Confetti/><main className="lg:ml-64 pt-16 lg:pt-6 px-3 sm:px-4 pb-24 lg:pb-8 max-w-6xl mx-auto overflow-x-hidden"><div className="flex justify-end gap-2 mb-4"><button className="btn-ghost border border-white/10 px-3 py-2" onClick={()=>setShowThemes(true)}><Palette size={16}/><span>Themes</span></button><InstallButton isInstallable={isInstallable} isInstalled={isInstalled} onInstall={promptInstall}><Download size={16}/><span>Install</span></InstallButton></div><Suspense fallback={<PageLoader/>}>{view==='dashboard'&&<Dashboard onNavigate={handleNavigate}/>} {view==='tasks'&&<Tasks/>}{view==='story'&&<StoryMode/>}{view==='skilltree'&&<SkillTree/>}{view==='workout'&&<WorkoutWithAIPlan/>}{view==='shadowai'&&<AIWorkoutBuilder/>}{view==='dungeons'&&<Dungeons/>}{view==='profile'&&<Profile/>}{view==='marketplace'&&<Marketplace/>}{view==='inventory'&&<Inventory/>}{view==='achievements'&&<Achievements/>}{view==='leaderboard'&&<Leaderboard/>}{view==='community'&&<Community/>}{view==='settings'&&<Settings/>}{view==='iteminspection'&&<ItemInspection itemId="" category="weapon" onBack={()=>handleNavigate('inventory')}/>}</Suspense></main>{showThemes&&<ThemePicker value={theme} onChange={chooseTheme} onClose={()=>setShowThemes(false)}/>}</div>
 }
-function App() { return <ErrorBoundary><AuthProvider><AppContent /></AuthProvider></ErrorBoundary>; }
-export default App;
+function App(){return <ErrorBoundary><AuthProvider><AppContent/></AuthProvider></ErrorBoundary>} export default App;

@@ -20,5 +20,10 @@ export function Background() {
     if (state.backgroundType === 'animated' && state.selectedBackgroundId) { const bg = BACKGROUNDS.find((item) => item.id === state.selectedBackgroundId); if (bg) return <div className="fixed inset-0" style={{ background: bg.css, filter: `brightness(${brightness}) ${blurFilter}`, transform, zIndex: -20 }} />; }
     return null;
   };
-  return <><div className="fixed inset-0 bg-[#07080b]" style={{ zIndex: -30 }} />{renderBackgroundLayer()}<div className="fixed inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 75% 55% at 42% 8%, rgba(245,158,11,0.08), transparent 62%), linear-gradient(115deg, rgba(255,255,255,0.012), transparent 42%, rgba(0,0,0,0.16))', zIndex: -15 }} />{state.backgroundDarken > 0 && <div className="fixed inset-0 pointer-events-none" style={{ backgroundColor: `rgba(5, 6, 10, ${state.backgroundDarken / 100})`, zIndex: -11 }} />}</>;
+  return <>
+    <div className="fixed inset-0" style={{ background: 'rgb(var(--site-bg))', zIndex: -30 }} />
+    {renderBackgroundLayer()}
+    <div className="fixed inset-0 pointer-events-none" style={{ background: 'var(--theme-background-overlay)', zIndex: -15 }} />
+    {state.backgroundDarken > 0 && <div className="fixed inset-0 pointer-events-none" style={{ backgroundColor: `rgb(var(--site-bg) / ${state.backgroundDarken / 100})`, zIndex: -11 }} />}
+  </>;
 }

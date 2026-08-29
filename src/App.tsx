@@ -4,6 +4,7 @@ import { Background } from './components/Background';
 import { ToastContainer } from './components/ui/Toast';
 import { Confetti } from './components/ui/Confetti';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
+import { ThemePicker } from './components/ThemePicker';
 import { AuthProvider, useAuth } from './lib/auth';
 import { useStore } from './store/useStore';
 import { syncSoundFlag } from './lib/sound';
@@ -40,7 +41,7 @@ function AppContent() {
   const handleNavigate = (v: ViewId) => { if (v === 'iteminspection') return; const target = v === 'worldmap' ? 'story' : v; setView(target); const url = new URL(window.location.href); url.searchParams.set('view', target); if (target === 'story') url.searchParams.delete('chapter'); window.history.replaceState({}, '', url); };
   if (loading || (user && !cloudLoaded)) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-[rgb(var(--accent-400))]" size={40} /></div>;
   if (!user) return <><Background /><Suspense fallback={<PageLoader />}><Auth /></Suspense></>;
-  return <div className="min-h-screen" data-theme={state.theme} style={{ backgroundColor: 'rgb(var(--site-bg))' }}><Background /><Navigation current={view} onNavigate={handleNavigate} /><ToastContainer /><Confetti /><InstallButton isInstallable={isInstallable} isInstalled={isInstalled} onInstall={promptInstall} /><main className="lg:ml-64 pt-16 lg:pt-6 px-3 sm:px-4 pb-24 lg:pb-8 max-w-6xl mx-auto overflow-x-hidden"><Suspense fallback={<PageLoader />}>
+  return <div className="min-h-screen" data-theme={state.theme} style={{ backgroundColor: 'rgb(var(--site-bg))' }}><Background /><Navigation current={view} onNavigate={handleNavigate} /><ToastContainer /><Confetti /><ThemePicker /><InstallButton isInstallable={isInstallable} isInstalled={isInstalled} onInstall={promptInstall} /><main className="lg:ml-64 pt-16 lg:pt-6 px-3 sm:px-4 pb-24 lg:pb-8 max-w-6xl mx-auto overflow-x-hidden"><Suspense fallback={<PageLoader />}>
     {view === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}{view === 'tasks' && <Tasks />}{view === 'story' && <StoryMode />}{view === 'skilltree' && <SkillTree />}{view === 'workout' && <WorkoutWithAIPlan />}{view === 'shadowai' && <ShadowAI />}{view === 'dungeons' && <Dungeons />}{view === 'profile' && <Profile />}{view === 'marketplace' && <Marketplace />}{view === 'inventory' && <Inventory />}{view === 'achievements' && <Achievements />}{view === 'leaderboard' && <Leaderboard />}{view === 'community' && <Community />}{view === 'settings' && <Settings />}{view === 'iteminspection' && <ItemInspection itemId="" category="weapon" onBack={() => handleNavigate('inventory')} />}
   </Suspense></main></div>;
 }

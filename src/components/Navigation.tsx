@@ -1,4 +1,4 @@
-import { LayoutDashboard, CheckSquare, BookOpen, Dumbbell, User, Store, Backpack, Trophy, Users, Settings, Menu, X, LogOut, MessageCircle, Swords, Brain } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, BookOpen, Dumbbell, User, Store, Users, Settings, Menu, X, LogOut, MessageCircle, Swords, Brain } from 'lucide-react';
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { playSound } from '../lib/sound';
@@ -10,14 +10,12 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard }, { id: 'tasks', label: 'Tasks', icon: CheckSquare },
   { id: 'story', label: 'Story Mode', icon: BookOpen }, { id: 'workout', label: 'Workout', icon: Dumbbell },
   { id: 'shadowai', label: 'Shadow AI', icon: Brain }, { id: 'dungeons', label: 'Dungeons', icon: Swords }, { id: 'profile', label: 'Hunter Profile', icon: User },
-  { id: 'marketplace', label: 'Marketplace', icon: Store }, { id: 'inventory', label: 'Inventory', icon: Backpack },
-  { id: 'achievements', label: 'Achievements', icon: Trophy }, { id: 'leaderboard', label: 'Leaderboard', icon: Users },
+  { id: 'marketplace', label: 'Marketplace', icon: Store }, { id: 'leaderboard', label: 'Leaderboard', icon: Users },
   { id: 'community', label: 'Community', icon: MessageCircle }, { id: 'settings', label: 'Settings', icon: Settings },
 ];
 interface NavigationProps { current: ViewId; onNavigate: (v: ViewId) => void; }
 export function Navigation({ current, onNavigate }: NavigationProps) {
-  const { state } = useStore(); const { signOut } = useAuth();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  useStore(); const { signOut } = useAuth(); const [mobileOpen, setMobileOpen] = useState(false);
   const handleNav = (v: ViewId) => { playSound('click'); onNavigate(v); setMobileOpen(false); };
   const handleSignOut = async () => { playSound('click'); await signOut(); };
   const brand = <div className="select-none font-black text-white tracking-[0.30em] leading-none text-[1.15rem] sm:text-[1.25rem]">STRYVEN</div>;

@@ -1,87 +1,93 @@
 import { useMemo, useState } from 'react';
-import { ArrowRight, Brain, Check, Dumbbell, Send, Sparkles, Target, User, Wand2 } from 'lucide-react';
+import { ArrowRight, Brain, Check, ChevronDown, ChevronRight, Dumbbell, RefreshCw, Send, Sparkles, Target, User, Wand2, X } from 'lucide-react';
 
 type Goal='strength'|'fitness'|'mobility'|'sports';
 type Equipment='bodyweight'|'home'|'gym';
 type Difficulty='beginner'|'intermediate'|'advanced';
 type Group='push'|'pull'|'legs'|'core'|'plyometric'|'mobility'|'conditioning';
-type Exercise={name:string;group:Group;target:string;reps:string;rest:number;equipment:Equipment[]};
-type Day={title:string;items:Exercise[]};
+type Pattern='horizontal-push'|'vertical-push'|'horizontal-pull'|'vertical-pull'|'squat'|'single-leg'|'hinge'|'hip-extension'|'calf'|'anti-extension'|'anti-lateral'|'jump'|'landing'|'lateral-jump'|'agility'|'conditioning'|'mobility'|'ankle';
+type Exercise={name:string;group:Group;target:string;reps:string;rest:number;equipment:Equipment[];pattern:Pattern;impact:'low'|'medium'|'high'};
+type Day={title:string;focus:string;items:Exercise[]};
 type Message={role:'user'|'ai';text:string};
+type Settings={days:number;equipment:Equipment;goal:Goal;difficulty:Difficulty;minutes:number};
 
 const DB:Exercise[]=[
-{name:'Push-up',group:'push',target:'Chest + triceps',reps:'3 × 8–15',rest:75,equipment:['bodyweight','home','gym']},
-{name:'Pike Push-up',group:'push',target:'Shoulders + triceps',reps:'3 × 5–12',rest:90,equipment:['bodyweight','home','gym']},
-{name:'Close-grip Push-up',group:'push',target:'Triceps + chest',reps:'2–3 × 6–12',rest:75,equipment:['bodyweight','home','gym']},
-{name:'Backpack Floor Press',group:'push',target:'Chest + triceps',reps:'3 × 8–15',rest:90,equipment:['home']},
-{name:'Backpack Row',group:'pull',target:'Back + biceps',reps:'3 × 8–15',rest:75,equipment:['home']},
-{name:'Band Row',group:'pull',target:'Upper back',reps:'3 × 10–15',rest:75,equipment:['home']},
-{name:'Assisted Pull-up',group:'pull',target:'Lats + arms',reps:'3 × 5–10',rest:105,equipment:['gym']},
-{name:'Lat Pulldown',group:'pull',target:'Lats',reps:'3 × 8–12',rest:90,equipment:['gym']},
-{name:'Bodyweight Squat',group:'legs',target:'Quads + glutes',reps:'3 × 8–20',rest:75,equipment:['bodyweight','home','gym']},
-{name:'Reverse Lunge',group:'legs',target:'Quads + glutes',reps:'3 × 6–12/side',rest:75,equipment:['bodyweight','home','gym']},
-{name:'Split Squat',group:'legs',target:'Quads + glutes',reps:'3 × 6–12/side',rest:90,equipment:['bodyweight','home','gym']},
-{name:'Glute Bridge',group:'legs',target:'Glutes + hips',reps:'3 × 10–20',rest:60,equipment:['bodyweight','home','gym']},
-{name:'Calf Raise',group:'legs',target:'Calves',reps:'3 × 10–20',rest:50,equipment:['bodyweight','home','gym']},
-{name:'Hip Hinge',group:'legs',target:'Posterior chain',reps:'3 × 8–15',rest:75,equipment:['bodyweight','home','gym']},
-{name:'Dead Bug',group:'core',target:'Core control',reps:'3 × 6–12/side',rest:50,equipment:['bodyweight','home','gym']},
-{name:'Front Plank',group:'core',target:'Core',reps:'3 × 20–60s',rest:50,equipment:['bodyweight','home','gym']},
-{name:'Side Plank',group:'core',target:'Lateral stability',reps:'2–3 × 15–45s/side',rest:50,equipment:['bodyweight','home','gym']},
-{name:'Pogo Hops',group:'plyometric',target:'Elasticity + landing',reps:'3 × 10–20s',rest:75,equipment:['bodyweight','home','gym']},
-{name:'Snap-down',group:'plyometric',target:'Landing mechanics',reps:'3 × 4–6',rest:75,equipment:['bodyweight','home','gym']},
-{name:'Squat Jump',group:'plyometric',target:'Vertical power',reps:'3 × 4–8',rest:105,equipment:['bodyweight','home','gym']},
-{name:'Lateral Bound',group:'plyometric',target:'Lateral power',reps:'3 × 4–8/side',rest:105,equipment:['bodyweight','home','gym']},
-{name:'Mountain Climber',group:'conditioning',target:'Conditioning + core',reps:'3 × 20–45s',rest:50,equipment:['bodyweight','home','gym']},
-{name:'Jumping Jack',group:'conditioning',target:'Conditioning',reps:'3 × 30–60s',rest:45,equipment:['bodyweight','home','gym']},
-{name:'Mobility Flow',group:'mobility',target:'Full-body mobility',reps:'6–10 min',rest:30,equipment:['bodyweight','home','gym']},
-{name:'World’s Greatest Stretch',group:'mobility',target:'Hips + T-spine',reps:'3–5/side',rest:30,equipment:['bodyweight','home','gym']},
-{name:'Ankle Rocks',group:'mobility',target:'Ankles',reps:'10/side',rest:20,equipment:['bodyweight','home','gym']},
+ {name:'Incline Push-up',group:'push',target:'Chest + triceps',reps:'8–15',rest:75,equipment:['bodyweight','home','gym'],pattern:'horizontal-push',impact:'low'},
+ {name:'Push-up',group:'push',target:'Chest + triceps',reps:'6–15',rest:75,equipment:['bodyweight','home','gym'],pattern:'horizontal-push',impact:'medium'},
+ {name:'Pike Push-up',group:'push',target:'Shoulders + triceps',reps:'5–12',rest:90,equipment:['bodyweight','home','gym'],pattern:'vertical-push',impact:'medium'},
+ {name:'Close-grip Push-up',group:'push',target:'Triceps + chest',reps:'6–12',rest:75,equipment:['bodyweight','home','gym'],pattern:'horizontal-push',impact:'medium'},
+ {name:'Backpack Floor Press',group:'push',target:'Chest + triceps',reps:'8–15',rest:90,equipment:['home'],pattern:'horizontal-push',impact:'medium'},
+ {name:'Backpack Row',group:'pull',target:'Back + biceps',reps:'8–15',rest:75,equipment:['home'],pattern:'horizontal-pull',impact:'medium'},
+ {name:'Band Row',group:'pull',target:'Upper back',reps:'10–15',rest:75,equipment:['home'],pattern:'horizontal-pull',impact:'low'},
+ {name:'Assisted Pull-up',group:'pull',target:'Lats + arms',reps:'5–10',rest:105,equipment:['gym'],pattern:'vertical-pull',impact:'high'},
+ {name:'Lat Pulldown',group:'pull',target:'Lats',reps:'8–12',rest:90,equipment:['gym'],pattern:'vertical-pull',impact:'medium'},
+ {name:'Bodyweight Squat',group:'legs',target:'Quads + glutes',reps:'8–20',rest:75,equipment:['bodyweight','home','gym'],pattern:'squat',impact:'medium'},
+ {name:'Reverse Lunge',group:'legs',target:'Quads + glutes',reps:'6–12/side',rest:75,equipment:['bodyweight','home','gym'],pattern:'single-leg',impact:'medium'},
+ {name:'Split Squat',group:'legs',target:'Quads + glutes',reps:'6–12/side',rest:90,equipment:['bodyweight','home','gym'],pattern:'single-leg',impact:'high'},
+ {name:'Step-up',group:'legs',target:'Legs + balance',reps:'6–12/side',rest:75,equipment:['home','gym'],pattern:'single-leg',impact:'medium'},
+ {name:'Glute Bridge',group:'legs',target:'Glutes + hips',reps:'10–20',rest:60,equipment:['bodyweight','home','gym'],pattern:'hip-extension',impact:'low'},
+ {name:'Calf Raise',group:'legs',target:'Calves',reps:'10–20',rest:50,equipment:['bodyweight','home','gym'],pattern:'calf',impact:'low'},
+ {name:'Hip Hinge',group:'legs',target:'Posterior chain',reps:'8–15',rest:75,equipment:['bodyweight','home','gym'],pattern:'hinge',impact:'medium'},
+ {name:'Dead Bug',group:'core',target:'Core control',reps:'6–12/side',rest:50,equipment:['bodyweight','home','gym'],pattern:'anti-extension',impact:'low'},
+ {name:'Front Plank',group:'core',target:'Core',reps:'20–60s',rest:50,equipment:['bodyweight','home','gym'],pattern:'anti-extension',impact:'low'},
+ {name:'Side Plank',group:'core',target:'Lateral stability',reps:'15–45s/side',rest:50,equipment:['bodyweight','home','gym'],pattern:'anti-lateral',impact:'low'},
+ {name:'Bird Dog',group:'core',target:'Core + coordination',reps:'6–12/side',rest:50,equipment:['bodyweight','home','gym'],pattern:'anti-lateral',impact:'low'},
+ {name:'Pogo Hops',group:'plyometric',target:'Elasticity + landing',reps:'10–20s',rest:75,equipment:['bodyweight','home','gym'],pattern:'jump',impact:'high'},
+ {name:'Snap-down',group:'plyometric',target:'Landing mechanics',reps:'4–6',rest:75,equipment:['bodyweight','home','gym'],pattern:'landing',impact:'medium'},
+ {name:'Squat Jump',group:'plyometric',target:'Vertical power',reps:'4–8',rest:105,equipment:['bodyweight','home','gym'],pattern:'jump',impact:'high'},
+ {name:'Lateral Bound',group:'plyometric',target:'Lateral power',reps:'4–8/side',rest:105,equipment:['bodyweight','home','gym'],pattern:'lateral-jump',impact:'high'},
+ {name:'Skater Step',group:'plyometric',target:'Agility + balance',reps:'20–40s',rest:60,equipment:['bodyweight','home','gym'],pattern:'agility',impact:'medium'},
+ {name:'Mountain Climber',group:'conditioning',target:'Conditioning + core',reps:'20–45s',rest:50,equipment:['bodyweight','home','gym'],pattern:'conditioning',impact:'medium'},
+ {name:'Jumping Jack',group:'conditioning',target:'Conditioning',reps:'30–60s',rest:45,equipment:['bodyweight','home','gym'],pattern:'conditioning',impact:'medium'},
+ {name:'March in Place',group:'conditioning',target:'Aerobic fitness',reps:'45–90s',rest:45,equipment:['bodyweight','home','gym'],pattern:'conditioning',impact:'low'},
+ {name:'Mobility Flow',group:'mobility',target:'Full-body mobility',reps:'6–10 min',rest:30,equipment:['bodyweight','home','gym'],pattern:'mobility',impact:'low'},
+ {name:'World’s Greatest Stretch',group:'mobility',target:'Hips + upper body',reps:'3–5/side',rest:30,equipment:['bodyweight','home','gym'],pattern:'mobility',impact:'low'},
+ {name:'Ankle Rocks',group:'mobility',target:'Ankles',reps:'10/side',rest:20,equipment:['bodyweight','home','gym'],pattern:'ankle',impact:'low'},
 ];
 
-const pick=(group:Group,equipment:Equipment,count:number)=>DB.filter(x=>x.group===group&&x.equipment.includes(equipment)).slice(0,count);
-const makePlan=(days:number,equipment:Equipment,goal:Goal,difficulty:Difficulty):Day[]=>{
- const names=days===6?['Push','Pull','Legs','Upper','Lower','Conditioning']:days===5?['Push','Pull','Legs','Upper + Core','Conditioning + Mobility']:days===4?['Upper Strength','Lower Strength','Recovery + Core','Full Body']:days===3?['Upper','Lower','Mobility + Core']:days===2?['Full Body A','Full Body B']:['Full Body'];
- const result:Day[]=[];
- names.forEach((title,index)=>{
-  let items:Exercise[]=[];
-  if(title==='Push')items=[...pick('push',equipment,3),...pick('core',equipment,1)];
-  else if(title==='Pull')items=[...pick('pull',equipment,3),...pick('core',equipment,1)];
-  else if(title==='Legs')items=[...pick('legs',equipment,5)];
-  else if(title==='Lower')items=[...pick('legs',equipment,4),...(goal==='sports'?pick('plyometric',equipment,2):[])];
-  else if(title==='Upper'||title.includes('Upper'))items=[...pick('push',equipment,2),...pick('pull',equipment,2),...pick('core',equipment,1)];
-  else if(title.includes('Conditioning'))items=[...pick('conditioning',equipment,2),...(goal==='sports'?pick('plyometric',equipment,2):[]),...pick('core',equipment,1),...pick('mobility',equipment,1)];
-  else if(title.includes('Recovery')||title.includes('Mobility'))items=[...pick('mobility',equipment,2),...pick('core',equipment,1)];
-  else {items=[...pick('legs',equipment,2),...pick('push',equipment,1),...pick('pull',equipment,1),...pick('core',equipment,1)];}
-  if(difficulty==='beginner')items=items.slice(0,Math.min(items.length,4));
-  result.push({title,items});
- });
- return result;
-};
+const labels:Record<Group,string>={push:'Push',pull:'Pull',legs:'Legs',core:'Core',plyometric:'Plyometric',mobility:'Mobility',conditioning:'Conditioning'};
+const parse=(text:string,current:Settings):Settings=>{const t=text.toLowerCase();const dm=t.match(/\b([1-6])\s*(?:days?|أيام|يوم)\b/);const mm=t.match(/\b(\d{2,3})\s*(?:min|mins|minutes|دقيقة|دقايق)\b/);let days=dm?Number(dm[1]):current.days;let minutes=mm?Number(mm[1]):current.minutes;let equipment:Equipment=t.includes('gym')||t.includes('جيم')?'gym':t.includes('home')||t.includes('بيت')||t.includes('منزل')?'home':t.includes('bodyweight')||t.includes('بدون')||t.includes('من غير')||t.includes('أدوات')?'bodyweight':current.equipment;let goal:Goal=t.includes('jump')||t.includes('dunk')||t.includes('basket')||t.includes('قفز')||t.includes('دانك')||t.includes('سلة')?'sports':t.includes('strength')||t.includes('قوة')?'strength':t.includes('mobility')||t.includes('مرونة')?'mobility':t.includes('fitness')||t.includes('لياقة')?'fitness':current.goal;let difficulty:Difficulty=t.includes('advanced')||t.includes('متقدم')||t.includes('صعب')||t.includes('أصعب')?'advanced':t.includes('beginner')||t.includes('مبتد')?'beginner':current.difficulty;if(t.includes('intermediate')||t.includes('متوسط'))difficulty='intermediate';return{days:Math.max(1,Math.min(6,days)),minutes:Math.max(25,Math.min(120,minutes)),equipment,goal,difficulty};};
 
-const parse=(text:string,current:{days:number;equipment:Equipment;goal:Goal;difficulty:Difficulty})=>{
- const t=text.toLowerCase();
- const daysMatch=t.match(/(?:6|5|4|3|2|1)\s*(?:days?|أيام|يوم)/); const days=daysMatch?Number(daysMatch[0].match(/\d+/)?.[0]):current.days;
- const equipment:Equipment=t.includes('gym')||t.includes('جيم')?'gym':t.includes('home')||t.includes('بيت')||t.includes('منزل')?'home':t.includes('equipment')||t.includes('أدوات')?current.equipment:'bodyweight';
- const goal:Goal=t.includes('jump')||t.includes('dunk')||t.includes('basket')||t.includes('قفز')||t.includes('سلة')?'sports':t.includes('strength')||t.includes('قوة')?'strength':t.includes('mobility')||t.includes('مرونة')?'mobility':current.goal;
- const difficulty:Difficulty=t.includes('beginner')||t.includes('مبتد')?'beginner':t.includes('advanced')||t.includes('متقدم')?'advanced':current.difficulty;
- return {days:Math.min(6,Math.max(1,days)),equipment,goal,difficulty};
-};
+const splitFor=(days:number)=>days===6?['Push','Pull','Legs','Upper','Lower','Conditioning']:days===5?['Push','Pull','Legs','Upper + Core','Conditioning + Mobility']:days===4?['Upper Strength','Lower Strength','Recovery + Core','Full Body']:days===3?['Upper','Lower','Mobility + Core']:days===2?['Full Body A','Full Body B']:['Full Body'];
+const groupsFor=(title:string,goal:Goal):Group[]=>{if(title==='Push')return['push','core'];if(title==='Pull')return['pull','core'];if(title==='Legs')return['legs'];if(title==='Lower')return goal==='sports'?['legs','plyometric','mobility']:['legs'];if(title==='Upper'||title.includes('Upper'))return['push','pull','core'];if(title.includes('Conditioning'))return goal==='sports'?['conditioning','plyometric','core']:['conditioning','core'];if(title.includes('Recovery')||title.includes('Mobility'))return['mobility','core'];if(title==='Full Body'||title==='Full Body A'||title==='Full Body B')return['legs','push','pull','core'];return['legs','push','pull','core'];};
+const setsFor=(d:Difficulty)=>d==='beginner'?2:d==='intermediate'?3:4;
+
+function buildPlan(settings:Settings,seed=0):Day[]{
+ const titles=splitFor(settings.days), used=new Set<string>(); const target=settings.minutes<35?4:settings.minutes<50?5:settings.minutes<70?6:7; const baseSets=setsFor(settings.difficulty);
+ return titles.map((title,di)=>{const groups=groupsFor(title,settings.goal);const items:Exercise[]=[];const patterns=new Set<Pattern>();
+  const candidates=(g:Group)=>DB.filter(e=>e.group===g&&e.equipment.includes(settings.equipment)&&!used.has(e.name)).sort((a,b)=>{let sa=0,sb=0;if(settings.goal==='strength'&&['push','pull','legs'].includes(a.group))sa+=3;if(settings.goal==='sports'&&['plyometric','conditioning'].includes(a.group))sa+=4;if(settings.goal==='mobility'&&a.group==='mobility')sa+=4;if(settings.difficulty==='beginner'&&a.impact==='low')sa+=2;if(settings.difficulty==='advanced'&&a.impact==='high')sa+=2;if((di+seed)%2&&a.name.length%2)sa+=.2;if((di+seed)%2&&b.name.length%2)sb+=.2;return sb-sa;});
+  groups.forEach(g=>{const c=candidates(g).find(e=>!patterns.has(e.pattern));if(c){items.push(c);used.add(c.name);patterns.add(c.pattern);}});
+  const fill=groups.flatMap(g=>candidates(g)).filter(e=>!used.has(e.name));for(const e of fill){if(items.length>=target)break;if(patterns.has(e.pattern)&&items.length<groups.length)continue;items.push(e);used.add(e.name);patterns.add(e.pattern);}
+  if(settings.goal==='sports'&&['Legs','Lower','Conditioning + Mobility'].includes(title)&&!items.some(e=>e.group==='plyometric')){const p=DB.find(e=>e.group==='plyometric'&&e.equipment.includes(settings.equipment)&&!used.has(e.name));if(p){items.splice(Math.min(2,items.length),0,p);used.add(p.name);}}
+  return{title,focus:groups.map(g=>labels[g]).join(' • '),items};});
+}
+
+const promptReply=(s:Settings)=>`تمام. هبني لك ${s.days} أيام × ${s.minutes} دقيقة، مستوى ${s.difficulty}، ${s.equipment==='bodyweight'?'من غير أدوات':s.equipment==='home'?'معدات منزلية':'جيم'}. هوزع الـmovement patterns والعضلات بحيث كل يوم له وظيفة واضحة، مع حجم تدريب مناسب للوقت والمستوى.`;
 
 export function ShadowAIChat(){
- const [settings,setSettings]=useState({days:6,equipment:'bodyweight' as Equipment,goal:'strength' as Goal,difficulty:'intermediate' as Difficulty});
- const [messages,setMessages]=useState<Message[]>([{role:'ai',text:'أنا Shadow AI. كلمني عادي زي ما تكلم أي مدرب. قولي هدفك، عدد الأيام، الوقت والمعدات، وأنا أبني لك نظام كامل وأقدر أعدله معاك خطوة بخطوة.'}]);
- const [input,setInput]=useState(''); const [plan,setPlan]=useState<Day[]|null>(null); const [applied,setApplied]=useState(false);
+ const [settings,setSettings]=useState<Settings>({days:6,equipment:'bodyweight',goal:'strength',difficulty:'intermediate',minutes:50});
+ const [messages,setMessages]=useState<Message[]>([{role:'ai',text:'أنا Shadow AI. كلمني طبيعي زي مدربك. قولي هدفك، عدد الأيام، الوقت والمعدات، وبعدها أقدر أبني لك برنامج كامل وأعدله معاك.'}]);
+ const [plan,setPlan]=useState<Day[]|null>(null);const [input,setInput]=useState('');const [expanded,setExpanded]=useState<number|null>(0);const [applied,setApplied]=useState(false);const [seed,setSeed]=useState(0);const [selected,setSelected]=useState<Exercise|null>(null);
  const total=useMemo(()=>plan?.reduce((n,d)=>n+d.items.length,0)||0,[plan]);
- const send=(preset?:string)=>{const text=(preset??input).trim();if(!text)return;const next=parse(text,settings);setSettings(next);setMessages(m=>[...m,{role:'user',text}]);setTimeout(()=>{setMessages(m=>[...m,{role:'ai',text:`تمام. فهمت إنك عايز ${next.days} أيام، ${next.equipment==='bodyweight'?'من غير أدوات':next.equipment==='home'?'بأدوات منزلية':'جيم'}، والهدف ${next.goal}. هبني الجدول على تقسيمة حقيقية بحيث كل يوم له وظيفته ومفيش تمرين رجل داخل Push أو تمرين Push داخل Pull.`}]);setPlan(makePlan(next.days,next.equipment,next.goal,next.difficulty));},120);setInput('');setApplied(false);};
- const apply=()=>{if(!plan)return;const payload=plan.flatMap((d,di)=>d.items.map(e=>({day:di+1,name:e.name,sets:Number(e.reps.match(/\d+/)?.[0]||3),reps:e.reps.replace(/^\d+\s*[×x]\s*/,'').replace(/^\d+–\d+\s*/,'').trim(),section:e.group==='mobility'?'stretching':e.group==='plyometric'?'plyometric':'main',group:e.group})));localStorage.setItem('forged-shadow-ai-workout-plan',JSON.stringify({id:`shadow-chat-${Date.now()}`,days:settings.days,goal:settings.goal,equipment:settings.equipment,exercises:payload}));setApplied(true);};
- return <section className="mx-auto flex min-h-[70vh] max-w-5xl flex-col gap-4 pb-10">
-  <div className="relative overflow-hidden rounded-3xl border border-ember-500/20 bg-gradient-to-br from-ember-500/10 via-black/40 to-black/20 p-5 sm:p-7"><div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-ember-500/10 blur-3xl"/><div className="relative flex items-center gap-4"><div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-ember-500/30 bg-ember-500/10"><Brain className="text-ember-400" size={28}/></div><div><div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[.2em] text-ember-400"><Sparkles size={13}/> Shadow AI</div><h1 className="mt-1 text-2xl font-black sm:text-3xl">Talk to your training AI.</h1><p className="mt-1 text-sm text-slate-400">Describe what you want. Shadow builds and reshapes the whole plan.</p></div></div></div>
-  <div className="grid flex-1 gap-4 lg:grid-cols-[1fr_310px]">
-   <div className="flex min-h-[560px] flex-col rounded-3xl border border-white/10 bg-black/30">
-    <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-6">{messages.map((m,i)=><div key={i} className={`flex gap-3 ${m.role==='user'?'justify-end':''}`}><div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${m.role==='ai'?'border border-ember-500/20 bg-ember-500/10 text-ember-400':'bg-white/10 text-slate-300'}`}>{m.role==='ai'?<Wand2 size={17}/>:<User size={17}/>}</div><div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 ${m.role==='ai'?'border border-white/5 bg-white/[.03] text-slate-200':'bg-ember-500 text-white'}`}>{m.text}</div></div>)}</div>
-    <div className="border-t border-white/10 p-3"><div className="flex gap-2"><input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')send()}} placeholder="مثال: عايز 6 أيام قوة وقفزة أعلى من غير أدوات" className="min-w-0 flex-1 rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-ember-500/50"/><button onClick={()=>send()} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-ember-500 text-white"><Send size={18}/></button></div><div className="mt-2 flex gap-2 overflow-x-auto">{['عايز 6 أيام من غير أدوات','خلّيها أصعب','عايز قفزة أعلى','غيّر النظام'].map(x=><button key={x} onClick={()=>send(x)} className="shrink-0 rounded-xl border border-white/5 bg-white/[.03] px-3 py-2 text-[11px] text-slate-400 hover:text-white">{x}</button>)}</div></div>
+ const send=(preset?:string)=>{const text=(preset??input).trim();if(!text)return;const next=parse(text,settings);const rebuild=plan!==null;setSettings(next);setMessages(m=>[...m,{role:'user',text},{role:'ai',text:promptReply(next)+(rebuild?' وطبقت التعديل على الخطة الحالية.':'')}]);setPlan(buildPlan(next,seed));setSeed(x=>x+1);setApplied(false);setInput('');};
+ const regenerate=()=>{const next=seed+1;setSeed(next);setPlan(buildPlan(settings,next));setApplied(false);setMessages(m=>[...m,{role:'ai',text:'أعدت توزيع الخطة مع الحفاظ على نفس هدفك، الأيام، الوقت والمعدات، لكن بتنوع أكبر في التمارين.'}]);};
+ const swap=(dayIndex:number,itemIndex:number)=>{if(!plan)return;const old=plan[dayIndex].items[itemIndex];const used=new Set(plan.flatMap(d=>d.items.map(e=>e.name)));const replacement=DB.filter(e=>e.group===old.group&&e.equipment.includes(settings.equipment)&&e.name!==old.name&&!used.has(e.name)).find(e=>e.pattern!==old.pattern)||DB.find(e=>e.group===old.group&&e.equipment.includes(settings.equipment)&&e.name!==old.name);if(!replacement)return;const next=plan.map((d,di)=>di===dayIndex?{...d,items:d.items.map((e,i)=>i===itemIndex?replacement:e)}:d);setPlan(next);setApplied(false);setMessages(m=>[...m,{role:'ai',text:`بدلت ${old.name} بـ ${replacement.name} مع الحفاظ على نفس الـmuscle group.`}]);};
+ const apply=()=>{if(!plan)return;const sets=setsFor(settings.difficulty);const payload=plan.flatMap((d,di)=>d.items.map(e=>({day:di+1,name:e.name,sets,reps:e.reps,section:e.group==='mobility'?'stretching':e.group==='plyometric'?'plyometric':'main',group:e.group,target:e.target,rest:e.rest})));localStorage.setItem('forged-shadow-ai-workout-plan',JSON.stringify({id:`shadow-builder-${Date.now()}`,version:2,days:settings.days,minutes:settings.minutes,goal:settings.goal,equipment:settings.equipment,difficulty:settings.difficulty,exercises:payload}));setApplied(true);const url=new URL(window.location.href);url.searchParams.set('view','workout');window.history.pushState({},'',url);window.dispatchEvent(new PopStateEvent('popstate'));};
+ return <section className="mx-auto flex min-h-[72vh] max-w-6xl flex-col gap-4 pb-10">
+  <header className="relative overflow-hidden rounded-3xl border border-ember-500/20 bg-gradient-to-br from-ember-500/15 via-black/40 to-black/20 p-5 sm:p-7"><div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-ember-500/10 blur-3xl"/><div className="relative flex items-center gap-4"><div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-ember-500/30 bg-ember-500/10 text-ember-400"><Brain size={28}/></div><div><div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[.2em] text-ember-400"><Sparkles size={13}/> Shadow AI • Workout Builder</div><h1 className="mt-1 text-2xl font-black sm:text-3xl">Build. Talk. Adapt.</h1><p className="mt-1 max-w-2xl text-sm text-slate-400">برنامج كامل يتغير مع كلامك، مش مجرد قائمة تمارين.</p></div></div></header>
+  <div className="grid flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+   <div className="flex min-h-[620px] flex-col rounded-3xl border border-white/10 bg-black/30 shadow-2xl">
+    <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-6">{messages.map((m,i)=><div key={i} className={`flex gap-3 ${m.role==='user'?'justify-end':''}`}><div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${m.role==='ai'?'border border-ember-500/20 bg-ember-500/10 text-ember-400':'bg-white/10 text-slate-300'}`}>{m.role==='ai'?<Wand2 size={17}/>:<User size={17}/>}</div><div className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm leading-6 ${m.role==='ai'?'border border-white/5 bg-white/[.03] text-slate-200':'bg-ember-500 text-white'}`}>{m.text}</div></div>)}
+     {!plan&&<div className="rounded-2xl border border-dashed border-white/10 bg-white/[.02] p-5"><div className="mb-3 flex items-center gap-2"><Target size={17} className="text-ember-400"/><b>ابدأ بأي جملة</b></div><p className="text-sm text-slate-400">مثال: «عايز 6 أيام من غير أدوات، قوة وقفزة أعلى، 50 دقيقة، ومتقدم».</p></div>}
+    </div>
+    <div className="border-t border-white/10 p-3 sm:p-4"><div className="flex gap-2"><input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')send()}} placeholder="اتكلم مع Shadow AI..." className="min-w-0 flex-1 rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-ember-500/50"/><button onClick={()=>send()} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-ember-500 text-white shadow-lg"><Send size={18}/></button></div><div className="mt-2 flex gap-2 overflow-x-auto">{['6 أيام من غير أدوات','زود القفز','خلّيها أصعب','غيّر يوم الرجل','بدّل التمارين'].map(x=><button key={x} onClick={()=>send(x)} className="shrink-0 rounded-xl border border-white/5 bg-white/[.03] px-3 py-2 text-[11px] text-slate-400 hover:border-ember-500/30 hover:text-white">{x}</button>)}</div></div>
    </div>
-   <aside className="rounded-3xl border border-white/10 bg-black/30 p-4 sm:p-5"><div className="flex items-center gap-2"><Target size={18} className="text-ember-400"/><h2 className="font-bold">Current plan</h2></div>{plan?<><div className="mt-4 grid grid-cols-2 gap-2"><div className="rounded-xl border border-white/5 p-3"><div className="text-[10px] text-slate-500">DAYS</div><b>{settings.days}</b></div><div className="rounded-xl border border-white/5 p-3"><div className="text-[10px] text-slate-500">EXERCISES</div><b>{total}</b></div></div><div className="mt-4 max-h-[360px] space-y-2 overflow-y-auto">{plan.map((d,i)=><div key={i} className="rounded-xl border border-white/5 bg-white/[.02] p-3"><div className="flex items-center justify-between"><b className="text-sm">Day {i+1}</b><span className="text-[10px] text-ember-400">{d.title}</span></div><div className="mt-2 space-y-1">{d.items.map(e=><div key={e.name} className="flex items-center gap-2 text-xs text-slate-400"><Check size={12} className="text-emerald-400"/>{e.name}</div>)}</div></div>)}</div><button onClick={apply} className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-ember-500 to-orange-600 px-4 py-3 text-sm font-black text-white"><Dumbbell size={16}/>{applied?'Applied to Workout':'Apply to Workout'}<ArrowRight size={16}/></button></>:<div className="mt-5 rounded-2xl border border-dashed border-white/10 p-5 text-center text-sm text-slate-500">ابدأ المحادثة، وShadow هيبني الخطة هنا.</div>}</aside>
+   <aside className="rounded-3xl border border-white/10 bg-black/30 p-4 sm:p-5">
+    <div className="flex items-center justify-between"><div className="flex items-center gap-2"><Dumbbell size={18} className="text-ember-400"/><h2 className="font-bold">Workout Builder</h2></div>{plan&&<button onClick={regenerate} title="Regenerate" className="btn-ghost px-2"><RefreshCw size={15}/></button>}</div>
+    <div className="mt-4 grid grid-cols-2 gap-2"><div className="rounded-xl border border-white/5 p-3"><div className="text-[10px] text-slate-500">DAYS</div><b className="text-lg">{settings.days}</b></div><div className="rounded-xl border border-white/5 p-3"><div className="text-[10px] text-slate-500">EXERCISES</div><b className="text-lg">{total||'—'}</b></div><div className="rounded-xl border border-white/5 p-3"><div className="text-[10px] text-slate-500">SESSION</div><b>{settings.minutes} min</b></div><div className="rounded-xl border border-white/5 p-3"><div className="text-[10px] text-slate-500">LEVEL</div><b className="capitalize">{settings.difficulty}</b></div></div>
+    {plan?<><div className="mt-4 max-h-[470px] space-y-2 overflow-y-auto pr-1">{plan.map((d,di)=><div key={d.title} className="overflow-hidden rounded-2xl border border-white/5 bg-white/[.02]"><button onClick={()=>setExpanded(expanded===di?null:di)} className="flex w-full items-center justify-between p-3 text-left"><div><b className="text-sm">Day {di+1} · {d.title}</b><p className="mt-0.5 text-[10px] text-slate-500">{d.focus}</p></div>{expanded===di?<ChevronDown size={16}/>:<ChevronRight size={16}/>}</button>{expanded===di&&<div className="space-y-1 border-t border-white/5 p-2">{d.items.map((e,ei)=><div key={e.name} className="group flex items-center gap-2 rounded-xl p-2 hover:bg-white/[.03]"><span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/5 text-[9px] text-slate-500">{ei+1}</span><button onClick={()=>setSelected(e)} className="min-w-0 flex-1 text-left"><b className="block truncate text-xs">{e.name}</b><span className="block text-[10px] text-slate-500">{e.target} · {setsFor(settings.difficulty)} × {e.reps} · {e.rest}s</span></button><button onClick={()=>swap(di,ei)} title="Swap" className="rounded-lg p-1.5 text-slate-500 opacity-0 transition group-hover:opacity-100 hover:bg-ember-500/10 hover:text-ember-300"><RefreshCw size={12}/></button></div>)}</div>}</div>)}</div><button onClick={apply} className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-ember-500 py-3 text-sm font-bold text-white shadow-lg">{applied?<><Check size={16}/> Applied to Workout</>:<>Apply full plan to Workout <ArrowRight size={16}/></>}</button></>:<div className="mt-4 rounded-2xl border border-dashed border-white/10 p-5 text-center text-sm text-slate-500">الخطة هتظهر هنا بعد أول رسالة.</div>}
+   </aside>
   </div>
+  {selected&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4" onClick={()=>setSelected(null)}><div className="w-full max-w-md rounded-3xl border border-white/10 bg-ink-950 p-5 shadow-2xl" onClick={e=>e.stopPropagation()}><div className="flex items-start justify-between gap-3"><div><span className="chip">{labels[selected.group]}</span><h2 className="mt-2 text-xl font-black">{selected.name}</h2><p className="mt-1 text-xs text-slate-500">{selected.target}</p></div><button onClick={()=>setSelected(null)} className="btn-ghost px-2"><X size={16}/></button></div><div className="mt-5 grid grid-cols-3 gap-2"><div className="rounded-xl border border-white/5 p-3"><span className="text-[10px] text-slate-500">REPS</span><b className="mt-1 block text-sm">{selected.reps}</b></div><div className="rounded-xl border border-white/5 p-3"><span className="text-[10px] text-slate-500">REST</span><b className="mt-1 block text-sm">{selected.rest}s</b></div><div className="rounded-xl border border-white/5 p-3"><span className="text-[10px] text-slate-500">LEVEL</span><b className="mt-1 block text-sm capitalize">{settings.difficulty}</b></div></div><button onClick={()=>setSelected(null)} className="btn-primary mt-5 w-full justify-center">Done</button></div></div>}
  </section>;
 }

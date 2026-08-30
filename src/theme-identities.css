@@ -1,0 +1,77 @@
+/* STRYVEN — eight visual identities. This layer sits after the shared theme bridge. */
+[data-theme] .theme-atmosphere{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.9}
+[data-theme] main,[data-theme] aside{position:relative;z-index:1}
+
+/* SHADOW — stealth / hunter / angular */
+[data-theme='shadow']{--theme-radius:6px}
+[data-theme='shadow'] .theme-atmosphere{background:radial-gradient(circle at 15% 10%,rgb(139 92 246/.10),transparent 28%),linear-gradient(135deg,transparent 0 48%,rgb(139 92 246/.035) 48% 49%,transparent 49%)}
+[data-theme='shadow'] .card,[data-theme='shadow'] .card-premium,[data-theme='shadow'] .glass{border-radius:6px!important;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));box-shadow:0 14px 34px rgb(0 0 0/.42)!important}
+[data-theme='shadow'] .btn{border-radius:5px!important;text-transform:uppercase;letter-spacing:.06em}
+[data-theme='shadow'] aside{border-right:1px solid rgb(139 92 246/.25)!important;box-shadow:10px 0 40px rgb(0 0 0/.35)}
+[data-theme='shadow'] .section-title{font-weight:900;text-transform:uppercase}
+
+/* EMBER — forge / heat / industrial */
+[data-theme='ember']{--theme-radius:3px}
+[data-theme='ember'] .theme-atmosphere{background:radial-gradient(ellipse at 75% 0%,rgb(255 122 24/.16),transparent 35%),repeating-linear-gradient(135deg,transparent 0 22px,rgb(255 122 24/.018) 22px 24px)}
+[data-theme='ember'] .card,[data-theme='ember'] .card-premium,[data-theme='ember'] .glass{border-radius:3px!important;border-top:2px solid rgb(255 122 24/.28)!important;box-shadow:0 14px 30px rgb(0 0 0/.45),inset 0 1px rgb(255 178 122/.08)!important}
+[data-theme='ember'] .btn{border-radius:3px!important;font-weight:900;text-transform:uppercase}
+[data-theme='ember'] aside{border-right:3px solid rgb(255 122 24/.18)!important}
+[data-theme='ember'] .section-title{font-weight:900;text-transform:uppercase;letter-spacing:.08em}
+
+/* FROST — crystalline / glass / precision */
+[data-theme='frost']{--theme-radius:20px}
+[data-theme='frost'] .theme-atmosphere{background:radial-gradient(circle at 20% 5%,rgb(56 189 248/.14),transparent 30%),radial-gradient(circle at 90% 80%,rgb(34 211 238/.08),transparent 32%)}
+[data-theme='frost'] .card,[data-theme='frost'] .card-premium,[data-theme='frost'] .glass{border-radius:20px!important;background:linear-gradient(135deg,rgb(125 211 252/.08),rgb(2 9 15/.48))!important;backdrop-filter:blur(24px) saturate(130%);border-color:rgb(125 211 252/.18)!important}
+[data-theme='frost'] .btn{border-radius:14px!important;backdrop-filter:blur(12px)}
+[data-theme='frost'] aside{background:linear-gradient(180deg,rgb(7 20 31/.84),rgb(2 9 15/.94))!important;backdrop-filter:blur(28px)}
+[data-theme='frost'] .section-title{font-weight:800}
+
+/* OCEAN — deep sea / navigation / fluid */
+[data-theme='ocean']{--theme-radius:14px}
+[data-theme='ocean'] .theme-atmosphere{background:radial-gradient(ellipse at 50% -10%,rgb(37 99 235/.18),transparent 42%),repeating-radial-gradient(ellipse at 50% 110%,transparent 0 28px,rgb(6 182 212/.025) 29px 30px)}
+[data-theme='ocean'] .card,[data-theme='ocean'] .card-premium,[data-theme='ocean'] .glass{border-radius:14px 14px 22px 22px!important;border-bottom:2px solid rgb(6 182 212/.20)!important}
+[data-theme='ocean'] .btn{border-radius:999px!important}
+[data-theme='ocean'] aside{border-right:1px solid rgb(6 182 212/.18)!important}
+[data-theme='ocean'] .section-title{letter-spacing:.03em}
+
+/* EMERALD — organic / growth / living system */
+[data-theme='emerald']{--theme-radius:18px}
+[data-theme='emerald'] .theme-atmosphere{background:radial-gradient(circle at 8% 15%,rgb(16 185 129/.12),transparent 30%),radial-gradient(circle at 92% 90%,rgb(34 197 94/.08),transparent 30%)}
+[data-theme='emerald'] .card,[data-theme='emerald'] .card-premium,[data-theme='emerald'] .glass{border-radius:18px!important;background:linear-gradient(145deg,rgb(16 185 129/.065),rgb(5 24 16/.88))!important;border-color:rgb(16 185 129/.16)!important}
+[data-theme='emerald'] .btn{border-radius:12px!important}
+[data-theme='emerald'] aside{border-right:1px solid rgb(16 185 129/.16)!important}
+[data-theme='emerald'] .section-title{font-weight:800}
+
+/* CRIMSON — battle / warning / weapon */
+[data-theme='crimson']{--theme-radius:2px}
+[data-theme='crimson'] .theme-atmosphere{background:radial-gradient(circle at 50% 0%,rgb(225 29 72/.16),transparent 28%),linear-gradient(165deg,transparent 0 49%,rgb(225 29 72/.025) 49% 51%,transparent 51%)}
+[data-theme='crimson'] .card,[data-theme='crimson'] .card-premium,[data-theme='crimson'] .glass{border-radius:2px!important;border-left:3px solid rgb(225 29 72/.25)!important}
+[data-theme='crimson'] .btn{border-radius:2px!important;text-transform:uppercase;font-weight:900}
+[data-theme='crimson'] aside{border-right:2px solid rgb(225 29 72/.25)!important}
+[data-theme='crimson'] .section-title{font-weight:900;text-transform:uppercase;letter-spacing:.07em}
+
+/* ROYAL — elite / ceremonial / premium */
+[data-theme='royal']{--theme-radius:24px}
+[data-theme='royal'] .theme-atmosphere{background:radial-gradient(ellipse at 50% -15%,rgb(99 102 241/.20),transparent 42%),radial-gradient(circle at 10% 80%,rgb(217 70 239/.07),transparent 28%)}
+[data-theme='royal'] .card,[data-theme='royal'] .card-premium,[data-theme='royal'] .glass{border-radius:24px!important;border:1px solid rgb(165 180 252/.20)!important;box-shadow:0 18px 45px rgb(0 0 0/.35),inset 0 1px rgb(255 255 255/.08),0 0 24px rgb(99 102 241/.06)!important}
+[data-theme='royal'] .btn{border-radius:999px!important}
+[data-theme='royal'] aside{border-right:1px solid rgb(165 180 252/.22)!important;box-shadow:10px 0 50px rgb(67 56 202/.12)}
+[data-theme='royal'] .section-title{letter-spacing:.04em;font-weight:900}
+
+/* GOLD — luxury / achievement / trophy */
+[data-theme='gold']{--theme-radius:8px}
+[data-theme='gold'] .theme-atmosphere{background:radial-gradient(ellipse at 50% 0%,rgb(245 158 11/.17),transparent 36%),linear-gradient(120deg,transparent 0 48%,rgb(251 191 36/.025) 48% 52%,transparent 52%)}
+[data-theme='gold'] .card,[data-theme='gold'] .card-premium,[data-theme='gold'] .glass{border-radius:8px!important;border:1px solid rgb(245 158 11/.20)!important;background:linear-gradient(145deg,rgb(43 32 7/.78),rgb(22 16 5/.92))!important;box-shadow:0 16px 36px rgb(0 0 0/.40),inset 0 1px rgb(254 243 199/.07)!important}
+[data-theme='gold'] .btn{border-radius:8px!important;font-weight:900}
+[data-theme='gold'] aside{border-right:1px solid rgb(245 158 11/.22)!important}
+[data-theme='gold'] .section-title{font-weight:900;text-transform:uppercase;letter-spacing:.06em}
+
+/* Shared identity polish */
+[data-theme] .card-hover:hover{transform:translateY(-2px)}
+[data-theme] .btn-primary{box-shadow:0 8px 24px rgb(var(--accent-500)/.18)!important}
+[data-theme] .progress-glow{box-shadow:0 0 14px rgb(var(--accent-500)/.38)!important}
+[data-theme] .rank-ring{filter:drop-shadow(0 0 7px rgb(var(--accent-500)/.30))}
+[data-theme] .xp-bar-fill{background:linear-gradient(90deg,rgb(var(--accent-600)),rgb(var(--accent-500)),rgb(var(--accent-400)))!important}
+[data-theme] ::-webkit-scrollbar-track{background:rgb(var(--theme-surface)/.70)}
+[data-theme] ::-webkit-scrollbar-thumb{background:linear-gradient(180deg,rgb(var(--accent-500)/.70),rgb(var(--theme-surface-2)));border-color:rgb(var(--theme-surface))}
+@media(prefers-reduced-motion:reduce){[data-theme] *,[data-theme] *::before,[data-theme] *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}

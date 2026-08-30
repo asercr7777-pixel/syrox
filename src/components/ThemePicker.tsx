@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Check, Palette, X } from 'lucide-react';
 import type { SiteTheme } from '../store/types';
+import '../theme-picker.css';
 
 const THEMES: {id: SiteTheme; name: string; description: string; previewClass: string}[] = [
   {id:'shadow',name:'Shadow',description:'Stealth hunter',previewClass:'theme-preview-shadow'},

@@ -14,7 +14,7 @@ export interface Friend { id: string; name: string; level: number; rankId: RankI
 export interface NotificationSettings { workout: boolean; water: boolean; sleep: boolean; reading: boolean; prayer: boolean; tasks: boolean; }
 export interface WorkoutSessionRecord { id: string; type: 'push' | 'pull' | 'legs' | 'cardio' | 'boxing' | 'custom'; durationSeconds: number; completedAt: number; }
 export type BackgroundType = 'default' | 'image' | 'video' | 'animated';
-export type SiteTheme = 'shadow' | 'ember' | 'frost' | 'ocean' | 'emerald' | 'crimson' | 'royal' | 'gold';
+export type SiteTheme = 'forge' | 'void' | 'nexus' | 'shogun' | 'titan' | 'rogue' | 'eclipse' | 'overdrive';
 
 export interface AppState {
   username: string; avatar: string; avatarColor: string; bannerColor: string; nameColor: string; theme: SiteTheme;

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Check, Pencil, Plus, RotateCcw, Trash2, X, Play, Pause, Square, Clock } from 'lucide-react';
+import { useStore } from '../store/useStore';
+import { ALL_CHAPTERS } from '../data/story';
 
 type Section = 'stretching' | 'main' | 'plyometric';
 type Exercise = { id: string; name: string; sets: number; reps: string; section: Section; done: boolean };
@@ -8,6 +10,7 @@ export type WorkoutHistoryEntry = { id: string; dayId: string; dayName: string; 
 
 const KEY = 'stryven-six-day-workout-v1';
 const DATE_KEY = 'stryven-six-day-workout-date-v1';
+const STORY_WORKOUT_KEY = 'stryven-story-workout-events-v1';
 export const WORKOUT_HISTORY_KEY = 'stryven-workout-history-v1';
 const seedNames = ['Day 1','Day 2','Day 3','Day 4','Day 5','Day 6'];
 const seedExercises = (day: number): Exercise[] => [
@@ -19,9 +22,11 @@ function initial(): Day[] { return seedNames.map((name, i) => ({ id: `day-${i + 
 function load(): Day[] { try { const raw = localStorage.getItem(KEY); if (raw) { const value = JSON.parse(raw); if (Array.isArray(value) && value.length === 6) return value; } } catch {} return initial(); }
 function loadHistory(): WorkoutHistoryEntry[] { try { const raw = localStorage.getItem(WORKOUT_HISTORY_KEY); const value = raw ? JSON.parse(raw) : []; return Array.isArray(value) ? value : []; } catch { return []; } }
 function todayKey() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function loadStoryWorkoutEvents(): Record<string, number> { try { const raw = localStorage.getItem(STORY_WORKOUT_KEY); const value = raw ? JSON.parse(raw) : {}; return value && typeof value === 'object' ? value : {}; } catch { return {}; } }
 const labels: Record<Section, string> = { stretching: 'Stretching', main: 'Main Training', plyometric: 'Plyometric' };
 
 export function SixDayWorkout() {
+  const { state, saveWorkoutSession, completeStoryMission } = useStore();
   const [days, setDays] = useState<Day[]>(load);
   const [active, setActive] = useState(0);
   const [editingDay, setEditingDay] = useState(false);
@@ -61,11 +66,40 @@ export function SixDayWorkout() {
   const startTimer = () => { if (running) return; const now = Date.now(); setStartedAt(now - elapsed * 1000); setRunning(true); };
   const pauseTimer = () => setRunning(false);
   const resetTimer = () => { setRunning(false); setElapsed(0); setStartedAt(null); };
+
+  const syncStoryAfterWorkout = (durationSeconds: number) => {
+    const today = todayKey();
+    const events = loadStoryWorkoutEvents();
+    const eventKey = `${today}:${current.id}`;
+    if (!events[eventKey]) events[eventKey] = Date.now();
+    localStorage.setItem(STORY_WORKOUT_KEY, JSON.stringify(events));
+
+    const currentChapterNumber = Math.min(state.storyChapter + 1, 30);
+    const chapter = ALL_CHAPTERS.find((item) => item.number === currentChapterNumber);
+    if (!chapter) return;
+
+    const previousSessionsToday = state.workoutSessions.filter((session) => {
+      const date = new Date(session.completedAt);
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` === today;
+    }).length;
+    const workoutCountToday = previousSessionsToday + 1;
+
+    chapter.missions
+      .filter((mission) => mission.type === 'workout' && !state.storyCompletedMissions[mission.id] && workoutCountToday >= mission.target)
+      .forEach((mission) => completeStoryMission(mission.id, { xp: mission.xpReward, coins: mission.coinReward }));
+
+    window.dispatchEvent(new CustomEvent('stryven-story-workout-completed', {
+      detail: { dayId: current.id, dayName: current.name, durationSeconds, date: today, workoutCountToday },
+    }));
+  };
+
   const finishTimer = () => {
     if (startedAt === null || elapsed <= 0) return;
     const completedAt = Date.now();
     const entry: WorkoutHistoryEntry = { id: `${completedAt}-${Math.random()}`, dayId: current.id, dayName: current.name, startedAt, completedAt, durationSeconds: elapsed };
     localStorage.setItem(WORKOUT_HISTORY_KEY, JSON.stringify([entry, ...loadHistory()].slice(0, 100)));
+    saveWorkoutSession('custom', elapsed);
+    syncStoryAfterWorkout(elapsed);
     window.dispatchEvent(new Event('stryven-workout-history-updated'));
     resetTimer();
   };

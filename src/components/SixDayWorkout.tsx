@@ -61,7 +61,23 @@ export function SixDayWorkout() {
       return <div key={section} className="card p-4 sm:p-5"><div className="flex items-center justify-between mb-3"><h3 className="font-display font-bold uppercase tracking-wider theme-accent">{labels[section]}</h3><span className="text-xs text-ink-400">{items.length} exercises</span></div>{items.length === 0 ? <p className="text-sm text-ink-400 py-3">No exercises yet.</p> : <div className="space-y-2">{items.map(ex => <div key={ex.id} className={`flex items-center gap-3 rounded-xl border p-3 ${ex.done ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-white/5 bg-ink-950/30'}`}><button onClick={() => toggle(ex.id)} className={`w-6 h-6 rounded-md border-2 flex items-center justify-center ${ex.done ? 'bg-emerald-500 border-emerald-500' : 'border-ink-500'}`}>{ex.done && <Check size={14}/>}</button><div className="flex-1 min-w-0"><p className={`font-medium ${ex.done ? 'line-through text-ink-400' : ''}`}>{ex.name}</p><p className="text-xs text-ink-400">{ex.sets} sets × {ex.reps}</p></div><button className="btn-ghost p-2" onClick={() => setExerciseDraft({ id: ex.id, name: ex.name, sets: ex.sets, reps: ex.reps, section: ex.section })}><Pencil size={14}/></button><button className="btn-ghost p-2 text-danger-400" onClick={() => remove(ex.id)}><Trash2 size={14}/></button></div>)}</div>}</div>;
     })}
     <button onClick={reset} className="btn-ghost"><RotateCcw size={15}/> Reset six-day setup</button>
-    {exerciseDraft && <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"><div className="card w-full max-w-md p-5 space-y-4"><div className="flex justify-between items-center"><h2 className="font-display text-xl font-bold">{exerciseDraft.id ? 'Edit Exercise' : 'Add Exercise'}</h2><button onClick={() => setExerciseDraft(null)}><X/></button></div><input className="input" placeholder="Exercise name" value={exerciseDraft.name} onChange={e => setExerciseDraft({ ...exerciseDraft, name: e.target.value })}/><div className="grid grid-cols-2 gap-3"><input className="input" type="number" min="1" value={exerciseDraft.sets} onChange={e => setExerciseDraft({ ...exerciseDraft, sets: Number(e.target.value) || 1 })}/><input className="input" placeholder="Reps / time" value={exerciseDraft.reps} onChange={e => setExerciseDraft({ ...exerciseDraft, reps: e.target.value })}/></div><select className="input" value={exerciseDraft.section} onChange={e => setExerciseDraft({ ...exerciseDraft, section: e.target.value as Section })}><option value="stretching">Stretching</option><option value="main">Main Training</option><option value="plyometric">Plyometric</option></select><button className="btn-primary w-full" onClick={saveExercise}>Save Exercise</button></div></div>}
+    {exerciseDraft && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 sm:p-5" onClick={() => setExerciseDraft(null)}>
+      <div className="card !w-[min(92vw,560px)] !max-w-[560px] max-h-[calc(100vh-2rem)] sm:max-h-[88vh] overflow-y-auto p-4 sm:p-5 space-y-3 sm:space-y-4" onClick={e => e.stopPropagation()}>
+        <div className="flex justify-between items-center gap-3">
+          <h2 className="font-display text-lg sm:text-xl font-bold truncate">{exerciseDraft.id ? 'Edit Exercise' : 'Add Exercise'}</h2>
+          <button aria-label="Close" className="btn-ghost p-2 flex-shrink-0" onClick={() => setExerciseDraft(null)}><X size={19}/></button>
+        </div>
+        <input className="input" placeholder="Exercise name" value={exerciseDraft.name} onChange={e => setExerciseDraft({ ...exerciseDraft, name: e.target.value })}/>
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+          <input className="input" type="number" min="1" value={exerciseDraft.sets} onChange={e => setExerciseDraft({ ...exerciseDraft, sets: Number(e.target.value) || 1 })}/>
+          <input className="input" placeholder="Reps / time" value={exerciseDraft.reps} onChange={e => setExerciseDraft({ ...exerciseDraft, reps: e.target.value })}/>
+        </div>
+        <select className="input" value={exerciseDraft.section} onChange={e => setExerciseDraft({ ...exerciseDraft, section: e.target.value as Section })}>
+          <option value="stretching">Stretching</option><option value="main">Main Training</option><option value="plyometric">Plyometric</option>
+        </select>
+        <button className="btn-primary w-full" onClick={saveExercise}>Save Exercise</button>
+      </div>
+    </div>}
   </div>;
 }
 export default SixDayWorkout;

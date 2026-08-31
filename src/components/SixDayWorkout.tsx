@@ -39,8 +39,45 @@ export function SixDayWorkout() {
   const current = days[active];
   const progress = useMemo(() => { const total = current.exercises.length; return total ? Math.round(current.exercises.filter(e => e.done).length / total * 100) : 0; }, [current]);
   const persist = (next: Day[]) => { setDays(next); localStorage.setItem(KEY, JSON.stringify(next)); };
+
+  const syncStoryAfterWorkout = (durationSeconds: number) => {
+    const today = todayKey();
+    const events = loadStoryWorkoutEvents();
+    const eventKey = `${today}:${current.id}`;
+    if (!events[eventKey]) events[eventKey] = Date.now();
+    localStorage.setItem(STORY_WORKOUT_KEY, JSON.stringify(events));
+
+    const currentChapterNumber = Math.min(state.storyChapter + 1, 30);
+    const chapter = ALL_CHAPTERS.find((item) => item.number === currentChapterNumber);
+    if (!chapter) return;
+
+    const previousSessionsToday = state.workoutSessions.filter((session) => {
+      const date = new Date(session.completedAt);
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` === today;
+    }).length;
+    const workoutCountToday = previousSessionsToday + 1;
+
+    chapter.missions
+      .filter((mission) => mission.type === 'workout' && !state.storyCompletedMissions[mission.id] && workoutCountToday >= mission.target)
+      .forEach((mission) => completeStoryMission(mission.id, { xp: mission.xpReward, coins: mission.coinReward }));
+
+    window.dispatchEvent(new CustomEvent('stryven-story-event', {
+      detail: { type: 'workout_completed', dayId: current.id, dayName: current.name, durationSeconds, date: today, workoutCountToday },
+    }));
+  };
+
   const updateCurrent = (fn: (d: Day) => Day) => persist(days.map((d, i) => i === active ? fn(d) : d));
-  const toggle = (id: string) => updateCurrent(d => ({ ...d, exercises: d.exercises.map(e => e.id === id ? { ...e, done: !e.done } : e) }));
+  const toggle = (id: string) => {
+    const nextDays = days.map((d, i) => i === active ? { ...d, exercises: d.exercises.map(e => e.id === id ? { ...e, done: !e.done } : e) } : d);
+    persist(nextDays);
+    const nextCurrent = nextDays[active];
+    const allDone = nextCurrent.exercises.length > 0 && nextCurrent.exercises.every((e) => e.done);
+    if (allDone) {
+      // The story reacts immediately when the real workout is completed,
+      // even if the user never starts the optional session timer.
+      window.setTimeout(() => syncStoryAfterWorkout(elapsed), 0);
+    }
+  };
   const saveDayName = () => { const value = dayName.trim(); if (!value) return; updateCurrent(d => ({ ...d, name: value })); setEditingDay(false); };
   const saveExercise = () => { if (!exerciseDraft?.name.trim()) return; updateCurrent(d => ({ ...d, exercises: exerciseDraft.id ? d.exercises.map(e => e.id === exerciseDraft.id ? { ...e, ...exerciseDraft, id: e.id } : e) : [...d.exercises, { ...exerciseDraft, id: `${Date.now()}-${Math.random()}`, done: false }] })); setExerciseDraft(null); };
   const remove = (id: string) => updateCurrent(d => ({ ...d, exercises: d.exercises.filter(e => e.id !== id) }));
@@ -66,32 +103,6 @@ export function SixDayWorkout() {
   const startTimer = () => { if (running) return; const now = Date.now(); setStartedAt(now - elapsed * 1000); setRunning(true); };
   const pauseTimer = () => setRunning(false);
   const resetTimer = () => { setRunning(false); setElapsed(0); setStartedAt(null); };
-
-  const syncStoryAfterWorkout = (durationSeconds: number) => {
-    const today = todayKey();
-    const events = loadStoryWorkoutEvents();
-    const eventKey = `${today}:${current.id}`;
-    if (!events[eventKey]) events[eventKey] = Date.now();
-    localStorage.setItem(STORY_WORKOUT_KEY, JSON.stringify(events));
-
-    const currentChapterNumber = Math.min(state.storyChapter + 1, 30);
-    const chapter = ALL_CHAPTERS.find((item) => item.number === currentChapterNumber);
-    if (!chapter) return;
-
-    const previousSessionsToday = state.workoutSessions.filter((session) => {
-      const date = new Date(session.completedAt);
-      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` === today;
-    }).length;
-    const workoutCountToday = previousSessionsToday + 1;
-
-    chapter.missions
-      .filter((mission) => mission.type === 'workout' && !state.storyCompletedMissions[mission.id] && workoutCountToday >= mission.target)
-      .forEach((mission) => completeStoryMission(mission.id, { xp: mission.xpReward, coins: mission.coinReward }));
-
-    window.dispatchEvent(new CustomEvent('stryven-story-workout-completed', {
-      detail: { dayId: current.id, dayName: current.name, durationSeconds, date: today, workoutCountToday },
-    }));
-  };
 
   const finishTimer = () => {
     if (startedAt === null || elapsed <= 0) return;

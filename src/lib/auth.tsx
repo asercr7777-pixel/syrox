@@ -14,6 +14,16 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+function authErrorMessage(message: string, mode: 'login' | 'signup'): string {
+  const value = message.toLowerCase();
+  if (value.includes('invalid login credentials') || value.includes('invalid credentials')) return 'Incorrect email or password.';
+  if (value.includes('user already registered') || value.includes('already registered')) return 'An account with this email already exists. Sign in instead.';
+  if (value.includes('email not confirmed')) return 'Your email has not been confirmed yet. Check your inbox.';
+  if (value.includes('password')) return mode === 'signup' ? 'This password cannot be used. Try a stronger password.' : 'Incorrect password.';
+  if (value.includes('email')) return 'Please check your email address and try again.';
+  return message;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,14 +38,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(sess);
     });
 
-    return () => {
-      sub.subscription.unsubscribe();
-    };
+    return () => sub.subscription.unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error ? error.message : null };
+    return { error: error ? authErrorMessage(error.message, 'login') : null };
   };
 
   const signUp = async (email: string, password: string, username: string) => {
@@ -44,10 +52,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
       options: { data: { username } },
     });
-    if (error) return { error: error.message };
+    if (error) return { error: authErrorMessage(error.message, 'signup') };
 
-    // Profile creation is handled by a database trigger on auth.users.
-    // If a session was created (email confirmation off), update the username.
     if (data.user && data.session) {
       const { error: profileError } = await supabase
         .from('profiles')
@@ -67,13 +73,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       provider: 'google',
       options: {
         redirectTo: origin,
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'consent',
-        },
+        queryParams: { access_type: 'offline', prompt: 'consent' },
       },
     });
-    return { error: error ? error.message : null };
+    return { error: error ? authErrorMessage(error.message, 'login') : null };
   };
 
   const signOut = async () => {

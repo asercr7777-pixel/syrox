@@ -1,4 +1,4 @@
-import type { Emotion, DialogueLine, StoryChoice } from './types';
+import type { Emotion, DialogueLine, StoryChoice, StoryMission } from './types';
 
 export type StoryFlag =
   | 'truth_seeker'
@@ -22,6 +22,7 @@ export const DEFAULT_STORY_STATE: StoryState = {
 };
 
 export function applyStoryFlag(state: StoryState, flag: StoryFlag, amount = 1): StoryState {
+  if (amount === 0) return state;
   return {
     ...state,
     flags: { ...state.flags, [flag]: (state.flags[flag] ?? 0) + amount },
@@ -33,12 +34,12 @@ export function hasStoryFlag(state: StoryState, flag: StoryFlag, minimum = 1): b
 }
 
 export function addLore(state: StoryState, loreId: string): StoryState {
-  if (state.loreFound.includes(loreId)) return state;
+  if (!loreId || state.loreFound.includes(loreId)) return state;
   return { ...state, loreFound: [...state.loreFound, loreId] };
 }
 
 export function addMilestone(state: StoryState, milestone: string): StoryState {
-  if (state.milestones.includes(milestone)) return state;
+  if (!milestone || state.milestones.includes(milestone)) return state;
   return { ...state, milestones: [...state.milestones, milestone] };
 }
 
@@ -55,6 +56,44 @@ export function applyChoice(state: StoryState, choice: Pick<StoryChoice, 'id' | 
 
   if (choice.reward?.type === 'lore' && typeof choice.reward.value === 'string') {
     next = addLore(next, choice.reward.value);
+  }
+
+  return next;
+}
+
+/**
+ * Converts a completed real-life mission into story momentum.
+ * The mapping is deterministic so replaying or reloading never creates random
+ * character development. The caller should only apply this when the mission
+ * transitions from incomplete -> complete.
+ */
+export function applyMissionEvolution(state: StoryState, mission: Pick<StoryMission, 'id' | 'type' | 'title' | 'description'>): StoryState {
+  let next = state;
+  const text = `${mission.id} ${mission.title} ${mission.description}`.toLowerCase();
+
+  if (mission.type === 'workout' || /train|workout|strength|push|pull|leg|exercise|plyometric/.test(text)) {
+    next = applyStoryFlag(next, 'resolve');
+  }
+  if (mission.type === 'tasks' || mission.type === 'discipline_score' || /discipline|complete|habit|daily/.test(text)) {
+    next = applyStoryFlag(next, 'resolve');
+  }
+  if (mission.type === 'read_quran' || mission.type === 'read_book' || /truth|secret|archive|lore|read|discover|learn/.test(text)) {
+    next = applyStoryFlag(next, 'truth_seeker');
+  }
+  if (mission.type === 'pray' || /mercy|protect|save|help|forgive/.test(text)) {
+    next = applyStoryFlag(next, 'mercy');
+  }
+  if (/shadow|trust|ally|beside/.test(text)) {
+    next = applyStoryFlag(next, 'shadow_trust');
+  }
+  if (/doubt|question|refuse|reject|suspicious/.test(text)) {
+    next = applyStoryFlag(next, 'shadow_doubt');
+  }
+  if (/freedom|escape|break|free/.test(text)) {
+    next = applyStoryFlag(next, 'freedom_first');
+  }
+  if (/power|control|dominate|rule/.test(text)) {
+    next = applyStoryFlag(next, 'power_first');
   }
 
   return next;
@@ -84,9 +123,15 @@ export function getShadowReaction(state: StoryState): DialogueLine[] {
 }
 
 export const STORY_MILESTONES = {
+  firstMission: 'first_mission_completed',
+  firstWorkout: 'first_workout_completed',
   firstBoss: 'first_boss_defeated',
   archiveOpened: 'black_archive_opened',
   systemDeclaredEnemy: 'system_declared_enemy',
   shadowTruth: 'shadow_truth_revealed',
   finalChoice: 'final_choice_made',
 } as const;
+
+function S(text: string, emotion: Emotion = 'mysterious'): DialogueLine {
+  return { speaker: 'Shadow', voice: 'guardian', text, emotion };
+}

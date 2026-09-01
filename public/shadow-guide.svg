@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" role="img" aria-labelledby="title desc">
+  <title id="title">Shadow</title>
+  <desc id="desc">Shadow, the mysterious guide watching the player's progress.</desc>
+  <rect width="600" height="800" fill="#07070d"/>
+  <image href="/shadow_observing.png.jpg" x="0" y="0" width="600" height="800" preserveAspectRatio="xMidYMid slice"/>
+  <rect width="600" height="800" fill="url(#shade)"/>
+  <defs>
+    <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#07070d" stop-opacity="0.05"/>
+      <stop offset="0.72" stop-color="#07070d" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#07070d" stop-opacity="0.72"/>
+    </linearGradient>
+  </defs>
+</svg>

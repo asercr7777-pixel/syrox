@@ -2,13 +2,25 @@ import { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, SkipForward, RotateCcw, Volume2, VolumeX, Eye } from 'lucide-react';
 import type { DialogueLine } from '../../data/story/types';
+import { getShadowImage, type ShadowState } from '../../lib/story/shadowReactions';
 import { narrate, pauseNarration, resumeNarration, stopNarration, setVoiceEnabled, isVoiceEnabled, duckMusic, playSfx, type SfxType } from '../../lib/audioEngine';
 
-interface CutscenePlayerProps { lines: DialogueLine[]; onComplete: () => void; bgGradient: string; chapterEmoji?: string; chapterTitle?: string; shadowGuide?: boolean; }
+interface CutscenePlayerProps { lines: DialogueLine[]; onComplete: () => void; bgGradient: string; chapterEmoji?: string; chapterTitle?: string; shadowGuide?: boolean; shadowState?: ShadowState; }
 
-export function CutscenePlayer({ lines, onComplete, bgGradient, chapterEmoji, chapterTitle, shadowGuide = true }: CutscenePlayerProps) {
+function stateFromLine(line: DialogueLine | undefined): ShadowState {
+  const emotion = line?.emotion;
+  if (emotion === 'angry') return 'threat';
+  if (emotion === 'excited' || emotion === 'happy') return 'power';
+  if (emotion === 'sad') return 'memory';
+  if (emotion === 'fear') return 'warning';
+  if (emotion === 'serious') return 'command';
+  if (emotion === 'mysterious') return 'observing';
+  return 'idle';
+}
+
+export function CutscenePlayer({ lines, onComplete, bgGradient, chapterEmoji, chapterTitle, shadowGuide = true, shadowState }: CutscenePlayerProps) {
   const [index, setIndex] = useState(0); const [displayedText, setDisplayedText] = useState(''); const [isTyping, setIsTyping] = useState(false); const [isPlaying, setIsPlaying] = useState(false); const [voiceOn, setVoiceOn] = useState(isVoiceEnabled());
-  const skipRef = useRef(false); const typeRef = useRef<ReturnType<typeof setInterval> | null>(null); const currentLine = lines[Math.min(index, lines.length - 1)]; const isLast = index >= lines.length - 1; const isShadow = Boolean(shadowGuide && currentLine?.speaker?.toLowerCase().includes('shadow'));
+  const skipRef = useRef(false); const typeRef = useRef<ReturnType<typeof setInterval> | null>(null); const currentLine = lines[Math.min(index, lines.length - 1)]; const isLast = index >= lines.length - 1; const isShadow = Boolean(shadowGuide && currentLine?.speaker?.toLowerCase().includes('shadow')); const activeShadowState = shadowState ?? stateFromLine(currentLine); const shadowImage = getShadowImage(activeShadowState);
   useEffect(() => { if (!currentLine) return; setDisplayedText(''); setIsTyping(true); skipRef.current = false; let i = 0; typeRef.current = setInterval(() => { if (skipRef.current) { setDisplayedText(currentLine.text); setIsTyping(false); if (typeRef.current) clearInterval(typeRef.current); return; } if (i < currentLine.text.length) { setDisplayedText(currentLine.text.slice(0, i + 1)); i++; } else { setIsTyping(false); if (typeRef.current) clearInterval(typeRef.current); } }, 24); return () => { if (typeRef.current) clearInterval(typeRef.current); }; }, [index, currentLine?.text]);
   useEffect(() => { if (!currentLine || !voiceOn) return; setIsPlaying(true); duckMusic(true); const voice = isShadow ? 'guardian' : currentLine.voice; narrate(currentLine.text, voice, currentLine.emotion ?? (isShadow ? 'mysterious' : 'neutral'), () => { setIsPlaying(false); duckMusic(false); }); if (currentLine.sfx) playSfx(currentLine.sfx as SfxType); return () => { stopNarration(); duckMusic(false); }; }, [index, voiceOn, isShadow]);
   const advance = () => { if (!currentLine) return; if (isTyping) { skipRef.current = true; setDisplayedText(currentLine.text); setIsTyping(false); return; } stopNarration(); duckMusic(false); setIsPlaying(false); if (isLast) onComplete(); else setIndex((v) => v + 1); };
@@ -18,7 +30,7 @@ export function CutscenePlayer({ lines, onComplete, bgGradient, chapterEmoji, ch
   return <div className="relative min-h-[480px] overflow-hidden rounded-3xl border border-white/10" style={{ background: bgGradient }}>
     <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(139,92,246,.2),transparent_42%)] pointer-events-none" />
     <div className="relative grid min-h-[480px] items-center gap-6 p-5 md:grid-cols-[210px_1fr] md:p-8">
-      {isShadow ? <motion.div initial={{ opacity: 0, x: -18, scale: .96 }} animate={{ opacity: 1, x: 0, scale: 1 }} className="relative mx-auto w-full max-w-[210px] overflow-hidden rounded-3xl border border-violet-400/30 bg-black/50 shadow-[0_0_50px_rgba(124,58,237,.2)]"><img src="/shadow_observing.png.jpg" alt="Shadow, the masked guide" className="aspect-[3/4] w-full object-cover object-center" onError={(event) => { event.currentTarget.src = '/shadow_standing.png.jpg'; }} /><div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent p-4"><div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-violet-200"><Eye size={13} /> Shadow</div><p className="mt-1 text-[10px] text-violet-100/70">The masked guide</p></div></motion.div> : <div className="hidden md:block" />}
+      {isShadow ? <motion.div key={activeShadowState} initial={{ opacity: 0, x: -18, scale: .96 }} animate={{ opacity: 1, x: 0, scale: 1 }} className="relative mx-auto w-full max-w-[210px] overflow-hidden rounded-3xl border border-violet-400/30 bg-black/50 shadow-[0_0_50px_rgba(124,58,237,.2)]"><img src={shadowImage} alt={`Shadow, ${activeShadowState} state`} className="aspect-[3/4] w-full object-cover object-center" onError={(event) => { if (event.currentTarget.src.endsWith('shadow_standing.png.jpg')) return; event.currentTarget.src = getShadowImage('standing'); }} /><div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent p-4"><div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-violet-200"><Eye size={13} /> Shadow</div><p className="mt-1 text-[10px] text-violet-100/70">{activeShadowState}</p></div></motion.div> : <div className="hidden md:block" />}
       <div className="min-w-0">
         {chapterEmoji && <motion.div key={chapterEmoji + index} initial={{ scale: .7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="mb-3 text-4xl">{chapterEmoji}</motion.div>}
         {chapterTitle && <motion.h2 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-5 font-display text-xl font-black text-white">{chapterTitle}</motion.h2>}

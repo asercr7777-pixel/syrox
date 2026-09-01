@@ -9,7 +9,6 @@ import { useStore } from './store/useStore';
 import { syncSoundFlag } from './lib/sound';
 import { usePWA } from './hooks/usePWA';
 import { InstallButton } from './components/pwa/InstallButton';
-import { SettingsAppearance } from './components/SettingsAppearance';
 import { StoryProgressBridge } from './components/StoryProgressBridge';
 import { Loader2 } from 'lucide-react';
 import './performance.css'; import './theme.css'; import './theme-overrides.css'; import './theme-identities.css'; import './theme-motion.css'; import './mobile.css'; import './community-scroll.css';
@@ -37,7 +36,7 @@ function getViewFromUrl(): ViewId { if (typeof window === 'undefined') return 'd
 function PageLoader() { return <div className="flex min-h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-[rgb(var(--accent-400))]" size={32} /></div>; }
 
 function AppContent() {
-  const { user, loading } = useAuth(); const { state, loadFromCloud, setUserId, cloudLoaded } = useStore(); const [view, setView] = useState<ViewId>(getViewFromUrl); const { isInstalled, isInstallable, promptInstall } = usePWA(); const isReset = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('reset') === '1';
+  const { user, loading } = useAuth(); const { state, loadFromCloud, setUserId } = useStore(); const [view, setView] = useState<ViewId>(getViewFromUrl); const { isInstalled, isInstallable, promptInstall } = usePWA(); const isReset = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('reset') === '1';
   useEffect(() => { syncSoundFlag(state.soundEnabled); }, [state.soundEnabled]);
   useEffect(() => { if (user) void loadFromCloud(user.id); else setUserId(null); }, [user, setUserId, loadFromCloud]);
   useEffect(() => { const onPopState = () => setView(getViewFromUrl()); window.addEventListener('popstate', onPopState); return () => window.removeEventListener('popstate', onPopState); }, []);
@@ -47,7 +46,7 @@ function AppContent() {
   if (loading) return <PageLoader />;
   if (!user && !isReset) return <Auth />;
   if (isReset) return <ResetPassword />;
-  return <ErrorBoundary><div className="min-h-screen"><Background /><Navigation activeView={view} onNavigate={handleNavigate} /><main className="relative z-10 mx-auto w-full max-w-[1400px] px-4 py-5 md:px-6"><Suspense fallback={<PageLoader />}>{content}</Suspense></main><ToastContainer /><Confetti />{!isInstalled && isInstallable && <InstallButton onInstall={promptInstall} />}<SettingsAppearance /><StoryProgressBridge /></div></ErrorBoundary>;
+  return <ErrorBoundary><div className="min-h-screen"><Background /><Navigation activeView={view} onNavigate={handleNavigate} /><main className="relative z-10 mx-auto w-full max-w-[1400px] px-4 py-5 md:px-6"><Suspense fallback={<PageLoader />}>{content}</Suspense></main><ToastContainer /><Confetti />{!isInstalled && isInstallable && <InstallButton onInstall={promptInstall} />}<StoryProgressBridge /></div></ErrorBoundary>;
 }
 
 export default function App() { return <AuthProvider><AppContent /></AuthProvider>; }

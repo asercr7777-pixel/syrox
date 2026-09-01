@@ -14,7 +14,7 @@ import { StoryProgressBridge } from './components/StoryProgressBridge';
 import { Loader2 } from 'lucide-react';
 import './performance.css'; import './theme.css'; import './theme-overrides.css'; import './theme-identities.css'; import './theme-motion.css'; import './mobile.css'; import './community-scroll.css';
 
-const Dashboard = lazy(() => import('./views/Dashboard').then((m) => ({ default: m.Dashboard }));
+const Dashboard = lazy(() => import('./views/Dashboard').then((m) => ({ default: m.Dashboard })));
 const Tasks = lazy(() => import('./views/Tasks').then((m) => ({ default: m.Tasks })));
 const StoryMode = lazy(() => import('./views/StoryMode').then((m) => ({ default: m.default })));
 const SkillTree = lazy(() => import('./views/SkillTree').then((m) => ({ default: m.SkillTree })));
@@ -43,10 +43,11 @@ function AppContent() {
   useEffect(() => { const onPopState = () => setView(getViewFromUrl()); window.addEventListener('popstate', onPopState); return () => window.removeEventListener('popstate', onPopState); }, []);
   useEffect(() => { document.documentElement.setAttribute('data-theme', state.theme); document.body.setAttribute('data-theme', state.theme); return () => { document.documentElement.removeAttribute('data-theme'); document.body.removeAttribute('data-theme'); }; }, [state.theme]);
   const handleNavigate = (v: ViewId) => { if (v === 'iteminspection') return; const target = v === 'worldmap' ? 'story' : v; setView(target); const url = new URL(window.location.href); url.searchParams.set('view', target); if (target === 'story') url.searchParams.delete('chapter'); window.history.replaceState({}, '', url); window.dispatchEvent(new Event('stryven-view-change')); };
-  if (loading || (user && !cloudLoaded)) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-[rgb(var(--accent-400))]" size={40} /></div>;
-  if (isReset) return <><Background /><Suspense fallback={<PageLoader />}><ResetPassword /></Suspense></>;
-  if (!user) return <><Background /><Suspense fallback={<PageLoader />}><Auth /></Suspense></>;
-  return <div className="min-h-screen isolate" data-theme={state.theme}><Background /><Navigation current={view} onNavigate={handleNavigate} /><ToastContainer /><Confetti /><StoryProgressBridge /><main className="relative z-10 lg:ml-64 pt-16 lg:pt-6 px-3 sm:px-4 pb-24 lg:pb-8 max-w-6xl mx-auto overflow-x-hidden">{view === 'settings' && <SettingsAppearance />}<Suspense fallback={<PageLoader />}>{view === 'dashboard' && <><Dashboard onNavigate={handleNavigate} />{!isInstalled && <div className="flex justify-center mt-5 mb-1"><InstallButton isInstallable={isInstallable} isInstalled={isInstalled} onInstall={promptInstall}>Install SYROX</InstallButton></div>}</>}{view === 'tasks' && <Tasks />}{view === 'story' && <StoryMode />}{view === 'skilltree' && <SkillTree />}{view === 'workout' && <WorkoutWithAIPlan />}{view === 'shadowai' && <ShadowAI />}{view === 'dungeons' && <Dungeons />}{view === 'profile' && <Profile />}{view === 'marketplace' && <Marketplace />}{view === 'inventory' && <Inventory />}{view === 'achievements' && <Achievements />}{view === 'leaderboard' && <Leaderboard />}{view === 'community' && <Community />}{view === 'settings' && <Settings />}{view === 'iteminspection' && <ItemInspection itemId="" category="weapon" onBack={() => handleNavigate('inventory')} />}</Suspense></main></div>;
+  const content = (() => { switch (view) { case 'dashboard': return <Dashboard onNavigate={handleNavigate} />; case 'tasks': return <Tasks />; case 'story': return <StoryMode />; case 'skilltree': return <SkillTree />; case 'workout': return <WorkoutWithAIPlan />; case 'shadowai': return <ShadowAI />; case 'dungeons': return <Dungeons />; case 'profile': return <Profile />; case 'marketplace': return <Marketplace />; case 'inventory': return <Inventory />; case 'achievements': return <Achievements />; case 'leaderboard': return <Leaderboard />; case 'community': return <Community />; case 'settings': return <Settings />; default: return <Dashboard onNavigate={handleNavigate} />; } })();
+  if (loading) return <PageLoader />;
+  if (!user && !isReset) return <Auth />;
+  if (isReset) return <ResetPassword />;
+  return <ErrorBoundary><div className="min-h-screen"><Background /><Navigation activeView={view} onNavigate={handleNavigate} /><main className="relative z-10 mx-auto w-full max-w-[1400px] px-4 py-5 md:px-6"><Suspense fallback={<PageLoader />}>{content}</Suspense></main><ToastContainer /><Confetti />{!isInstalled && isInstallable && <InstallButton onInstall={promptInstall} />}<SettingsAppearance /><StoryProgressBridge /></div></ErrorBoundary>;
 }
-function App() { return <ErrorBoundary><AuthProvider><AppContent /></AuthProvider></ErrorBoundary>; }
-export default App;
+
+export default function App() { return <AuthProvider><AppContent /></AuthProvider>; }

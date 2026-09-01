@@ -33,7 +33,7 @@ export function Background() {
 
   const renderBackgroundLayer = () => {
     if (state.backgroundType === 'video' && state.backgroundVideo && !videoError) {
-      return <video autoPlay muted loop playsInline preload="auto" className="fixed inset-0 w-full h-full object-cover pointer-events-none" style={{ filter: `brightness(${brightness}) ${blurFilter}`, transform, zIndex: 0 }} src={state.backgroundVideo} onError={handleVideoError} aria-hidden="true" />;
+      return <video autoPlay muted loop playsInline preload="metadata" className="fixed inset-0 w-full h-full object-cover pointer-events-none" style={{ filter: `brightness(${brightness}) ${blurFilter}`, transform, zIndex: 0 }} src={state.backgroundVideo} onError={handleVideoError} aria-hidden="true" />;
     }
     if (state.backgroundType === 'image' && state.customBackground && !imgError) {
       return <div className="fixed inset-0 pointer-events-none bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url("${state.customBackground}")`, filter: `brightness(${brightness}) ${blurFilter}`, transform, zIndex: 0 }} role="img" aria-label="Custom background" />;

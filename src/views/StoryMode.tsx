@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Check, Coins, Map as MapIcon, Music, Sparkles, Swords, Target, Trophy, VolumeX, Zap } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Coins, Map as MapIcon, Music, Swords, Target, Trophy, VolumeX, Zap } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { toast } from '../components/ui/Toast';
 import { triggerConfetti } from '../components/ui/Confetti';
@@ -13,24 +13,13 @@ type StoryView = 'map' | 'missions' | 'cutscene' | 'boss' | 'reward';
 type CutsceneKind = 'missionBefore' | 'missionAfter';
 const CHAPTERS = [...ALL_CHAPTERS].sort((a, b) => a.number - b.number).slice(0, 30);
 const getChapter = (number: number) => CHAPTERS.find((chapter) => chapter.number === number) ?? CHAPTERS[0];
+function localDateKey(timestamp: number) { const d = new Date(timestamp); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function todayKey() { return localDateKey(Date.now()); }
 
-function localDateKey(timestamp: number) {
-  const d = new Date(timestamp);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-function todayKey() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
 function missionProgress(state: ReturnType<typeof useStore>['state'], mission: StoryMission) {
   switch (mission.type) {
     case 'tasks': return Math.min(mission.target, Object.values(state.coreCompleted).filter(Boolean).length + Object.values(state.customCompleted).filter(Boolean).length);
-    case 'workout': {
-      const today = todayKey();
-      const sessionsToday = state.workoutSessions.filter((session) => localDateKey(session.completedAt) === today).length;
-      const historySaysWorkout = state.history.some((day) => day.date === today && day.workoutCompleted);
-      return Math.min(mission.target, Math.max(state.workoutsCompletedToday, sessionsToday, historySaysWorkout ? 1 : 0));
-    }
+    case 'workout': { const today = todayKey(); const sessionsToday = state.workoutSessions.filter((session) => localDateKey(session.completedAt) === today).length; const historySaysWorkout = state.history.some((day) => day.date === today && day.workoutCompleted); return Math.min(mission.target, Math.max(state.workoutsCompletedToday, sessionsToday, historySaysWorkout ? 1 : 0)); }
     case 'pray': return state.coreCompleted.pray ? 1 : 0;
     case 'water': return state.coreCompleted.water ? 1 : 0;
     case 'sleep': return state.coreCompleted.sleep ? 1 : 0;
@@ -42,29 +31,11 @@ function missionProgress(state: ReturnType<typeof useStore>['state'], mission: S
     default: return 0;
   }
 }
+
 function missionDone(state: ReturnType<typeof useStore>['state'], mission: StoryMission) { return Boolean(state.storyCompletedMissions[mission.id]) || missionProgress(state, mission) >= mission.target; }
 
 type BossExercise = { name: string; durationSeconds: number; note: string };
-function getBossExercises(chapterNumber: number): BossExercise[] {
-  const sets: BossExercise[][] = [
-    [
-      { name: 'Push-ups', durationSeconds: 20, note: 'Controlled reps. Keep your form clean.' },
-      { name: 'Bodyweight Squats', durationSeconds: 25, note: 'Steady pace and comfortable depth.' },
-      { name: 'Plank', durationSeconds: 30, note: 'Brace your core and keep breathing.' },
-    ],
-    [
-      { name: 'Mountain Climbers', durationSeconds: 25, note: 'Keep a steady rhythm and controlled hips.' },
-      { name: 'Push-ups', durationSeconds: 20, note: 'Quality reps only; stop if form breaks.' },
-      { name: 'High Knees', durationSeconds: 30, note: 'Stay light on your feet and keep moving.' },
-    ],
-    [
-      { name: 'Reverse Lunges', durationSeconds: 30, note: 'Alternate sides with control.' },
-      { name: 'Pike Push-ups', durationSeconds: 20, note: 'Use a comfortable range of motion.' },
-      { name: 'Plank', durationSeconds: 40, note: 'Stay steady and breathe normally.' },
-    ],
-  ];
-  return sets[(chapterNumber - 1) % sets.length];
-}
+function getBossExercises(chapterNumber: number): BossExercise[] { const sets: BossExercise[][] = [[{ name: 'Push-ups', durationSeconds: 20, note: 'Controlled reps. Keep your form clean.' }, { name: 'Bodyweight Squats', durationSeconds: 25, note: 'Steady pace and comfortable depth.' }, { name: 'Plank', durationSeconds: 30, note: 'Brace your core and keep breathing.' }], [{ name: 'Mountain Climbers', durationSeconds: 25, note: 'Keep a steady rhythm and controlled hips.' }, { name: 'Push-ups', durationSeconds: 20, note: 'Quality reps only; stop if form breaks.' }, { name: 'High Knees', durationSeconds: 30, note: 'Stay light on your feet and keep moving.' }], [{ name: 'Reverse Lunges', durationSeconds: 30, note: 'Alternate sides with control.' }, { name: 'Pike Push-ups', durationSeconds: 20, note: 'Use a comfortable range of motion.' }, { name: 'Plank', durationSeconds: 40, note: 'Stay steady and breathe normally.' }]]; return sets[(chapterNumber - 1) % sets.length]; }
 
 export default function StoryMode() {
   const { state, completeStoryMission, defeatStoryBoss, advanceStoryChapter, unlockLore, unlockStoryAchievement } = useStore();
@@ -74,72 +45,23 @@ export default function StoryMode() {
   const [cutsceneLines, setCutsceneLines] = useState<DialogueLine[]>([]);
   const [cutsceneKind, setCutsceneKind] = useState<CutsceneKind>('missionBefore');
   const [musicOn, setMusicOn] = useState(isMusicEnabled());
-  const [bossHp, setBossHp] = useState(0);
-  const [bossPhase, setBossPhase] = useState<'intro' | 'battle' | 'defeat'>('intro');
-  const [bossExerciseIndex, setBossExerciseIndex] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(0);
+  const [bossHp, setBossHp] = useState(0); const [bossPhase, setBossPhase] = useState<'intro' | 'battle' | 'defeat'>('intro'); const [bossExerciseIndex, setBossExerciseIndex] = useState(0); const [timeLeft, setTimeLeft] = useState(0);
   const [reward, setReward] = useState<{ xp: number; coins: number; title?: string; lore?: string } | null>(null);
-  const bossExercises = useMemo(() => getBossExercises(selected.number), [selected.number]);
-  const bossExercise = bossExercises[bossExerciseIndex];
-
+  const bossExercises = useMemo(() => getBossExercises(selected.number), [selected.number]); const bossExercise = bossExercises[bossExerciseIndex];
   useEffect(() => { initAudio(); const params = new URLSearchParams(window.location.search); const requested = Number(params.get('chapter')); if (requested >= 1 && requested <= 30) { setSelected(getChapter(requested)); setView('missions'); } return () => { stopMusic(); stopNarration(); }; }, []);
   useEffect(() => { if (!musicOn) { stopMusic(); return; } if (view === 'map') playMusic('mystery'); else if (selected) playMusic(selected.musicTheme); }, [view, musicOn, selected]);
-  useEffect(() => {
-    if (view !== 'boss' || bossPhase !== 'battle') return;
-    setTimeLeft(bossExercise.durationSeconds);
-    const interval = window.setInterval(() => {
-      setTimeLeft((previous) => {
-        if (previous <= 1) {
-          window.clearInterval(interval);
-          completeBossExercise();
-          return 0;
-        }
-        return previous - 1;
-      });
-    }, 1000);
-    return () => window.clearInterval(interval);
-  }, [view, bossPhase, bossExerciseIndex, bossExercise.durationSeconds]);
+  useEffect(() => { if (view !== 'boss' || bossPhase !== 'battle') return; setTimeLeft(bossExercise.durationSeconds); let finished = false; const interval = window.setInterval(() => { setTimeLeft((previous) => { if (previous <= 1) { if (!finished) { finished = true; window.clearInterval(interval); completeBossExercise(); } return 0; } return previous - 1; }); }, 1000); return () => window.clearInterval(interval); }, [view, bossPhase, bossExerciseIndex, bossExercise.durationSeconds]);
   const selectChapter = (chapter: StoryChapter) => { setSelected(chapter); setView('missions'); const url = new URL(window.location.href); url.searchParams.set('view', 'story'); url.searchParams.set('chapter', String(chapter.number)); window.history.replaceState({}, '', url); playSfx('click'); };
   const backToMap = () => { setView('map'); const url = new URL(window.location.href); url.searchParams.set('view', 'story'); url.searchParams.delete('chapter'); window.history.replaceState({}, '', url); playSfx('click'); };
   const toggleMusic = () => { const next = !musicOn; setMusicOn(next); setMusicEnabled(next); if (!next) stopMusic(); };
   const openMission = (mission: StoryMission) => { setPendingMission(mission); const alreadyDone = Boolean(state.storyCompletedMissions[mission.id]); setCutsceneLines(alreadyDone ? (mission.cutsceneAfter.length ? mission.cutsceneAfter : mission.cutsceneBefore) : (mission.cutsceneBefore.length ? mission.cutsceneBefore : [{ speaker: 'Shadow', voice: 'guardian', text: 'The path is waiting. Complete the task, then return.', emotion: 'mysterious' }])); setCutsceneKind(alreadyDone ? 'missionAfter' : 'missionBefore'); setView('cutscene'); playSfx('door'); };
   const finishCutscene = () => { if (!pendingMission) { setView('missions'); return; } if (cutsceneKind === 'missionBefore') { if (!missionDone(state, pendingMission)) { toast({ title: 'Mission not complete', message: 'Complete the mission in the story or the linked real task, then return.', type: 'info', icon: '📋' }); setView('missions'); return; } completeStoryMission(pendingMission.id, { xp: pendingMission.xpReward, coins: pendingMission.coinReward }); playSfx('quest_complete'); triggerConfetti(25); if (pendingMission.cutsceneAfter.length) { setCutsceneLines(pendingMission.cutsceneAfter); setCutsceneKind('missionAfter'); setView('cutscene'); return; } } setPendingMission(null); setView('missions'); };
   const startBoss = () => { if (state.storyBossDefeated[selected.boss.id]) { setReward({ xp: selected.boss.xpReward, coins: selected.boss.coinReward, title: selected.boss.rewardTitle, lore: selected.boss.rewardLore }); setView('reward'); return; } if (!selected.missions.every((m) => missionDone(state, m))) { toast({ title: 'Boss locked', message: 'Complete every chapter mission first.', type: 'info' }); return; } setBossExerciseIndex(0); setBossHp(selected.boss.hp); setBossPhase('intro'); setView('boss'); playSfx('boss_roar'); };
-  const completeBossExercise = () => {
-    if (bossPhase !== 'battle') return;
-    const nextIndex = bossExerciseIndex + 1;
-    const damage = Math.max(1, Math.ceil(selected.boss.hp / bossExercises.length));
-    const nextHp = Math.max(0, bossHp - damage);
-    setBossHp(nextHp);
-    playSfx(nextHp === 0 ? 'success' : 'sword_clash');
-    if (nextHp === 0 || nextIndex >= bossExercises.length) {
-      setBossPhase('defeat');
-      const boss = selected.boss;
-      defeatStoryBoss(boss.id);
-      if (boss.rewardTitle) unlockStoryAchievement(boss.rewardTitle);
-      if (boss.rewardLore) unlockLore(boss.rewardLore);
-      completeStoryMission(`boss_${boss.id}`, { xp: boss.xpReward, coins: boss.coinReward });
-      setReward({ xp: boss.xpReward, coins: boss.coinReward, title: boss.rewardTitle, lore: boss.rewardLore });
-      triggerConfetti(60);
-      window.setTimeout(() => setView('reward'), 800);
-      return;
-    }
-    setBossExerciseIndex(nextIndex);
-    setTimeLeft(bossExercises[nextIndex].durationSeconds);
-  };
+  const completeBossExercise = () => { if (bossPhase !== 'battle') return; const nextIndex = bossExerciseIndex + 1; const damage = Math.max(1, Math.ceil(selected.boss.hp / bossExercises.length)); const nextHp = Math.max(0, bossHp - damage); setBossHp(nextHp); playSfx(nextHp === 0 ? 'success' : 'sword_clash'); if (nextHp === 0 || nextIndex >= bossExercises.length) { setBossPhase('defeat'); const boss = selected.boss; defeatStoryBoss(boss.id); if (boss.rewardTitle) unlockStoryAchievement(boss.rewardTitle); if (boss.rewardLore) unlockLore(boss.rewardLore); completeStoryMission(`boss_${boss.id}`, { xp: boss.xpReward, coins: boss.coinReward }); setReward({ xp: boss.xpReward, coins: boss.coinReward, title: boss.rewardTitle, lore: boss.rewardLore }); triggerConfetti(60); window.setTimeout(() => setView('reward'), 800); return; } setBossExerciseIndex(nextIndex); setTimeLeft(bossExercises[nextIndex].durationSeconds); };
   const claimReward = () => { setReward(null); if (selected.number === Math.min(state.storyChapter + 1, 30) && selected.number < 30) advanceStoryChapter(); setView('map'); };
-  const currentNumber = Math.min(state.storyChapter + 1, 30);
-  const selectedProgress = useMemo(() => selected.missions.map((m) => ({ mission: m, progress: missionProgress(state, m), done: Boolean(state.storyCompletedMissions[m.id]) || missionProgress(state, m) >= m.target })), [selected, state]);
-  const allMissionsDone = selected.missions.length > 0 && selected.missions.every((m) => Boolean(state.storyCompletedMissions[m.id]) || missionProgress(state, m) >= m.target);
-
+  const currentNumber = Math.min(state.storyChapter + 1, 30); const selectedProgress = useMemo(() => selected.missions.map((m) => ({ mission: m, progress: missionProgress(state, m), done: missionDone(state, m) })), [selected, state]); const allMissionsDone = selected.missions.length > 0 && selected.missions.every((m) => missionDone(state, m));
   if (view === 'cutscene') return <div className="space-y-4"><button onClick={() => setView('missions')} className="btn-ghost"><ArrowLeft size={16} /> Back to missions</button><CutscenePlayer lines={cutsceneLines} onComplete={finishCutscene} bgGradient={selected.bgGradient} chapterEmoji={selected.emoji} chapterTitle={selected.title} shadowGuide /></div>;
-  if (view === 'missions') return <section className="space-y-6">
-    <div className="flex items-center justify-between gap-3"><button onClick={backToMap} className="btn-ghost"><MapIcon size={16} /> World Map</button><button onClick={toggleMusic} className="btn-ghost">{musicOn ? <Music size={15} /> : <VolumeX size={15} />}{musicOn ? 'Music On' : 'Music Off'}</button></div>
-    <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="relative overflow-hidden rounded-3xl border border-ember-500/25 bg-black/45 p-5 sm:p-7"><div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-violet-600/10 blur-3xl" /><div className="relative"><div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-ember-400">Arc I · Chapter {selected.number} · {selected.region.name}</div><h1 className="mt-1 font-display text-3xl font-black text-white sm:text-5xl">{selected.title}</h1><p className="mt-2 max-w-3xl text-sm leading-6 text-ink-300">{selected.description}</p><div className="mt-4 h-2 overflow-hidden rounded-full bg-white/5"><div className="h-full rounded-full bg-gradient-to-r from-ember-500 to-shadow-500 transition-all" style={{ width: `${selected.missions.length ? selectedProgress.filter((x) => x.done).length / selected.missions.length * 100 : 0}%` }} /></div></div></motion.div>
-    <div className="relative overflow-hidden rounded-3xl border border-violet-500/25 bg-[#07070d] p-5 sm:p-6"><div className="grid gap-5 md:grid-cols-[170px_1fr]"><div className="mx-auto w-36 overflow-hidden rounded-2xl border border-violet-400/30 bg-black/50 shadow-[0_0_35px_rgba(124,58,237,.18)]"><img src="/shadow_standing.png.jpg" alt="Shadow" className="aspect-[3/4] w-full object-cover" onError={(event) => { if (!event.currentTarget.src.endsWith('/shadow-guide.svg')) event.currentTarget.src = '/shadow-guide.svg'; }} /></div><div className="self-center"><div className="flex items-center gap-2"><Sparkles size={15} className="text-violet-300" /><span className="text-[10px] font-bold uppercase tracking-[0.3em] text-violet-300">SHADOW · INSIDE THE STORY</span></div><h2 className="mt-1 font-display text-2xl font-black text-white">The masked guide speaks from the path.</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-ink-300">Shadow is not a separate page. He appears in scenes, gives direction before difficult missions, and returns when the story changes.</p><div className="mt-4 rounded-xl border border-violet-500/20 bg-violet-500/5 p-3 text-sm italic text-violet-100">“Complete the task in your world. Then come back. I will show you what changed.”</div></div></div></div>
-    <div className="grid gap-3 lg:grid-cols-2">{selectedProgress.map(({ mission, progress, done }, i) => <motion.div key={mission.id} initial={{ opacity: 0, x: i % 2 ? 10 : -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: Math.min(i * .035, .25) }} className={`rounded-2xl border p-4 ${done ? 'border-emerald-500/25 bg-emerald-500/5' : 'border-white/10 bg-black/30'}`}><div className="flex items-start gap-3"><div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${done ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300' : 'border-ember-500/20 bg-ember-500/10 text-ember-300'}`}>{done ? <Check size={18} /> : <Target size={18} />}</div><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-2"><h3 className="font-display text-lg font-bold text-white">{mission.title}</h3><span className="text-xs font-mono text-ink-500">{progress}/{mission.target}</span></div><p className="mt-1 text-xs leading-5 text-ink-400">{mission.description}</p><div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/5"><div className={`h-full rounded-full ${done ? 'bg-emerald-500' : 'bg-ember-500'}`} style={{ width: `${Math.min(100, progress / Math.max(1, mission.target) * 100)}%` }} /></div><div className="mt-3 flex items-center justify-between gap-2"><span className="flex items-center gap-1 text-[11px] text-ink-500"><Zap size={12} /> +{mission.xpReward} XP · <Coins size={12} /> +{mission.coinReward}</span><button onClick={() => openMission(mission)} className="btn-primary px-3 py-1.5 text-xs">{done ? 'Replay Scene' : 'Enter Mission'} <ArrowRight size={13} /></button></div></div></div></motion.div>)} </div>
-    <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-[10px] uppercase tracking-wider text-amber-300">Chapter Gate</p><h3 className="mt-1 font-display text-xl font-black text-white">{selected.boss.name}</h3><p className="text-xs text-ink-400">{allMissionsDone ? 'All missions complete. The gate is open.' : 'Finish every mission to challenge the boss.'}</p></div><button disabled={!allMissionsDone} onClick={startBoss} className="btn-primary disabled:cursor-not-allowed disabled:opacity-40"><Swords size={16} /> Challenge</button></div></div>
-  </section>;
+  if (view === 'missions') return <section className="space-y-5"><div className="flex items-center justify-between gap-3"><button onClick={backToMap} className="btn-ghost"><MapIcon size={16} /> World Map</button><button onClick={toggleMusic} className="btn-ghost">{musicOn ? <Music size={15} /> : <VolumeX size={15} />}{musicOn ? 'Music On' : 'Music Off'}</button></div><motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="relative overflow-hidden rounded-3xl border border-ember-500/25 bg-black/45 p-5 sm:p-7"><div className="relative"><div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-ember-400">Chapter {selected.number} · {selected.region.name}</div><h1 className="mt-1 font-display text-3xl font-black text-white sm:text-5xl">{selected.title}</h1><p className="mt-2 max-w-3xl text-sm leading-6 text-ink-300">{selected.description}</p><div className="mt-4 h-2 overflow-hidden rounded-full bg-white/5"><div className="h-full rounded-full bg-gradient-to-r from-ember-500 to-shadow-500 transition-all" style={{ width: `${selected.missions.length ? selectedProgress.filter((x) => x.done).length / selected.missions.length * 100 : 0}%` }} /></div></div></motion.div><div className="grid gap-3 lg:grid-cols-2">{selectedProgress.map(({ mission, progress, done }, i) => <motion.div key={`${selected.id}:${mission.id}`} initial={{ opacity: 0, x: i % 2 ? 8 : -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: Math.min(i * .035, .2) }} className={`rounded-2xl border p-4 ${done ? 'border-emerald-500/25 bg-emerald-500/5' : 'border-white/10 bg-black/30'}`}><div className="flex items-start gap-3"><div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${done ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300' : 'border-ember-500/20 bg-ember-500/10 text-ember-300'}`}>{done ? <Check size={18} /> : <Target size={18} />}</div><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-2"><h3 className="font-display text-lg font-bold text-white">{mission.title}</h3><span className="text-xs font-mono text-ink-500">{progress}/{mission.target}</span></div><p className="mt-1 text-xs leading-5 text-ink-400">{mission.description}</p><div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/5"><div className={`h-full rounded-full ${done ? 'bg-emerald-500' : 'bg-ember-500'}`} style={{ width: `${Math.min(100, progress / Math.max(1, mission.target) * 100)}%` }} /></div><div className="mt-3 flex items-center justify-between gap-2"><span className="flex items-center gap-1 text-[11px] text-ink-500"><Zap size={12} /> +{mission.xpReward} XP · <Coins size={12} /> +{mission.coinReward}</span><button onClick={() => openMission(mission)} className="btn-primary px-3 py-1.5 text-xs">{done ? 'Replay Scene' : 'Enter Mission'} <ArrowRight size={13} /></button></div></div></div></motion.div>)}</div><div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-[10px] uppercase tracking-wider text-amber-300">Chapter Gate</p><h3 className="mt-1 font-display text-xl font-black text-white">{selected.boss.name}</h3><p className="text-xs text-ink-400">{allMissionsDone ? 'All missions complete. The gate is open.' : 'Finish every mission to challenge the boss.'}</p></div><button disabled={!allMissionsDone} onClick={startBoss} className="btn-primary disabled:cursor-not-allowed disabled:opacity-40"><Swords size={16} /> Challenge</button></div></div></section>;
   if (view === 'boss') return <section className="space-y-6"><button onClick={() => setView('missions')} className="btn-ghost"><ArrowLeft size={16} /> Back</button><div className="rounded-3xl border border-red-500/25 bg-black/55 p-6 text-center"><div className="text-6xl">{selected.boss.emoji}</div><div className="mt-2 text-[10px] font-bold uppercase tracking-[0.3em] text-red-300">{selected.boss.title}</div><h1 className="mt-1 font-display text-4xl font-black text-white">{selected.boss.name}</h1><p className="mx-auto mt-2 max-w-2xl text-sm text-ink-300">{selected.boss.description}</p>{bossPhase === 'intro' && <div className="mt-6"><button onClick={() => { setBossPhase('battle'); setBossExerciseIndex(0); setTimeLeft(bossExercises[0].durationSeconds); }} className="btn-primary"><Swords size={16} /> Begin Battle</button></div>}{bossPhase === 'battle' && <div className="mx-auto mt-6 max-w-md"><div className="mb-2 flex items-center justify-between text-xs text-ink-400"><span>HP</span><span>{bossHp}/{selected.boss.hp}</span></div><div className="h-3 overflow-hidden rounded-full bg-white/5"><div className="h-full bg-red-500 transition-all" style={{ width: `${bossHp / selected.boss.hp * 100}%` }} /></div><div className="mt-3 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-ember-300"><span>Phase {bossExerciseIndex + 1}/{bossExercises.length}</span><span className="font-mono text-lg text-white">{timeLeft}s</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-white/5"><div className="h-full bg-ember-500 transition-[width] duration-1000" style={{ width: `${timeLeft / Math.max(1, bossExercise.durationSeconds) * 100}%` }} /></div><div className="mt-5 rounded-2xl border border-white/10 bg-black/30 p-5"><div className="text-2xl">{bossExercise.name}</div><div className="mt-1 text-4xl font-black text-white">{bossExercise.durationSeconds} seconds</div><p className="mt-2 text-xs text-ink-400">{bossExercise.note}</p><p className="mt-3 text-xs font-semibold text-violet-300">Survive the timer. When it ends, the next exercise opens.</p></div></div>}{bossPhase === 'defeat' && <div className="mt-6"><Trophy size={48} className="mx-auto text-amber-300" /><h2 className="mt-3 font-display text-2xl font-black text-white">{selected.boss.name} defeated</h2></div>}</div></section>;
   if (view === 'reward' && reward) return <section className="mx-auto max-w-xl rounded-3xl border border-amber-500/25 bg-black/55 p-8 text-center"><Trophy size={56} className="mx-auto text-amber-300" /><h1 className="mt-4 font-display text-4xl font-black text-white">Victory</h1><p className="mt-2 text-ink-300">+{reward.xp} XP · +{reward.coins} Coins</p>{reward.title && <p className="mt-2 text-sm text-amber-200">Title unlocked: {reward.title}</p>}{reward.lore && <p className="mt-1 text-xs text-ink-400">Lore unlocked: {reward.lore}</p>}<button onClick={claimReward} className="btn-primary mt-6">Return to World Map</button></section>;
   return <section className="space-y-6"><div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.3em] text-ember-400">SYROX · STORY MODE</p><h1 className="font-display text-3xl font-black text-white sm:text-5xl">The Broken Reality</h1><p className="mt-1 text-sm text-ink-400">Your discipline changes the world.</p></div><button onClick={toggleMusic} className="btn-ghost">{musicOn ? <Music size={15} /> : <VolumeX size={15} />}{musicOn ? 'Music On' : 'Music Off'}</button></div><div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/40 p-5"><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{CHAPTERS.map((chapter) => { const unlocked = chapter.number <= currentNumber; const completed = chapter.number < currentNumber; return <button key={chapter.id} disabled={!unlocked} onClick={() => selectChapter(chapter)} className={`group relative overflow-hidden rounded-2xl border p-5 text-left transition ${unlocked ? 'border-white/10 bg-black/35 hover:border-ember-500/40 hover:bg-black/50' : 'cursor-not-allowed border-white/5 bg-black/20 opacity-40'}`}><div className="text-3xl">{completed ? '✓' : chapter.emoji}</div><div className="mt-2 text-[10px] font-bold uppercase tracking-[0.25em] text-ink-500">Chapter {chapter.number}</div><h2 className="mt-1 font-display text-xl font-black text-white">{chapter.title}</h2><p className="mt-1 text-xs leading-5 text-ink-400">{chapter.subtitle}</p>{completed && <div className="absolute right-3 top-3 rounded-full bg-emerald-500/10 px-2 py-1 text-[9px] font-bold uppercase text-emerald-300">Complete</div>}</button>; })}</div></div></section>;

@@ -18,15 +18,134 @@ function stateFromLine(line: DialogueLine | undefined): ShadowState {
   return 'idle';
 }
 
+// SpeechSynthesis does not expose a reliable duration API, so the text reveal is
+// paced from the same voice/emotion family and then held until narration ends.
+// This keeps the text from racing ahead of the voice while preserving the
+// existing audio engine and all other callers.
+function getRevealDuration(text: string, voice: DialogueLine['voice'], emotion?: DialogueLine['emotion']): number {
+  const baseWpm: Record<string, number> = {
+    narrator: 145, mentor: 150, merchant: 165, warrior: 175, survivor: 155,
+    corrupted: 135, guardian: 125, boss: 115, player: 165,
+  };
+  const emotionRate: Record<string, number> = {
+    neutral: 1, happy: 1.1, serious: 0.9, excited: 1.2,
+    mysterious: 0.85, angry: 1.1, sad: 0.8, fear: 1.15,
+  };
+  const wpm = (baseWpm[voice] ?? 145) * (emotionRate[emotion ?? 'neutral'] ?? 1);
+  const words = Math.max(1, text.trim().split(/\s+/).length);
+  const punctuationPauses = (text.match(/[,.!?;:]/g) ?? []).length * 90;
+  return Math.max(900, (words / wpm) * 60_000 + punctuationPauses);
+}
+
 export function CutscenePlayer({ lines, onComplete, bgGradient, chapterEmoji, chapterTitle, shadowGuide = true, shadowState }: CutscenePlayerProps) {
   const [index, setIndex] = useState(0); const [displayedText, setDisplayedText] = useState(''); const [isTyping, setIsTyping] = useState(false); const [isPlaying, setIsPlaying] = useState(false); const [voiceOn, setVoiceOn] = useState(isVoiceEnabled()); const [imageFailed, setImageFailed] = useState(false);
-  const skipRef = useRef(false); const typeRef = useRef<ReturnType<typeof setInterval> | null>(null); const currentLine = lines[Math.min(index, lines.length - 1)]; const isLast = index >= lines.length - 1; const isShadow = Boolean(shadowGuide && currentLine?.speaker?.toLowerCase().includes('shadow')); const activeShadowState = shadowState ?? stateFromLine(currentLine); const shadowImage = getShadowImage(activeShadowState);
+  const skipRef = useRef(false); const typeRef = useRef<ReturnType<typeof setInterval> | null>(null); const narrationFinishedRef = useRef(false); const currentLine = lines[Math.min(index, lines.length - 1)]; const isLast = index >= lines.length - 1; const isShadow = Boolean(shadowGuide && currentLine?.speaker?.toLowerCase().includes('shadow')); const activeShadowState = shadowState ?? stateFromLine(currentLine); const shadowImage = getShadowImage(activeShadowState);
   useEffect(() => { setImageFailed(false); }, [shadowImage]);
-  useEffect(() => { if (!currentLine) return; setDisplayedText(''); setIsTyping(true); skipRef.current = false; let i = 0; typeRef.current = setInterval(() => { if (skipRef.current) { setDisplayedText(currentLine.text); setIsTyping(false); if (typeRef.current) clearInterval(typeRef.current); return; } if (i < currentLine.text.length) { setDisplayedText(currentLine.text.slice(0, i + 1)); i++; } else { setIsTyping(false); if (typeRef.current) clearInterval(typeRef.current); } }, 24); return () => { if (typeRef.current) clearInterval(typeRef.current); }; }, [index, currentLine?.text]);
-  useEffect(() => { if (!currentLine || !voiceOn) return; setIsPlaying(true); duckMusic(true); const voice = isShadow ? 'guardian' : currentLine.voice; narrate(currentLine.text, voice, currentLine.emotion ?? (isShadow ? 'mysterious' : 'neutral'), () => { setIsPlaying(false); duckMusic(false); }); if (currentLine.sfx) playSfx(currentLine.sfx as SfxType); return () => { stopNarration(); duckMusic(false); }; }, [index, voiceOn, isShadow]);
-  const advance = () => { if (!currentLine) return; if (isTyping) { skipRef.current = true; setDisplayedText(currentLine.text); setIsTyping(false); return; } stopNarration(); duckMusic(false); setIsPlaying(false); if (isLast) onComplete(); else setIndex((v) => v + 1); };
-  const replay = () => { if (!currentLine || !voiceOn) return; setIsPlaying(true); duckMusic(true); narrate(currentLine.text, isShadow ? 'guardian' : currentLine.voice, currentLine.emotion ?? (isShadow ? 'mysterious' : 'neutral'), () => { setIsPlaying(false); duckMusic(false); }); };
-  const toggleVoice = () => { const v = !voiceOn; setVoiceOn(v); setVoiceEnabled(v); if (!v) { stopNarration(); setIsPlaying(false); duckMusic(false); } };
+
+  useEffect(() => {
+    if (!currentLine) return;
+    if (typeRef.current) clearInterval(typeRef.current);
+    setDisplayedText('');
+    setIsTyping(true);
+    skipRef.current = false;
+    narrationFinishedRef.current = !voiceOn;
+
+    const text = currentLine.text;
+    if (!voiceOn) {
+      let i = 0;
+      typeRef.current = setInterval(() => {
+        if (skipRef.current) {
+          setDisplayedText(text); setIsTyping(false);
+          if (typeRef.current) clearInterval(typeRef.current);
+          return;
+        }
+        if (i < text.length) { setDisplayedText(text.slice(0, i + 1)); i += 1; }
+        else { setIsTyping(false); if (typeRef.current) clearInterval(typeRef.current); }
+      }, 28);
+      return () => { if (typeRef.current) clearInterval(typeRef.current); };
+    }
+
+    // When voice is enabled, pace the reveal to the estimated speech duration.
+    // If the browser's actual speech lasts longer, the full line stays visible
+    // until onEnd, so it never advances visually before the voice finishes.
+    const duration = getRevealDuration(text, isShadow ? 'guardian' : currentLine.voice, currentLine.emotion);
+    const stepMs = Math.max(18, duration / Math.max(1, text.length));
+    let i = 0;
+    typeRef.current = setInterval(() => {
+      if (skipRef.current) {
+        setDisplayedText(text); setIsTyping(false);
+        if (typeRef.current) clearInterval(typeRef.current);
+        return;
+      }
+      if (i < text.length && !narrationFinishedRef.current) {
+        setDisplayedText(text.slice(0, i + 1)); i += 1;
+      } else if (i >= text.length && narrationFinishedRef.current) {
+        setDisplayedText(text); setIsTyping(false);
+        if (typeRef.current) clearInterval(typeRef.current);
+      }
+    }, stepMs);
+
+    return () => { if (typeRef.current) clearInterval(typeRef.current); };
+  }, [index, currentLine?.text, voiceOn, isShadow]);
+
+  useEffect(() => {
+    if (!currentLine || !voiceOn) return;
+    setIsPlaying(true); duckMusic(true);
+    narrationFinishedRef.current = false;
+    const voice = isShadow ? 'guardian' : currentLine.voice;
+    narrate(
+      currentLine.text,
+      voice,
+      currentLine.emotion ?? (isShadow ? 'mysterious' : 'neutral'),
+      () => {
+        narrationFinishedRef.current = true;
+        setDisplayedText(currentLine.text);
+        setIsTyping(false);
+        setIsPlaying(false);
+        duckMusic(false);
+      }
+    );
+    if (currentLine.sfx) playSfx(currentLine.sfx as SfxType);
+    return () => { stopNarration(); duckMusic(false); narrationFinishedRef.current = true; };
+  }, [index, voiceOn, isShadow]);
+
+  const advance = () => {
+    if (!currentLine) return;
+    if (isTyping) {
+      skipRef.current = true;
+      narrationFinishedRef.current = true;
+      setDisplayedText(currentLine.text);
+      setIsTyping(false);
+      stopNarration();
+      duckMusic(false);
+      setIsPlaying(false);
+      return;
+    }
+    stopNarration(); duckMusic(false); setIsPlaying(false);
+    if (isLast) onComplete(); else setIndex((v) => v + 1);
+  };
+
+  const replay = () => {
+    if (!currentLine || !voiceOn) return;
+    narrationFinishedRef.current = false;
+    skipRef.current = false;
+    setDisplayedText(''); setIsTyping(true); setIsPlaying(true); duckMusic(true);
+    narrate(
+      currentLine.text,
+      isShadow ? 'guardian' : currentLine.voice,
+      currentLine.emotion ?? (isShadow ? 'mysterious' : 'neutral'),
+      () => {
+        narrationFinishedRef.current = true;
+        setDisplayedText(currentLine.text); setIsTyping(false); setIsPlaying(false); duckMusic(false);
+      }
+    );
+  };
+
+  const toggleVoice = () => {
+    const v = !voiceOn; setVoiceOn(v); setVoiceEnabled(v);
+    if (!v) { stopNarration(); setIsPlaying(false); duckMusic(false); narrationFinishedRef.current = true; }
+  };
+
   if (!currentLine) return <div className="rounded-2xl border border-white/10 bg-black/50 p-8 text-center text-ink-300">No dialogue available.</div>;
   return <div className="relative min-h-[480px] overflow-hidden rounded-3xl border border-white/10" style={{ background: bgGradient }}>
     <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(139,92,246,.2),transparent_42%)] pointer-events-none" />

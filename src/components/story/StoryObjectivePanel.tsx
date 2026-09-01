@@ -5,9 +5,9 @@ import { useStore } from '../../store/useStore';
 import {
   STORY_MILESTONES,
   addMilestone,
+  applyChoice,
   applyMissionEvolution,
   decodeStoryEvolution,
-  encodeStoryEvolution,
   getShadowReaction,
   mergeEncodedStoryEvolution,
 } from '../../data/story/storyEvolution';
@@ -19,26 +19,38 @@ interface StoryObjectivePanelProps {
 }
 
 export function StoryObjectivePanel({ mission, progress, complete }: StoryObjectivePanelProps) {
-  const { state, unlockStoryAchievement } = useStore();
+  const { state, unlockStoryAchievement, setStoryChoice } = useStore();
   const percent = complete ? 100 : Math.min(100, (progress / Math.max(1, mission.target)) * 100);
-
+  const selectedChoiceId = state.storyChoices[mission.chapterId];
   const evolutionBefore = decodeStoryEvolution(state.storyAchievements, state.storyLoreUnlocked);
   let evolutionAfter = complete ? applyMissionEvolution(evolutionBefore, mission) : evolutionBefore;
+
   if (complete) {
     evolutionAfter = addMilestone(evolutionAfter, STORY_MILESTONES.firstMission);
     if (mission.type === 'workout') evolutionAfter = addMilestone(evolutionAfter, STORY_MILESTONES.firstWorkout);
     if (mission.id.startsWith('boss_')) evolutionAfter = addMilestone(evolutionAfter, STORY_MILESTONES.firstBoss);
+    if (selectedChoiceId) {
+      const selectedChoice = mission.choices?.find((choice) => choice.id === selectedChoiceId);
+      if (selectedChoice) evolutionAfter = applyChoice(evolutionAfter, selectedChoice);
+    }
 
-    const encoded = mergeEncodedStoryEvolution(
-      state.storyAchievements,
-      evolutionBefore,
-      evolutionAfter,
-    );
+    const encoded = mergeEncodedStoryEvolution(state.storyAchievements, evolutionBefore, evolutionAfter);
     const newTokens = encoded.filter((token) => !state.storyAchievements.includes(token));
     if (newTokens.length > 0) {
       window.setTimeout(() => newTokens.forEach((token) => unlockStoryAchievement(token)), 0);
     }
   }
+
+  const choose = (choiceId: string) => {
+    if (selectedChoiceId) return;
+    const choice = mission.choices?.find((item) => item.id === choiceId);
+    if (!choice) return;
+    setStoryChoice(mission.chapterId, choice.id);
+    const before = decodeStoryEvolution(state.storyAchievements, state.storyLoreUnlocked);
+    const after = applyChoice(before, choice);
+    const encoded = mergeEncodedStoryEvolution(state.storyAchievements, before, after);
+    encoded.filter((token) => !state.storyAchievements.includes(token)).forEach((token) => unlockStoryAchievement(token));
+  };
 
   const reaction = getShadowReaction(evolutionAfter)[0];
 
@@ -60,6 +72,23 @@ export function StoryObjectivePanel({ mission, progress, complete }: StoryObject
         <div className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-white/[.06]"><motion.div className={`h-full rounded-full ${complete ? 'bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,.45)]' : 'bg-gradient-to-r from-violet-500 to-ember-400'}`} animate={{ width: `${percent}%` }} transition={{ duration: .45, ease: 'easeOut' }} /></div>
         <AnimatePresence mode="wait"><motion.p key={complete ? 'complete' : 'active'} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} className={`relative mt-2 text-[9px] font-black uppercase tracking-[.2em] ${complete ? 'text-emerald-300' : 'text-ink-500'}`}>{complete ? 'OBJECTIVE COMPLETE · Continue unlocked' : 'Complete the objective to unlock Continue'}</motion.p></AnimatePresence>
       </motion.div>
+
+      {complete && mission.choices && mission.choices.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-amber-400/15 bg-black/35 p-4">
+          <div className="text-[8px] font-black uppercase tracking-[.28em] text-amber-300">Choose your path</div>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {mission.choices.map((choice) => {
+              const selected = selectedChoiceId === choice.id;
+              return (
+                <button key={choice.id} type="button" onClick={() => choose(choice.id)} disabled={Boolean(selectedChoiceId)} className={`rounded-xl border px-3 py-3 text-left transition ${selected ? 'border-amber-300/40 bg-amber-500/10' : 'border-white/10 bg-white/[.02] hover:border-amber-400/25 hover:bg-amber-500/[.05]'} disabled:cursor-default`}>
+                  <div className="text-xs font-black text-white">{choice.label}</div>
+                  <div className="mt-1 text-[10px] leading-4 text-ink-500">{choice.consequence}</div>
+                </button>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
 
       {complete && reaction && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-violet-400/15 bg-violet-500/[.045] px-4 py-3">

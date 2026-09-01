@@ -1,17 +1,18 @@
 export * from './types';
 export * from './npcs';
+export * from './storyRework';
 export { STORY_CHAPTERS, STORY_CHAPTERS_EXPANSION } from './chapters';
 export { ARC1_CHAPTERS_16_30 } from './arc1Chapters16to30';
 
 import type { StoryChapter } from './types';
-import { STORY_CHAPTERS, STORY_CHAPTERS_EXPANSION } from './chapters';
-import { ARC1_CHAPTERS_16_30 } from './arc1Chapters16to30';
+import { REWORKED_STORY_CHAPTERS } from './storyRework';
 
-export const ALL_CHAPTERS: StoryChapter[] = [
-  ...STORY_CHAPTERS,
-  ...STORY_CHAPTERS_EXPANSION,
-  ...ARC1_CHAPTERS_16_30,
-];
+/**
+ * Canonical story registry. The legacy chapter files remain available for
+ * backwards compatibility, but Story Mode and the store now use this single
+ * 30-chapter canon so completion keys can never drift between story versions.
+ */
+export const ALL_CHAPTERS: StoryChapter[] = REWORKED_STORY_CHAPTERS;
 
 export function getChapterById(id: string): StoryChapter | undefined {
   return ALL_CHAPTERS.find((chapter) => chapter.id === id);

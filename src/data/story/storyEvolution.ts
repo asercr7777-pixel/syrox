@@ -36,14 +36,30 @@ export function addMilestone(state: StoryState, milestone: string): StoryState {
   return { ...state, milestones: [...state.milestones, milestone] };
 }
 
+/** Explicit IDs are kept for backwards compatibility; new choices can evolve
+ * automatically from their wording without requiring another data-map edit. */
 export const CHOICE_FLAG_MAP: Record<string, StoryFlag> = {
   c1: 'resolve',
   c2: 'truth_seeker',
 };
 
-export function applyChoice(state: StoryState, choice: Pick<StoryChoice, 'id' | 'reward'>): StoryState {
+function inferChoiceFlag(choice: Pick<StoryChoice, 'id' | 'label' | 'consequence'>): StoryFlag | null {
+  const explicit = CHOICE_FLAG_MAP[choice.id];
+  if (explicit) return explicit;
+  const text = `${choice.id} ${choice.label} ${choice.consequence}`.toLowerCase();
+  if (/truth|secret|reveal|learn|discover|knowledge|question/.test(text)) return 'truth_seeker';
+  if (/trust|ally|stand with|beside|believe|follow shadow/.test(text)) return 'shadow_trust';
+  if (/doubt|reject|refuse|suspicious|betray|against shadow/.test(text)) return 'shadow_doubt';
+  if (/freedom|escape|break free|liberate|independent/.test(text)) return 'freedom_first';
+  if (/power|control|dominate|rule|stronger|master/.test(text)) return 'power_first';
+  if (/mercy|forgive|save|protect|help|spare/.test(text)) return 'mercy';
+  if (/resolve|endure|persist|continue|fight|forward|discipline/.test(text)) return 'resolve';
+  return null;
+}
+
+export function applyChoice(state: StoryState, choice: Pick<StoryChoice, 'id' | 'label' | 'consequence' | 'reward'>): StoryState {
   let next = state;
-  const flag = CHOICE_FLAG_MAP[choice.id];
+  const flag = inferChoiceFlag(choice);
   if (flag) next = applyStoryFlag(next, flag);
   if (choice.reward?.type === 'lore' && typeof choice.reward.value === 'string') next = addLore(next, choice.reward.value);
   return next;
@@ -63,11 +79,6 @@ export function applyMissionEvolution(state: StoryState, mission: Pick<StoryMiss
   return next;
 }
 
-/**
- * Persists evolution without changing AppState's public shape. Each flag point
- * is represented by a unique achievement token, so old user_state rows remain
- * compatible and the existing storyAchievements persistence is reused.
- */
 const FLAG_TOKEN = 'evo:flag:';
 const MILESTONE_TOKEN = 'evo:milestone:';
 

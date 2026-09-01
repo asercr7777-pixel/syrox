@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, SkipForward, RotateCcw, Volume2, VolumeX, Eye } from 'lucide-react';
+import { Play, SkipForward, RotateCcw, Volume2, VolumeX, Eye, Sparkles, ChevronRight } from 'lucide-react';
 import type { DialogueLine } from '../../data/story/types';
 import { getShadowImage, type ShadowState } from '../../lib/story/shadowReactions';
 import { narrate, pauseNarration, resumeNarration, stopNarration, setVoiceEnabled, isVoiceEnabled, duckMusic, playSfx, type SfxType } from '../../lib/audioEngine';
@@ -18,127 +18,72 @@ function stateFromLine(line: DialogueLine | undefined): ShadowState {
   return 'idle';
 }
 
-// SpeechSynthesis does not expose a reliable duration API, so the text reveal is
-// paced from the same voice/emotion family and then held until narration ends.
-// This keeps the text from racing ahead of the voice while preserving the
-// existing audio engine and all other callers.
 function getRevealDuration(text: string, voice: DialogueLine['voice'], emotion?: DialogueLine['emotion']): number {
-  const baseWpm: Record<string, number> = {
-    narrator: 145, mentor: 150, merchant: 165, warrior: 175, survivor: 155,
-    corrupted: 135, guardian: 125, boss: 115, player: 165,
-  };
-  const emotionRate: Record<string, number> = {
-    neutral: 1, happy: 1.1, serious: 0.9, excited: 1.2,
-    mysterious: 0.85, angry: 1.1, sad: 0.8, fear: 1.15,
-  };
+  const baseWpm: Record<string, number> = { narrator: 145, mentor: 150, merchant: 165, warrior: 175, survivor: 155, corrupted: 135, guardian: 125, boss: 115, player: 165 };
+  const emotionRate: Record<string, number> = { neutral: 1, happy: 1.1, serious: .9, excited: 1.2, mysterious: .85, angry: 1.1, sad: .8, fear: 1.15 };
   const wpm = (baseWpm[voice] ?? 145) * (emotionRate[emotion ?? 'neutral'] ?? 1);
   const words = Math.max(1, text.trim().split(/\s+/).length);
   const punctuationPauses = (text.match(/[,.!?;:]/g) ?? []).length * 90;
-  return Math.max(900, (words / wpm) * 60_000 + punctuationPauses);
+  return Math.max(900, (words / wpm) * 60000 + punctuationPauses);
 }
 
 export function CutscenePlayer({ lines, onComplete, bgGradient, chapterEmoji, chapterTitle, shadowGuide = true, shadowState }: CutscenePlayerProps) {
-  const [index, setIndex] = useState(0); const [displayedText, setDisplayedText] = useState(''); const [isTyping, setIsTyping] = useState(false); const [isPlaying, setIsPlaying] = useState(false); const [voiceOn, setVoiceOn] = useState(isVoiceEnabled()); const [imageFailed, setImageFailed] = useState(false);
-  const skipRef = useRef(false); const typeRef = useRef<ReturnType<typeof setInterval> | null>(null); const narrationFinishedRef = useRef(false); const currentLine = lines[Math.min(index, lines.length - 1)]; const isLast = index >= lines.length - 1; const isShadow = Boolean(shadowGuide && currentLine?.speaker?.toLowerCase().includes('shadow')); const activeShadowState = shadowState ?? stateFromLine(currentLine); const shadowImage = getShadowImage(activeShadowState);
+  const [index, setIndex] = useState(0);
+  const [displayedText, setDisplayedText] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [voiceOn, setVoiceOn] = useState(isVoiceEnabled());
+  const [imageFailed, setImageFailed] = useState(false);
+  const skipRef = useRef(false);
+  const typeRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const narrationFinishedRef = useRef(false);
+  const currentLine = lines[Math.min(index, lines.length - 1)];
+  const isLast = index >= lines.length - 1;
+  const isShadow = Boolean(shadowGuide && currentLine?.speaker?.toLowerCase().includes('shadow'));
+  const activeShadowState = shadowState ?? stateFromLine(currentLine);
+  const shadowImage = getShadowImage(activeShadowState);
+
   useEffect(() => { setImageFailed(false); }, [shadowImage]);
 
   useEffect(() => {
     if (!currentLine) return;
     if (typeRef.current) clearInterval(typeRef.current);
-    setDisplayedText('');
-    setIsTyping(true);
-    skipRef.current = false;
-    narrationFinishedRef.current = !voiceOn;
-
+    setDisplayedText(''); setIsTyping(true); skipRef.current = false; narrationFinishedRef.current = !voiceOn;
     const text = currentLine.text;
-    if (!voiceOn) {
-      let i = 0;
-      typeRef.current = setInterval(() => {
-        if (skipRef.current) {
-          setDisplayedText(text); setIsTyping(false);
-          if (typeRef.current) clearInterval(typeRef.current);
-          return;
-        }
-        if (i < text.length) { setDisplayedText(text.slice(0, i + 1)); i += 1; }
-        else { setIsTyping(false); if (typeRef.current) clearInterval(typeRef.current); }
-      }, 28);
-      return () => { if (typeRef.current) clearInterval(typeRef.current); };
-    }
-
-    // When voice is enabled, pace the reveal to the estimated speech duration.
-    // If the browser's actual speech lasts longer, the full line stays visible
-    // until onEnd, so it never advances visually before the voice finishes.
-    const duration = getRevealDuration(text, isShadow ? 'guardian' : currentLine.voice, currentLine.emotion);
+    const duration = voiceOn ? getRevealDuration(text, isShadow ? 'guardian' : currentLine.voice, currentLine.emotion) : Math.max(900, text.length * 28);
     const stepMs = Math.max(18, duration / Math.max(1, text.length));
     let i = 0;
     typeRef.current = setInterval(() => {
-      if (skipRef.current) {
-        setDisplayedText(text); setIsTyping(false);
-        if (typeRef.current) clearInterval(typeRef.current);
-        return;
-      }
-      if (i < text.length && !narrationFinishedRef.current) {
-        setDisplayedText(text.slice(0, i + 1)); i += 1;
-      } else if (i >= text.length && narrationFinishedRef.current) {
-        setDisplayedText(text); setIsTyping(false);
-        if (typeRef.current) clearInterval(typeRef.current);
-      }
+      if (skipRef.current) { setDisplayedText(text); setIsTyping(false); if (typeRef.current) clearInterval(typeRef.current); return; }
+      if (i < text.length && (!voiceOn || !narrationFinishedRef.current)) { setDisplayedText(text.slice(0, i + 1)); i += 1; }
+      else if (i >= text.length && (!voiceOn || narrationFinishedRef.current)) { setDisplayedText(text); setIsTyping(false); if (typeRef.current) clearInterval(typeRef.current); }
     }, stepMs);
-
     return () => { if (typeRef.current) clearInterval(typeRef.current); };
   }, [index, currentLine?.text, voiceOn, isShadow]);
 
   useEffect(() => {
     if (!currentLine || !voiceOn) return;
-    setIsPlaying(true); duckMusic(true);
-    narrationFinishedRef.current = false;
-    const voice = isShadow ? 'guardian' : currentLine.voice;
-    narrate(
-      currentLine.text,
-      voice,
-      currentLine.emotion ?? (isShadow ? 'mysterious' : 'neutral'),
-      () => {
-        narrationFinishedRef.current = true;
-        setDisplayedText(currentLine.text);
-        setIsTyping(false);
-        setIsPlaying(false);
-        duckMusic(false);
-      }
-    );
+    setIsPlaying(true); duckMusic(true); narrationFinishedRef.current = false;
+    narrate(currentLine.text, isShadow ? 'guardian' : currentLine.voice, currentLine.emotion ?? (isShadow ? 'mysterious' : 'neutral'), () => {
+      narrationFinishedRef.current = true; setDisplayedText(currentLine.text); setIsTyping(false); setIsPlaying(false); duckMusic(false);
+    });
     if (currentLine.sfx) playSfx(currentLine.sfx as SfxType);
     return () => { stopNarration(); duckMusic(false); narrationFinishedRef.current = true; };
   }, [index, voiceOn, isShadow]);
 
   const advance = () => {
     if (!currentLine) return;
-    if (isTyping) {
-      skipRef.current = true;
-      narrationFinishedRef.current = true;
-      setDisplayedText(currentLine.text);
-      setIsTyping(false);
-      stopNarration();
-      duckMusic(false);
-      setIsPlaying(false);
-      return;
-    }
+    if (isTyping) { skipRef.current = true; narrationFinishedRef.current = true; setDisplayedText(currentLine.text); setIsTyping(false); stopNarration(); duckMusic(false); setIsPlaying(false); return; }
     stopNarration(); duckMusic(false); setIsPlaying(false);
     if (isLast) onComplete(); else setIndex((v) => v + 1);
   };
 
   const replay = () => {
     if (!currentLine || !voiceOn) return;
-    narrationFinishedRef.current = false;
-    skipRef.current = false;
-    setDisplayedText(''); setIsTyping(true); setIsPlaying(true); duckMusic(true);
-    narrate(
-      currentLine.text,
-      isShadow ? 'guardian' : currentLine.voice,
-      currentLine.emotion ?? (isShadow ? 'mysterious' : 'neutral'),
-      () => {
-        narrationFinishedRef.current = true;
-        setDisplayedText(currentLine.text); setIsTyping(false); setIsPlaying(false); duckMusic(false);
-      }
-    );
+    narrationFinishedRef.current = false; skipRef.current = false; setDisplayedText(''); setIsTyping(true); setIsPlaying(true); duckMusic(true);
+    narrate(currentLine.text, isShadow ? 'guardian' : currentLine.voice, currentLine.emotion ?? (isShadow ? 'mysterious' : 'neutral'), () => {
+      narrationFinishedRef.current = true; setDisplayedText(currentLine.text); setIsTyping(false); setIsPlaying(false); duckMusic(false);
+    });
   };
 
   const toggleVoice = () => {
@@ -147,16 +92,56 @@ export function CutscenePlayer({ lines, onComplete, bgGradient, chapterEmoji, ch
   };
 
   if (!currentLine) return <div className="rounded-2xl border border-white/10 bg-black/50 p-8 text-center text-ink-300">No dialogue available.</div>;
-  return <div className="relative min-h-[480px] overflow-hidden rounded-3xl border border-white/10" style={{ background: bgGradient }}>
-    <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(139,92,246,.2),transparent_42%)] pointer-events-none" />
-    <div className="relative grid min-h-[480px] items-center gap-6 p-5 md:grid-cols-[210px_1fr] md:p-8">
-      {isShadow ? <motion.div key={activeShadowState} initial={{ opacity: 0, x: -18, scale: .96 }} animate={{ opacity: 1, x: 0, scale: 1 }} className="relative mx-auto w-full max-w-[210px] overflow-hidden rounded-3xl border border-violet-400/30 bg-black/50 shadow-[0_0_50px_rgba(124,58,237,.2)]"><img src={imageFailed ? getShadowImage('standing') : shadowImage} alt={`Shadow, ${activeShadowState} state`} className="aspect-[3/4] w-full object-cover object-center" onError={() => setImageFailed(true)} /><div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent p-4"><div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-violet-200"><Eye size={13} /> Shadow</div><p className="mt-1 text-[10px] text-violet-100/70">{activeShadowState}</p></div></motion.div> : <div className="hidden md:block" />}
-      <div className="min-w-0">
-        {chapterEmoji && <motion.div key={chapterEmoji + index} initial={{ scale: .7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="mb-3 text-4xl">{chapterEmoji}</motion.div>}
-        {chapterTitle && <motion.h2 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-5 font-display text-xl font-black text-white">{chapterTitle}</motion.h2>}
-        <AnimatePresence mode="wait"><motion.div key={index} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}><div className="mb-2"><span className={`inline-flex rounded-lg px-3 py-1 text-sm font-bold ${isShadow ? 'border border-violet-400/30 bg-violet-500/10 text-violet-200' : 'border border-ember-500/25 bg-ember-500/10 text-ember-300'}`}>{currentLine.speaker}</span></div><button onClick={advance} aria-label={isTyping ? 'Show full dialogue' : isLast ? 'Finish scene' : 'Continue dialogue'} className="w-full rounded-2xl border border-white/10 bg-black/70 p-5 text-left shadow-xl backdrop-blur-sm"><p className="text-sm leading-7 text-ink-100 md:text-base">{displayedText}{isTyping && <span className="ml-1 inline-block h-4 w-1.5 animate-pulse bg-ember-400" />}</p>{!isTyping && <div className="mt-3 text-[10px] uppercase tracking-wider text-ink-500">Click to continue ▸</div>}</button></motion.div></AnimatePresence>
-        <div className="mt-4 flex flex-wrap gap-2"><button onClick={() => { if (isPlaying) { pauseNarration(); setIsPlaying(false); } else { resumeNarration(); setIsPlaying(true); } }} disabled={!voiceOn} className="btn-ghost btn-sheen px-3 py-1.5 text-xs"><Play size={13} />{isPlaying ? 'Pause' : 'Play'}</button><button onClick={replay} disabled={!voiceOn} className="btn-ghost btn-sheen px-3 py-1.5 text-xs"><RotateCcw size={13} /> Replay</button><button onClick={onComplete} className="btn-ghost btn-sheen px-3 py-1.5 text-xs"><SkipForward size={13} /> Skip</button><button onClick={toggleVoice} className="btn-ghost btn-sheen px-3 py-1.5 text-xs">{voiceOn ? <Volume2 size={13} /> : <VolumeX size={13} />}{voiceOn ? 'Voice On' : 'Voice Off'}</button></div>
-        <div className="mt-4 flex gap-1.5" aria-label={`Dialogue ${index + 1} of ${lines.length}`}>{lines.map((_, i) => <div key={i} className={`h-1.5 rounded-full ${i === index ? 'w-7 bg-ember-500' : i < index ? 'w-1.5 bg-ember-500/40' : 'w-1.5 bg-white/10'}`} />)}</div>
+  const progress = ((index + 1) / Math.max(lines.length, 1)) * 100;
+
+  return <div className="relative min-h-[560px] overflow-hidden rounded-[2rem] border border-white/10 bg-black shadow-2xl" style={{ backgroundImage: bgGradient }}>
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(139,92,246,.26),transparent_32%),radial-gradient(circle_at_88%_82%,rgba(245,158,11,.13),transparent_30%)]" />
+    <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(0,0,0,.78),rgba(0,0,0,.38),rgba(0,0,0,.82))]" />
+    <div className="absolute -left-28 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full bg-violet-500/10 blur-3xl" />
+    <div className="absolute -right-24 bottom-0 h-72 w-72 rounded-full bg-ember-500/10 blur-3xl" />
+
+    <div className="relative z-10 flex min-h-[560px] flex-col p-4 sm:p-6 md:p-8">
+      <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[.06] text-lg shadow-inner">{chapterEmoji ?? <Sparkles size={18} className="text-ember-300" />}</div>
+          <div className="min-w-0"><p className="text-[9px] font-black uppercase tracking-[.35em] text-ink-500">Story Mode</p><h2 className="truncate font-display text-sm font-black uppercase tracking-wider text-white sm:text-base">{chapterTitle ?? 'Unknown Chapter'}</h2></div>
+        </div>
+        <div className="shrink-0 text-right"><p className="text-[9px] font-black uppercase tracking-[.28em] text-ink-500">Scene</p><p className="font-mono text-xs font-bold text-ink-200">{String(index + 1).padStart(2, '0')} / {String(lines.length).padStart(2, '0')}</p></div>
+      </div>
+
+      <div className="mt-5 grid flex-1 items-center gap-7 md:grid-cols-[230px_1fr]">
+        {isShadow ? <motion.div key={activeShadowState} initial={{ opacity: 0, x: -24, scale: .94 }} animate={{ opacity: 1, x: 0, scale: 1 }} transition={{ duration: .45 }} className="relative mx-auto w-full max-w-[230px]">
+          <div className="absolute inset-4 rounded-[2rem] bg-violet-500/20 blur-2xl" />
+          <div className="relative overflow-hidden rounded-[2rem] border border-violet-300/20 bg-black/60 p-1 shadow-[0_0_70px_rgba(124,58,237,.22)]">
+            <img src={imageFailed ? getShadowImage('standing') : shadowImage} alt={`Shadow, ${activeShadowState} state`} className="aspect-[3/4] w-full rounded-[1.7rem] object-cover object-center opacity-95" onError={() => setImageFailed(true)} />
+            <div className="absolute inset-x-1 bottom-1 rounded-b-[1.7rem] bg-gradient-to-t from-black via-black/75 to-transparent px-5 pb-5 pt-12"><div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[.3em] text-violet-200"><Eye size={13} /> Shadow</div><p className="mt-1 text-[10px] uppercase tracking-widest text-violet-100/45">{activeShadowState}</p></div>
+          </div>
+        </motion.div> : <div className="hidden md:flex md:items-center md:justify-center"><div className="relative flex h-40 w-40 items-center justify-center rounded-full border border-white/5 bg-white/[.025]"><div className="absolute inset-4 rounded-full border border-ember-400/10" /><Sparkles size={26} className="text-ember-300/50" /></div></div>}
+
+        <div className="min-w-0">
+          <AnimatePresence mode="wait"><motion.div key={index} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: .35 }}>
+            <div className="mb-4 flex items-center gap-3">
+              <span className={`inline-flex items-center rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[.22em] ${isShadow ? 'border-violet-300/20 bg-violet-500/10 text-violet-200' : 'border-ember-400/20 bg-ember-500/10 text-ember-200'}`}>{currentLine.speaker}</span>
+              {isPlaying && <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[.2em] text-ink-500"><span className="flex gap-0.5"><i className="h-2 w-0.5 animate-pulse bg-ember-400" /><i className="h-3 w-0.5 animate-pulse bg-ember-400 [animation-delay:120ms]" /><i className="h-2 w-0.5 animate-pulse bg-ember-400 [animation-delay:240ms]" /></span> Speaking</span>}
+            </div>
+            <button onClick={advance} aria-label={isTyping ? 'Show full dialogue' : isLast ? 'Finish scene' : 'Continue dialogue'} className="group relative w-full overflow-hidden rounded-[1.7rem] border border-white/10 bg-black/55 p-6 text-left shadow-2xl backdrop-blur-xl transition-all hover:border-white/20 hover:bg-black/65 sm:p-7">
+              <div className="absolute left-0 top-0 h-px w-1/2 bg-gradient-to-r from-transparent via-ember-400/60 to-transparent" />
+              <p className="min-h-[8rem] text-[15px] leading-8 text-ink-100 sm:text-base sm:leading-8">{displayedText}{isTyping && <span className="ml-1 inline-block h-5 w-1.5 animate-pulse rounded-full bg-ember-400 align-middle shadow-[0_0_10px_rgba(245,158,11,.6)]" />}</p>
+              {!isTyping && <div className="mt-5 flex items-center gap-2 text-[9px] font-black uppercase tracking-[.25em] text-ink-500 transition-colors group-hover:text-ember-300"><ChevronRight size={13} /> {isLast ? 'Finish Scene' : 'Continue'}</div>}
+            </button>
+          </motion.div></AnimatePresence>
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <div className="mb-3 flex items-center justify-between text-[9px] font-black uppercase tracking-[.2em] text-ink-500"><span>Scene progression</span><span>{Math.round(progress)}%</span></div>
+        <div className="h-1 overflow-hidden rounded-full bg-white/[.06]"><motion.div className="h-full rounded-full bg-gradient-to-r from-violet-500 via-ember-400 to-ember-300 shadow-[0_0_14px_rgba(245,158,11,.35)]" animate={{ width: `${progress}%` }} transition={{ duration: .4 }} /></div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button onClick={() => { if (isPlaying) { pauseNarration(); setIsPlaying(false); } else { resumeNarration(); setIsPlaying(true); } }} disabled={!voiceOn} className="btn-ghost btn-sheen px-3 py-1.5 text-xs"><Play size={13} />{isPlaying ? 'Pause' : 'Play'}</button>
+          <button onClick={replay} disabled={!voiceOn} className="btn-ghost btn-sheen px-3 py-1.5 text-xs"><RotateCcw size={13} /> Replay</button>
+          <button onClick={onComplete} className="btn-ghost btn-sheen px-3 py-1.5 text-xs"><SkipForward size={13} /> Skip</button>
+          <button onClick={toggleVoice} className="btn-ghost btn-sheen px-3 py-1.5 text-xs">{voiceOn ? <Volume2 size={13} /> : <VolumeX size={13} />}{voiceOn ? 'Voice On' : 'Voice Off'}</button>
+        </div>
       </div>
     </div>
   </div>;

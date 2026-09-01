@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getShadowImage, getShadowReaction, type ShadowState, type StoryEventType } from '../lib/story/shadowReactions';
 import { useStore } from '../store/useStore';
 import { ALL_CHAPTERS } from '../data/story';
@@ -151,23 +151,42 @@ export function StoryProgressBridge() {
   if (!storyVisible) return null;
 
   return (
-    <motion.aside
-      initial={{ opacity: 0, y: 12, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      className="pointer-events-none fixed bottom-5 right-5 z-40 hidden w-[min(340px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-violet-500/25 bg-[#07070d]/95 shadow-[0_20px_60px_rgba(0,0,0,.5)] backdrop-blur-xl sm:block"
-      aria-label="Shadow story reaction"
-    >
-      <div className="flex items-stretch">
-        <div className="w-24 shrink-0 overflow-hidden border-r border-violet-500/20 bg-black/60">
-          <img src={image} alt="Shadow" className="h-full min-h-28 w-full object-cover object-center" />
+    <AnimatePresence mode="wait">
+      <motion.aside
+        key={`${latestEvent?.id ?? 'idle'}:${latestEvent?.shadowState ?? 'idle'}`}
+        initial={{ opacity: 0, y: 18, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 8, scale: 0.98 }}
+        transition={{ duration: 0.24 }}
+        className="pointer-events-none fixed bottom-4 left-4 right-4 z-40 mx-auto w-auto max-w-[380px] overflow-hidden rounded-2xl border border-violet-500/25 bg-[#07070d]/95 shadow-[0_20px_60px_rgba(0,0,0,.5)] backdrop-blur-xl sm:bottom-5 sm:left-auto sm:right-5 sm:mx-0 sm:w-[min(340px,calc(100vw-2rem))]"
+        aria-label="Shadow story reaction"
+      >
+        <div className="flex items-stretch">
+          <div className="w-24 shrink-0 overflow-hidden border-r border-violet-500/20 bg-black/60 sm:w-28">
+            <img
+              key={image}
+              src={image}
+              alt={`Shadow, ${latestEvent?.shadowState ?? 'idle'} state`}
+              loading="eager"
+              className="h-full min-h-28 w-full object-cover object-center"
+              onError={(event) => {
+                if (event.currentTarget.src.endsWith('/shadow_standing.png.jpg')) return;
+                event.currentTarget.src = getShadowImage('standing');
+              }}
+            />
+          </div>
+          <div className="min-w-0 flex-1 p-3.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-[9px] font-bold uppercase tracking-[0.25em] text-violet-300">{reaction.title}</div>
+              <div className="h-1.5 w-1.5 rounded-full bg-violet-300 shadow-[0_0_10px_rgba(167,139,250,.8)]" />
+            </div>
+            <p className="mt-2 text-xs leading-5 text-ink-100 sm:text-sm">{reaction.lines[0]}</p>
+            <p className="mt-1 text-[11px] leading-4 text-ink-400">{reaction.lines[1]}</p>
+            <div className="mt-2 text-[9px] font-mono uppercase tracking-widest text-violet-400/60">STATE · {latestEvent?.shadowState ?? 'idle'}</div>
+          </div>
         </div>
-        <div className="min-w-0 flex-1 p-3">
-          <div className="text-[9px] font-bold uppercase tracking-[0.25em] text-violet-300">{reaction.title}</div>
-          <p className="mt-2 text-xs leading-5 text-ink-100">{reaction.lines[0]}</p>
-          <p className="mt-1 text-[11px] leading-4 text-ink-400">{reaction.lines[1]}</p>
-        </div>
-      </div>
-    </motion.aside>
+      </motion.aside>
+    </AnimatePresence>
   );
 }
 

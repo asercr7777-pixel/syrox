@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, LockKeyhole, Target, Zap } from 'lucide-react';
 import type { StoryMission } from '../../data/story/types';
@@ -29,17 +30,22 @@ export function StoryObjectivePanel({ mission, progress, complete }: StoryObject
     evolutionAfter = addMilestone(evolutionAfter, STORY_MILESTONES.firstMission);
     if (mission.type === 'workout') evolutionAfter = addMilestone(evolutionAfter, STORY_MILESTONES.firstWorkout);
     if (mission.id.startsWith('boss_')) evolutionAfter = addMilestone(evolutionAfter, STORY_MILESTONES.firstBoss);
+    const text = `${mission.id} ${mission.title} ${mission.description}`.toLowerCase();
+    if (/archive|black archive/.test(text)) evolutionAfter = addMilestone(evolutionAfter, STORY_MILESTONES.archiveOpened);
+    if (/system.*enemy|enemy.*system|system declared/.test(text)) evolutionAfter = addMilestone(evolutionAfter, STORY_MILESTONES.systemDeclaredEnemy);
+    if (/shadow.*truth|truth.*shadow|shadow.*revealed|truth revealed/.test(text)) evolutionAfter = addMilestone(evolutionAfter, STORY_MILESTONES.shadowTruth);
     if (selectedChoiceId) {
       const selectedChoice = mission.choices?.find((choice) => choice.id === selectedChoiceId);
       if (selectedChoice) evolutionAfter = applyChoice(evolutionAfter, selectedChoice);
     }
+  }
 
+  useEffect(() => {
+    if (!complete) return;
     const encoded = mergeEncodedStoryEvolution(state.storyAchievements, evolutionBefore, evolutionAfter);
     const newTokens = encoded.filter((token) => !state.storyAchievements.includes(token));
-    if (newTokens.length > 0) {
-      window.setTimeout(() => newTokens.forEach((token) => unlockStoryAchievement(token)), 0);
-    }
-  }
+    if (newTokens.length > 0) newTokens.forEach((token) => unlockStoryAchievement(token));
+  }, [complete, evolutionAfter, evolutionBefore, state.storyAchievements, unlockStoryAchievement]);
 
   const choose = (choiceId: string) => {
     if (selectedChoiceId) return;
@@ -47,7 +53,9 @@ export function StoryObjectivePanel({ mission, progress, complete }: StoryObject
     if (!choice) return;
     setStoryChoice(mission.chapterId, choice.id);
     const before = decodeStoryEvolution(state.storyAchievements, state.storyLoreUnlocked);
-    const after = applyChoice(before, choice);
+    let after = applyChoice(before, choice);
+    if (choice.reward?.type === 'lore') after = addMilestone(after, STORY_MILESTONES.shadowTruth);
+    if (/final|end|fate|last choice/i.test(`${mission.id} ${choice.label} ${choice.consequence}`)) after = addMilestone(after, STORY_MILESTONES.finalChoice);
     const encoded = mergeEncodedStoryEvolution(state.storyAchievements, before, after);
     encoded.filter((token) => !state.storyAchievements.includes(token)).forEach((token) => unlockStoryAchievement(token));
   };

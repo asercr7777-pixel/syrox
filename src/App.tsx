@@ -7,6 +7,7 @@ import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { AuthProvider, useAuth } from './lib/auth';
 import { useStore } from './store/useStore';
 import { syncSoundFlag } from './lib/sound';
+import { ensureStoryReset } from './lib/story/storyReset';
 import { usePWA } from './hooks/usePWA';
 import { InstallButton } from './components/pwa/InstallButton';
 import { SettingsAppearance } from './components/SettingsAppearance';
@@ -71,8 +72,16 @@ function AppContent() {
   }, [state.soundEnabled]);
 
   useEffect(() => {
-    if (user) void loadFromCloud(user.id);
-    else setUserId(null);
+    let cancelled = false;
+    if (!user) {
+      setUserId(null);
+      return;
+    }
+    void (async () => {
+      await ensureStoryReset(user.id);
+      if (!cancelled) await loadFromCloud(user.id);
+    })();
+    return () => { cancelled = true; };
   }, [user, setUserId, loadFromCloud]);
 
   useEffect(() => {

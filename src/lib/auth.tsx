@@ -54,6 +54,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     if (error) return { error: authErrorMessage(error.message, 'signup') };
 
+    // Supabase can intentionally return a user with no identities for an
+    // already-registered email when email enumeration protection is enabled.
+    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      return { error: 'An account with this email already exists. Sign in instead.' };
+    }
+
     if (data.user && data.session) {
       const { error: profileError } = await supabase
         .from('profiles')

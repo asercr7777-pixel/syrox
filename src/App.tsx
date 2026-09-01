@@ -46,7 +46,7 @@ function AppContent() {
   if (loading) return <PageLoader />;
   if (!user && !isReset) return <Auth />;
   if (isReset) return <ResetPassword />;
-  return <ErrorBoundary><div className="min-h-screen"><Background /><Navigation activeView={view} onNavigate={handleNavigate} /><main className="relative z-10 mx-auto w-full max-w-[1400px] px-4 py-5 md:px-6"><Suspense fallback={<PageLoader />}>{content}</Suspense></main><ToastContainer /><Confetti />{!isInstalled && isInstallable && <InstallButton onInstall={promptInstall} />}<StoryProgressBridge /></div></ErrorBoundary>;
+  return <ErrorBoundary><div className="min-h-screen"><Background /><Navigation current={view} onNavigate={handleNavigate} /><main className="relative z-10 mx-auto w-full max-w-[1400px] px-4 py-5 md:px-6 lg:ml-64"><Suspense fallback={<PageLoader />}>{content}</Suspense></main><ToastContainer /><Confetti />{!isInstalled && isInstallable && <InstallButton onInstall={promptInstall} />}<StoryProgressBridge /></div></ErrorBoundary>;
 }
 
 export default function App() { return <AuthProvider><AppContent /></AuthProvider>; }

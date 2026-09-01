@@ -22,6 +22,7 @@ function initial(): Day[] { return seedNames.map((name, i) => ({ id: `day-${i + 
 function load(): Day[] { try { const raw = localStorage.getItem(KEY); if (raw) { const value = JSON.parse(raw); if (Array.isArray(value) && value.length === 6) return value; } } catch {} return initial(); }
 function loadHistory(): WorkoutHistoryEntry[] { try { const raw = localStorage.getItem(WORKOUT_HISTORY_KEY); const value = raw ? JSON.parse(raw) : []; return Array.isArray(value) ? value : []; } catch { return []; } }
 function todayKey() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function todayKeyFromTimestamp(timestamp: number) { const d = new Date(timestamp); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function loadStoryWorkoutEvents(): Record<string, number> { try { const raw = localStorage.getItem(STORY_WORKOUT_KEY); const value = raw ? JSON.parse(raw) : {}; return value && typeof value === 'object' ? value : {}; } catch { return {}; } }
 const labels: Record<Section, string> = { stretching: 'Stretching', main: 'Main Training', plyometric: 'Plyometric' };
 
@@ -51,19 +52,14 @@ export function SixDayWorkout() {
     const chapter = ALL_CHAPTERS.find((item) => item.number === currentChapterNumber);
     if (!chapter) return;
 
-    const previousSessionsToday = state.workoutSessions.filter((session) => {
-      const date = new Date(session.completedAt);
-      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` === today;
-    }).length;
+    const previousSessionsToday = state.workoutSessions.filter((session) => todayKeyFromTimestamp(session.completedAt) === today).length;
     const workoutCountToday = previousSessionsToday + 1;
 
     chapter.missions
       .filter((mission) => mission.type === 'workout' && !state.storyCompletedMissions[mission.id] && workoutCountToday >= mission.target)
       .forEach((mission) => completeStoryMission(mission.id, { xp: mission.xpReward, coins: mission.coinReward }));
 
-    window.dispatchEvent(new CustomEvent('stryven-story-event', {
-      detail: { type: 'workout_completed', dayId: current.id, dayName: current.name, durationSeconds, date: today, workoutCountToday },
-    }));
+    window.dispatchEvent(new CustomEvent('stryven-story-event', { detail: { type: 'workout_completed', dayId: current.id, dayName: current.name, durationSeconds, date: today, workoutCountToday } }));
   };
 
   const updateCurrent = (fn: (d: Day) => Day) => persist(days.map((d, i) => i === active ? fn(d) : d));
@@ -72,11 +68,7 @@ export function SixDayWorkout() {
     persist(nextDays);
     const nextCurrent = nextDays[active];
     const allDone = nextCurrent.exercises.length > 0 && nextCurrent.exercises.every((e) => e.done);
-    if (allDone) {
-      // The story reacts immediately when the real workout is completed,
-      // even if the user never starts the optional session timer.
-      window.setTimeout(() => syncStoryAfterWorkout(elapsed), 0);
-    }
+    if (allDone) window.setTimeout(() => syncStoryAfterWorkout(elapsed), 0);
   };
   const saveDayName = () => { const value = dayName.trim(); if (!value) return; updateCurrent(d => ({ ...d, name: value })); setEditingDay(false); };
   const saveExercise = () => { if (!exerciseDraft?.name.trim()) return; updateCurrent(d => ({ ...d, exercises: exerciseDraft.id ? d.exercises.map(e => e.id === exerciseDraft.id ? { ...e, ...exerciseDraft, id: e.id } : e) : [...d.exercises, { ...exerciseDraft, id: `${Date.now()}-${Math.random()}`, done: false }] })); setExerciseDraft(null); };
@@ -86,24 +78,23 @@ export function SixDayWorkout() {
     const checkNewDay = () => {
       const currentDate = todayKey();
       const savedDate = localStorage.getItem(DATE_KEY);
-      if (savedDate !== currentDate) {
-        const stored = load();
-        const next = stored.map(d => ({ ...d, exercises: d.exercises.map(e => ({ ...e, done: false })) }));
-        setDays(next);
-        localStorage.setItem(KEY, JSON.stringify(next));
-        localStorage.setItem(DATE_KEY, currentDate);
-      }
+      if (savedDate === currentDate) return;
+      const stored = load();
+      const next = stored.map(d => ({ ...d, exercises: d.exercises.map(e => ({ ...e, done: false })) }));
+      setDays(next);
+      localStorage.setItem(KEY, JSON.stringify(next));
+      localStorage.setItem(DATE_KEY, currentDate);
     };
     checkNewDay();
-    const interval = window.setInterval(checkNewDay, 30 * 1000);
-    return () => window.clearInterval(interval);
+    const onVisibility = () => { if (document.visibilityState === 'visible') checkNewDay(); };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
   }, []);
 
   useEffect(() => { if (!running || startedAt === null) return; const tick = () => setElapsed(Math.max(0, Math.floor((Date.now() - startedAt) / 1000))); tick(); const id = window.setInterval(tick, 1000); return () => window.clearInterval(id); }, [running, startedAt]);
   const startTimer = () => { if (running) return; const now = Date.now(); setStartedAt(now - elapsed * 1000); setRunning(true); };
   const pauseTimer = () => setRunning(false);
   const resetTimer = () => { setRunning(false); setElapsed(0); setStartedAt(null); };
-
   const finishTimer = () => {
     if (startedAt === null || elapsed <= 0) return;
     const completedAt = Date.now();

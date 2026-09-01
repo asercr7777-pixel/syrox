@@ -1,4 +1,4 @@
-import type { Emotion, DialogueLine } from './types';
+import type { Emotion, DialogueLine, StoryChoice } from './types';
 
 export type StoryFlag =
   | 'truth_seeker'
@@ -42,12 +42,23 @@ export function addMilestone(state: StoryState, milestone: string): StoryState {
   return { ...state, milestones: [...state.milestones, milestone] };
 }
 
-const S = (text: string, emotion: Emotion = 'neutral'): DialogueLine => ({
-  speaker: 'Shadow',
-  voice: 'mentor',
-  text,
-  emotion,
-});
+/** Maps the existing choice ids to the story direction they represent. */
+export const CHOICE_FLAG_MAP: Record<string, StoryFlag> = {
+  c1: 'resolve',
+  c2: 'truth_seeker',
+};
+
+export function applyChoice(state: StoryState, choice: Pick<StoryChoice, 'id' | 'reward'>): StoryState {
+  let next = state;
+  const flag = CHOICE_FLAG_MAP[choice.id];
+  if (flag) next = applyStoryFlag(next, flag);
+
+  if (choice.reward?.type === 'lore' && typeof choice.reward.value === 'string') {
+    next = addLore(next, choice.reward.value);
+  }
+
+  return next;
+}
 
 /** Shadow reacts differently as the player's decisions shape the story. */
 export function getShadowReaction(state: StoryState): DialogueLine[] {
@@ -57,11 +68,17 @@ export function getShadowReaction(state: StoryState): DialogueLine[] {
   if (hasStoryFlag(state, 'shadow_doubt', 2)) {
     return [S('You keep questioning me. Good. But understand this: some truths become dangerous before they become useful.', 'serious')];
   }
+  if (hasStoryFlag(state, 'truth_seeker', 2)) {
+    return [S('You keep choosing the truth, even when it costs you comfort. Remember that when the System offers you an easier answer.', 'mysterious')];
+  }
   if (hasStoryFlag(state, 'freedom_first', 2)) {
     return [S('You keep choosing freedom, even when obedience would be easier. The System has noticed.', 'mysterious')];
   }
   if (hasStoryFlag(state, 'power_first', 2)) {
     return [S('Power keeps appearing in front of you. Remember: what you can control is not always what you should control.', 'serious')];
+  }
+  if (hasStoryFlag(state, 'resolve', 2)) {
+    return [S('You keep moving forward when turning back would be easier. That resolve will matter when the path disappears.', 'serious')];
   }
   return [S('Every choice leaves a mark. The world is beginning to remember yours.', 'mysterious')];
 }

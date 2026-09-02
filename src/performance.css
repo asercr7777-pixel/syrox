@@ -2,41 +2,81 @@
 html { scroll-behavior: auto !important; }
 body { overscroll-behavior-y: none; }
 main { contain: layout paint; }
-
 .glass, .glass-soft { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
 .card, .card-premium, .card-hover { box-shadow: 0 2px 10px rgba(0,0,0,.18) !important; }
 .card-hover, .card-premium, .btn { transition: none !important; }
 .card-hover:hover, .card-premium:hover { transform: none !important; }
 .aura-glow::before, .energy-pulse, .xp-bar-fill, .boss-hp, .skeleton-shimmer { animation: none !important; }
 .glow-ring::before { transition: none !important; }
-
-/* Never spend frames animating decorative backgrounds while the user scrolls. */
-html.is-scrolling .theme-atmosphere,
-html.is-scrolling .theme-atmosphere::before,
-html.is-scrolling .theme-atmosphere::after,
-html.is-scrolling .theme-particle,
-html.is-scrolling video { animation-play-state: paused !important; }
-html.is-scrolling .theme-atmosphere::before,
-html.is-scrolling .theme-atmosphere::after,
-html.is-scrolling .theme-particle { opacity: .35 !important; }
-
+html.is-scrolling .theme-atmosphere, html.is-scrolling .theme-atmosphere::before, html.is-scrolling .theme-atmosphere::after, html.is-scrolling .theme-particle, html.is-scrolling video { animation-play-state: paused !important; }
+html.is-scrolling .theme-atmosphere::before, html.is-scrolling .theme-atmosphere::after, html.is-scrolling .theme-particle { opacity: .35 !important; }
 .theme-atmosphere { contain: strict; }
-
-/* Story: remove costly cinematic effects without changing story logic. */
-.story-page *, .story-page *::before, .story-page *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
-.story-page .backdrop-blur-xl, .story-page .backdrop-blur-md, .story-page .backdrop-blur-sm { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
-
-/* Prevent off-screen decorative layers from stealing layout/paint time. */
-img { content-visibility: auto; }
-
 @media (max-width: 768px) {
-  .theme-atmosphere { display: none !important; }
-  .theme-particle { display: none !important; }
-  video { animation: none !important; }
-  .shadow-2xl, .shadow-xl, .shadow-lg { box-shadow: 0 2px 8px rgba(0,0,0,.16) !important; }
-  [class*="blur-3xl"], [class*="blur-2xl"] { filter: none !important; opacity: .45; }
+ .theme-atmosphere, .theme-particle { display:none !important; }
+ video { animation:none !important; }
+ .shadow-2xl, .shadow-xl, .shadow-lg { box-shadow:0 2px 8px rgba(0,0,0,.16) !important; }
+ [class*="blur-3xl"], [class*="blur-2xl"] { filter:none !important; opacity:.45; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
-}
+/* Lightweight Story Mode */
+.story-simple { max-width: 900px; margin: 0 auto; padding-bottom: 20px; color: white; }
+.story-simple * { box-sizing:border-box; }
+.story-top { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.story-main-title { margin:2px 0 0; font-size:clamp(28px,5vw,48px); line-height:1; font-weight:950; letter-spacing:-.04em; }
+.story-subtitle { margin:7px 0 0; color:rgb(148 163 184); font-size:13px; }
+.story-kicker { color:rgb(251 146 60); font-size:9px; font-weight:900; letter-spacing:.2em; text-transform:uppercase; }
+.story-card { border:1px solid rgba(255,255,255,.09); background:rgba(4,4,8,.72); border-radius:20px; padding:16px; }
+.story-status { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.story-status div { min-width:0; padding:11px; border-radius:13px; background:rgba(255,255,255,.035); }
+.story-status span { display:block; color:rgb(100 116 139); font-size:8px; text-transform:uppercase; letter-spacing:.12em; }
+.story-status b { display:block; margin-top:4px; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.story-chapters { display:grid; gap:7px; }
+.story-chapter { width:100%; display:flex; align-items:center; gap:11px; text-align:left; border:1px solid rgba(255,255,255,.08); background:rgba(4,4,8,.62); border-radius:15px; padding:11px; color:white; }
+.story-chapter:disabled { opacity:.38; }
+.story-chapter.current { border-color:rgba(251,146,60,.42); background:rgba(251,146,60,.055); }
+.story-chapter.done { border-color:rgba(52,211,153,.2); }
+.chapter-number { width:35px; height:35px; flex:0 0 35px; display:grid; place-items:center; border-radius:10px; background:rgba(255,255,255,.045); }
+.story-chapter > span:nth-child(2) { min-width:0; flex:1; }
+.story-chapter small, .story-chapter b, .story-chapter em { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.story-chapter small { color:rgb(100 116 139); font-size:7px; font-weight:900; letter-spacing:.14em; }
+.story-chapter b { margin-top:2px; font-size:13px; }
+.story-chapter em { margin-top:2px; color:rgb(100 116 139); font-size:9px; font-style:normal; }
+.story-back, .story-icon-button { display:inline-flex; align-items:center; gap:7px; border:1px solid rgba(255,255,255,.09); background:rgba(255,255,255,.035); border-radius:10px; color:rgb(203 213 225); padding:8px 10px; font-size:11px; font-weight:800; }
+.story-icon-button { padding:9px; }
+.story-title-row { display:flex; align-items:flex-start; justify-content:space-between; gap:15px; margin-top:10px; }
+.story-title-row h1 { margin:0; font-size:clamp(22px,4vw,34px); font-weight:950; letter-spacing:-.035em; }
+.story-title-row p { margin:6px 0 0; color:rgb(148 163 184); font-size:12px; line-height:1.55; }
+.story-percent { font-size:20px; font-weight:950; color:rgb(251 146 60); }
+.story-progress, .story-boss-bar { height:5px; margin-top:14px; overflow:hidden; border-radius:99px; background:rgba(255,255,255,.06); }
+.story-progress span, .story-boss-bar span { display:block; height:100%; border-radius:inherit; background:rgb(251 146 60); }
+.story-section-head { display:flex; justify-content:space-between; align-items:center; color:rgb(203 213 225); }
+.story-section-head div span { display:block; margin-top:2px; color:rgb(100 116 139); font-size:9px; }
+.story-missions { display:grid; gap:7px; margin-top:12px; }
+.story-mission { width:100%; display:flex; align-items:center; gap:9px; border:1px solid rgba(255,255,255,.07); background:rgba(255,255,255,.025); border-radius:13px; padding:10px; text-align:left; color:white; }
+.story-mission.done { border-color:rgba(52,211,153,.18); opacity:.72; }
+.mission-check { width:28px; height:28px; flex:0 0 28px; display:grid; place-items:center; border-radius:8px; background:rgba(255,255,255,.04); color:rgb(251 146 60); }
+.story-mission.done .mission-check { color:rgb(52 211 153); }
+.mission-copy { min-width:0; flex:1; }
+.mission-copy b, .mission-copy small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mission-copy b { font-size:11px; }
+.mission-copy small { margin-top:2px; color:rgb(100 116 139); font-size:9px; }
+.mission-value { flex:0 0 auto; color:rgb(148 163 184); font-size:8px; font-weight:900; }
+.story-boss-button, .story-primary { width:100%; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:12px; border:1px solid rgba(251,146,60,.35); background:rgba(251,146,60,.1); border-radius:12px; padding:11px 14px; color:rgb(255 237 213); font-size:11px; font-weight:900; }
+.story-hint { display:flex; align-items:center; justify-content:center; gap:6px; padding:9px; color:rgb(100 116 139); font-size:9px; text-align:center; }
+.story-boss-head { display:flex; align-items:center; gap:11px; margin-top:10px; }
+.story-boss-head h1 { margin:0; font-size:24px; font-weight:950; }
+.story-boss-head p { margin:3px 0 0; color:rgb(100 116 139); font-size:10px; }
+.story-icon { width:56px; height:56px; display:grid; place-items:center; margin:0 auto 12px; border:1px solid rgba(251,146,60,.25); border-radius:16px; background:rgba(251,146,60,.08); color:rgb(251 146 60); }
+.story-icon.danger { width:44px; height:44px; margin:0; color:rgb(248 113 113); border-color:rgba(248,113,113,.25); background:rgba(248,113,113,.06); }
+.story-phase { margin-top:15px; padding:13px; border-radius:13px; background:rgba(255,255,255,.03); }
+.story-phase b { font-size:13px; }
+.story-phase p { margin:4px 0 0; color:rgb(148 163 184); font-size:11px; line-height:1.5; }
+.story-reward { text-align:center; padding:28px 16px; }
+.story-reward h1 { margin:0; font-size:25px; font-weight:950; }
+.story-reward p { color:rgb(148 163 184); font-size:11px; }
+.story-rewards { display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin:15px 0; }
+.story-rewards span, .story-loot { display:inline-flex; align-items:center; gap:6px; padding:8px 10px; border-radius:10px; background:rgba(255,255,255,.04); color:rgb(226 232 240); font-size:10px; }
+.story-loot { display:flex; flex-direction:column; margin:0 auto; max-width:300px; }
+.story-loot span { color:rgb(100 116 139); font-size:9px; }
+@media(max-width:640px){ .story-simple{padding:0 0 12px}.story-card{border-radius:16px;padding:13px}.story-status b{font-size:11px}.story-chapter{padding:10px}.story-main-title{font-size:31px}.story-title-row h1{font-size:22px}.story-mission{padding:9px}.mission-copy b{font-size:10px}.story-boss-head h1{font-size:21px} }
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}

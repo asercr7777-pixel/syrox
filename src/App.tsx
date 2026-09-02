@@ -26,7 +26,7 @@ const Tasks = lazy(() => import('./views/Tasks').then((m) => ({ default: m.Tasks
 const StoryMode = lazy(() => import('./views/StoryMode').then((m) => ({ default: m.default })));
 const SkillTree = lazy(() => import('./views/SkillTree').then((m) => ({ default: m.SkillTree })));
 const WorkoutWithAIPlan = lazy(() => import('./components/WorkoutWithAIPlan').then((m) => ({ default: m.WorkoutWithAIPlan })));
-const ShadowAI = lazy(() => import('./components/ShadowAIV2').then((m) => ({ default: m.ShadowAIV2 })));
+const ShadowAI = lazy(() => import('./components/ShadowAICinematic').then((m) => ({ default: m.ShadowAICinematic })));
 const Dungeons = lazy(() => import('./views/Dungeons').then((m) => ({ default: m.Dungeons })));
 const Profile = lazy(() => import('./views/Profile').then((m) => ({ default: m.Profile })));
 const Marketplace = lazy(() => import('./views/Marketplace').then((m) => ({ default: m.Marketplace })));

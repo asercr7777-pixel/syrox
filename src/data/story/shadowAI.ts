@@ -12,11 +12,34 @@ export type ShadowMode =
   | 'respecting'
   | 'provoking';
 
+export type ShadowAction =
+  | 'recover'
+  | 'complete_tasks'
+  | 'train'
+  | 'protect_streak'
+  | 'seek_truth'
+  | 'continue_story'
+  | 'rest_and_return';
+
 export interface ShadowMoment {
   mode: ShadowMode;
   title: string;
   line: string;
   pressure: number;
+}
+
+export interface ShadowMemory {
+  firstMission: boolean;
+  firstWorkout: boolean;
+  firstBoss: boolean;
+  currentStreak: number;
+  bestStreak: number;
+  recentConsistency: number;
+  workoutMomentum: number;
+  completedMissions: number;
+  defeatedBosses: number;
+  loreCount: number;
+  dominantPath: 'truth' | 'trust' | 'power' | 'freedom' | 'mercy' | 'resolve' | 'uncertain';
 }
 
 interface ShadowProfile {
@@ -103,6 +126,61 @@ function getProfile(state: AppState, chapter: number, missionDone: boolean): Sha
   };
 }
 
+function getDominantPath(profile: ShadowProfile): ShadowMemory['dominantPath'] {
+  const paths: Array<[ShadowMemory['dominantPath'], number]> = [
+    ['truth', profile.truth],
+    ['trust', profile.trust],
+    ['power', profile.power],
+    ['freedom', profile.freedom],
+    ['mercy', profile.mercy],
+    ['resolve', profile.resolve],
+  ];
+  paths.sort((a, b) => b[1] - a[1]);
+  return paths[0][1] > 0 ? paths[0][0] : 'uncertain';
+}
+
+export function getShadowMemory(state: AppState): ShadowMemory {
+  const evo = decodeStoryEvolution(state.storyAchievements, state.storyLoreUnlocked);
+  const profile = getProfile(state, Math.max(1, state.storyChapter + 1), false);
+  return {
+    firstMission: profile.completedMissions >= 1,
+    firstWorkout: Boolean(state.history?.some(day => day.workoutCompleted)),
+    firstBoss: profile.defeatedBosses >= 1,
+    currentStreak: state.streak,
+    bestStreak: state.bestStreak,
+    recentConsistency: profile.consistency,
+    workoutMomentum: profile.recentMomentum,
+    completedMissions: profile.completedMissions,
+    defeatedBosses: profile.defeatedBosses,
+    loreCount: profile.loreCount,
+    dominantPath: getDominantPath(profile),
+  };
+}
+
+/**
+ * Chooses the most useful next real-world action for the player.
+ * Shadow never invents completion data; it only reacts to the current store.
+ */
+export function getShadowAction(state: AppState, chapter: number, missionDone: boolean): ShadowAction {
+  const profile = getProfile(state, chapter, missionDone);
+  const enabledTasks = state.mainTasks.filter(task => task.enabled);
+  const completedTasks = enabledTasks.filter(task => state.coreCompleted[task.id]).length;
+  const allTasksDone = enabledTasks.length > 0 && completedTasks === enabledTasks.length;
+  const workoutToday = state.workoutsCompletedToday > 0 || state.workoutSessions.some(session => {
+    const d = new Date(session.completedAt);
+    const today = new Date();
+    return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate();
+  });
+
+  if (state.streak === 0 && profile.consistency < 35) return 'recover';
+  if (!allTasksDone) return 'complete_tasks';
+  if (!workoutToday && profile.recentMomentum < 70) return 'train';
+  if (state.streak > 0 && state.streak >= Math.max(3, Math.floor(state.bestStreak * 0.8))) return 'protect_streak';
+  if (profile.truth > profile.resolve && profile.curiosity >= 40) return 'seek_truth';
+  if (!missionDone) return 'continue_story';
+  return 'rest_and_return';
+}
+
 function pick<T>(items: T[], seed: number): T {
   return items[Math.abs(seed) % items.length];
 }
@@ -123,11 +201,7 @@ function getSeed(state: AppState, chapter: number, missionDone: boolean, profile
 
 /**
  * Behavior-driven local Shadow engine.
- *
- * Shadow does not use a cloud LLM or fabricate player data. Instead, it reads
- * the player's real progression and story history and turns those signals into
- * a persistent-feeling relationship: trust, suspicion, respect, curiosity and
- * pressure all change the kind of Shadow that appears.
+ * Shadow reads real progression and story history instead of fabricating data.
  */
 export function getShadowMoment(state: AppState, chapter: number, missionDone: boolean): ShadowMoment {
   const profile = getProfile(state, chapter, missionDone);
@@ -144,12 +218,7 @@ export function getShadowMoment(state: AppState, chapter: number, missionDone: b
       'You wanted answers badly enough to become dangerous. Now you finally understand why I stayed quiet.',
       'The deeper you looked, the less useful your old certainty became. That was the point.',
     ];
-    return {
-      mode: 'revealing',
-      title: 'SHADOW // ACCESS GRANTED',
-      line: pick(lines, seed),
-      pressure: profile.pressure,
-    };
+    return { mode: 'revealing', title: 'SHADOW // ACCESS GRANTED', line: pick(lines, seed), pressure: profile.pressure };
   }
 
   if (doubtDominant) {
@@ -158,12 +227,7 @@ export function getShadowMoment(state: AppState, chapter: number, missionDone: b
       'Every time you question me, you make the System nervous. I almost respect that.',
       'You watch my words like they are traps. Good. Some of them are.',
     ];
-    return {
-      mode: 'doubting',
-      title: 'SHADOW // UNCONVINCED',
-      line: pick(lines, seed),
-      pressure: profile.pressure,
-    };
+    return { mode: 'doubting', title: 'SHADOW // UNCONVINCED', line: pick(lines, seed), pressure: profile.pressure };
   }
 
   if (trustDominant && profile.respect >= 45) {
@@ -172,26 +236,16 @@ export function getShadowMoment(state: AppState, chapter: number, missionDone: b
       'I used to measure your obedience. Now I measure your judgment.',
       'You do not need a hand on your shoulder anymore. You need a witness. I can be that.',
     ];
-    return {
-      mode: 'trusting',
-      title: 'SHADOW // ALLY',
-      line: pick(lines, seed),
-      pressure: profile.pressure,
-    };
+    return { mode: 'trusting', title: 'SHADOW // ALLY', line: pick(lines, seed), pressure: profile.pressure };
   }
 
   if (profile.consistency >= 75 && state.streak >= 5) {
     const lines = [
       'Again. You return when it would be easier to disappear. That habit is becoming a weapon.',
-      'Five days, and you still came back. I am beginning to think your discipline is not temporary.',
+      'You keep coming back. I am beginning to think your discipline is not temporary.',
       'You are making consistency look less like effort and more like identity.',
     ];
-    return {
-      mode: 'respecting',
-      title: 'SHADOW // RESPECT',
-      line: pick(lines, seed),
-      pressure: profile.pressure,
-    };
+    return { mode: 'respecting', title: 'SHADOW // RESPECT', line: pick(lines, seed), pressure: profile.pressure };
   }
 
   if (profile.consistency < 30 && state.streak === 0) {
@@ -200,12 +254,7 @@ export function getShadowMoment(state: AppState, chapter: number, missionDone: b
       'Your excuses arrived before you did. Send them away and come back.',
       'You broke the rhythm. Fine. Rebuild it before the break becomes your new identity.',
     ];
-    return {
-      mode: 'warning',
-      title: 'SHADOW // PRESSURE',
-      line: pick(lines, seed),
-      pressure: profile.pressure,
-    };
+    return { mode: 'warning', title: 'SHADOW // PRESSURE', line: pick(lines, seed), pressure: profile.pressure };
   }
 
   if (!missionDone && profile.pressure >= 55) {
@@ -214,12 +263,7 @@ export function getShadowMoment(state: AppState, chapter: number, missionDone: b
       'The mission is still waiting. So is the version of you that finishes it.',
       'You keep standing at the edge of the decision. Step forward.',
     ];
-    return {
-      mode: 'provoking',
-      title: 'SHADOW // PROVOCATION',
-      line: pick(lines, seed),
-      pressure: profile.pressure,
-    };
+    return { mode: 'provoking', title: 'SHADOW // PROVOCATION', line: pick(lines, seed), pressure: profile.pressure };
   }
 
   if (truthDominant) {
@@ -228,12 +272,7 @@ export function getShadowMoment(state: AppState, chapter: number, missionDone: b
       'Questions are changing you faster than answers ever could.',
       'You are no longer chasing victory. You are chasing what victory is hiding.',
     ];
-    return {
-      mode: 'testing',
-      title: 'SHADOW // TESTING',
-      line: pick(lines, seed),
-      pressure: profile.pressure,
-    };
+    return { mode: 'testing', title: 'SHADOW // TESTING', line: pick(lines, seed), pressure: profile.pressure };
   }
 
   if (profile.power >= profile.truth + 2 && profile.power >= profile.mercy + 1) {
@@ -242,12 +281,7 @@ export function getShadowMoment(state: AppState, chapter: number, missionDone: b
       'You want control. I wonder what you will become when you finally have it.',
       'You are collecting power faster than wisdom. That imbalance never stays quiet.',
     ];
-    return {
-      mode: 'testing',
-      title: 'SHADOW // POWER TEST',
-      line: pick(lines, seed),
-      pressure: profile.pressure,
-    };
+    return { mode: 'testing', title: 'SHADOW // POWER TEST', line: pick(lines, seed), pressure: profile.pressure };
   }
 
   if (disciplineDominant) {
@@ -256,12 +290,7 @@ export function getShadowMoment(state: AppState, chapter: number, missionDone: b
       'I do not need to push you as much anymore. That is progress.',
       'Discipline is becoming your answer before I finish asking the question.',
     ];
-    return {
-      mode: 'respecting',
-      title: 'SHADOW // OBSERVING',
-      line: pick(lines, seed),
-      pressure: profile.pressure,
-    };
+    return { mode: 'respecting', title: 'SHADOW // OBSERVING', line: pick(lines, seed), pressure: profile.pressure };
   }
 
   const lines = [
@@ -272,12 +301,7 @@ export function getShadowMoment(state: AppState, chapter: number, missionDone: b
     'Do not mistake silence for absence. I am still here.',
   ];
 
-  return {
-    mode: 'watching',
-    title: 'SHADOW // WATCHING',
-    line: pick(lines, seed),
-    pressure: profile.pressure,
-  };
+  return { mode: 'watching', title: 'SHADOW // WATCHING', line: pick(lines, seed), pressure: profile.pressure };
 }
 
 export function shadowDialogue(state: AppState, chapter: number, missionDone: boolean): DialogueLine[] {
@@ -293,12 +317,5 @@ export function shadowDialogue(state: AppState, chapter: number, missionDone: bo
             ? 'serious'
             : 'neutral';
 
-  return [
-    {
-      speaker: 'Shadow',
-      voice: 'mentor',
-      text: moment.line,
-      emotion,
-    },
-  ];
+  return [{ speaker: 'Shadow', voice: 'mentor', text: moment.line, emotion }];
 }

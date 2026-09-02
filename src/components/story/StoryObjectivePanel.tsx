@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, LockKeyhole, Target, Zap } from 'lucide-react';
+import { Check, LockKeyhole, Target, Zap, Eye, Flame, Swords } from 'lucide-react';
 import type { StoryMission } from '../../data/story/types';
 import { useStore } from '../../store/useStore';
 import {
@@ -12,12 +12,23 @@ import {
   getShadowReaction,
   mergeEncodedStoryEvolution,
 } from '../../data/story/storyEvolution';
+import { getShadowAction, getShadowMemory, getShadowMoment } from '../../data/story/shadowAI';
 
 interface StoryObjectivePanelProps {
   mission: StoryMission;
   progress: number;
   complete: boolean;
 }
+
+const ACTION_LABELS: Record<ReturnType<typeof getShadowAction>, string> = {
+  recover: 'Recover your rhythm',
+  complete_tasks: 'Finish today\'s tasks',
+  train: 'Train before you return',
+  protect_streak: 'Protect your streak',
+  seek_truth: 'Keep searching for the truth',
+  continue_story: 'Continue the story',
+  rest_and_return: 'Rest — then return',
+};
 
 export function StoryObjectivePanel({ mission, progress, complete }: StoryObjectivePanelProps) {
   const { state, unlockStoryAchievement, setStoryChoice } = useStore();
@@ -61,6 +72,9 @@ export function StoryObjectivePanel({ mission, progress, complete }: StoryObject
   };
 
   const reaction = getShadowReaction(evolutionAfter)[0];
+  const shadowMoment = getShadowMoment(state, mission.chapterId ? Number(mission.chapterId.match(/\d+/)?.[0] ?? state.storyChapter + 1) : state.storyChapter + 1, complete);
+  const shadowMemory = getShadowMemory(state);
+  const shadowAction = getShadowAction(state, state.storyChapter + 1, complete);
 
   return (
     <div className="space-y-3">
@@ -79,6 +93,23 @@ export function StoryObjectivePanel({ mission, progress, complete }: StoryObject
         </div>
         <div className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-white/[.06]"><motion.div className={`h-full rounded-full ${complete ? 'bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,.45)]' : 'bg-gradient-to-r from-violet-500 to-ember-400'}`} animate={{ width: `${percent}%` }} transition={{ duration: .45, ease: 'easeOut' }} /></div>
         <AnimatePresence mode="wait"><motion.p key={complete ? 'complete' : 'active'} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} className={`relative mt-2 text-[9px] font-black uppercase tracking-[.2em] ${complete ? 'text-emerald-300' : 'text-ink-500'}`}>{complete ? 'OBJECTIVE COMPLETE · Continue unlocked' : 'Complete the objective to unlock Continue'}</motion.p></AnimatePresence>
+      </motion.div>
+
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-violet-400/15 bg-violet-500/[.045] p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2 text-[8px] font-black uppercase tracking-[.28em] text-violet-300"><Eye size={11} /> Shadow // {shadowMoment.mode}</div>
+            <p className="mt-1 text-sm font-bold leading-6 text-white">{shadowMoment.line}</p>
+          </div>
+          <div className="shrink-0 rounded-lg border border-white/10 bg-black/20 px-2 py-1 text-[8px] font-black uppercase tracking-wider text-ink-500">Pressure {shadowMoment.pressure}</div>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="rounded-xl border border-white/5 bg-black/20 p-2"><div className="flex items-center gap-1 text-[8px] uppercase tracking-wider text-ink-600"><Flame size={9} /> Streak</div><div className="mt-1 font-mono text-xs font-black text-white">{shadowMemory.currentStreak}</div></div>
+          <div className="rounded-xl border border-white/5 bg-black/20 p-2"><div className="flex items-center gap-1 text-[8px] uppercase tracking-wider text-ink-600"><Swords size={9} /> Missions</div><div className="mt-1 font-mono text-xs font-black text-white">{shadowMemory.completedMissions}</div></div>
+          <div className="rounded-xl border border-white/5 bg-black/20 p-2"><div className="text-[8px] uppercase tracking-wider text-ink-600">Consistency</div><div className="mt-1 font-mono text-xs font-black text-white">{shadowMemory.recentConsistency}%</div></div>
+          <div className="rounded-xl border border-white/5 bg-black/20 p-2"><div className="text-[8px] uppercase tracking-wider text-ink-600">Path</div><div className="mt-1 font-mono text-xs font-black uppercase text-white">{shadowMemory.dominantPath}</div></div>
+        </div>
+        <div className="mt-3 rounded-xl border border-amber-400/10 bg-amber-500/[.04] px-3 py-2 text-[10px] text-amber-100/80"><span className="font-black uppercase tracking-wider text-amber-300">Shadow directive:</span> {ACTION_LABELS[shadowAction]}</div>
       </motion.div>
 
       {complete && mission.choices && mission.choices.length > 0 && (

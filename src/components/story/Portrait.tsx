@@ -2,13 +2,8 @@ import { motion } from 'framer-motion';
 import type { Emotion } from '../../data/story/types';
 import { getShadowImage, type ShadowState } from '../../lib/story/shadowReactions';
 
-const EMOTION_EMOJIS: Record<Emotion, string> = {
-  neutral: '🙂', happy: '😊', serious: '😤', excited: '🔥', mysterious: '👁️', angry: '😠', sad: '😢', fear: '😨',
-};
-
-const SPEAKER_AVATARS: Record<string, string> = {
-  Narrator: '📜', Shadow: '🌑', Kael: '💰', Lyra: '⚔️', Oren: '🧍', Malakai: '💀', Guardian: '🏛️', Boss: '👹', Player: '🧙',
-};
+const EMOTION_EMOJIS: Record<Emotion, string> = { neutral: '—', happy: '✦', serious: '!', excited: '◆', mysterious: '◈', angry: '×', sad: '·', fear: '⚠' };
+const SPEAKER_AVATARS: Record<string, string> = { Narrator: '📜', Shadow: '◈', Kael: '💰', Lyra: '⚔️', Oren: '◉', Malakai: '☠', Guardian: '⌂', Boss: '◆', Player: '◇' };
 
 function shadowStateForEmotion(emotion: Emotion): ShadowState {
   if (emotion === 'angry') return 'threat';
@@ -20,33 +15,28 @@ function shadowStateForEmotion(emotion: Emotion): ShadowState {
   return 'idle';
 }
 
-interface PortraitProps {
-  speaker: string;
-  emotion?: Emotion;
-  isActive: boolean;
-  side: 'left' | 'right';
-}
+interface PortraitProps { speaker: string; emotion?: Emotion; isActive: boolean; side: 'left' | 'right'; }
 
 export function Portrait({ speaker, emotion = 'neutral', isActive, side }: PortraitProps) {
   const isShadow = speaker.toLowerCase() === 'shadow';
   const isBoss = speaker === 'Boss';
   const avatar = SPEAKER_AVATARS[speaker] ?? '🎭';
-  const emotionEmoji = EMOTION_EMOJIS[emotion];
-  const shadowImage = isShadow ? getShadowImage(shadowStateForEmotion(emotion)) : '';
+  const shadowState = isShadow ? shadowStateForEmotion(emotion) : 'idle';
+  const shadowImage = isShadow ? getShadowImage(shadowState) : '';
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: side === 'left' ? -50 : 50, scale: 0.8 }}
-      animate={{ opacity: isActive ? 1 : 0.4, x: 0, scale: isActive ? 1 : 0.95 }}
-      transition={{ type: 'spring', duration: 0.5 }}
-      className={`relative flex-shrink-0 ${isBoss ? 'scale-110' : ''}`}
-    >
-      <div className={`absolute inset-0 rounded-full blur-xl transition-opacity duration-500 ${isActive ? 'opacity-60' : 'opacity-20'}`} style={{ background: isBoss ? 'radial-gradient(circle, #dc2626, transparent 70%)' : 'radial-gradient(circle, #a78bfa, transparent 70%)' }} />
-      <div className={`relative h-20 w-20 overflow-hidden rounded-full border-2 transition-all duration-300 md:h-24 md:w-24 ${isActive ? 'border-white/40' : 'border-white/10'}`} style={{ background: isBoss ? 'radial-gradient(circle at 30% 30%, #4a0a0a, #1a0a0a)' : 'radial-gradient(circle at 30% 30%, #2a2a4a, #0a0a1a)', boxShadow: isActive ? (isBoss ? '0 0 30px rgba(220,38,38,0.5)' : '0 0 25px rgba(167,139,250,0.4)') : 'none' }}>
-        {isShadow ? <img src={shadowImage} alt={`Shadow, ${shadowStateForEmotion(emotion)} state`} className="h-full w-full object-cover object-center" loading="eager" onError={(event) => { if (event.currentTarget.src.endsWith('/shadow_standing.png.jpg')) return; event.currentTarget.src = getShadowImage('standing'); }} /> : <div className="flex h-full w-full items-center justify-center text-4xl md:text-5xl">{avatar}</div>}
-        {emotion !== 'neutral' && <div className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border border-white/20 bg-ink-900 text-lg">{emotionEmoji}</div>}
+    <motion.div initial={{ opacity: 0, x: side === 'left' ? -36 : 36, scale: .84 }} animate={{ opacity: isActive ? 1 : .46, x: 0, scale: isActive ? 1 : .94 }} transition={{ type: 'spring', duration: .55 }} className={`relative flex-shrink-0 ${isBoss ? 'scale-110' : ''}`}>
+      <div className={`absolute -inset-4 rounded-full blur-2xl transition-opacity duration-700 ${isActive ? 'opacity-70' : 'opacity-15'}`} style={{ background: isBoss ? 'radial-gradient(circle,rgba(220,38,38,.45),transparent 68%)' : 'radial-gradient(circle,rgba(139,92,246,.42),transparent 68%)' }} />
+      <div className="relative h-[92px] w-[92px] md:h-[108px] md:w-[108px]">
+        <div className={`absolute inset-0 rounded-[2rem] border ${isActive ? 'border-violet-300/40' : 'border-white/10'} bg-black/80 shadow-2xl backdrop-blur-xl`} />
+        <div className="absolute inset-1 overflow-hidden rounded-[1.65rem]">
+          {isShadow ? <img src={shadowImage} alt={`Shadow ${shadowState}`} className="h-full w-full object-cover object-center transition-transform duration-700" style={{ transform: isActive ? 'scale(1.04)' : 'scale(1)' }} loading="eager" onError={(event) => { if (!event.currentTarget.src.endsWith('/shadow_standing.png.jpg')) event.currentTarget.src = getShadowImage('standing'); }} /> : <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-white/10 to-black text-4xl md:text-5xl">{avatar}</div>}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-white/[.05]" />
+          {isShadow && <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-violet-300/60 shadow-[0_0_14px_rgba(196,181,253,.8)]" />}
+        </div>
+        {emotion !== 'neutral' && <div className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-lg border border-white/15 bg-[#0a0810]/95 text-xs font-black text-violet-200 shadow-xl">{EMOTION_EMOJIS[emotion]}</div>}
+        <div className={`absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-[.2em] backdrop-blur-md ${isShadow ? 'border-violet-300/20 bg-violet-500/[.07] text-violet-200' : 'border-white/10 bg-black/70 text-white'} ${isActive ? 'opacity-100' : 'opacity-70'}`}>{speaker}</div>
       </div>
-      <div className={`absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-bold transition-colors ${isActive ? 'text-white' : 'text-ink-400'}`}>{speaker}</div>
     </motion.div>
   );
 }

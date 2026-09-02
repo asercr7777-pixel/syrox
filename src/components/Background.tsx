@@ -18,9 +18,9 @@ export function Background() {
   }, []);
 
   const brightness = Math.max(.35, Math.min(1.6, state.backgroundBrightness / 100));
-  const blur = Math.min(Math.max(state.backgroundBlur, 0), 8);
+  const blur = Math.min(Math.max(state.backgroundBlur, 0), 4);
   const blurFilter = blur > 0 ? `blur(${blur}px)` : 'none';
-  const transform = blur > 0 ? 'scale(1.02)' : 'none';
+  const transform = blur > 0 ? 'scale(1.01)' : 'none';
   const handleImgError = useCallback(() => setImgError(true), []);
   const handleVideoError = useCallback(() => setVideoError(true), []);
 
@@ -33,7 +33,7 @@ export function Background() {
 
   const renderBackgroundLayer = () => {
     if (state.backgroundType === 'video' && state.backgroundVideo && !videoError) {
-      return <video autoPlay muted loop playsInline preload="metadata" className="fixed inset-0 w-full h-full object-cover pointer-events-none" style={{ filter: `brightness(${brightness}) ${blurFilter}`, transform, zIndex: 0 }} src={state.backgroundVideo} onError={handleVideoError} aria-hidden="true" />;
+      return <video autoPlay muted loop playsInline preload="none" className="fixed inset-0 w-full h-full object-cover pointer-events-none" style={{ filter: `brightness(${brightness}) ${blurFilter}`, transform, zIndex: 0 }} src={state.backgroundVideo} onError={handleVideoError} aria-hidden="true" />;
     }
     if (state.backgroundType === 'image' && state.customBackground && !imgError) {
       return <div className="fixed inset-0 pointer-events-none bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url("${state.customBackground}")`, filter: `brightness(${brightness}) ${blurFilter}`, transform, zIndex: 0 }} role="img" aria-label="Custom background" />;

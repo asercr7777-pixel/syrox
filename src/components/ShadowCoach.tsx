@@ -1,38 +1,51 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { Activity, Brain, CalendarDays, CheckCircle2, Flame, Moon, Shield, Sparkles, Target, TrendingUp, Zap } from 'lucide-react';
+import { Activity, Brain, CalendarDays, CheckCircle2, Flame, MessageCircle, Shield, Sparkles, Target, TrendingUp, Zap } from 'lucide-react';
 import { useStore } from '../store/useStore';
 
 type Props={children:ReactNode};
-type Mood='locked-in'|'normal'|'recovery';
-const readNumber=(value:unknown,fallback=0)=>typeof value==='number'&&Number.isFinite(value)?value:fallback;
+type Mode='home'|'train'|'plan'|'analyze'|'chat';
+const num=(v:unknown,f=0)=>typeof v==='number'&&Number.isFinite(v)?v:f;
 
 export function ShadowCoach({children}:Props){
  const {state}=useStore(); const raw=state as unknown as Record<string,unknown>;
- const streak=readNumber(raw.streak,readNumber(raw.currentStreak)); const level=readNumber(raw.level,1); const xp=readNumber(raw.xp,0);
- const today=new Date().toISOString().slice(0,10);
- const [mood,setMood]=useState<Mood>(()=>{try{return(localStorage.getItem('syrox-shadow-mood') as Mood)||'normal';}catch{return'normal'}});
- const [checked,setChecked]=useState(false);
- const review=useMemo(()=>{
-   const history=Array.isArray(raw.history)?raw.history as Array<Record<string,unknown>>:[]; const recent=history.slice(-7);
-   const completed=recent.filter(d=>d.allMainDone===true).length; const workouts=recent.filter(d=>d.workoutCompleted===true).length;
-   const sessions=Array.isArray(raw.workoutSessions)?raw.workoutSessions as unknown[]:[];
-   const consistency=recent.length?Math.round(((completed+workouts)/(recent.length*2))*100):Math.min(100,streak*12);
-   const score=Math.max(35,Math.min(98,Math.round(consistency*.65+Math.min(30,streak*3)+Math.min(10,sessions.length))));
-   const status=score>=80?'Strong week':score>=60?'Building momentum':'Reset the rhythm';
-   const advice=score>=80?'Keep the plan. Progress one variable at a time.':score>=60?'Do not add volume yet. Win the same schedule again next week.':'Lower the target, protect consistency, then build back.';
-   return {completed,workouts,sessions:sessions.length,consistency,score,status,advice};
- },[raw.history,raw.workoutSessions,streak]);
- const readiness=useMemo(()=>{let score=review.score;if(mood==='locked-in')score+=8;if(mood==='recovery')score-=16;return Math.max(35,Math.min(98,score));},[review.score,mood]);
+ const streak=num(raw.streak); const level=num(raw.level,1); const xp=num(raw.xp); const [mode,setMode]=useState<Mode>('home');
+ const history=Array.isArray(raw.history)?raw.history as Array<Record<string,unknown>>:[];
+ const recent=history.slice(-7); const workouts=recent.filter(x=>x.workoutCompleted===true).length; const completed=recent.filter(x=>x.allMainDone===true).length;
+ const consistency=recent.length?Math.round(((completed+workouts)/(recent.length*2))*100):Math.min(100,streak*12);
+ const score=Math.max(35,Math.min(98,Math.round(consistency*.65+Math.min(30,streak*3))));
  const phase=level<10?'Foundation':level<25?'Build':level<50?'Ascend':'Elite';
- const brief=mood==='recovery'?'Today is controlled recovery. Keep intensity honest and protect tomorrow.':mood==='locked-in'?'You are locked in. Push quality, not random volume.':'Stay consistent. One clean session beats an ambitious plan you will abandon.';
- const setMoodSafe=(next:Mood)=>{setMood(next);try{localStorage.setItem('syrox-shadow-mood',next);}catch{}};
- return <div className="space-y-3 sm:space-y-4">
-  <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-ember-500/25 bg-gradient-to-br from-black/80 via-ember-950/30 to-violet-950/20 p-4 sm:p-6 shadow-2xl"><div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-ember-500/10 blur-3xl"/><div className="relative grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center"><div className="flex items-start gap-3"><div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-ember-400/30 bg-ember-500/10"><Shield size={21} className="text-ember-300"/></div><div><div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-black uppercase tracking-[.2em] text-ember-300"><Sparkles size={12}/> Shadow Coach · {phase}</div><h2 className="mt-1 text-base font-black sm:text-xl">{brief}</h2><p className="mt-1 text-[11px] sm:text-xs leading-5 text-slate-500">Your coaching adapts from recent completion and workout data.</p></div></div><div className="grid grid-cols-3 gap-2"><Stat icon={<Flame size={14}/>} value={String(streak)} label="Streak"/><Stat icon={<Zap size={14}/>} value={`${readiness}%`} label="Ready"/><Stat icon={<Target size={14}/>} value={`Lv ${level}`} label="Level"/></div></div></div>
-  <div className="grid gap-3 lg:grid-cols-[1fr_320px]"><div className="rounded-2xl border border-white/10 bg-black/30 p-3 sm:p-4"><div className="flex items-center gap-2"><Brain size={16} className="text-violet-300"/><b className="text-sm">Daily check-in</b><span className="ml-auto text-[9px] text-slate-600">{today}</span></div><div className="mt-3 grid grid-cols-3 gap-2"><MoodButton active={mood==='locked-in'} onClick={()=>setMoodSafe('locked-in')} label="Locked in"/><MoodButton active={mood==='normal'} onClick={()=>setMoodSafe('normal')} label="Normal"/><MoodButton active={mood==='recovery'} onClick={()=>setMoodSafe('recovery')} label="Recovery"/></div><button onClick={()=>setChecked(true)} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[.04] px-4 py-2.5 text-xs font-black text-slate-300">{checked?'Check-in recorded':'Confirm today’s state'} <Activity size={14}/></button></div><div className="rounded-2xl border border-white/10 bg-black/30 p-3 sm:p-4"><div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-500"><Moon size={14}/> Coach rule</div><p className="mt-3 text-sm leading-6 text-slate-300">{mood==='recovery'?'Reduce volume before you reduce consistency.':'Progress when performance is stable; recover when quality drops.'}</p><div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/5"><div className="h-full rounded-full bg-ember-500 transition-all" style={{width:`${readiness}%`}}/></div><div className="mt-1 flex justify-between text-[9px] text-slate-600"><span>Readiness</span><span>{xp.toLocaleString()} XP</span></div></div></div>
-  <div className="rounded-2xl border border-violet-400/15 bg-violet-500/[.035] p-3 sm:p-4"><div className="flex items-center gap-2"><CalendarDays size={16} className="text-violet-300"/><div><div className="text-[9px] font-black uppercase tracking-[.2em] text-violet-300">Weekly review</div><div className="text-sm font-black">{review.status}</div></div><div className="ml-auto font-mono text-lg font-black text-white">{review.score}</div></div><div className="mt-3 grid grid-cols-3 gap-2"><ReviewStat icon={<CheckCircle2 size={12}/>} value={review.completed} label="Days"/><ReviewStat icon={<Activity size={12}/>} value={review.workouts} label="Workouts"/><ReviewStat icon={<TrendingUp size={12}/>} value={`${review.consistency}%`} label="Consistent"/></div><p className="mt-3 text-xs leading-5 text-slate-400">{review.advice}</p><div className="mt-3 flex items-center gap-2 text-[10px] text-slate-600"><Target size={12}/> Next week: {review.score>=80?'progress carefully':review.score>=60?'repeat the structure':'rebuild the minimum habit'}</div></div>
-  {children}
+ const greeting=score>=80?'You are on track. Keep the standard.':score>=60?'Momentum is building. Stay consistent.':'Reset the rhythm. Small wins first.';
+ const modeTitle={train:'TRAIN',plan:'TODAY\'S PLAN',analyze:'YOUR PROGRESS',chat:'TALK TO SHADOW'}[mode as Exclude<Mode,'home'>];
+ const actionText=useMemo(()=>({train:'Open your workout and execute the session cleanly.',plan:'Your priority is consistency. Finish the important tasks before adding more.',analyze:`Last 7 days: ${completed} complete days and ${workouts} workout days. Consistency is ${consistency}%.`,chat:'Use the coach below when you want a direct conversation with Shadow.'}),[completed,workouts,consistency]);
+ return <div className="space-y-4 sm:space-y-5">
+   <section className="rounded-2xl border border-white/10 bg-black/45 p-4 sm:p-6">
+    <div className="flex items-center gap-3">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-ember-400/30 bg-ember-500/10"><Shield size={20} className="text-ember-300"/></div>
+      <div className="min-w-0 flex-1"><div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[.22em] text-ember-300"><Sparkles size={11}/> Shadow · Personal Coach</div><h1 className="mt-1 text-lg font-black sm:text-2xl">{greeting}</h1><p className="mt-1 text-[11px] text-slate-500">Phase: {phase} · Level {level} · {xp.toLocaleString()} XP</p></div>
+      <div className="hidden sm:block rounded-xl border border-white/10 bg-white/[.03] px-3 py-2 text-center"><div className="text-[8px] text-slate-600">STREAK</div><b className="text-lg">{streak}</b></div>
+    </div>
+   </section>
+
+   <section className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+    <CoachButton icon={<Activity size={17}/>} title="Train" text="Workout" active={mode==='train'} onClick={()=>setMode('train')}/>
+    <CoachButton icon={<Target size={17}/>} title="Plan" text="Today" active={mode==='plan'} onClick={()=>setMode('plan')}/>
+    <CoachButton icon={<TrendingUp size={17}/>} title="Analyze" text="Progress" active={mode==='analyze'} onClick={()=>setMode('analyze')}/>
+    <CoachButton icon={<MessageCircle size={17}/>} title="Talk" text="Shadow" active={mode==='chat'} onClick={()=>setMode('chat')}/>
+   </section>
+
+   {mode!=='home'&&<section className="rounded-2xl border border-ember-500/20 bg-ember-500/[.04] p-4 sm:p-5">
+     <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[.2em] text-ember-300"><Brain size={13}/>{modeTitle}</div>
+     <p className="mt-3 text-sm leading-6 text-slate-300">{actionText[mode as Exclude<Mode,'home'>]}</p>
+     <div className="mt-3 flex flex-wrap gap-2 text-[10px] text-slate-500"><span className="rounded-lg bg-white/[.04] px-2 py-1">Streak {streak}</span><span className="rounded-lg bg-white/[.04] px-2 py-1">Level {level}</span><span className="rounded-lg bg-white/[.04] px-2 py-1">Score {score}</span></div>
+   </section>}
+
+   <section className="grid gap-3 sm:grid-cols-3">
+    <Mini title="Readiness" value={`${score}%`} icon={<Zap size={14}/>}/><Mini title="Week" value={`${consistency}%`} icon={<CalendarDays size={14}/>}/><Mini title="Streak" value={String(streak)} icon={<Flame size={14}/>}/>
+   </section>
+
+   {mode==='chat'&&<div className="rounded-2xl border border-white/10 bg-black/25 p-2 sm:p-3">{children}</div>}
+   {mode!=='chat'&&<div className="rounded-xl border border-white/[.07] bg-black/20 px-3 py-2 text-[10px] text-slate-500">Shadow only shows the detailed coach interface when you choose <b className="text-slate-300">Talk</b>. This keeps the page fast and clear.</div>}
  </div>;
 }
-function Stat({icon,value,label}:{icon:ReactNode;value:string;label:string}){return <div className="rounded-xl border border-white/10 bg-white/[.03] px-2 py-2 text-center"><span className="mx-auto block w-fit text-slate-400">{icon}</span><b className="mt-1 block text-xs sm:text-sm">{value}</b><span className="text-[8px] text-slate-600">{label.toUpperCase()}</span></div>}
-function ReviewStat({icon,value,label}:{icon:ReactNode;value:string|number;label:string}){return <div className="rounded-xl border border-white/[.07] bg-black/20 p-2"><div className="flex items-center gap-1 text-[8px] uppercase tracking-wider text-slate-600">{icon}{label}</div><b className="mt-1 block text-sm">{value}</b></div>}
-function MoodButton({active,onClick,label}:{active:boolean;onClick:()=>void;label:string}){return <button onClick={onClick} className={`rounded-xl border px-2 py-3 text-[10px] sm:text-xs font-bold transition ${active?'border-ember-500/50 bg-ember-500/10 text-ember-200':'border-white/10 bg-white/[.02] text-slate-500'}`}>{label}</button>}
+function CoachButton({icon,title,text,active,onClick}:{icon:ReactNode;title:string;text:string;active:boolean;onClick:()=>void}){return <button onClick={onClick} className={`min-w-0 rounded-2xl border p-3 text-left ${active?'border-ember-500/35 bg-ember-500/[.08]':'border-white/10 bg-black/25 hover:bg-white/[.03]'}`}><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[.04] text-slate-300">{icon}</span><b className="mt-2 block text-sm text-white">{title}</b><span className="text-[9px] text-slate-600">{text}</span></button>}
+function Mini({title,value,icon}:{title:string;value:string;icon:ReactNode}){return <div className="rounded-xl border border-white/10 bg-black/25 p-3"><div className="flex items-center gap-1 text-[9px] uppercase tracking-wider text-slate-600">{icon}{title}</div><b className="mt-1 block text-base text-white">{value}</b></div>}

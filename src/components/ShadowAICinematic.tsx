@@ -1,45 +1,73 @@
 import { useMemo, useState } from 'react';
-import { Activity, Brain, ChevronDown, Flame, Shield, Sparkles, Target, Zap } from 'lucide-react';
-import { useStore } from '../store/useStore';
-import { ShadowAIV2 } from './ShadowAIV2';
+import { Activity, ArrowRight, Brain, Check, ChevronLeft, Dumbbell, Flame, Gauge, RotateCcw, Target, Timer, UserRound } from 'lucide-react';
 
-const promptSets = [
-  { label: 'Build my plan', text: 'Build me a complete 6 day strength program, bodyweight, 50 minutes.' },
-  { label: 'Make it harder', text: 'Make my program harder and more challenging.' },
-  { label: 'Jump / dunk', text: 'Build a sports program for vertical jump and dunk, 6 days, bodyweight.' },
-  { label: 'Recovery', text: 'Adjust my training for recovery and better movement quality.' },
-];
+type Profile = { weight:number; height:number; age:number; level:string; goal:string; days:number; duration:number; equipment:string; focus:string };
+type Exercise = { name:string; sets:number; reps:string; rest:string; note:string; level:number };
 
-export function ShadowAICinematic() {
-  const { state } = useStore();
-  const [showIntel, setShowIntel] = useState(true);
-  const [prompt, setPrompt] = useState('');
-  const streak = Number(state.streak ?? 0);
-  const level = Number(state.level ?? 1);
-  const todayTasks = Array.isArray(state.tasks) ? state.tasks.filter((task: any) => task.completed).length : 0;
-  const totalTasks = Array.isArray(state.tasks) ? state.tasks.length : 0;
+const defaults:Profile={weight:70,height:175,age:18,level:'intermediate',goal:'strength',days:4,duration:50,equipment:'none',focus:'full body'};
+const library:Record<string,Exercise[]>={
+ strength:[
+  {name:'Tempo Push-Ups',sets:4,reps:'8–15',rest:'60–90s',note:'3 sec down, explosive up.',level:2},
+  {name:'Pike Push-Ups',sets:4,reps:'6–12',rest:'75s',note:'Keep hips high and control the descent.',level:2},
+  {name:'Split Squats',sets:4,reps:'10–14 / leg',rest:'75s',note:'Drive through the front foot.',level:1},
+  {name:'Single-Leg Glute Bridge',sets:3,reps:'12–18 / leg',rest:'45s',note:'Pause hard at the top.',level:1},
+  {name:'Hollow Body Hold',sets:3,reps:'25–45 sec',rest:'45s',note:'Lower back stays pressed down.',level:1},
+  {name:'Explosive Push-Ups',sets:3,reps:'5–8',rest:'90s',note:'Leave a rep in reserve; land softly.',level:3},
+ ],
+ muscle:[
+  {name:'Push-Up Mechanical Drop Set',sets:3,reps:'8–15 + 6–10',rest:'90s',note:'Standard → knees without resting.',level:2},
+  {name:'Pike Push-Ups',sets:4,reps:'8–12',rest:'75s',note:'Shoulders lead the movement.',level:2},
+  {name:'Reverse Lunges',sets:4,reps:'10–15 / leg',rest:'60s',note:'Controlled range, stable knee.',level:1},
+  {name:'Squat 1.5 Reps',sets:4,reps:'10–15',rest:'60s',note:'Halfway up, return down, then stand.',level:2},
+  {name:'Plank Shoulder Taps',sets:3,reps:'20–30 total',rest:'45s',note:'Minimize hip rotation.',level:1},
+ ],
+ athletic:[
+  {name:'Pogo Jumps',sets:4,reps:'20',rest:'45s',note:'Quick contacts; stay springy.',level:1},
+  {name:'Broad Jumps',sets:5,reps:'4',rest:'90s',note:'Full reset between jumps.',level:2},
+  {name:'Explosive Push-Ups',sets:4,reps:'5–8',rest:'90s',note:'Maximum quality, never grind.',level:3},
+  {name:'Jump Squats',sets:4,reps:'6–10',rest:'75s',note:'Soft landing and full reset.',level:2},
+  {name:'Reverse Lunges',sets:3,reps:'10 / leg',rest:'60s',note:'Stay tall and controlled.',level:1},
+  {name:'Hollow Body Hold',sets:3,reps:'30–45 sec',rest:'45s',note:'Brace throughout.',level:1},
+ ]
+};
 
-  const status = useMemo(() => {
-    if (streak >= 14) return { label: 'LOCKED IN', text: 'Your consistency is high. Shadow will prioritize progression.' };
-    if (streak >= 7) return { label: 'BUILDING', text: 'Your streak is building. Keep the workload controlled and consistent.' };
-    return { label: 'AWAKENING', text: 'Shadow is calibrating around consistency first, then intensity.' };
-  }, [streak]);
+function bmi(p:Profile){const h=p.height/100;return p.weight/(h*h)}
+function levelScore(p:Profile){return Math.round(Math.min(100,25+(p.level==='beginner'?10:p.level==='advanced'?35:25)+(p.days*4)+(p.duration>=60?15:8)))}
+function buildPlan(p:Profile):Exercise[]{const key=p.focus==='explosiveness'||p.goal==='athletic'?'athletic':p.goal==='muscle'?'muscle':'strength';const max=p.level==='beginner'?2:p.level==='advanced'?3:3;return library[key].filter(e=>e.level<=max).slice(0, p.duration<40?4:6)}
 
-  return (
-    <section className="relative space-y-4 pb-12">
-      <div className="pointer-events-none absolute -top-20 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-ember-500/10 blur-3xl" />
-      <div className="relative overflow-hidden rounded-[28px] border border-ember-500/20 bg-[radial-gradient(circle_at_78%_20%,rgba(255,90,0,.13),transparent_32%),linear-gradient(145deg,rgba(8,8,12,.98),rgba(18,12,22,.94),rgba(5,5,8,.98))] p-5 shadow-2xl sm:p-7">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.025)_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:linear-gradient(to_bottom,black,transparent)]" />
-        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-4"><div className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-[24px] border border-ember-400/30 bg-black/60 shadow-[0_0_45px_rgba(255,90,0,.12)]"><div className="absolute inset-2 rounded-[18px] border border-white/5"/><Brain size={34} className="text-ember-300"/><span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-black bg-emerald-400 shadow-[0_0_14px_rgba(52,211,153,.6)]"/></div><div><div className="flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-[.28em] text-ember-300"><Sparkles size={13}/> Shadow AI · {status.label}</div><h1 className="mt-1 text-3xl font-black tracking-tight text-white sm:text-4xl">The system that adapts to you.</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">A dedicated training intelligence layer for SYROX. Ask naturally, rebuild the plan, swap movements, or change the difficulty without losing the structure.</p></div></div>
-          <div className="grid grid-cols-3 gap-2 sm:min-w-[330px]"><div className="rounded-2xl border border-white/10 bg-black/35 p-3"><Flame size={16} className="text-ember-400"/><b className="mt-2 block text-lg">{streak}</b><span className="text-[10px] uppercase text-slate-500">Streak</span></div><div className="rounded-2xl border border-white/10 bg-black/35 p-3"><Zap size={16} className="text-amber-300"/><b className="mt-2 block text-lg">{level}</b><span className="text-[10px] uppercase text-slate-500">Level</span></div><div className="rounded-2xl border border-white/10 bg-black/35 p-3"><Activity size={16} className="text-emerald-300"/><b className="mt-2 block text-lg">{todayTasks}/{totalTasks || 0}</b><span className="text-[10px] uppercase text-slate-500">Tasks</span></div></div>
-        </div>
-        <div className="relative mt-5 flex flex-wrap gap-2">{promptSets.map((item)=><button key={item.label} onClick={()=>setPrompt(item.text)} className="rounded-full border border-white/10 bg-white/[.035] px-3 py-2 text-xs font-bold text-slate-300 transition hover:border-ember-500/30 hover:bg-ember-500/10 hover:text-white">{item.label}</button>)}</div>
-        <div className="relative mt-3 text-xs text-slate-500">Quick actions now open inside Shadow instead of only copying text.</div>
-      </div>
-      <button onClick={()=>setShowIntel(v=>!v)} className="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-left"><span className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-400"><Shield size={15} className="text-emerald-400"/> Shadow intelligence</span><ChevronDown size={16} className={`text-slate-500 transition ${showIntel?'rotate-180':''}`}/></button>
-      {showIntel&&<div className="grid gap-3 md:grid-cols-3"><div className="rounded-2xl border border-white/10 bg-black/25 p-4"><Target size={18} className="text-ember-400"/><b className="mt-2 block text-sm">Context aware</b><p className="mt-1 text-xs leading-5 text-slate-500">Shadow sees your current progression signals and keeps coaching focused on the next useful action.</p></div><div className="rounded-2xl border border-white/10 bg-black/25 p-4"><Activity size={18} className="text-emerald-400"/><b className="mt-2 block text-sm">Load conscious</b><p className="mt-1 text-xs leading-5 text-slate-500">Movement groups, recovery spacing and exercise compatibility stay inside the generated plan.</p></div><div className="rounded-2xl border border-white/10 bg-black/25 p-4"><Zap size={18} className="text-amber-300"/><b className="mt-2 block text-sm">No dead ends</b><p className="mt-1 text-xs leading-5 text-slate-500">Regenerate and smart-swap controls preserve the training role instead of randomly replacing exercises.</p></div></div>}
-      <ShadowAIV2 initialPrompt={prompt}/>
-    </section>
-  );
+export default function ShadowAICinematic(){
+ const [profile,setProfile]=useState<Profile>(defaults);
+ const [onboarded,setOnboarded]=useState(false);
+ const [tab,setTab]=useState<'plan'|'profile'>('plan');
+ const [completed,setCompleted]=useState<number[]>([]);
+ const [week,setWeek]=useState(1);
+ const plan=useMemo(()=>buildPlan(profile),[profile]);
+ const score=levelScore(profile);
+ const finishAssessment=()=>{setOnboarded(true);setCompleted([])};
+ const toggle=(i:number)=>setCompleted(v=>v.includes(i)?v.filter(x=>x!==i):[...v,i]);
+ if(!onboarded)return <div className="min-h-[70vh] rounded-3xl border border-white/10 bg-black/40 p-5 sm:p-8 text-white shadow-2xl backdrop-blur-xl">
+  <div className="mx-auto max-w-3xl"><div className="mb-8 flex items-center gap-3"><div className="rounded-2xl bg-white/10 p-3"><Brain/></div><div><div className="text-xs font-bold uppercase tracking-[.28em] text-white/50">SHADOW // COACH</div><h1 className="text-3xl font-black sm:text-5xl">Build your body.<br/><span className="text-white/50">No generic plans.</span></h1></div></div>
+  <p className="mb-7 max-w-2xl text-sm leading-6 text-white/60">Shadow starts with a fitness assessment, then builds a training plan around your body, goal, time and available equipment.</p>
+  <div className="grid gap-4 sm:grid-cols-2">
+   {[['weight','Weight (kg)','number'],['height','Height (cm)','number'],['age','Age','number']].map(([k,l,t])=><label key={k} className="text-xs font-bold uppercase tracking-wider text-white/50">{l}<input type="number" value={(profile as any)[k]} onChange={e=>setProfile({...profile,[k]:Number(e.target.value)})} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 p-3 text-base text-white outline-none"/></label>)}
+   <label className="text-xs font-bold uppercase tracking-wider text-white/50">Training level<select value={profile.level} onChange={e=>setProfile({...profile,level:e.target.value})} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 p-3 text-white"><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select></label>
+   <label className="text-xs font-bold uppercase tracking-wider text-white/50">Main goal<select value={profile.goal} onChange={e=>setProfile({...profile,goal:e.target.value})} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 p-3 text-white"><option value="strength">Strength</option><option value="muscle">Muscle</option><option value="athletic">Athletic / Explosive</option></select></label>
+   <label className="text-xs font-bold uppercase tracking-wider text-white/50">Primary focus<select value={profile.focus} onChange={e=>setProfile({...profile,focus:e.target.value})} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 p-3 text-white"><option>full body</option><option>explosiveness</option><option>upper body</option><option>lower body</option></select></label>
+   <label className="text-xs font-bold uppercase tracking-wider text-white/50">Training days / week<input type="number" min="2" max="7" value={profile.days} onChange={e=>setProfile({...profile,days:Math.max(2,Math.min(7,Number(e.target.value)))})} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 p-3 text-white"/></label>
+   <label className="text-xs font-bold uppercase tracking-wider text-white/50">Session length<select value={profile.duration} onChange={e=>setProfile({...profile,duration:Number(e.target.value)})} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 p-3 text-white"><option value="30">30 min</option><option value="45">45 min</option><option value="50">50 min</option><option value="60">60 min</option><option value="75">75 min</option></select></label>
+   <label className="text-xs font-bold uppercase tracking-wider text-white/50 sm:col-span-2">Equipment<select value={profile.equipment} onChange={e=>setProfile({...profile,equipment:e.target.value})} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 p-3 text-white"><option value="none">No equipment</option><option value="home">Home equipment</option><option value="gym">Full gym</option></select></label>
+  </div><button onClick={finishAssessment} className="mt-7 flex w-full items-center justify-center gap-2 rounded-xl bg-white py-4 font-black text-black transition hover:translate-y-[-1px]">GENERATE MY PLAN <ArrowRight size={18}/></button>
+ </div></div>;
+ return <div className="min-h-[70vh] text-white">
+  <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><div className="text-xs font-bold uppercase tracking-[.28em] text-white/40">SHADOW // PERSONAL COACH</div><h1 className="text-3xl font-black sm:text-4xl">Your Training System</h1></div><button onClick={()=>setOnboarded(false)} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold"><RotateCcw size={14}/> Reassess</button></div>
+  <div className="mb-4 grid gap-3 sm:grid-cols-4"><Stat icon={<Gauge/>} label="Coach score" value={`${score}/100`}/><Stat icon={<Target/>} label="Goal" value={profile.goal}/><Stat icon={<Flame/>} label="Week" value={`${week} / 4`}/><Stat icon={<Activity/>} label="BMI" value={bmi(profile).toFixed(1)}/></div>
+  <div className="mb-4 flex gap-2"><button onClick={()=>setTab('plan')} className={`rounded-xl px-4 py-2 text-sm font-bold ${tab==='plan'?'bg-white text-black':'bg-white/5 text-white/60'}`}>Today's Plan</button><button onClick={()=>setTab('profile')} className={`rounded-xl px-4 py-2 text-sm font-bold ${tab==='profile'?'bg-white text-black':'bg-white/5 text-white/60'}`}>Athlete Profile</button></div>
+  {tab==='profile'?<div className="rounded-2xl border border-white/10 bg-black/30 p-5"><div className="mb-5 flex items-center gap-3"><UserRound/><div><b className="block">Assessment profile</b><span className="text-xs text-white/50">Used to personalize progression.</span></div></div><div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{[['Weight',`${profile.weight} kg`],['Height',`${profile.height} cm`],['Level',profile.level],['Days',`${profile.days}/week`],['Duration',`${profile.duration} min`],['Equipment',profile.equipment],['Goal',profile.goal],['Focus',profile.focus]].map(([a,b])=><div key={a} className="rounded-xl bg-white/5 p-3"><span className="block text-[10px] uppercase tracking-wider text-white/40">{a}</span><b className="mt-1 block capitalize">{b}</b></div>)}</div></div>:<>
+   <div className="mb-4 rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 to-transparent p-5"><div className="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white/50"><Dumbbell size={14}/> Day 01 · {profile.goal} protocol</div><h2 className="text-2xl font-black">Progressive {profile.goal} session</h2><p className="mt-1 text-sm text-white/50">{plan.length} movements · {profile.duration} min · {profile.equipment==='none'?'bodyweight':'equipment-assisted'}</p></div>
+   <div className="space-y-2">{plan.map((e,i)=><button key={e.name} onClick={()=>toggle(i)} className={`flex w-full items-center gap-3 rounded-2xl border p-4 text-left transition ${completed.includes(i)?'border-white/20 bg-white/10 opacity-60':'border-white/10 bg-black/30 hover:bg-white/5'}`}><span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${completed.includes(i)?'bg-white text-black':'bg-white/5'}`}>{completed.includes(i)?<Check size={17}/>:<span className="text-xs font-black">{i+1}</span>}</span><span className="min-w-0 flex-1"><b className="block">{e.name}</b><span className="text-xs text-white/45">{e.sets} sets · {e.reps} · Rest {e.rest}</span><small className="mt-1 block text-xs text-white/35">{e.note}</small></span><Timer size={16} className="text-white/30"/></button>)}</div>
+   <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-4"><div className="mb-2 flex justify-between text-xs font-bold"><span>Session progress</span><span>{completed.length}/{plan.length}</span></div><div className="h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full bg-white transition-all" style={{width:`${completed.length/Math.max(1,plan.length)*100}%`}}/></div>{completed.length===plan.length&&<p className="mt-3 text-xs font-bold text-white/70">Session complete. Shadow will use this result to tune the next progression.</p>}</div>
+  </>}
+  <div className="mt-5 flex items-center gap-2 text-[11px] leading-5 text-white/35"><Brain size={13}/> Training recommendations are rule-based and should be adjusted for pain, injury, recovery and real-world limits.</div>
+ </div>
 }
+function Stat({icon,label,value}:{icon:React.ReactNode;label:string;value:string}){return <div className="rounded-2xl border border-white/10 bg-black/30 p-4"><div className="mb-3 text-white/40">{icon}</div><span className="block text-[10px] uppercase tracking-widest text-white/35">{label}</span><b className="mt-1 block capitalize">{value}</b></div>}

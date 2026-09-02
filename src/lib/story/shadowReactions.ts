@@ -1,29 +1,17 @@
 export type ShadowState = 'idle' | 'observing' | 'ready' | 'command' | 'memory' | 'power' | 'revelation' | 'threat' | 'side' | 'standing' | 'walking' | 'warning';
 
-export type StoryEventType =
-  | 'workout_completed'
-  | 'task_completed'
-  | 'streak_increased'
-  | 'day_completed'
-  | 'return_after_absence'
-  | 'milestone_reached'
-  | 'dungeon_cleared';
+export type StoryEventType = 'workout_completed' | 'task_completed' | 'streak_increased' | 'day_completed' | 'return_after_absence' | 'milestone_reached' | 'dungeon_cleared';
 
-export interface ShadowReaction {
-  state: ShadowState;
-  title: string;
-  lines: string[];
-  priority: number;
-}
+export interface ShadowReaction { state: ShadowState; title: string; lines: string[]; priority: number; }
 
 const reactions: Record<StoryEventType, ShadowReaction> = {
-  workout_completed: { state: 'observing', title: 'SHADOW // OBSERVING', lines: ['I saw that.', 'You did not stop when it became difficult.'], priority: 30 },
-  task_completed: { state: 'ready', title: 'SHADOW // NOTED', lines: ['Another decision made.', 'Small actions become patterns.'], priority: 20 },
-  streak_increased: { state: 'power', title: 'SHADOW // PROGRESS DETECTED', lines: ['The pattern is changing.', 'Keep going.'], priority: 40 },
-  day_completed: { state: 'command', title: 'SHADOW // DAY COMPLETE', lines: ['Today is done.', 'Tomorrow will ask the same question.'], priority: 50 },
-  return_after_absence: { state: 'memory', title: 'SHADOW // MEMORY', lines: ['You disappeared.', 'But you came back. That matters.'], priority: 60 },
-  milestone_reached: { state: 'revelation', title: 'SHADOW // THRESHOLD', lines: ['You crossed a line you could not see before.', 'There is more beyond it.'], priority: 80 },
-  dungeon_cleared: { state: 'threat', title: 'SHADOW // THREAT DETECTED', lines: ['The gate is weaker now.', 'Do not mistake progress for safety.'], priority: 55 },
+  workout_completed: { state: 'observing', title: 'SHADOW // OBSERVING', lines: ['I saw the hesitation. You moved anyway.', 'Your body answered before your excuses could.'], priority: 30 },
+  task_completed: { state: 'ready', title: 'SHADOW // NOTED', lines: ['One decision became real. That is how identity is built.', 'Another small victory. Never underestimate repeated choices.'], priority: 20 },
+  streak_increased: { state: 'power', title: 'SHADOW // PATTERN SHIFT', lines: ['The pattern is changing. Even the System can see it now.', 'Consistency is becoming something the world has to account for.'], priority: 40 },
+  day_completed: { state: 'command', title: 'SHADOW // DAY SEALED', lines: ['Today is sealed. Do not confuse a finished day with a finished war.', 'You kept the vow for one more day. Tomorrow decides whether it was real.'], priority: 50 },
+  return_after_absence: { state: 'memory', title: 'SHADOW // RETURN DETECTED', lines: ['You disappeared. I remembered the shape of your absence.', 'You came back. I will not call that weakness. I will call it evidence.'], priority: 60 },
+  milestone_reached: { state: 'revelation', title: 'SHADOW // THRESHOLD CROSSED', lines: ['You crossed a line that cannot be uncrossed.', 'The world has changed by a fraction. So have you.'], priority: 80 },
+  dungeon_cleared: { state: 'threat', title: 'SHADOW // GATE BREACH', lines: ['The gate is weaker. Something on the other side knows your name now.', 'You cleared the dungeon. Do not celebrate too early. It was watching you too.'], priority: 55 },
 };
 
 export function getShadowReaction(event: StoryEventType): ShadowReaction { return reactions[event]; }

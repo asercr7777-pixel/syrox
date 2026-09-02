@@ -1,4 +1,8 @@
-/* Performance-first overrides: preserve the visual language while minimizing GPU paint/compositing. */
+/* SYROX performance layer — keep visuals, remove scroll-time GPU/layout pressure. */
+html { scroll-behavior: auto !important; }
+body { overscroll-behavior-y: none; }
+main { contain: layout paint; }
+
 .glass, .glass-soft { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
 .card { box-shadow: 0 3px 14px rgba(0,0,0,0.24); }
 .card-hover, .card-premium { transition-duration: 120ms !important; }
@@ -8,157 +12,82 @@
 .aura-glow::before, .energy-pulse, .xp-bar-fill, .boss-hp, .skeleton-shimmer { animation: none !important; }
 .glow-ring::before { transition: opacity 100ms ease; }
 
+/* During active scrolling, pause decorative animation/paint work. */
+html.is-scrolling .theme-atmosphere::before,
+html.is-scrolling .theme-atmosphere::after,
+html.is-scrolling .theme-particle,
+html.is-scrolling .theme-atmosphere,
+html.is-scrolling video { animation-play-state: paused !important; }
+html.is-scrolling .theme-atmosphere::before,
+html.is-scrolling .theme-atmosphere::after { opacity: .55 !important; }
+
+/* Avoid expensive per-frame compositing on decorative fixed layers. */
+.theme-atmosphere { contain: strict; }
+
 /* World Map: simple vertical chapter road with minimal paint cost. */
 [style*="aspect-ratio: 2 / 1"] {
-  aspect-ratio: auto !important;
-  height: auto !important;
-  min-height: 0 !important;
-  max-width: 100%;
-  overflow: hidden !important;
-  touch-action: pan-y;
+  aspect-ratio: auto !important; height: auto !important; min-height: 0 !important;
+  max-width: 100%; overflow: hidden !important; touch-action: pan-y;
 }
-
 [style*="aspect-ratio: 2 / 1"] > .absolute.inset-0 {
-  position: relative !important;
-  inset: auto !important;
-  min-width: 0 !important;
-  width: 100% !important;
-  min-height: 0 !important;
-  height: auto !important;
-  padding: 24px 10px 32px !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  gap: 18px !important;
-  overflow: visible !important;
+  position: relative !important; inset: auto !important; min-width: 0 !important; width: 100% !important;
+  min-height: 0 !important; height: auto !important; padding: 24px 10px 32px !important;
+  display: flex !important; flex-direction: column !important; align-items: center !important;
+  justify-content: flex-start !important; gap: 18px !important; overflow: visible !important;
 }
-
-[style*="aspect-ratio: 2 / 1"] > .absolute.inset-0 > div.absolute.inset-0 {
-  pointer-events: none !important;
-  z-index: 0 !important;
-}
-
+[style*="aspect-ratio: 2 / 1"] > .absolute.inset-0 > div.absolute.inset-0 { pointer-events: none !important; z-index: 0 !important; }
 [style*="aspect-ratio: 2 / 1"] button.group {
-  position: relative !important;
-  left: auto !important; top: auto !important; right: auto !important; bottom: auto !important;
-  transform: none !important;
-  z-index: 3 !important;
-  flex: 0 0 78px !important;
-  width: min(210px, 76vw) !important;
-  height: 78px !important;
-  margin: 0 !important;
-  padding: 0 10px !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
+  position: relative !important; left: auto !important; top: auto !important; right: auto !important; bottom: auto !important;
+  transform: none !important; z-index: 3 !important; flex: 0 0 78px !important;
+  width: min(210px, 76vw) !important; height: 78px !important; margin: 0 !important; padding: 0 10px !important;
+  display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: flex-start !important;
 }
-
 [style*="aspect-ratio: 2 / 1"] button.group > svg { display: none !important; }
-
 [style*="aspect-ratio: 2 / 1"] button.group > div:last-child {
-  position: static !important;
-  transform: none !important;
-  margin-top: 6px !important;
-  width: 100% !important;
-  max-width: 200px !important;
-  min-height: 18px !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
-  text-align: center !important;
-  pointer-events: none !important;
-  z-index: 4 !important;
+  position: static !important; transform: none !important; margin-top: 6px !important; width: 100% !important;
+  max-width: 200px !important; min-height: 18px !important; overflow: hidden !important;
+  text-overflow: ellipsis !important; white-space: nowrap !important; text-align: center !important;
+  pointer-events: none !important; z-index: 4 !important;
 }
-
 [style*="aspect-ratio: 2 / 1"] button.group:not(:last-of-type)::after {
-  content: '' !important;
-  position: absolute !important;
-  z-index: -1 !important;
-  left: 50% !important;
-  top: 56px !important;
-  width: 2px !important;
-  height: 38px !important;
-  transform: translateX(-50%) !important;
-  background: rgba(255,122,24,0.45) !important;
-  box-shadow: none !important;
+  content: '' !important; position: absolute !important; z-index: -1 !important; left: 50% !important; top: 56px !important;
+  width: 2px !important; height: 38px !important; transform: translateX(-50%) !important;
+  background: rgba(255,122,24,0.45) !important; box-shadow: none !important;
 }
-
 [style*="aspect-ratio: 2 / 1"] button.group .relative.w-12.h-12 { flex: 0 0 auto !important; }
 
-/* Mobile collection/category selectors: keep every option full-size and scrollable. */
 @media (max-width: 639px) {
   .marketplace-shell > div.flex.gap-2.overflow-x-auto,
   .space-y-6 > div.flex.gap-2.overflow-x-auto {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    align-items: stretch !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: none !important;
-    padding: 2px 2px 8px !important;
+    width: 100% !important; max-width: 100% !important; min-width: 0 !important; display: flex !important;
+    flex-wrap: nowrap !important; align-items: stretch !important; overflow-x: auto !important; overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important; scrollbar-width: none !important; padding: 2px 2px 8px !important;
   }
-
   .marketplace-shell > div.flex.gap-2.overflow-x-auto::-webkit-scrollbar,
   .space-y-6 > div.flex.gap-2.overflow-x-auto::-webkit-scrollbar { display: none !important; }
-
   .marketplace-shell > div.flex.gap-2.overflow-x-auto > button,
   .space-y-6 > div.flex.gap-2.overflow-x-auto > button {
-    flex: 0 0 auto !important;
-    width: max-content !important;
-    min-width: 112px !important;
-    min-height: 44px !important;
-    white-space: nowrap !important;
+    flex: 0 0 auto !important; width: max-content !important; min-width: 112px !important; min-height: 44px !important; white-space: nowrap !important;
   }
-
-  /* Inventory item cards: never let the card content become narrower than its controls. */
-  .space-y-6 .grid.grid-cols-1.min\:\[380px\]\:grid-cols-2 {
-    min-width: 0 !important;
-  }
-
-  .space-y-6 .grid.grid-cols-1.min\:\[380px\]\:grid-cols-2 > .card {
-    min-width: 0 !important;
-    overflow: hidden !important;
-  }
-
-  .space-y-6 .grid.grid-cols-1.min\:\[380px\]\:grid-cols-2 > .card button {
-    min-width: 0 !important;
-  }
-
-  /* Story chapter controls/cards: give each chapter room instead of squeezing text into tiny cells. */
-  .space-y-6 button.group,
-  .space-y-6 button[class*="chapter"] {
-    min-width: 0;
-  }
+  .space-y-6 .grid.grid-cols-1.min\:\[380px\]\:grid-cols-2 { min-width: 0 !important; }
+  .space-y-6 .grid.grid-cols-1.min\:\[380px\]\:grid-cols-2 > .card { min-width: 0 !important; overflow: hidden !important; }
+  .space-y-6 .grid.grid-cols-1.min\:\[380px\]\:grid-cols-2 > .card button { min-width: 0 !important; }
+  .space-y-6 button.group, .space-y-6 button[class*="chapter"] { min-width: 0; }
 }
-
 @media (max-width: 379px) {
   .marketplace-shell > div.flex.gap-2.overflow-x-auto > button,
-  .space-y-6 > div.flex.gap-2.overflow-x-auto > button {
-    min-width: 118px !important;
-  }
-
-  .space-y-6 .grid.grid-cols-1.min\:\[380px\]\:grid-cols-2 {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
+  .space-y-6 > div.flex.gap-2.overflow-x-auto > button { min-width: 118px !important; }
+  .space-y-6 .grid.grid-cols-1.min\:\[380px\]\:grid-cols-2 { grid-template-columns: minmax(0, 1fr) !important; }
 }
-
 @media (max-width: 1023px) {
   [style*="aspect-ratio: 2 / 1"] > .absolute.inset-0 { padding-left: 8px !important; padding-right: 8px !important; gap: 20px !important; }
 }
-
 @media (max-width: 640px) {
   [style*="aspect-ratio: 2 / 1"] { border-radius: 14px; }
   [style*="aspect-ratio: 2 / 1"] > .absolute.inset-0 { padding: 20px 6px 30px !important; gap: 22px !important; }
   [style*="aspect-ratio: 2 / 1"] button.group { width: min(185px, 72vw) !important; flex-basis: 78px !important; }
   [style*="aspect-ratio: 2 / 1"] button.group > div:last-child { max-width: 175px !important; font-size: 0.7rem !important; line-height: 1rem !important; }
 }
-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
 }

@@ -153,9 +153,6 @@ export default function StoryModeSimpleV2() {
 function WorldMap({ current, completed, level, open }: { current: number; completed: number; level: number; open: (c: StoryChapter) => void }) {
   const activeCount = Math.max(1, Math.min(30, completed + 1));
   const activeRoute = smoothPath(nodes.slice(0, activeCount));
-  const regionLabels = [
-    ['ASHEN GATE', 220, 720], ['VEILWOOD', 670, 650], ['IRON WASTES', 1160, 560], ['DUSK VALLEY', 1620, 470], ['CROWN OF SHADOWS', 2070, 390]
-  ] as const;
 
   return (
     <div className="relative min-h-[86vh] overflow-hidden rounded-[2rem] border border-white/10 bg-[#050607] text-white shadow-2xl">
@@ -184,11 +181,11 @@ function WorldMap({ current, completed, level, open }: { current: number; comple
         <div className="mb-2 flex items-center justify-between text-[10px] font-black uppercase tracking-[.25em] text-white/35"><span>WORLD MAP · HORIZONTAL SCROLL</span><span>← DRAG / SHIFT →</span></div>
         <div className="syrox-map-scroll overflow-x-auto overflow-y-hidden rounded-[1.75rem] border border-amber-300/20 bg-black/50 shadow-inner">
           <div className="syrox-map-canvas relative" style={{ width: MAP_W, height: MAP_H }}>
-            <img src="/world-map.webp.jpg" alt="Syrox World Map" draggable={false} loading="eager" decoding="async" className="syrox-map-image absolute inset-0 h-full w-full select-none object-cover" />
+            <img src="/world-map-aaa-anime.webp.jpg" alt="Syrox World Map" draggable={false} loading="eager" decoding="async" className="syrox-map-image absolute inset-0 h-full w-full select-none object-cover" />
 
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_38%,rgba(0,0,0,.22)_72%,rgba(0,0,0,.52)_100%)]" />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/[.18] via-transparent to-black/[.30]" />
-            <div className="pointer-events-none absolute inset-0 opacity-[.045] bg-[linear-gradient(115deg,transparent_0%,rgba(255,255,255,.7)_45%,transparent_50%,transparent_100%)]" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/[.12] via-transparent to-black/[.24]" />
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_0%,rgba(255,255,255,.045)_45%,transparent_50%,transparent_100%)]" />
 
             <svg viewBox={`0 0 ${MAP_W} ${MAP_H}`} className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" aria-hidden="true" preserveAspectRatio="none">
               <defs>
@@ -200,7 +197,6 @@ function WorldMap({ current, completed, level, open }: { current: number; comple
               <path d={routeD} fill="none" stroke="rgba(255,213,120,.26)" strokeWidth="17" strokeLinecap="round" strokeLinejoin="round" filter="url(#syrox-route-soft)" />
               <path d={routeD} fill="none" stroke="url(#syrox-route-gradient)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="20 9" />
               <path d={activeRoute} fill="none" stroke="rgba(255,255,255,.95)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" filter="url(#syrox-route-glow)" />
-              {regionLabels.map(([name, x, y]) => <text key={name} x={x} y={y} fill="rgba(255,255,255,.62)" fontSize="20" fontWeight="900" letterSpacing="5" textAnchor="middle" style={{ textShadow: '0 3px 12px rgba(0,0,0,.95)' }}>{name}</text>)}
             </svg>
 
             {nodes.map(([x, y], index) => {

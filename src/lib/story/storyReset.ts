@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from '../supabase';
 
-const STORY_RESET_VERSION = 2;
+// Increment whenever the story structure/presentation is intentionally rebuilt.
+const STORY_RESET_VERSION = 3;
 
 const RESET_STATE = {
   storyChapter: 0,
@@ -46,7 +47,10 @@ export async function ensureStoryReset(userId: string): Promise<void> {
       if (current?.state) {
         const { error: updateError } = await supabase
           .from('user_state')
-          .update({ state: { ...(current.state as Record<string, unknown>), ...RESET_STATE }, updated_at: new Date().toISOString() })
+          .update({
+            state: { ...(current.state as Record<string, unknown>), ...RESET_STATE },
+            updated_at: new Date().toISOString(),
+          })
           .eq('user_id', userId);
 
         if (updateError) {
@@ -57,7 +61,10 @@ export async function ensureStoryReset(userId: string): Promise<void> {
 
       const { error: versionUpdateError } = await supabase
         .from('story_reset_versions')
-        .upsert({ user_id: userId, version: STORY_RESET_VERSION, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+        .upsert(
+          { user_id: userId, version: STORY_RESET_VERSION, updated_at: new Date().toISOString() },
+          { onConflict: 'user_id' },
+        );
 
       if (versionUpdateError) console.error('[storyReset] version update failed:', versionUpdateError);
     }

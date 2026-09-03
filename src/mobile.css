@@ -71,3 +71,38 @@
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
 }
+
+/* Story Mode: keep the RPG world map wide on phones, never stack the chapters. */
+@media (max-width: 767px) {
+  main div[class~="mx-3"][class~="mb-5"][class~="mt-3"][class~="overflow-hidden"] {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+    overscroll-behavior-x: contain;
+    scrollbar-width: auto;
+    scrollbar-gutter: stable;
+    padding-bottom: 10px;
+  }
+
+  main div[class~="mx-3"][class~="mb-5"][class~="mt-3"][class~="overflow-hidden"] > div[class~="min-h-[680px]"] {
+    width: 1800px !important;
+    min-width: 1800px !important;
+    min-height: 680px !important;
+    height: 680px !important;
+  }
+
+  main div[class~="mx-3"][class~="mb-5"][class~="mt-3"][class~="overflow-hidden"]::-webkit-scrollbar {
+    height: 9px;
+  }
+
+  main div[class~="mx-3"][class~="mb-5"][class~="mt-3"][class~="overflow-hidden"]::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(245, 215, 145, 0.42);
+  }
+
+  main div[class~="mx-3"][class~="mb-5"][class~="mt-3"][class~="overflow-hidden"]::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+  }
+}

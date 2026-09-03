@@ -1,8 +1,11 @@
 let ctx: AudioContext | null = null;
 let enabled = true;
+let lastTaskSoundAt = 0;
+let activeTaskOsc: OscillatorNode | null = null;
 
 function getCtx(): AudioContext | null {
   if (typeof window === 'undefined') return null;
+  if (ctx?.state === 'closed') ctx = null;
   if (!ctx) {
     try {
       ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -15,28 +18,54 @@ function getCtx(): AudioContext | null {
 
 export function setSoundEnabled(v: boolean) {
   enabled = v;
+  if (!v && activeTaskOsc) {
+    try { activeTaskOsc.stop(); } catch { /* already stopped */ }
+    activeTaskOsc = null;
+  }
 }
 
 export function playSound(type: 'task' | 'levelup' | 'rankup' | 'timer' | 'reward' | 'error' | 'click' | 'whoosh' | 'workoutComplete') {
   if (!enabled) return;
   const c = getCtx();
   if (!c) return;
-  if (c.state === 'suspended') void c.resume();
+
+  if (c.state === 'suspended') {
+    void c.resume().catch(() => undefined);
+  }
+
+  // Task completion can be triggered by both the task UI and the story bridge.
+  // Keep it as one short sting so two completions cannot leave overlapping audio nodes.
+  if (type === 'task') {
+    const nowMs = Date.now();
+    if (nowMs - lastTaskSoundAt < 140) return;
+    lastTaskSoundAt = nowMs;
+    if (activeTaskOsc) {
+      try { activeTaskOsc.stop(); } catch { /* already stopped */ }
+      activeTaskOsc = null;
+    }
+  }
 
   const now = c.currentTime;
   const osc = c.createOscillator();
   const gain = c.createGain();
   osc.connect(gain);
   gain.connect(c.destination);
+  osc.addEventListener('ended', () => {
+    try { osc.disconnect(); gain.disconnect(); } catch { /* already disconnected */ }
+    if (type === 'task' && activeTaskOsc === osc) activeTaskOsc = null;
+  }, { once: true });
 
   switch (type) {
     case 'task': {
+      activeTaskOsc = osc;
       osc.type = 'sine';
       osc.frequency.setValueAtTime(660, now);
       osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
       gain.gain.setValueAtTime(0.15, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-      osc.start(now); osc.stop(now + 0.2); break;
+      osc.start(now);
+      osc.stop(now + 0.2);
+      break;
     }
     case 'levelup': {
       osc.type = 'triangle';
@@ -107,7 +136,6 @@ export function playSound(type: 'task' | 'levelup' | 'rankup' | 'timer' | 'rewar
       osc.start(now); osc.stop(now + 0.35); break;
     }
     case 'workoutComplete': {
-      // Short, deep victory sting: restrained and cinematic rather than arcade-like.
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(196, now);
       osc.frequency.exponentialRampToValueAtTime(293.66, now + 0.16);
@@ -133,5 +161,5 @@ export function playSound(type: 'task' | 'levelup' | 'rankup' | 'timer' | 'rewar
 }
 
 export function syncSoundFlag(v: boolean) {
-  enabled = v;
+  setSoundEnabled(v);
 }

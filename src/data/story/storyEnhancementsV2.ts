@@ -12,8 +12,11 @@ export function directStory(chapters:StoryChapter[]):StoryChapter[]{
   const t=theme(ch.number);
   const missions=ch.missions.map((m,index)=>{
    const [beat,instruction]=BEATS[index]??BEATS[5];
+   // The live task system exposes Quran reading, not a generic `read` task.
+   // Normalize legacy Story missions so this objective can actually be completed.
+   const missionType: StoryMission['type'] = m.type === 'read_book' ? 'read_quran' : m.type;
    const choices=m.choices?.map(c=>({...c,consequence:`${c.consequence} This decision is recorded under the ${t} arc.`}));
-   const out:StoryMission={...m,title:`${beat} · ${m.title}`,description:`${instruction} ${m.description}`,choices,
+   const out:StoryMission={...m,type:missionType,title:`${beat} · ${m.title}`,description:`${instruction} ${m.description}`,choices,
     cutsceneBefore:[...m.cutsceneBefore,{speaker:'Shadow',voice:'mentor',text:`${arc(ch.number)}. The lesson here is ${t}. Act deliberately.`,emotion:'mysterious'}],
     cutsceneAfter:[...m.cutsceneAfter,{speaker:'Narrator',voice:'narrator',text:`The System records your action as a ${t} decision.`,emotion:'neutral'}]};
    return out;

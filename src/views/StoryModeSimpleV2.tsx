@@ -11,13 +11,13 @@ type Screen = 'world' | 'chapter' | 'boss' | 'reward';
 const chapters = [...ALL_CHAPTERS].sort((a, b) => a.number - b.number).slice(0, 30);
 
 const MAP_W = 3200;
-const MAP_H = 700;
+const MAP_H = 520;
 const nodes: [number, number][] = [
-  [160, 470], [360, 350], [560, 250], [760, 155], [960, 240], [1160, 350],
-  [1360, 460], [1560, 365], [1760, 235], [1960, 145], [2160, 245], [2360, 355],
-  [2560, 465], [2760, 350], [2960, 235], [3135, 145], [2960, 145], [2760, 250],
-  [2560, 365], [2360, 475], [2160, 365], [1960, 255], [1760, 155], [1560, 260],
-  [1360, 375], [1160, 490], [960, 390], [760, 290], [560, 175], [360, 115]
+  [201, 78], [758, 78], [1316, 78], [1884, 78], [2437, 78], [2996, 78],
+  [2996, 182], [2437, 182], [1884, 182], [1316, 182], [758, 182], [201, 182],
+  [201, 286], [758, 286], [1316, 286], [1884, 286], [2437, 286], [2996, 286],
+  [2996, 390], [2437, 390], [1884, 390], [1316, 390], [758, 390], [201, 390],
+  [201, 476], [758, 476], [1316, 476], [1884, 476], [2437, 476], [2996, 476]
 ];
 
 function smoothPath(points: [number, number][]) {
@@ -165,27 +165,25 @@ function WorldMap({ current, completed, level, open }: { current: number; comple
   return (
     <div className="relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#050607] text-white shadow-2xl">
       <style>{`
-        .syrox-map-scroll{scrollbar-width:auto;scrollbar-color:rgba(255,255,255,.38) rgba(255,255,255,.05);-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+        .syrox-map-scroll{height:clamp(300px,52vw,520px);max-height:520px;scrollbar-width:auto;scrollbar-color:rgba(255,255,255,.38) rgba(255,255,255,.05);-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;overflow-x:auto;overflow-y:hidden}
         .syrox-map-scroll::-webkit-scrollbar{height:9px}
         .syrox-map-scroll::-webkit-scrollbar-track{background:rgba(255,255,255,.055);border-radius:999px}
         .syrox-map-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.38);border:2px solid rgba(255,255,255,.04);border-radius:999px}
         .syrox-map-canvas{contain:layout paint;isolation:isolate}
         .syrox-map-image{image-rendering:auto;backface-visibility:hidden;transform:translateZ(0);-webkit-transform:translateZ(0);filter:saturate(1.08) contrast(1.05)}
       `}</style>
-
       <header className="relative z-30 flex flex-wrap items-center justify-between gap-4 border-b border-white/10 bg-black/65 px-4 py-3.5 backdrop-blur-xl sm:px-5">
         <div className="min-w-0"><div className="flex items-center gap-2 text-[8px] font-black uppercase tracking-[.38em] text-amber-100/55"><Map size={12} /> SYROX · THE SHATTERED REALM</div><div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1"><h1 className="text-2xl font-black tracking-tight sm:text-3xl">World Map</h1><span className="text-[9px] font-bold uppercase tracking-[.2em] text-white/25">30 Territories</span></div></div>
         <div className="flex items-center gap-2"><div className="min-w-[78px] rounded-xl border border-white/10 bg-white/[.035] px-3 py-2 text-right"><div className="text-[7px] font-black uppercase tracking-[.22em] text-white/30">Progress</div><div className="mt-0.5 text-base font-black">{completed}<span className="text-white/25">/30</span></div></div><div className="min-w-[88px] rounded-xl border border-amber-200/15 bg-amber-200/[.035] px-3 py-2 text-right"><div className="text-[7px] font-black uppercase tracking-[.22em] text-amber-100/40">Shadow</div><div className="mt-0.5 flex items-center justify-end gap-1 text-base font-black"><Zap size={12} /> {level}</div></div></div>
       </header>
-
       <div className="relative z-20 px-2.5 pt-2.5 sm:px-4 sm:pt-3.5">
         <div className="mb-2 flex items-center justify-between px-1 text-[8px] font-black uppercase tracking-[.24em] text-white/25"><span>THE SHATTERED REALM</span><span>SCROLL HORIZONTALLY</span></div>
         <div className="relative overflow-hidden rounded-[1.35rem] border border-white/10 bg-black/60 shadow-[inset_0_0_50px_rgba(0,0,0,.45)]">
           <div className="pointer-events-none absolute left-0 top-0 z-20 h-full w-8 bg-gradient-to-r from-black/55 to-transparent" /><div className="pointer-events-none absolute right-0 top-0 z-20 h-full w-8 bg-gradient-to-l from-black/55 to-transparent" />
-          <div className="syrox-map-scroll overflow-x-auto overflow-y-hidden">
+          <div className="syrox-map-scroll">
             <div className="syrox-map-canvas relative" style={{ width: MAP_W, height: MAP_H }}>
               <img src="/world-map-aaa-anime.webp.jpg" alt="Syrox World Map" draggable={false} loading="eager" decoding="async" className="syrox-map-image absolute inset-0 h-full w-full select-none object-cover" />
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_38%,rgba(0,0,0,.18)_70%,rgba(0,0,0,.5)_100%)]" /><div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/[.1] via-transparent to-black/[.25]" />
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_38%,rgba(0,0,0,.18)_70%,rgba(0,0,0,.5)_100%)]" /><div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/[.1] via-transparent to-black/[.25]" /><div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_0%,rgba(255,255,255,.035)_45%,transparent_50%,transparent_100%)]" />
               <svg viewBox={`0 0 ${MAP_W} ${MAP_H}`} className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" aria-hidden="true" preserveAspectRatio="none">
                 <defs><filter id="syrox-route-glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter><filter id="syrox-route-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2" /></filter><linearGradient id="syrox-route-gradient" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stopColor="#b87925" /><stop offset="45%" stopColor="#e8b85a" /><stop offset="78%" stopColor="#fff0bb" /><stop offset="100%" stopColor="#ffffff" /></linearGradient></defs>
                 <path d={routeD} fill="none" stroke="rgba(0,0,0,.72)" strokeWidth="24" strokeLinecap="round" strokeLinejoin="round" /><path d={routeD} fill="none" stroke="rgba(255,213,120,.2)" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round" filter="url(#syrox-route-soft)" /><path d={routeD} fill="none" stroke="url(#syrox-route-gradient)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="18 10" /><path d={activeRoute} fill="none" stroke="rgba(255,255,255,.96)" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" filter="url(#syrox-route-glow)" />

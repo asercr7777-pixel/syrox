@@ -10,8 +10,6 @@ import { triggerConfetti } from '../components/ui/Confetti';
 type Screen = 'world' | 'chapter' | 'boss' | 'reward';
 const chapters = [...ALL_CHAPTERS].sort((a, b) => a.number - b.number).slice(0, 30);
 
-// 30 chapters arranged in a deliberate snake path: left → right, then right → left.
-// Five rows keep the route readable while giving every chapter room around the artwork.
 const MAP_W = 2700;
 const MAP_H = 900;
 const nodes: [number, number][] = [
@@ -160,46 +158,46 @@ function WorldMap({ current, completed, level, open }: { current: number; comple
   const activeRoute = smoothPath(nodes.slice(0, activeCount));
 
   return (
-    <div className="relative min-h-[86vh] overflow-hidden rounded-[2rem] border border-white/10 bg-[#050607] text-white shadow-2xl">
+    <div className="relative min-h-[70vh] overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#050607] text-white shadow-2xl">
       <style>{`
         .syrox-map-scroll{scrollbar-width:auto;scrollbar-color:rgba(255,255,255,.34) rgba(255,255,255,.06);-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
-        .syrox-map-scroll::-webkit-scrollbar{height:12px}
+        .syrox-map-scroll::-webkit-scrollbar{height:10px}
         .syrox-map-scroll::-webkit-scrollbar-track{background:rgba(255,255,255,.055);border-radius:999px}
-        .syrox-map-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.34);border:3px solid rgba(255,255,255,.04);border-radius:999px}
+        .syrox-map-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.34);border:2px solid rgba(255,255,255,.04);border-radius:999px}
         .syrox-map-canvas{contain:layout paint;isolation:isolate}
         .syrox-map-image{image-rendering:auto;backface-visibility:hidden;transform:translateZ(0);-webkit-transform:translateZ(0);filter:saturate(1.08) contrast(1.05)}
       `}</style>
 
-      <header className="relative z-30 flex flex-wrap items-start justify-between gap-4 border-b border-white/10 bg-black/60 p-5 backdrop-blur-md sm:p-7">
+      <header className="relative z-30 flex flex-wrap items-start justify-between gap-3 border-b border-white/10 bg-black/60 p-4 backdrop-blur-md sm:p-5">
         <div>
-          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[.45em] text-amber-200/70"><Map size={14} /> SYROX WORLD MAP</div>
-          <h1 className="mt-2 text-4xl font-black tracking-tight sm:text-6xl">The Shattered Realm</h1>
-          <p className="mt-2 max-w-xl text-sm text-white/50">Chapter 01 → 30. Follow the connected road across the realm. The next territory unlocks as you progress.</p>
+          <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[.4em] text-amber-200/70"><Map size={13} /> SYROX WORLD MAP</div>
+          <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-5xl">The Shattered Realm</h1>
+          <p className="mt-1 max-w-xl text-xs text-white/50">Chapter 01 → 30. Follow the connected road across the realm. The next territory unlocks as you progress.</p>
         </div>
         <div className="flex gap-2">
-          <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-right"><div className="text-[9px] font-black uppercase tracking-[.3em] text-white/35">Progress</div><div className="mt-1 text-xl font-black">{completed}/30</div></div>
-          <div className="rounded-xl border border-amber-200/20 bg-amber-200/[.06] px-4 py-3 text-right"><div className="text-[9px] font-black uppercase tracking-[.3em] text-amber-200/50">Shadow Level</div><div className="mt-1 flex items-center justify-end gap-2 text-xl font-black"><Zap size={15} /> {level}</div><div className="text-[8px] uppercase tracking-[.18em] text-white/25">Player Level</div></div>
+          <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-right"><div className="text-[8px] font-black uppercase tracking-[.25em] text-white/35">Progress</div><div className="mt-0.5 text-lg font-black">{completed}/30</div></div>
+          <div className="rounded-lg border border-amber-200/20 bg-amber-200/[.06] px-3 py-2 text-right"><div className="text-[8px] font-black uppercase tracking-[.25em] text-amber-200/50">Shadow Level</div><div className="mt-0.5 flex items-center justify-end gap-1.5 text-lg font-black"><Zap size={13} /> {level}</div><div className="text-[7px] uppercase tracking-[.15em] text-white/25">Player Level</div></div>
         </div>
       </header>
 
-      <div className="relative z-20 px-3 pt-3 sm:px-7 sm:pt-5">
-        <div className="mb-2 flex items-center justify-between text-[10px] font-black uppercase tracking-[.25em] text-white/35"><span>WORLD MAP · HORIZONTAL SCROLL</span><span>← DRAG / SHIFT →</span></div>
-        <div className="syrox-map-scroll overflow-x-auto overflow-y-hidden rounded-[1.75rem] border border-amber-300/20 bg-black/50 shadow-inner">
+      <div className="relative z-20 px-2.5 pt-2.5 sm:px-5 sm:pt-4">
+        <div className="mb-1.5 flex items-center justify-between text-[9px] font-black uppercase tracking-[.2em] text-white/35"><span>WORLD MAP · HORIZONTAL SCROLL</span><span>← DRAG / SHIFT →</span></div>
+        <div className="syrox-map-scroll overflow-x-auto overflow-y-hidden rounded-[1.4rem] border border-amber-300/20 bg-black/50 shadow-inner">
           <div className="syrox-map-canvas relative" style={{ width: MAP_W, height: MAP_H }}>
             <img src="/world-map-aaa-anime.webp.jpg" alt="Syrox World Map" draggable={false} loading="eager" decoding="async" className="syrox-map-image absolute inset-0 h-full w-full select-none object-cover" />
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_36%,rgba(0,0,0,.18)_70%,rgba(0,0,0,.48)_100%)]" />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/[.10] via-transparent to-black/[.20]" />
-
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_38%,rgba(0,0,0,.22)_72%,rgba(0,0,0,.52)_100%)]" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/[.12] via-transparent to-black/[.24]" />
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_0%,rgba(255,255,255,.045)_45%,transparent_50%,transparent_100%)]" />
             <svg viewBox={`0 0 ${MAP_W} ${MAP_H}`} className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" aria-hidden="true" preserveAspectRatio="none">
               <defs>
                 <filter id="syrox-route-glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 <filter id="syrox-route-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.5" /></filter>
                 <linearGradient id="syrox-route-gradient" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stopColor="#d39a34" /><stop offset="45%" stopColor="#f4c96b" /><stop offset="75%" stopColor="#fff0bb" /><stop offset="100%" stopColor="#ffffff" /></linearGradient>
               </defs>
-              <path d={routeD} fill="none" stroke="rgba(0,0,0,.82)" strokeWidth="34" strokeLinecap="round" strokeLinejoin="round" />
-              <path d={routeD} fill="none" stroke="rgba(255,213,120,.25)" strokeWidth="18" strokeLinecap="round" strokeLinejoin="round" filter="url(#syrox-route-soft)" />
+              <path d={routeD} fill="none" stroke="rgba(0,0,0,.78)" strokeWidth="30" strokeLinecap="round" strokeLinejoin="round" />
+              <path d={routeD} fill="none" stroke="rgba(255,213,120,.26)" strokeWidth="17" strokeLinecap="round" strokeLinejoin="round" filter="url(#syrox-route-soft)" />
               <path d={routeD} fill="none" stroke="url(#syrox-route-gradient)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="20 9" />
-              <path d={activeRoute} fill="none" stroke="rgba(255,255,255,.96)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" filter="url(#syrox-route-glow)" />
+              <path d={activeRoute} fill="none" stroke="rgba(255,255,255,.95)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" filter="url(#syrox-route-glow)" />
             </svg>
 
             {nodes.map(([x, y], index) => {
@@ -208,22 +206,22 @@ function WorldMap({ current, completed, level, open }: { current: number; comple
               const conquered = number <= completed;
               const currentNode = number === current;
               return (
-                <button key={number} onClick={() => unlocked && open(chapters[index])} disabled={!unlocked} aria-label={`Chapter ${number}${!unlocked ? ', locked' : ''}`} className="absolute z-10 -translate-x-1/2 -translate-y-1/2" style={{ left: x, top: y }}>
-                  <span className={`relative flex h-[66px] w-[66px] items-center justify-center rounded-full border shadow-[0_10px_30px_rgba(0,0,0,.7)] transition-transform duration-200 ${currentNode ? 'scale-125 border-white bg-black/95 ring-2 ring-white/30' : conquered ? 'border-amber-200/95 bg-black/90 hover:scale-110' : unlocked ? 'border-white/80 bg-black/85 hover:scale-110' : 'border-white/20 bg-black/80 opacity-70'}`}>
-                    {currentNode && <span className="absolute inset-[-11px] animate-pulse rounded-full border border-white/70" />}
-                    <span className="absolute inset-[5px] rounded-full border border-white/10" />
-                    {conquered ? <Check size={22} strokeWidth={3} /> : unlocked ? <span className="text-[15px] font-black tracking-tight">{String(number).padStart(2, '0')}</span> : <Lock size={17} />}
-                    <span className={`absolute -bottom-7 whitespace-nowrap rounded-md border px-2 py-1 text-[8px] font-black tracking-[.16em] shadow-[0_5px_18px_rgba(0,0,0,.7)] ${currentNode ? 'border-white bg-white text-black' : conquered ? 'border-amber-200/25 bg-black/90 text-amber-100' : 'border-white/10 bg-black/85 text-white/70'}`}>CH {String(number).padStart(2, '0')}</span>
+                <button key={number} onClick={() => unlocked && open(chapters[index])} disabled={!unlocked} aria-label={`Chapter ${number}${!unlocked ? ', locked' : ''}`} className="absolute z-10 -translate-x-1/2 -translate-y-1/2 disabled:cursor-not-allowed" style={{ left: x, top: y }}>
+                  <span className={`relative flex h-[52px] w-[52px] items-center justify-center rounded-full border shadow-[0_7px_22px_rgba(0,0,0,.62)] transition-transform duration-200 ${currentNode ? 'scale-125 border-white bg-black/92 ring-2 ring-white/30' : conquered ? 'border-amber-200/95 bg-black/88 hover:scale-110' : unlocked ? 'border-white/75 bg-black/80 hover:scale-110' : 'border-white/20 bg-black/78 opacity-70'}`}>
+                    {currentNode && <span className="absolute inset-[-9px] animate-pulse rounded-full border border-white/70" />}
+                    <span className="absolute inset-[4px] rounded-full border border-white/10" />
+                    {conquered ? <Check size={18} strokeWidth={3} /> : unlocked ? <span className="text-[13px] font-black tracking-tight">{String(number).padStart(2, '0')}</span> : <Lock size={15} />}
+                    <span className={`absolute -bottom-5 whitespace-nowrap rounded-md border px-1.5 py-0.5 text-[7px] font-black tracking-[.14em] shadow-[0_4px_15px_rgba(0,0,0,.65)] ${currentNode ? 'border-white bg-white text-black' : conquered ? 'border-amber-200/25 bg-black/90 text-amber-100' : 'border-white/10 bg-black/85 text-white/70'}`}>CH {String(number).padStart(2, '0')}</span>
                   </span>
                 </button>
               );
             })}
           </div>
         </div>
-        <div className="px-1 pb-2 pt-2 text-[9px] font-black uppercase tracking-[.25em] text-white/30">Scrollbar is intentionally below the map · page itself remains vertically scrollable</div>
+        <div className="px-1 pb-1.5 pt-1.5 text-[8px] font-black uppercase tracking-[.2em] text-white/30">Scrollbar is intentionally below the map · page itself remains vertically scrollable</div>
       </div>
 
-      <footer className="relative z-20 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 bg-black/50 px-5 py-4 text-[9px] font-black uppercase tracking-[.25em] text-white/35 sm:px-7"><span><span className="mr-2 inline-block h-2 w-2 rounded-full bg-amber-200" /> {completed}/30 chapters conquered</span><span>Current Chapter {current}/30</span><span className="flex items-center gap-2"><Skull size={12} /> Complete the route to reach each Boss Citadel</span></footer>
+      <footer className="relative z-20 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 bg-black/50 px-4 py-3 text-[8px] font-black uppercase tracking-[.2em] text-white/35 sm:px-5"><span><span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-amber-200" /> {completed}/30 chapters conquered</span><span>Current Chapter {current}/30</span><span className="flex items-center gap-1.5"><Skull size={11} /> Complete the route to reach each Boss Citadel</span></footer>
     </div>
   );
 }

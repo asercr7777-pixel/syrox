@@ -11,11 +11,13 @@ type Screen = 'world' | 'chapter' | 'boss' | 'reward';
 const chapters = [...ALL_CHAPTERS].sort((a, b) => a.number - b.number).slice(0, 30);
 
 const MAP_W = 3200;
-const MAP_H = 820;
+const MAP_H = 700;
 const nodes: [number, number][] = [
-  [170, 125], [490, 155], [810, 110], [1130, 150], [1450, 120], [1770, 160], [2090, 115], [2410, 150], [2730, 120], [3030, 145],
-  [3030, 350], [2730, 320], [2410, 370], [2090, 335], [1770, 365], [1450, 325], [1130, 360], [810, 330], [490, 370], [170, 340],
-  [170, 585], [490, 620], [810, 575], [1130, 615], [1450, 585], [1770, 620], [2090, 580], [2410, 610], [2730, 575], [3030, 600]
+  [160, 470], [360, 350], [560, 250], [760, 155], [960, 240], [1160, 350],
+  [1360, 460], [1560, 365], [1760, 235], [1960, 145], [2160, 245], [2360, 355],
+  [2560, 465], [2760, 350], [2960, 235], [3135, 145], [2960, 145], [2760, 250],
+  [2560, 365], [2360, 475], [2160, 365], [1960, 255], [1760, 155], [1560, 260],
+  [1360, 375], [1160, 490], [960, 390], [760, 290], [560, 175], [360, 115]
 ];
 
 function smoothPath(points: [number, number][]) {
@@ -87,10 +89,7 @@ export default function StoryModeSimpleV2() {
   };
 
   const hitBoss = () => {
-    if (bossPhase < 2) {
-      setBossPhase(v => v + 1);
-      return;
-    }
+    if (bossPhase < 2) { setBossPhase(v => v + 1); return; }
     const b = selected.boss;
     defeatStoryBoss(b.id);
     if (b.rewardTitle) unlockStoryAchievement(b.rewardTitle);
@@ -176,59 +175,27 @@ function WorldMap({ current, completed, level, open }: { current: number; comple
 
       <header className="relative z-30 flex flex-wrap items-center justify-between gap-4 border-b border-white/10 bg-black/65 px-4 py-3.5 backdrop-blur-xl sm:px-5">
         <div className="min-w-0"><div className="flex items-center gap-2 text-[8px] font-black uppercase tracking-[.38em] text-amber-100/55"><Map size={12} /> SYROX · THE SHATTERED REALM</div><div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1"><h1 className="text-2xl font-black tracking-tight sm:text-3xl">World Map</h1><span className="text-[9px] font-bold uppercase tracking-[.2em] text-white/25">30 Territories</span></div></div>
-        <div className="flex items-center gap-2">
-          <div className="min-w-[78px] rounded-xl border border-white/10 bg-white/[.035] px-3 py-2 text-right"><div className="text-[7px] font-black uppercase tracking-[.22em] text-white/30">Progress</div><div className="mt-0.5 text-base font-black">{completed}<span className="text-white/25">/30</span></div></div>
-          <div className="min-w-[88px] rounded-xl border border-amber-200/15 bg-amber-200/[.035] px-3 py-2 text-right"><div className="text-[7px] font-black uppercase tracking-[.22em] text-amber-100/40">Shadow</div><div className="mt-0.5 flex items-center justify-end gap-1 text-base font-black"><Zap size={12} /> {level}</div></div>
-        </div>
+        <div className="flex items-center gap-2"><div className="min-w-[78px] rounded-xl border border-white/10 bg-white/[.035] px-3 py-2 text-right"><div className="text-[7px] font-black uppercase tracking-[.22em] text-white/30">Progress</div><div className="mt-0.5 text-base font-black">{completed}<span className="text-white/25">/30</span></div></div><div className="min-w-[88px] rounded-xl border border-amber-200/15 bg-amber-200/[.035] px-3 py-2 text-right"><div className="text-[7px] font-black uppercase tracking-[.22em] text-amber-100/40">Shadow</div><div className="mt-0.5 flex items-center justify-end gap-1 text-base font-black"><Zap size={12} /> {level}</div></div></div>
       </header>
 
       <div className="relative z-20 px-2.5 pt-2.5 sm:px-4 sm:pt-3.5">
         <div className="mb-2 flex items-center justify-between px-1 text-[8px] font-black uppercase tracking-[.24em] text-white/25"><span>THE SHATTERED REALM</span><span>SCROLL HORIZONTALLY</span></div>
         <div className="relative overflow-hidden rounded-[1.35rem] border border-white/10 bg-black/60 shadow-[inset_0_0_50px_rgba(0,0,0,.45)]">
-          <div className="pointer-events-none absolute left-0 top-0 z-20 h-full w-8 bg-gradient-to-r from-black/55 to-transparent" />
-          <div className="pointer-events-none absolute right-0 top-0 z-20 h-full w-8 bg-gradient-to-l from-black/55 to-transparent" />
+          <div className="pointer-events-none absolute left-0 top-0 z-20 h-full w-8 bg-gradient-to-r from-black/55 to-transparent" /><div className="pointer-events-none absolute right-0 top-0 z-20 h-full w-8 bg-gradient-to-l from-black/55 to-transparent" />
           <div className="syrox-map-scroll overflow-x-auto overflow-y-hidden">
             <div className="syrox-map-canvas relative" style={{ width: MAP_W, height: MAP_H }}>
               <img src="/world-map-aaa-anime.webp.jpg" alt="Syrox World Map" draggable={false} loading="eager" decoding="async" className="syrox-map-image absolute inset-0 h-full w-full select-none object-cover" />
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_38%,rgba(0,0,0,.18)_70%,rgba(0,0,0,.5)_100%)]" />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/[.1] via-transparent to-black/[.25]" />
-              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_0%,rgba(255,255,255,.035)_45%,transparent_50%,transparent_100%)]" />
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_38%,rgba(0,0,0,.18)_70%,rgba(0,0,0,.5)_100%)]" /><div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/[.1] via-transparent to-black/[.25]" />
               <svg viewBox={`0 0 ${MAP_W} ${MAP_H}`} className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" aria-hidden="true" preserveAspectRatio="none">
-                <defs>
-                  <filter id="syrox-route-glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-                  <filter id="syrox-route-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2" /></filter>
-                  <linearGradient id="syrox-route-gradient" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stopColor="#b87925" /><stop offset="45%" stopColor="#e8b85a" /><stop offset="78%" stopColor="#fff0bb" /><stop offset="100%" stopColor="#ffffff" /></linearGradient>
-                </defs>
-                <path d={routeD} fill="none" stroke="rgba(0,0,0,.72)" strokeWidth="24" strokeLinecap="round" strokeLinejoin="round" />
-                <path d={routeD} fill="none" stroke="rgba(255,213,120,.2)" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round" filter="url(#syrox-route-soft)" />
-                <path d={routeD} fill="none" stroke="url(#syrox-route-gradient)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="18 10" />
-                <path d={activeRoute} fill="none" stroke="rgba(255,255,255,.96)" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" filter="url(#syrox-route-glow)" />
+                <defs><filter id="syrox-route-glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter><filter id="syrox-route-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2" /></filter><linearGradient id="syrox-route-gradient" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stopColor="#b87925" /><stop offset="45%" stopColor="#e8b85a" /><stop offset="78%" stopColor="#fff0bb" /><stop offset="100%" stopColor="#ffffff" /></linearGradient></defs>
+                <path d={routeD} fill="none" stroke="rgba(0,0,0,.72)" strokeWidth="24" strokeLinecap="round" strokeLinejoin="round" /><path d={routeD} fill="none" stroke="rgba(255,213,120,.2)" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round" filter="url(#syrox-route-soft)" /><path d={routeD} fill="none" stroke="url(#syrox-route-gradient)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="18 10" /><path d={activeRoute} fill="none" stroke="rgba(255,255,255,.96)" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" filter="url(#syrox-route-glow)" />
               </svg>
-
-              {nodes.map(([x, y], index) => {
-                const number = index + 1;
-                const unlocked = number <= current;
-                const conquered = number <= completed;
-                const currentNode = number === current;
-                const isFinal = number === 30;
-                return (
-                  <button key={number} onClick={() => unlocked && open(chapters[index])} disabled={!unlocked} aria-label={`Chapter ${number}${!unlocked ? ', locked' : ''}`} className="absolute z-10 -translate-x-1/2 -translate-y-1/2 disabled:cursor-not-allowed" style={{ left: x, top: y }}>
-                    <span className={`relative flex h-[52px] w-[52px] items-center justify-center rounded-full border shadow-[0_7px_22px_rgba(0,0,0,.62)] transition duration-200 ${currentNode ? 'scale-125 border-white bg-black/95 ring-2 ring-white/25 shadow-[0_0_32px_rgba(255,255,255,.2)]' : conquered ? 'border-amber-200/90 bg-black/90 hover:scale-110 hover:shadow-[0_0_24px_rgba(255,210,120,.18)]' : unlocked ? 'border-white/65 bg-black/80 hover:scale-110' : 'border-white/15 bg-black/75 opacity-65'}`}>
-                      {currentNode && <><span className="absolute inset-[-10px] animate-pulse rounded-full border border-white/65" /><span className="absolute inset-[-17px] rounded-full border border-white/10" /></>}
-                      {isFinal && !conquered && <span className="absolute inset-[-5px] rounded-full border border-white/20" />}
-                      <span className="absolute inset-[4px] rounded-full border border-white/10" />
-                      {conquered ? <Check size={18} strokeWidth={3} /> : unlocked ? <span className="text-[13px] font-black tracking-tight">{String(number).padStart(2, '0')}</span> : <Lock size={15} />}
-                      <span className={`absolute -bottom-5 whitespace-nowrap rounded-md border px-1.5 py-0.5 text-[7px] font-black tracking-[.14em] shadow-[0_4px_15px_rgba(0,0,0,.65)] ${currentNode ? 'border-white bg-white text-black' : conquered ? 'border-amber-200/25 bg-black/90 text-amber-100' : 'border-white/10 bg-black/85 text-white/55'}`}>{isFinal ? 'FINAL' : `CH ${String(number).padStart(2, '0')}`}</span>
-                    </span>
-                  </button>
-                );
-              })}
+              {nodes.map(([x, y], index) => { const number = index + 1; const unlocked = number <= current; const conquered = number <= completed; const currentNode = number === current; const isFinal = number === 30; return <button key={number} onClick={() => unlocked && open(chapters[index])} disabled={!unlocked} aria-label={`Chapter ${number}${!unlocked ? ', locked' : ''}`} className="absolute z-10 -translate-x-1/2 -translate-y-1/2 disabled:cursor-not-allowed" style={{ left: x, top: y }}><span className={`relative flex h-[52px] w-[52px] items-center justify-center rounded-full border shadow-[0_7px_22px_rgba(0,0,0,.62)] transition duration-200 ${currentNode ? 'scale-125 border-white bg-black/95 ring-2 ring-white/25 shadow-[0_0_32px_rgba(255,255,255,.2)]' : conquered ? 'border-amber-200/90 bg-black/90 hover:scale-110 hover:shadow-[0_0_24px_rgba(255,210,120,.18)]' : unlocked ? 'border-white/65 bg-black/80 hover:scale-110' : 'border-white/15 bg-black/75 opacity-65'}`}>{currentNode && <><span className="absolute inset-[-10px] animate-pulse rounded-full border border-white/65" /><span className="absolute inset-[-17px] rounded-full border border-white/10" /></>}{isFinal && !conquered && <span className="absolute inset-[-5px] rounded-full border border-white/20" />}<span className="absolute inset-[4px] rounded-full border border-white/10" />{conquered ? <Check size={18} strokeWidth={3} /> : unlocked ? <span className="text-[13px] font-black tracking-tight">{String(number).padStart(2, '0')}</span> : <Lock size={15} />}<span className={`absolute -bottom-5 whitespace-nowrap rounded-md border px-1.5 py-0.5 text-[7px] font-black tracking-[.14em] shadow-[0_4px_15px_rgba(0,0,0,.65)] ${currentNode ? 'border-white bg-white text-black' : conquered ? 'border-amber-200/25 bg-black/90 text-amber-100' : 'border-white/10 bg-black/85 text-white/55'}`}>{isFinal ? 'FINAL' : `CH ${String(number).padStart(2, '0')}`}</span></span></button>; })}
             </div>
           </div>
         </div>
         <div className="flex items-center justify-between px-1 pb-1 pt-1.5 text-[8px] font-black uppercase tracking-[.2em] text-white/25"><span>30 CHAPTERS · ONE PATH</span><span>← DRAG →</span></div>
       </div>
-
       <footer className="relative z-20 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 bg-black/55 px-4 py-2.5 text-[8px] font-black uppercase tracking-[.18em] text-white/30 sm:px-5"><span><span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-amber-200" /> {completed}/30 conquered</span><span>Chapter {current}/30</span><span className="flex items-center gap-1.5"><Skull size={11} /> Boss Citadels await</span></footer>
     </div>
   );

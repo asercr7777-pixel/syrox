@@ -9,12 +9,17 @@ import { triggerConfetti } from '../components/ui/Confetti';
 
 type Screen = 'world' | 'chapter' | 'boss' | 'reward';
 const chapters = [...ALL_CHAPTERS].sort((a, b) => a.number - b.number).slice(0, 30);
-const MAP_W = 2400;
-const MAP_H = 820;
+
+// 30 chapters arranged in a deliberate snake path: left → right, then right → left.
+// Five rows keep the route readable while giving every chapter room around the artwork.
+const MAP_W = 2700;
+const MAP_H = 900;
 const nodes: [number, number][] = [
-  [110, 650], [180, 565], [260, 625], [345, 525], [430, 585], [515, 470], [610, 535], [700, 430], [790, 490], [875, 370],
-  [965, 430], [1055, 330], [1145, 395], [1235, 285], [1325, 345], [1415, 245], [1510, 305], [1595, 195], [1680, 260], [1765, 170],
-  [1850, 235], [1920, 145], [1990, 205], [2050, 125], [2110, 190], [2160, 110], [2210, 175], [2260, 95], [2310, 150], [2350, 75]
+  [170, 135], [640, 135], [1110, 135], [1590, 135], [2060, 135], [2530, 135],
+  [2530, 315], [2060, 315], [1590, 315], [1110, 315], [640, 315], [170, 315],
+  [170, 495], [640, 495], [1110, 495], [1590, 495], [2060, 495], [2530, 495],
+  [2530, 675], [2060, 675], [1590, 675], [1110, 675], [640, 675], [170, 675],
+  [170, 825], [640, 825], [1110, 825], [1590, 825], [2060, 825], [2530, 825]
 ];
 
 function smoothPath(points: [number, number][]) {
@@ -162,7 +167,7 @@ function WorldMap({ current, completed, level, open }: { current: number; comple
         .syrox-map-scroll::-webkit-scrollbar-track{background:rgba(255,255,255,.055);border-radius:999px}
         .syrox-map-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.34);border:3px solid rgba(255,255,255,.04);border-radius:999px}
         .syrox-map-canvas{contain:layout paint;isolation:isolate}
-        .syrox-map-image{image-rendering:auto;backface-visibility:hidden;transform:translateZ(0);-webkit-transform:translateZ(0)}
+        .syrox-map-image{image-rendering:auto;backface-visibility:hidden;transform:translateZ(0);-webkit-transform:translateZ(0);filter:saturate(1.08) contrast(1.05)}
       `}</style>
 
       <header className="relative z-30 flex flex-wrap items-start justify-between gap-4 border-b border-white/10 bg-black/60 p-5 backdrop-blur-md sm:p-7">
@@ -182,10 +187,8 @@ function WorldMap({ current, completed, level, open }: { current: number; comple
         <div className="syrox-map-scroll overflow-x-auto overflow-y-hidden rounded-[1.75rem] border border-amber-300/20 bg-black/50 shadow-inner">
           <div className="syrox-map-canvas relative" style={{ width: MAP_W, height: MAP_H }}>
             <img src="/world-map-aaa-anime.webp.jpg" alt="Syrox World Map" draggable={false} loading="eager" decoding="async" className="syrox-map-image absolute inset-0 h-full w-full select-none object-cover" />
-
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_38%,rgba(0,0,0,.22)_72%,rgba(0,0,0,.52)_100%)]" />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/[.12] via-transparent to-black/[.24]" />
-            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_0%,rgba(255,255,255,.045)_45%,transparent_50%,transparent_100%)]" />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_36%,rgba(0,0,0,.18)_70%,rgba(0,0,0,.48)_100%)]" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/[.10] via-transparent to-black/[.20]" />
 
             <svg viewBox={`0 0 ${MAP_W} ${MAP_H}`} className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" aria-hidden="true" preserveAspectRatio="none">
               <defs>
@@ -193,10 +196,10 @@ function WorldMap({ current, completed, level, open }: { current: number; comple
                 <filter id="syrox-route-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.5" /></filter>
                 <linearGradient id="syrox-route-gradient" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stopColor="#d39a34" /><stop offset="45%" stopColor="#f4c96b" /><stop offset="75%" stopColor="#fff0bb" /><stop offset="100%" stopColor="#ffffff" /></linearGradient>
               </defs>
-              <path d={routeD} fill="none" stroke="rgba(0,0,0,.78)" strokeWidth="30" strokeLinecap="round" strokeLinejoin="round" />
-              <path d={routeD} fill="none" stroke="rgba(255,213,120,.26)" strokeWidth="17" strokeLinecap="round" strokeLinejoin="round" filter="url(#syrox-route-soft)" />
+              <path d={routeD} fill="none" stroke="rgba(0,0,0,.82)" strokeWidth="34" strokeLinecap="round" strokeLinejoin="round" />
+              <path d={routeD} fill="none" stroke="rgba(255,213,120,.25)" strokeWidth="18" strokeLinecap="round" strokeLinejoin="round" filter="url(#syrox-route-soft)" />
               <path d={routeD} fill="none" stroke="url(#syrox-route-gradient)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="20 9" />
-              <path d={activeRoute} fill="none" stroke="rgba(255,255,255,.95)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" filter="url(#syrox-route-glow)" />
+              <path d={activeRoute} fill="none" stroke="rgba(255,255,255,.96)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" filter="url(#syrox-route-glow)" />
             </svg>
 
             {nodes.map(([x, y], index) => {
@@ -205,12 +208,12 @@ function WorldMap({ current, completed, level, open }: { current: number; comple
               const conquered = number <= completed;
               const currentNode = number === current;
               return (
-                <button key={number} onClick={() => unlocked && open(chapters[index])} disabled={!unlocked} aria-label={`Chapter ${number}${!unlocked ? ', locked' : ''}`} className="absolute z-10 -translate-x-1/2 -translate-y-1/2 disabled:cursor-not-allowed" style={{ left: x, top: y }}>
-                  <span className={`relative flex h-[60px] w-[60px] items-center justify-center rounded-full border shadow-[0_8px_26px_rgba(0,0,0,.62)] transition-transform duration-200 ${currentNode ? 'scale-125 border-white bg-black/92 ring-2 ring-white/30' : conquered ? 'border-amber-200/95 bg-black/88 hover:scale-110' : unlocked ? 'border-white/75 bg-black/80 hover:scale-110' : 'border-white/20 bg-black/78 opacity-70'}`}>
-                    {currentNode && <span className="absolute inset-[-10px] animate-pulse rounded-full border border-white/70" />}
+                <button key={number} onClick={() => unlocked && open(chapters[index])} disabled={!unlocked} aria-label={`Chapter ${number}${!unlocked ? ', locked' : ''}`} className="absolute z-10 -translate-x-1/2 -translate-y-1/2" style={{ left: x, top: y }}>
+                  <span className={`relative flex h-[66px] w-[66px] items-center justify-center rounded-full border shadow-[0_10px_30px_rgba(0,0,0,.7)] transition-transform duration-200 ${currentNode ? 'scale-125 border-white bg-black/95 ring-2 ring-white/30' : conquered ? 'border-amber-200/95 bg-black/90 hover:scale-110' : unlocked ? 'border-white/80 bg-black/85 hover:scale-110' : 'border-white/20 bg-black/80 opacity-70'}`}>
+                    {currentNode && <span className="absolute inset-[-11px] animate-pulse rounded-full border border-white/70" />}
                     <span className="absolute inset-[5px] rounded-full border border-white/10" />
-                    {conquered ? <Check size={21} strokeWidth={3} /> : unlocked ? <span className="text-[15px] font-black tracking-tight">{String(number).padStart(2, '0')}</span> : <Lock size={17} />}
-                    <span className={`absolute -bottom-6 whitespace-nowrap rounded-md border px-2 py-1 text-[8px] font-black tracking-[.16em] shadow-[0_5px_18px_rgba(0,0,0,.65)] ${currentNode ? 'border-white bg-white text-black' : conquered ? 'border-amber-200/25 bg-black/90 text-amber-100' : 'border-white/10 bg-black/85 text-white/70'}`}>CH {String(number).padStart(2, '0')}</span>
+                    {conquered ? <Check size={22} strokeWidth={3} /> : unlocked ? <span className="text-[15px] font-black tracking-tight">{String(number).padStart(2, '0')}</span> : <Lock size={17} />}
+                    <span className={`absolute -bottom-7 whitespace-nowrap rounded-md border px-2 py-1 text-[8px] font-black tracking-[.16em] shadow-[0_5px_18px_rgba(0,0,0,.7)] ${currentNode ? 'border-white bg-white text-black' : conquered ? 'border-amber-200/25 bg-black/90 text-amber-100' : 'border-white/10 bg-black/85 text-white/70'}`}>CH {String(number).padStart(2, '0')}</span>
                   </span>
                 </button>
               );

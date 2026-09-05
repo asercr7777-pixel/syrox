@@ -70,7 +70,7 @@ function normalizeLoadedState(cloudState: AppState, def: AppState): AppState {
     coins: Math.max(0, Number.isFinite(cloudState.coins) ? cloudState.coins : def.coins),
     totalPoints: Math.max(0, Number.isFinite(cloudState.totalPoints) ? cloudState.totalPoints : def.totalPoints),
     dailyXp: Math.max(0, Math.min(Number.isFinite(cloudState.dailyXp) ? cloudState.dailyXp : 0, 1000)),
-    dailyPoints: Math.max(0, Number.isFinite(cloudState.dailyPoints) ? cloudState.dailyPoints : def.dailyPoints),
+    dailyPoints: Math.max(0, Number.isFinite(cloudState.dailyPoints) ? cloudState.dailyPoints : 0),
     dailyCap: 1000,
     level: levelFromXp(Math.max(0, Number.isFinite(cloudState.xp) ? cloudState.xp : def.xp)),
     storyChapter: Math.max(0, Math.min(cloudState.storyChapter ?? 0, ALL_STORY_CHAPTER_COUNT)),
@@ -241,7 +241,6 @@ function doDailyReset() {
 function addXp(s: AppState, amount: number): AppState {
   let xp = s.xp;
   let level = s.level;
-  let coins = s.coins;
   let leveledUp = false;
   let multiplier = 1;
   if (s.doubleXpUntil && s.doubleXpUntil > Date.now()) multiplier = 2;
@@ -251,7 +250,6 @@ function addXp(s: AppState, amount: number): AppState {
   if (newLevel > level) {
     level = newLevel;
     leveledUp = true;
-    coins += (newLevel - s.level) * 50;
   }
   if (leveledUp) {
     setTimeout(() => playSound('levelup'), 50);
@@ -261,7 +259,7 @@ function addXp(s: AppState, amount: number): AppState {
   if (newRank.id !== oldRank.id && getRankIndex(newRank.id) > getRankIndex(oldRank.id)) {
     setTimeout(() => playSound('rankup'), 150);
   }
-  return { ...s, xp, level, coins };
+  return { ...s, xp, level };
 }
 
 
@@ -842,40 +840,16 @@ function resetAll() {
   scheduleAutoSave();
 }
 
-function purchaseItem(itemId: string, category: string, price: number): boolean {
-  let success = false;
-  setState((s) => {
-    const marketItem = getMarketItem(itemId, category as MarketCategory);
-    if (!marketItem || price !== marketItem.price) return s;
-    if (s.xp < marketItem.xpRequired || s.coins < marketItem.price) return s;
-    const typeMap: Record<MarketCategory, InventoryItem['type']> = {
-      weapons: 'weapon', auras: 'aura', titles: 'title',
-      shields: 'shield', frames: 'frame', backgrounds: 'background',
-    };
-    const type = typeMap[marketItem.category];
-    if (s.inventory.some((i) => i.id === itemId && i.type === type)) return s;
-    success = true;
-    playSound('reward');
-    return {
-      ...s,
-      coins: s.coins - marketItem.price,
-      inventory: [...s.inventory, { id: itemId, type, obtainedAt: Date.now(), favorite: false }],
-    };
-  });
-  return success;
-}
-
-function completeStoryMission(missionId: string, reward: { xp: number; coins: number }) {
+function completeStoryMission(missionId: string, reward: { xp: number }) {
   setState((s) => {
     if (s.storyCompletedMissions[missionId]) return s;
     const mission = ALL_CHAPTERS.flatMap((chapter) => chapter.missions).find((m) => m.id === missionId);
     const boss = mission ? undefined : ALL_CHAPTERS.map((chapter) => chapter.boss).find((b) => `boss_${b.id}` === missionId);
     if (!mission && !boss) return s;
     const expectedXp = mission?.xpReward ?? boss?.xpReward ?? 0;
-    const expectedCoins = mission?.coinReward ?? boss?.coinReward ?? 0;
-    if (reward.xp !== expectedXp || reward.coins !== expectedCoins) return s;
-    let next = addPoints(s, expectedXp, 0);
-    next = { ...next, coins: next.coins + expectedCoins, storyCompletedMissions: { ...next.storyCompletedMissions, [missionId]: true } };
+    if (reward.xp !== expectedXp) return s;
+    const next = addPoints(s, expectedXp, 0);
+    return { ...next, storyCompletedMissions: { ...next.storyCompletedMissions, [missionId]: true } };
     return next;
   });
   playSound('reward');
@@ -1472,8 +1446,7 @@ export function useStore(): StoreActions {
     sendMotivation,
     setNote,
     resetAll,
-    purchaseItem,
-    completeStoryMission,
+      completeStoryMission,
     setStoryChoice,
     defeatStoryBoss,
     advanceStoryChapter,

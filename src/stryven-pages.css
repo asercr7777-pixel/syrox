@@ -1,0 +1,7 @@
+/* STRYVEN // section-specific architecture */
+.stryven-view-tasks .stryven-page>div:first-child,.stryven-view-dungeons .stryven-page>div:first-child,.stryven-view-profile .stryven-page>div:first-child{max-width:none}
+.stryven-view-tasks .space-y-6>section:first-of-type{border-radius:16px}
+.stryven-view-profile .space-y-6>div:first-child{border-radius:20px}
+.stryven-view-profile .space-y-6>div:nth-child(3){display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+@media(max-width:900px){.stryven-view-profile .space-y-6>div:nth-child(3){grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:560px){.stryven-view-profile .space-y-6>div:nth-child(3){grid-template-columns:repeat(2,minmax(0,1fr))}}

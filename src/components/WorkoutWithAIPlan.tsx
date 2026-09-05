@@ -1,5 +1,5 @@
-import { Workout2 } from './Workout2';
+import { SixDayWorkout } from './SixDayWorkout';
 
 export function WorkoutWithAIPlan() {
-  return <Workout2 />;
+  return <SixDayWorkout />;
 }

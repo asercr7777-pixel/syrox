@@ -16,6 +16,7 @@ import './theme.css';
 import './theme-overrides.css';
 import './theme-identities.css';
 import './theme-motion.css';
+import './stryven-ui-system.css';
 import './stryven-redesign.css';
 import './stryven-shell.css';
 import './stryven-pages.css';
@@ -57,7 +58,6 @@ function AppContent() {
     void Promise.allSettled([ensureStoryReset(user.id), loadFromCloud(user.id)]);
   }, [user, setUserId, loadFromCloud]);
 
-  // Keep the scroll effect lightweight: one animation-frame update at a time.
   useEffect(() => {
     let raf = 0;
     let timeout = 0;

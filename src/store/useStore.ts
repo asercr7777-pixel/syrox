@@ -1291,7 +1291,6 @@ export interface StoreActions {
   // Reset
   resetAll: () => void;
   // Marketplace
-  purchaseItem: (itemId: string, category: string, price: number) => boolean;
   completeStoryMission: (missionId: string, reward: { xp: number; coins: number }) => void;
   setStoryChoice: (chapterId: string, choiceId: string) => void;
   defeatStoryBoss: (bossId: string) => void;

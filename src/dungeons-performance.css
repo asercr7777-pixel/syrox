@@ -1,0 +1,83 @@
+/* STRYVEN Dungeons performance layer.
+   Keep expensive visual work off the scroll path while preserving the cinematic look. */
+
+.stryven-raids {
+  contain: layout paint;
+}
+
+.raid-hero,
+.raid-footer-panel,
+.raid-card,
+.raid-preview,
+.raid-run-modal,
+.raid-reward-modal {
+  contain: layout paint style;
+}
+
+.raid-hero__image,
+.raid-footer-art {
+  will-change: auto;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Don't keep all 20 large 4K card surfaces in the active paint workload. */
+.raid-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 260px 462px;
+  scroll-snap-stop: normal;
+}
+
+.raid-card__image {
+  display: block;
+  image-rendering: auto;
+  backface-visibility: hidden;
+}
+
+/* Only promote a card while it is actually being interacted with. */
+.raid-card:hover,
+.raid-card:focus-visible {
+  will-change: transform;
+}
+
+.raid-rail {
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: auto;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  touch-action: pan-x;
+}
+
+.raid-hero__image,
+.raid-footer-art {
+  background-attachment: scroll;
+}
+
+/* Reduce compositor pressure on phones without changing the artwork itself. */
+@media (max-width: 768px) {
+  .raid-card:hover {
+    transform: none;
+  }
+
+  .raid-card:hover .raid-card__image {
+    transform: none;
+  }
+
+  .raid-card__rank,
+  .raid-status {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .raid-card,
+  .raid-card__image,
+  .raid-enter,
+  .raid-claim,
+  .raid-continue {
+    transition: none !important;
+  }
+}

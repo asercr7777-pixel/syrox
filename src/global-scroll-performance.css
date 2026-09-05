@@ -1,0 +1,75 @@
+/* STRYVEN global scroll performance layer — all pages. */
+
+/* Keep native scrolling predictable and cheap. */
+html { scroll-behavior: auto; }
+body { overscroll-behavior-y: none; }
+
+/* Avoid expensive visual work while the user is actively scrolling. */
+html.is-scrolling .theme-atmosphere,
+html.is-scrolling .theme-atmosphere::before,
+html.is-scrolling .theme-atmosphere::after,
+html.is-scrolling .theme-particle,
+html.is-scrolling video {
+  animation-play-state: paused !important;
+}
+
+html.is-scrolling .theme-atmosphere::before,
+html.is-scrolling .theme-atmosphere::after,
+html.is-scrolling .theme-particle {
+  opacity: .3 !important;
+}
+
+/* Heavy effects are the main source of scroll-time GPU paint. */
+html.is-scrolling [class*="backdrop-blur"],
+html.is-scrolling [class*="blur-3xl"],
+html.is-scrolling [class*="blur-2xl"] {
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Keep repeated page surfaces isolated without clipping overlays/modals. */
+.stryven-page,
+.stryven-page-frame {
+  contain: layout style;
+}
+
+/* Images should stay sharp while avoiding unnecessary resampling work. */
+.stryven-page img {
+  image-rendering: auto;
+  backface-visibility: hidden;
+}
+
+/* Horizontal rails across the site should remain compositor-friendly. */
+.stryven-page [style*="overflow-x"],
+.stryven-page [class*="scroll-x"],
+.stryven-page [class*="horizontal"] {
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  scroll-behavior: auto;
+}
+
+/* Prevent large fixed/background layers from forcing layout work. */
+.theme-atmosphere,
+.stryven-shell,
+.stryven-app-shell {
+  contain: layout style;
+}
+
+/* On mobile, reduce only expensive shadows during active scrolling. */
+@media (max-width: 768px) {
+  html.is-scrolling .shadow-2xl,
+  html.is-scrolling .shadow-xl,
+  html.is-scrolling .shadow-lg {
+    box-shadow: 0 2px 8px rgba(0,0,0,.14) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

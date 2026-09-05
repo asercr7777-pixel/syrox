@@ -2,6 +2,23 @@
 .stryven-view-tasks .stryven-page>div:first-child,.stryven-view-dungeons .stryven-page>div:first-child,.stryven-view-profile .stryven-page>div:first-child{max-width:none}
 .stryven-view-tasks .space-y-6>section:first-of-type{border-radius:16px}
 .stryven-view-profile .space-y-6>div:first-child{border-radius:20px}
+.stryven-view-profile .space-y-6>div:nth-child(2){padding:18px;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:rgba(8,8,9,.68)}
 .stryven-view-profile .space-y-6>div:nth-child(3){display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
-@media(max-width:900px){.stryven-view-profile .space-y-6>div:nth-child(3){grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:560px){.stryven-view-profile .space-y-6>div:nth-child(3){grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stryven-view-profile .space-y-6>div:nth-child(3)>div{min-width:0}
+.stryven-view-profile .space-y-6>div:nth-child(4){grid-template-columns:repeat(5,minmax(0,1fr))}
+.stryven-view-profile .space-y-6>div:nth-child(4),.stryven-view-profile .space-y-6>div:nth-child(5),.stryven-view-profile .space-y-6>div:nth-child(6){border-radius:18px}
+.stryven-view-profile .section-title{letter-spacing:-.035em}
+.stryven-view-dungeons .space-y-6>div:nth-child(2){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.stryven-view-dungeons .space-y-6>div:nth-child(2)>div{min-width:0}
+.stryven-view-dungeons .space-y-6>div:nth-child(2) .card-premium{height:100%;display:flex;flex-direction:column}
+.stryven-view-dungeons .space-y-6>div:nth-child(2) .card-premium>div.relative{height:100%;display:flex;flex-direction:column}
+.stryven-view-dungeons .space-y-6>div:nth-child(2) .card-premium .btn-primary{margin-top:auto}
+.stryven-view-settings .space-y-6{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;align-items:start}
+.stryven-view-settings .space-y-6>div:first-child{grid-column:1/-1;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:14px}
+.stryven-view-settings .space-y-6>div:nth-child(2){grid-column:span 7}
+.stryven-view-settings .space-y-6>div:nth-child(3){grid-column:span 5}
+.stryven-view-settings .space-y-6>div:nth-child(4){grid-column:1/-1}
+.stryven-view-settings .space-y-6>div:nth-child(n+5){grid-column:span 6}
+.stryven-view-settings .card{height:100%}
+@media(max-width:900px){.stryven-view-profile .space-y-6>div:nth-child(3){grid-template-columns:repeat(3,minmax(0,1fr))}.stryven-view-profile .space-y-6>div:nth-child(4){grid-template-columns:repeat(3,minmax(0,1fr))}.stryven-view-dungeons .space-y-6>div:nth-child(2){grid-template-columns:1fr}.stryven-view-settings .space-y-6>div:nth-child(n+2){grid-column:1/-1}}
+@media(max-width:560px){.stryven-view-profile .space-y-6>div:nth-child(3),.stryven-view-profile .space-y-6>div:nth-child(4){grid-template-columns:repeat(2,minmax(0,1fr))}.stryven-view-settings .space-y-6{gap:10px}}

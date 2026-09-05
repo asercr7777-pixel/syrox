@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { playSound } from '../lib/sound';
 import { useAuth } from '../lib/auth';
 
-export type ViewId = 'dashboard' | 'tasks' | 'story' | 'workout' | 'dungeons' | 'profile' | 'achievements' | 'leaderboard' | 'skilltree' | 'worldmap' | 'settings';
+export type ViewId = 'dashboard' | 'tasks' | 'story' | 'workout' | 'dungeons' | 'profile' | 'leaderboard' | 'worldmap' | 'settings';
 interface NavItem { id: ViewId; label: string; icon: typeof LayoutDashboard; }
 
 const NAV_ITEMS: NavItem[] = [

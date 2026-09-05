@@ -28,17 +28,15 @@ import './stryven-character.css';
 const Dashboard = lazy(() => import('./views/Dashboard').then((m) => ({ default: m.Dashboard })));
 const Tasks = lazy(() => import('./views/Tasks').then((m) => ({ default: m.Tasks })));
 const StoryMode = lazy(() => import('./views/StoryModeSimpleV2'));
-const SkillTree = lazy(() => import('./views/SkillTree').then((m) => ({ default: m.SkillTree })));
 const WorkoutWithAIPlan = lazy(() => import('./components/WorkoutWithAIPlan').then((m) => ({ default: m.WorkoutWithAIPlan })));
 const Dungeons = lazy(() => import('./views/Dungeons').then((m) => ({ default: m.Dungeons })));
 const Profile = lazy(() => import('./views/Profile').then((m) => ({ default: m.Profile })));
-const Achievements = lazy(() => import('./views/Achievements').then((m) => ({ default: m.Achievements })));
 const Leaderboard = lazy(() => import('./views/Leaderboard').then((m) => ({ default: m.Leaderboard })));
 const Settings = lazy(() => import('./views/Settings').then((m) => ({ default: m.Settings })));
 const Auth = lazy(() => import('./views/Auth').then((m) => ({ default: m.Auth })));
 const ResetPassword = lazy(() => import('./views/ResetPassword').then((m) => ({ default: m.ResetPassword })));
 
-const VALID_VIEWS = new Set<ViewId>(['dashboard', 'tasks', 'story', 'workout', 'dungeons', 'profile', 'achievements', 'leaderboard', 'skilltree', 'settings']);
+const VALID_VIEWS = new Set<ViewId>(['dashboard', 'tasks', 'story', 'workout', 'dungeons', 'profile', 'leaderboard', 'settings']);
 function getViewFromUrl(): ViewId {
   if (typeof window === 'undefined') return 'dashboard';
   const requested = new URLSearchParams(window.location.search).get('view');
@@ -75,11 +73,9 @@ function AppContent() {
           {view === 'dashboard' && <section className="stryven-page"><Dashboard onNavigate={handleNavigate} />{!isInstalled && <div className="stryven-install"><InstallButton isInstallable={isInstallable} isInstalled={isInstalled} onInstall={promptInstall}>Install STRYVEN</InstallButton></div>}</section>}
           {view === 'tasks' && <section className="stryven-page"><Tasks /></section>}
           {view === 'story' && <section className="stryven-page stryven-story-page"><StoryMode /></section>}
-          {view === 'skilltree' && <section className="stryven-page"><SkillTree /></section>}
           {view === 'workout' && <section className="stryven-page"><WorkoutWithAIPlan /></section>}
           {view === 'dungeons' && <section className="stryven-page"><Dungeons /></section>}
           {view === 'profile' && <section className="stryven-page"><Profile /></section>}
-          {view === 'achievements' && <section className="stryven-page"><Achievements /></section>}
           {view === 'leaderboard' && <section className="stryven-page"><Leaderboard /></section>}
           {view === 'settings' && <section className="stryven-page stryven-settings"><Settings /></section>}
         </Suspense>

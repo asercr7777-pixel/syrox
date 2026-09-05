@@ -17,30 +17,29 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
 
           store = Path('src/store/useStore.ts')
           text = store.read_text()
           text = text.replace("import { getMarketItem, type MarketCategory } from '../data/marketplace';\n", '')
 
-          start = text.find('    let next = addPoints(s, dungeon.rewardXp, dungeon.rewardXp);')
-          end = text.find('    });\n  }\n\n  function clearSecretDungeon', start)
-          if start < 0 or end < 0 or end <= start:
-              raise SystemExit('clearDungeon reward section not found; refusing unsafe edit')
-          replacement = "    const next = addPoints(s, dungeon.rewardXp, dungeon.rewardXp);\n    return { ...next, dungeonClearedToday: true, lastDungeonDate: todayStr(), dungeonsCleared: next.dungeonsCleared + 1 };\n"
-          text = text[:start] + replacement + text[end:]
+          pattern = re.compile(r"\n\s*let next = addPoints\(s, dungeon\.rewardXp, dungeon\.rewardXp\);.*?\n\s*return \{\.\.\.next, inventory: \[\.\.\.next\.inventory, \.\.\.rewardItems\]\};", re.S)
+          replacement = "\n    const next = addPoints(s, dungeon.rewardXp, dungeon.rewardXp);\n    return { ...next, dungeonClearedToday: true, lastDungeonDate: todayStr(), dungeonsCleared: next.dungeonsCleared + 1 };"
+          text, count = pattern.subn(replacement, text, count=1)
+          if count != 1:
+              raise SystemExit(f'clearDungeon reward section match count={count}; refusing unsafe edit')
 
-          marker = 'dailyXp:'
-          cap_start = text.find(marker)
-          cap_end = text.find('    ...', cap_start)
-          if cap_start < 0:
-              raise SystemExit('daily cap section not found; refusing unsafe edit')
-          text = text[:cap_start] + "dailyXp: Math.max(0, Math.min(Number.isFinite(cloudState.dailyXp) ? cloudState.dailyXp : 0, 1000)),\n    dailyPoints: Math.max(0, Number.isFinite(cloudState.dailyPoints) ? cloudState.dailyPoints : 0),\n    dailyCap: 1000,\n" + text[cap_end:]
+          cap_pattern = re.compile(r"dailyXp:\s*Math\.max\(0, Math\.min\(Number\.isFinite\(cloudState\.dailyXp\).*?dailyCap:\s*Math\.max\(1, Number\.isFinite\(cloudState\.dailyCap\).*?\),", re.S)
+          cap_replacement = "dailyXp: Math.max(0, Math.min(Number.isFinite(cloudState.dailyXp) ? cloudState.dailyXp : 0, 1000)),\n    dailyPoints: Math.max(0, Number.isFinite(cloudState.dailyPoints) ? cloudState.dailyPoints : 0),\n    dailyCap: 1000,"
+          text, cap_count = cap_pattern.subn(cap_replacement, text, count=1)
+          if cap_count != 1:
+              raise SystemExit(f'daily cap match count={cap_count}; refusing unsafe edit')
           store.write_text(text)
 
           workout = Path('src/components/SixDayWorkout.tsx')
           w = workout.read_text()
-          w = w.replace('completeStoryMission(mission.id, { xp: mission.xpReward, coins: mission.coinReward })', 'completeStoryMission(mission.id, { xp: mission.xpReward })')
-          workout.write_text(w)
+          w2 = w.replace('completeStoryMission(mission.id, { xp: mission.xpReward, coins: mission.coinReward })', 'completeStoryMission(mission.id, { xp: mission.xpReward })')
+          workout.write_text(w2)
           PY
 
           git config user.name "github-actions[bot]"

@@ -26,6 +26,20 @@ body {
 .stryven-page-frame { width: min(100% - 32px, 1440px); margin-inline: auto; padding: 28px 0 56px; }
 .stryven-page { min-width: 0; animation: stryven-page-in .28s ease both; }
 
+/* Navigation */
+.stryven-topbar {
+  background: rgba(5,6,10,.82) !important;
+  border-bottom: 1px solid rgba(148,163,184,.12) !important;
+  box-shadow: 0 14px 40px rgba(0,0,0,.24), inset 0 -1px 0 rgba(34,211,238,.035);
+  backdrop-filter: blur(18px) saturate(140%);
+}
+.stryven-brand span { letter-spacing: .22em; font-weight: 950; }
+.stryven-topnav-item { transition: color .2s ease, background .2s ease, border-color .2s ease, transform .2s ease; }
+.stryven-topnav-item:hover { background: rgba(255,255,255,.035); transform: translateY(-1px); }
+.stryven-topnav-item.is-active { color: #fff !important; background: linear-gradient(135deg, rgba(34,211,238,.1), rgba(139,92,246,.1)) !important; border-color: rgba(34,211,238,.18) !important; box-shadow: inset 0 0 24px rgba(34,211,238,.035); }
+.stryven-signout:hover { color: #fff !important; border-color: rgba(217,70,239,.3) !important; }
+
+/* Shared surfaces */
 [data-theme] .card,
 [data-theme] .glass,
 [data-theme] .card-premium {
@@ -33,41 +47,108 @@ body {
   border: 1px solid rgba(148,163,184,.13) !important;
   box-shadow: 0 18px 45px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.025) !important;
 }
-
 [data-theme] .card:hover,
 [data-theme] .card-premium:hover {
   border-color: rgba(34,211,238,.25) !important;
   box-shadow: 0 22px 55px rgba(0,0,0,.34), 0 0 28px rgba(34,211,238,.06), inset 0 1px 0 rgba(255,255,255,.035) !important;
   transform: translateY(-1px);
 }
-
 [data-theme] .btn-primary {
   background: linear-gradient(135deg, var(--stryven-blue), var(--stryven-purple)) !important;
-  box-shadow: 0 8px 24px rgba(59,130,246,.2);
+  border: 1px solid rgba(255,255,255,.12) !important;
+  box-shadow: 0 8px 24px rgba(59,130,246,.2), inset 0 1px 0 rgba(255,255,255,.15);
 }
-[data-theme] .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
-
-[data-theme] .btn-ghost {
-  background: rgba(16,21,30,.72) !important;
-  border-color: rgba(148,163,184,.14) !important;
-}
-
+[data-theme] .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 12px 30px rgba(59,130,246,.26); }
+[data-theme] .btn-ghost { background: rgba(16,21,30,.72) !important; border-color: rgba(148,163,184,.14) !important; }
 [data-theme] .input,
 [data-theme] input,
 [data-theme] textarea,
-[data-theme] select {
-  background: rgba(8,12,18,.78) !important;
-  border-color: rgba(148,163,184,.14) !important;
+[data-theme] select { background: rgba(8,12,18,.78) !important; border-color: rgba(148,163,184,.14) !important; }
+[data-theme] input:focus,
+[data-theme] textarea:focus,
+[data-theme] select:focus { border-color: rgba(34,211,238,.45) !important; box-shadow: 0 0 0 3px rgba(34,211,238,.07), 0 0 22px rgba(34,211,238,.05) !important; outline: none; }
+
+/* Page headers and major panels */
+.stryven-page h1, .stryven-page h2, .stryven-page h3 { text-wrap: balance; }
+.stryven-page button { -webkit-tap-highlight-color: transparent; }
+.stryven-view-dashboard .stryven-page > div > section:first-child,
+.stryven-view-tasks .stryven-page > div > header:first-child,
+.stryven-view-dungeons .stryven-page > div > :first-child,
+.stryven-view-leaderboard .stryven-page > div > :first-child,
+.stryven-view-profile .stryven-page > div > :first-child,
+.stryven-view-settings .stryven-page > div > :first-child {
+  position: relative;
+  overflow: hidden;
 }
+.stryven-view-dashboard .stryven-page > div > section:first-child::before,
+.stryven-view-tasks .stryven-page > div > header:first-child::before,
+.stryven-view-dungeons .stryven-page > div > :first-child::before,
+.stryven-view-leaderboard .stryven-page > div > :first-child::before,
+.stryven-view-profile .stryven-page > div > :first-child::before,
+.stryven-view-settings .stryven-page > div > :first-child::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(34,211,238,.7), rgba(139,92,246,.65), transparent);
+  opacity: .8;
+}
+
+/* Dashboard */
+.stryven-view-dashboard .stryven-page .rounded-\[28px\] {
+  background: radial-gradient(circle at 80% 0%, rgba(139,92,246,.12), transparent 24rem), linear-gradient(145deg, #0d1119, #07090d) !important;
+  border-color: rgba(34,211,238,.15) !important;
+  box-shadow: 0 26px 70px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+.stryven-view-dashboard .stryven-page .rounded-\[28px\] h1 { letter-spacing: -.03em; }
+.stryven-view-dashboard .stryven-page .rounded-2xl { transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+
+/* Mission board */
+.stryven-view-tasks .stryven-page .card { overflow: hidden; }
+.stryven-view-tasks .stryven-page .card > div:first-child { background: linear-gradient(90deg, rgba(34,211,238,.035), transparent 55%); }
+.stryven-view-tasks .stryven-page .divide-y > div { transition: background .18s ease, transform .18s ease; }
+.stryven-view-tasks .stryven-page .divide-y > div:hover { background: rgba(255,255,255,.025); }
+
+/* Story / map */
+.stryven-story-page { position: relative; }
+.stryven-story-page::before,
+.stryven-story-page::after { content: ''; position: fixed; pointer-events: none; width: 24rem; height: 24rem; border-radius: 999px; filter: blur(70px); opacity: .07; z-index: -1; }
+.stryven-story-page::before { top: 12%; right: -10rem; background: var(--stryven-purple); }
+.stryven-story-page::after { bottom: 8%; left: -10rem; background: var(--stryven-cyan); }
+
+/* Workout */
+.stryven-view-workout .stryven-workout-shell { position: relative; }
+.stryven-view-workout .stryven-workout-shell .card { border-radius: 18px; }
+.stryven-view-workout .stryven-workout-shell button { transition: transform .18s ease, filter .18s ease, border-color .18s ease; }
+.stryven-view-workout .stryven-workout-shell button:hover { transform: translateY(-1px); }
+
+/* Dungeons */
+.stryven-view-dungeons .card,
+.stryven-view-dungeons [class*="rounded-"] { border-color: rgba(139,92,246,.13); }
+.stryven-view-dungeons .btn-primary { box-shadow: 0 10px 30px rgba(139,92,246,.18); }
+
+/* Hunter / rankings */
+.stryven-view-profile .card,
+.stryven-view-leaderboard .card { background: linear-gradient(145deg, rgba(13,17,25,.96), rgba(7,9,14,.92)) !important; }
+.stryven-view-leaderboard .card:hover { border-color: rgba(217,70,239,.22) !important; }
+
+/* Settings */
+.stryven-settings .card { border-radius: 18px; }
+.stryven-settings button:hover { border-color: rgba(34,211,238,.2); }
+
+/* Bottom mobile navigation */
+.stryven-bottomnav {
+  background: rgba(5,6,10,.9) !important;
+  border-top: 1px solid rgba(148,163,184,.13) !important;
+  backdrop-filter: blur(18px) saturate(150%);
+  box-shadow: 0 -18px 45px rgba(0,0,0,.28);
+}
+.stryven-bottomnav-item.is-active { color: var(--stryven-cyan) !important; background: rgba(34,211,238,.06) !important; }
+.stryven-mobile-sheet { background: rgba(5,6,10,.72) !important; backdrop-filter: blur(16px); }
+.stryven-sheet-item.is-active { background: linear-gradient(135deg, rgba(34,211,238,.1), rgba(139,92,246,.1)) !important; }
 
 .stryven-page-loader,
-.stryven-auth-loader {
-  min-height: 45vh;
-  display: grid;
-  place-items: center;
-  color: var(--stryven-cyan);
-}
-
+.stryven-auth-loader { min-height: 45vh; display: grid; place-items: center; color: var(--stryven-cyan); }
 .stryven-install { margin-top: 20px; }
 
 @keyframes stryven-page-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -75,9 +156,12 @@ body {
 @media (max-width: 767px) {
   .stryven-page-frame { width: min(100% - 20px, 680px); padding: 16px 0 36px; }
   .stryven-page { animation-duration: .2s; }
+  .stryven-view-dashboard .stryven-page .rounded-\[28px\] { border-radius: 22px; }
+  .stryven-view-dashboard .stryven-page h1 { font-size: clamp(1.75rem, 9vw, 2.6rem); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .stryven-page { animation: none; }
   [data-theme] .card, [data-theme] .card-premium { transition: none !important; transform: none !important; }
+  .stryven-topnav-item, .stryven-bottomnav-item { transition: none !important; }
 }

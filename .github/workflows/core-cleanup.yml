@@ -21,37 +21,34 @@ jobs:
 
           store = Path('src/store/useStore.ts')
           text = store.read_text()
+
+          # Remove stale marketplace dependency and purchase function if still present.
           text = text.replace("import { getMarketItem, type MarketCategory } from '../data/marketplace';\n", '')
+          text = re.sub(r"\nfunction purchaseItem\(.*?\n}\n\nfunction completeStoryMission", "\nfunction completeStoryMission", text, flags=re.S)
 
-          # Main dungeon: XP/progression only.
-          text = re.sub(
-              r"drops = generateDrops\(dungeon\.auraDropBonus\);\n\s*const next = addPoints\(s, dungeon\.rewardXp, dungeon\.rewardXp\);\n\s*return \{ \.\.\.next, dungeonClearedToday: true, lastDungeonDate: todayStr\(\), dungeonsCleared: next\.dungeonsCleared \+ 1 \};",
-              "const next = addPoints(s, dungeon.rewardXp, dungeon.rewardXp);\n    return { ...next, dungeonClearedToday: true, lastDungeonDate: todayStr(), dungeonsCleared: next.dungeonsCleared + 1 };",
-              text, count=1)
+          # Story rewards are XP-only now. Keep the API backward-compatible at call sites by accepting XP only.
+          text = text.replace("function completeStoryMission(missionId: string, reward: { xp: number; coins: number })", "function completeStoryMission(missionId: string, reward: { xp: number })")
+          text = text.replace("    const expectedCoins = mission?.coinReward ?? boss?.coinReward ?? 0;\n    if (reward.xp !== expectedXp || reward.coins !== expectedCoins) return s;\n    let next = addPoints(s, expectedXp, 0);\n    next = { ...next, coins: next.coins + expectedCoins, storyCompletedMissions: { ...next.storyCompletedMissions, [missionId]: true } };", "    if (reward.xp !== expectedXp) return s;\n    const next = addPoints(s, expectedXp, 0);\n    return { ...next, storyCompletedMissions: { ...next.storyCompletedMissions, [missionId]: true } };")
 
-          # Secret dungeon: remove coins/items from the persisted reward path, keep XP and completion state.
-          text = re.sub(
-              r"drops = generateDrops\(0\.15\);\n\s*drops\.push\(\{ type: 'aura'.*?\n\s*drops\.push\(\{ type: 'title'.*?\n\s*let next = addPoints\(s, dungeon\.rewardXp, dungeon\.rewardXp\);\n\s*next = \{ \.\.\.next, coins: next\.coins \+ dungeon\.rewardCoins, secretDungeonAvailable: false, secretDungeonId: null, secretDungeonExpiresAt: null, dungeonsCleared: next\.dungeonsCleared \+ 1 \};\n\s*const existing = new Set\(next\.inventory\.map\(\(i\) => `\$\{i\.type\}:\$\{i\.id\}`\)\);\n\s*const newItems = drops\.filter\(.*?\);\n\s*return \{ \.\.\.next, inventory: \[\.\.\.next\.inventory, \.\.\.newItems\] \};",
-              "const next = addPoints(s, dungeon.rewardXp, dungeon.rewardXp);\n    return { ...next, secretDungeonAvailable: false, secretDungeonId: null, secretDungeonExpiresAt: null, dungeonsCleared: next.dungeonsCleared + 1 };",
-              text, count=1, flags=re.S)
+          # Level-ups no longer mint currency.
+          text = re.sub(r"\n\s*let coins = s\.coins;", "", text, count=1)
+          text = re.sub(r"\n\s*coins \+= \(newLevel - s\.level\) \* 50;", "", text, count=1)
+          text = text.replace("return { ...s, xp, level, coins };", "return { ...s, xp, level };")
 
-          # Boss completion: XP/progression only; keep boss defeat state and HP.
-          text = re.sub(
-              r"next = \{ \.\.\.next, bossDefeated: \{ \.\.\.next\.bossDefeated, \[bossId\]: true \}, coins: next\.coins \+ BOSS_DUNGEON\.rewardCoins \ };\n\s*next = addPoints\(next, BOSS_DUNGEON\.rewardXp, BOSS_DUNGEON\.rewardXp\);\n\s*drops = \[.*?\];\n\s*const existing = new Set\(next\.inventory\.map\(\(i\) => `\$\{i\.type\}:\$\{i\.id\}`\)\);\n\s*const newItems = drops\.filter\(.*?\);\n\s*return \{ \.\.\.next, inventory: \[\.\.\.next\.inventory, \.\.\.newItems\] \};",
-              "next = addPoints(next, BOSS_DUNGEON.rewardXp, BOSS_DUNGEON.rewardXp);\n      return { ...next, bossDefeated: { ...next.bossDefeated, [bossId]: true } };",
-              text, count=1, flags=re.S)
+          # Keep the daily XP cap authoritative.
+          text = re.sub(r"dailyXp:\s*Math\.max\(0, Math\.min\(Number\.isFinite\(cloudState\.dailyXp\).*?dailyCap:\s*1000,", "dailyXp: Math.max(0, Math.min(Number.isFinite(cloudState.dailyXp) ? cloudState.dailyXp : 0, 1000)),\n    dailyPoints: Math.max(0, Number.isFinite(cloudState.dailyPoints) ? cloudState.dailyPoints : 0),\n    dailyCap: 1000,", text, count=1, flags=re.S)
 
-          # Story workout completion must not pass coin rewards.
-          workout = Path('src/components/SixDayWorkout.tsx')
-          w = workout.read_text()
-          w = w.replace('completeStoryMission(mission.id, { xp: mission.xpReward, coins: mission.coinReward })', 'completeStoryMission(mission.id, { xp: mission.xpReward })')
-          workout.write_text(w)
-
+          # Remove obsolete marketplace purchase action from the exported store API if present.
+          text = text.replace("  purchaseItem,\n", "")
           store.write_text(text)
+
+          workout = Path('src/components/SixDayWorkout.tsx')
+          w = workout.read_text().replace('completeStoryMission(mission.id, { xp: mission.xpReward, coins: mission.coinReward })', 'completeStoryMission(mission.id, { xp: mission.xpReward })')
+          workout.write_text(w)
           PY
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/store/useStore.ts src/components/SixDayWorkout.tsx
-          git diff --cached --quiet || git commit -m "refactor: remove legacy economy from core rewards"
+          git diff --cached --quiet || git commit -m "refactor: make story and progression XP-only"
           git push

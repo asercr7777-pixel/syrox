@@ -13,7 +13,7 @@ jobs:
     if: github.actor != 'github-actions[bot]'
     steps:
       - uses: actions/checkout@v4
-      - name: Apply core reward cleanup
+      - name: Remove legacy economy from core logic
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -23,27 +23,35 @@ jobs:
           text = store.read_text()
           text = text.replace("import { getMarketItem, type MarketCategory } from '../data/marketplace';\n", '')
 
-          pattern = re.compile(r"\n\s*let next = addPoints\(s, dungeon\.rewardXp, dungeon\.rewardXp\);.*?\n\s*return \{\.\.\.next, inventory: \[\.\.\.next\.inventory, \.\.\.rewardItems\]\};", re.S)
-          replacement = "\n    const next = addPoints(s, dungeon.rewardXp, dungeon.rewardXp);\n    return { ...next, dungeonClearedToday: true, lastDungeonDate: todayStr(), dungeonsCleared: next.dungeonsCleared + 1 };"
-          text, count = pattern.subn(replacement, text, count=1)
-          if count != 1:
-              raise SystemExit(f'clearDungeon reward section match count={count}; refusing unsafe edit')
+          # Main dungeon: XP/progression only.
+          text = re.sub(
+              r"drops = generateDrops\(dungeon\.auraDropBonus\);\n\s*const next = addPoints\(s, dungeon\.rewardXp, dungeon\.rewardXp\);\n\s*return \{ \.\.\.next, dungeonClearedToday: true, lastDungeonDate: todayStr\(\), dungeonsCleared: next\.dungeonsCleared \+ 1 \};",
+              "const next = addPoints(s, dungeon.rewardXp, dungeon.rewardXp);\n    return { ...next, dungeonClearedToday: true, lastDungeonDate: todayStr(), dungeonsCleared: next.dungeonsCleared + 1 };",
+              text, count=1)
 
-          cap_pattern = re.compile(r"dailyXp:\s*Math\.max\(0, Math\.min\(Number\.isFinite\(cloudState\.dailyXp\).*?dailyCap:\s*Math\.max\(1, Number\.isFinite\(cloudState\.dailyCap\).*?\),", re.S)
-          cap_replacement = "dailyXp: Math.max(0, Math.min(Number.isFinite(cloudState.dailyXp) ? cloudState.dailyXp : 0, 1000)),\n    dailyPoints: Math.max(0, Number.isFinite(cloudState.dailyPoints) ? cloudState.dailyPoints : 0),\n    dailyCap: 1000,"
-          text, cap_count = cap_pattern.subn(cap_replacement, text, count=1)
-          if cap_count != 1:
-              raise SystemExit(f'daily cap match count={cap_count}; refusing unsafe edit')
-          store.write_text(text)
+          # Secret dungeon: remove coins/items from the persisted reward path, keep XP and completion state.
+          text = re.sub(
+              r"drops = generateDrops\(0\.15\);\n\s*drops\.push\(\{ type: 'aura'.*?\n\s*drops\.push\(\{ type: 'title'.*?\n\s*let next = addPoints\(s, dungeon\.rewardXp, dungeon\.rewardXp\);\n\s*next = \{ \.\.\.next, coins: next\.coins \+ dungeon\.rewardCoins, secretDungeonAvailable: false, secretDungeonId: null, secretDungeonExpiresAt: null, dungeonsCleared: next\.dungeonsCleared \+ 1 \};\n\s*const existing = new Set\(next\.inventory\.map\(\(i\) => `\$\{i\.type\}:\$\{i\.id\}`\)\);\n\s*const newItems = drops\.filter\(.*?\);\n\s*return \{ \.\.\.next, inventory: \[\.\.\.next\.inventory, \.\.\.newItems\] \};",
+              "const next = addPoints(s, dungeon.rewardXp, dungeon.rewardXp);\n    return { ...next, secretDungeonAvailable: false, secretDungeonId: null, secretDungeonExpiresAt: null, dungeonsCleared: next.dungeonsCleared + 1 };",
+              text, count=1, flags=re.S)
 
+          # Boss completion: XP/progression only; keep boss defeat state and HP.
+          text = re.sub(
+              r"next = \{ \.\.\.next, bossDefeated: \{ \.\.\.next\.bossDefeated, \[bossId\]: true \}, coins: next\.coins \+ BOSS_DUNGEON\.rewardCoins \ };\n\s*next = addPoints\(next, BOSS_DUNGEON\.rewardXp, BOSS_DUNGEON\.rewardXp\);\n\s*drops = \[.*?\];\n\s*const existing = new Set\(next\.inventory\.map\(\(i\) => `\$\{i\.type\}:\$\{i\.id\}`\)\);\n\s*const newItems = drops\.filter\(.*?\);\n\s*return \{ \.\.\.next, inventory: \[\.\.\.next\.inventory, \.\.\.newItems\] \};",
+              "next = addPoints(next, BOSS_DUNGEON.rewardXp, BOSS_DUNGEON.rewardXp);\n      return { ...next, bossDefeated: { ...next.bossDefeated, [bossId]: true } };",
+              text, count=1, flags=re.S)
+
+          # Story workout completion must not pass coin rewards.
           workout = Path('src/components/SixDayWorkout.tsx')
           w = workout.read_text()
-          w2 = w.replace('completeStoryMission(mission.id, { xp: mission.xpReward, coins: mission.coinReward })', 'completeStoryMission(mission.id, { xp: mission.xpReward })')
-          workout.write_text(w2)
+          w = w.replace('completeStoryMission(mission.id, { xp: mission.xpReward, coins: mission.coinReward })', 'completeStoryMission(mission.id, { xp: mission.xpReward })')
+          workout.write_text(w)
+
+          store.write_text(text)
           PY
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/store/useStore.ts src/components/SixDayWorkout.tsx
-          git diff --cached --quiet || git commit -m "refactor: make core progression XP-only"
+          git diff --cached --quiet || git commit -m "refactor: remove legacy economy from core rewards"
           git push

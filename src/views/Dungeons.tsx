@@ -8,6 +8,8 @@ import { toast } from '../components/ui/Toast';
 import { triggerConfetti } from '../components/ui/Confetti';
 import { playSound } from '../lib/sound';
 import { Swords, Lock, Check, Zap, Coins, Sparkles, Trophy, Award, Shield, Dumbbell, X, ChevronRight, Skull, Target, Crown } from 'lucide-react';
+import '../stryven-dungeons.css';
+import '../dungeons-performance.css';
 
 const RARITY_COLORS: Record<string, string> = {
   common: '#9ca3af', rare: '#3b82f6', epic: '#a855f7', legendary: '#f59e0b', mythic: '#ef4444', secret: '#fbbf24',
@@ -116,7 +118,16 @@ export function Dungeons() {
               onClick={() => isUnlocked && setSelectedDungeon(dungeon)}
               disabled={!isUnlocked}
             >
-              <img src={image} alt="" className="raid-card__image" loading={idx < 4 ? 'eager' : 'lazy'} />
+              <img
+                src={image}
+                alt=""
+                className="raid-card__image"
+                loading={idx < 3 ? 'eager' : 'lazy'}
+                decoding="async"
+                fetchPriority={idx < 2 ? 'high' : 'auto'}
+                width="2160"
+                height="3840"
+              />
               <span className="raid-card__shade" />
               <span className="raid-card__top"><span className="raid-card__number">{String(idx + 1).padStart(2, '0')}</span><span className="raid-card__rank">{rank.name}</span></span>
               <span className="raid-card__bottom">

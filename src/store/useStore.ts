@@ -8,7 +8,6 @@ import { DUNGEONS, SECRET_DUNGEONS, BOSS_DUNGEON } from '../data/dungeons';
 import { playSound } from '../lib/sound';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { ALL_CHAPTERS, getTotalChapters } from '../data/story';
-import { getMarketItem, type MarketCategory } from '../data/marketplace';
 import { getChestById } from '../data/chests';
 import { getBattlePassReward } from '../data/battlepass';
 import { getMilestoneById } from '../data/milestones';
@@ -70,9 +69,9 @@ function normalizeLoadedState(cloudState: AppState, def: AppState): AppState {
     xp: Math.max(0, Number.isFinite(cloudState.xp) ? cloudState.xp : def.xp),
     coins: Math.max(0, Number.isFinite(cloudState.coins) ? cloudState.coins : def.coins),
     totalPoints: Math.max(0, Number.isFinite(cloudState.totalPoints) ? cloudState.totalPoints : def.totalPoints),
-    dailyXp: Math.max(0, Math.min(Number.isFinite(cloudState.dailyXp) ? cloudState.dailyXp : 0, Number.isFinite(cloudState.dailyCap) ? cloudState.dailyCap : def.dailyCap)),
+    dailyXp: Math.max(0, Math.min(Number.isFinite(cloudState.dailyXp) ? cloudState.dailyXp : 0, 1000)),
     dailyPoints: Math.max(0, Number.isFinite(cloudState.dailyPoints) ? cloudState.dailyPoints : def.dailyPoints),
-    dailyCap: Math.max(1, Number.isFinite(cloudState.dailyCap) ? cloudState.dailyCap : def.dailyCap),
+    dailyCap: 1000,
     level: levelFromXp(Math.max(0, Number.isFinite(cloudState.xp) ? cloudState.xp : def.xp)),
     storyChapter: Math.max(0, Math.min(cloudState.storyChapter ?? 0, ALL_STORY_CHAPTER_COUNT)),
     storyMission: Math.max(0, cloudState.storyMission ?? 0),
@@ -612,27 +611,8 @@ function clearDungeon(dungeonId: string): DropResult[] {
     if (!dungeon || s.dungeonClearedToday) return s;
     if (getRankIndex(getRankByXp(s.xp).id) < getRankIndex(dungeon.rankId)) return s;
     drops = generateDrops(dungeon.auraDropBonus);
-    let next = addPoints(s, dungeon.rewardXp, dungeon.rewardXp);
-    next = { ...next, coins: next.coins + dungeon.rewardCoins, dungeonClearedToday: true, lastDungeonDate: todayStr(), dungeonsCleared: next.dungeonsCleared + 1 };
-    const existing = new Set(next.inventory.map((i) => `${i.type}:${i.id}`));
-    const rewardItems: InventoryItem[] = [];
-    for (const drop of drops) {
-      if (!drop.itemId) continue;
-      const key = `${drop.type}:${drop.itemId}`;
-      if (!existing.has(key)) {
-        existing.add(key);
-        rewardItems.push({ id: drop.itemId, type: drop.type as InventoryItem['type'], obtainedAt: Date.now(), favorite: false });
-      }
-    }
-    for (const reward of dungeon.rewards) {
-      if (!reward.itemId || !['aura', 'title', 'weapon', 'shield', 'badge'].includes(reward.type)) continue;
-      const key = `${reward.type}:${reward.itemId}`;
-      if (!existing.has(key)) {
-        existing.add(key);
-        rewardItems.push({ id: reward.itemId, type: reward.type as InventoryItem['type'], obtainedAt: Date.now(), favorite: false });
-      }
-    }
-    return { ...next, inventory: [...next.inventory, ...rewardItems] };
+    const next = addPoints(s, dungeon.rewardXp, dungeon.rewardXp);
+    return { ...next, dungeonClearedToday: true, lastDungeonDate: todayStr(), dungeonsCleared: next.dungeonsCleared + 1 };
   });
   playSound('rankup');
   return drops;

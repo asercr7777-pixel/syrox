@@ -54,7 +54,7 @@ export function SixDayWorkout() {
     if (!chapter) return;
     const workoutCountToday = state.workoutSessions.filter((session) => dayKey(session.completedAt) === today).length + 1;
     chapter.missions.filter((mission) => mission.type === 'workout' && !state.storyCompletedMissions[mission.id] && workoutCountToday >= mission.target)
-      .forEach((mission) => completeStoryMission(mission.id, { xp: mission.xpReward, coins: mission.coinReward }));
+      .forEach((mission) => completeStoryMission(mission.id, { xp: mission.xpReward }));
     window.dispatchEvent(new CustomEvent('stryven-story-event', { detail: { type: 'workout_completed', dayId: current.id, dayName: current.name, durationSeconds, date: today, workoutCountToday } }));
   };
 

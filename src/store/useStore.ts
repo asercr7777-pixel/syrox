@@ -610,7 +610,6 @@ function clearDungeon(dungeonId: string): DropResult[] {
     const dungeon = DUNGEONS.find((d) => d.id === dungeonId);
     if (!dungeon || s.dungeonClearedToday) return s;
     if (getRankIndex(getRankByXp(s.xp).id) < getRankIndex(dungeon.rankId)) return s;
-    drops = generateDrops(dungeon.auraDropBonus);
     const next = addPoints(s, dungeon.rewardXp, dungeon.rewardXp);
     return { ...next, dungeonClearedToday: true, lastDungeonDate: todayStr(), dungeonsCleared: next.dungeonsCleared + 1 };
   });
@@ -655,15 +654,8 @@ function clearSecretDungeon(dungeonId: string): DropResult[] {
     const dungeon = SECRET_DUNGEONS.find((d) => d.id === dungeonId);
     if (!dungeon || !s.secretDungeonAvailable || s.secretDungeonId !== dungeonId) return s;
     if (s.secretDungeonExpiresAt !== null && s.secretDungeonExpiresAt < Date.now()) return s;
-    drops = generateDrops(0.15);
-    drops.push({ type: 'aura', itemId: dungeon.auraId, rarity: 'epic', label: 'Secret Aura' });
-    drops.push({ type: 'title', itemId: dungeon.titleId, rarity: 'epic', label: 'Secret Title' });
-    let next = addPoints(s, dungeon.rewardXp, dungeon.rewardXp);
-    next = { ...next, coins: next.coins + dungeon.rewardCoins, secretDungeonAvailable: false, secretDungeonId: null, secretDungeonExpiresAt: null, dungeonsCleared: next.dungeonsCleared + 1 };
-    const existing = new Set(next.inventory.map((i) => `${i.type}:${i.id}`));
-    const newItems = drops.filter((d) => d.itemId && !existing.has(`${d.type}:${d.itemId}`))
-      .map((d) => ({ id: d.itemId!, type: d.type as InventoryItem['type'], obtainedAt: Date.now(), favorite: false }));
-    return { ...next, inventory: [...next.inventory, ...newItems] };
+    const next = addPoints(s, dungeon.rewardXp, dungeon.rewardXp);
+    return { ...next, secretDungeonAvailable: false, secretDungeonId: null, secretDungeonExpiresAt: null, dungeonsCleared: next.dungeonsCleared + 1 };
   });
   playSound('rankup');
   return drops;

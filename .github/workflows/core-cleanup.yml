@@ -21,24 +21,15 @@ jobs:
 
           store = Path('src/store/useStore.ts')
           text = store.read_text()
-
-          # Remove stale marketplace dependency and purchase function if still present.
           text = text.replace("import { getMarketItem, type MarketCategory } from '../data/marketplace';\n", '')
           text = re.sub(r"\nfunction purchaseItem\(.*?\n}\n\nfunction completeStoryMission", "\nfunction completeStoryMission", text, flags=re.S)
-
-          # Story rewards are XP-only now. Keep the API backward-compatible at call sites by accepting XP only.
           text = text.replace("function completeStoryMission(missionId: string, reward: { xp: number; coins: number })", "function completeStoryMission(missionId: string, reward: { xp: number })")
           text = text.replace("    const expectedCoins = mission?.coinReward ?? boss?.coinReward ?? 0;\n    if (reward.xp !== expectedXp || reward.coins !== expectedCoins) return s;\n    let next = addPoints(s, expectedXp, 0);\n    next = { ...next, coins: next.coins + expectedCoins, storyCompletedMissions: { ...next.storyCompletedMissions, [missionId]: true } };", "    if (reward.xp !== expectedXp) return s;\n    const next = addPoints(s, expectedXp, 0);\n    return { ...next, storyCompletedMissions: { ...next.storyCompletedMissions, [missionId]: true } };")
-
-          # Level-ups no longer mint currency.
           text = re.sub(r"\n\s*let coins = s\.coins;", "", text, count=1)
           text = re.sub(r"\n\s*coins \+= \(newLevel - s\.level\) \* 50;", "", text, count=1)
           text = text.replace("return { ...s, xp, level, coins };", "return { ...s, xp, level };")
-
-          # Keep the daily XP cap authoritative.
           text = re.sub(r"dailyXp:\s*Math\.max\(0, Math\.min\(Number\.isFinite\(cloudState\.dailyXp\).*?dailyCap:\s*1000,", "dailyXp: Math.max(0, Math.min(Number.isFinite(cloudState.dailyXp) ? cloudState.dailyXp : 0, 1000)),\n    dailyPoints: Math.max(0, Number.isFinite(cloudState.dailyPoints) ? cloudState.dailyPoints : 0),\n    dailyCap: 1000,", text, count=1, flags=re.S)
-
-          # Remove obsolete marketplace purchase action from the exported store API if present.
+          text = re.sub(r"\n\s*purchaseItem:\s*\(.*?\n", "\n", text, count=1)
           text = text.replace("  purchaseItem,\n", "")
           store.write_text(text)
 
@@ -50,5 +41,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/store/useStore.ts src/components/SixDayWorkout.tsx
-          git diff --cached --quiet || git commit -m "refactor: make story and progression XP-only"
-          git push
+          git diff --cached --quiet || git commit -m "refactor: make core progression economy-free"
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main

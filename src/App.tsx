@@ -21,6 +21,7 @@ import './theme-motion.css';
 import './mobile.css';
 import './stryven-redesign.css';
 import './stryven-shell.css';
+import './story-map-responsive.css';
 
 const Dashboard = lazy(() => import('./views/Dashboard').then((m) => ({ default: m.Dashboard })));
 const Tasks = lazy(() => import('./views/Tasks').then((m) => ({ default: m.Tasks })));

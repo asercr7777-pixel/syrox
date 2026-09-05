@@ -21,6 +21,9 @@ import './theme-motion.css';
 import './mobile.css';
 import './stryven-redesign.css';
 import './stryven-shell.css';
+import './stryven-pages.css';
+import './stryven-settings.css';
+import './stryven-dungeons.css';
 import './story-map-responsive.css';
 
 const Dashboard = lazy(() => import('./views/Dashboard').then((m) => ({ default: m.Dashboard })));
@@ -79,7 +82,7 @@ function AppContent() {
           {view === 'profile' && <section className="stryven-page"><Profile /></section>}
           {view === 'achievements' && <section className="stryven-page"><Achievements /></section>}
           {view === 'leaderboard' && <section className="stryven-page"><Leaderboard /></section>}
-          {view === 'settings' && <section className="stryven-page"><Settings /></section>}
+          {view === 'settings' && <section className="stryven-page stryven-settings"><Settings /></section>}
         </Suspense>
       </div>
     </main>

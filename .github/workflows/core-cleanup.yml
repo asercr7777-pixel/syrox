@@ -1,0 +1,54 @@
+name: Core Cleanup
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply core reward cleanup
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          store = Path('src/store/useStore.ts')
+          text = store.read_text()
+
+          old = "import { getMarketItem, type MarketCategory } from '../data/marketplace';\n"
+          if old in text:
+              text = text.replace(old, '')
+
+          old = """    let next = addPoints(s, dungeon.rewardXp, dungeon.rewardXp);\n    next = { ...next, coins: next.coins + dungeon.rewardCoins, dungeonClearedToday: true, lastDungeonDate: todayStr(), dungeonsCleared: next.dungeonsCleared + 1 };\n    const existing = new Set(next.inventory.map((i) => `${i.type}:${i.id}`));\n    const rewardItems: InventoryItem[] = [];\n    for (const drop of drops) {\n      if (!drop.itemId) continue;\n      const key = `${drop.type}:${drop.itemId}`;\n      if (!existing.has(key)) {\n        existing.add(key);\n        rewardItems.push({ id: drop.itemId, type: drop.type as InventoryItem['type'], obtainedAt: Date.now(), favorite: false });\n      }\n    }\n    for (const reward of dungeon.rewards) {\n      if (!reward.itemId || !['aura', 'title', 'weapon', 'shield', 'badge'].includes(reward.type)) continue;\n      const key = `${reward.type}:${reward.itemId}`;\n      if (!existing.has(key)) {\n        existing.add(key);\n        rewardItems.push({ id: reward.itemId, type: reward.type as InventoryItem['type'], obtainedAt: Date.now(), favorite: false });\n      }\n    }\n    return { ...next, inventory: [...next.inventory, ...rewardItems] };"""
+          new = """    const next = addPoints(s, dungeon.rewardXp, dungeon.rewardXp);\n    return { ...next, dungeonClearedToday: true, lastDungeonDate: todayStr(), dungeonsCleared: next.dungeonsCleared + 1 };"""
+          if old not in text:
+              raise SystemExit('clearDungeon reward block not found; refusing unsafe edit')
+          text = text.replace(old, new, 1)
+
+          old = "dailyXp: Math.max(0, Math.min(Number.isFinite(cloudState.dailyXp) ? cloudState.dailyXp : 0, Number.isFinite(cloudState.dailyCap) ? cloudState.dailyCap : def.dailyCap)),\n    dailyPoints: Math.max(0, Number.isFinite(cloudState.dailyPoints) ? cloudState.dailyPoints : def.dailyPoints),\n    dailyCap: Math.max(1, Number.isFinite(cloudState.dailyCap) ? cloudState.dailyCap : def.dailyCap),"
+          new = "dailyXp: Math.max(0, Math.min(Number.isFinite(cloudState.dailyXp) ? cloudState.dailyXp : 0, 1000)),\n    dailyPoints: Math.max(0, Number.isFinite(cloudState.dailyPoints) ? cloudState.dailyPoints : def.dailyPoints),\n    dailyCap: 1000,"
+          if old not in text:
+              raise SystemExit('daily cap normalization block not found; refusing unsafe edit')
+          text = text.replace(old, new, 1)
+
+          store.write_text(text)
+
+          workout = Path('src/components/SixDayWorkout.tsx')
+          text = workout.read_text()
+          old = "completeStoryMission(mission.id, { xp: mission.xpReward, coins: mission.coinReward })"
+          if old in text:
+              text = text.replace(old, "completeStoryMission(mission.id, { xp: mission.xpReward })")
+          workout.write_text(text)
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/store/useStore.ts src/components/SixDayWorkout.tsx
+          git diff --cached --quiet || git commit -m "refactor: make core progression XP-only"
+          git push

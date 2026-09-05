@@ -1,10 +1,5 @@
-import SixDayWorkout from './SixDayWorkout';
-import './workout-redesign.css';
+import { Workout2 } from './Workout2';
 
 export function WorkoutWithAIPlan() {
-  return (
-    <div className="stryven-workout-shell">
-      <SixDayWorkout />
-    </div>
-  );
+  return <Workout2 />;
 }

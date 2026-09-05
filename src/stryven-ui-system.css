@@ -1,0 +1,83 @@
+/* STRYVEN — global cinematic UI system */
+:root {
+  --stryven-bg: #05060a;
+  --stryven-surface: #0b0e14;
+  --stryven-surface-2: #10151e;
+  --stryven-line: rgba(148,163,184,.14);
+  --stryven-text: #f4f7fb;
+  --stryven-muted: #8d98a8;
+  --stryven-cyan: #22d3ee;
+  --stryven-blue: #3b82f6;
+  --stryven-purple: #8b5cf6;
+  --stryven-magenta: #d946ef;
+}
+
+html { background: var(--stryven-bg); }
+body {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(34,211,238,.07), transparent 28rem),
+    radial-gradient(circle at 88% 16%, rgba(139,92,246,.07), transparent 30rem),
+    var(--stryven-bg);
+  color: var(--stryven-text);
+}
+
+.stryven-app-shell { min-height: 100vh; isolation: isolate; }
+.stryven-main { position: relative; min-height: 100vh; }
+.stryven-page-frame { width: min(100% - 32px, 1440px); margin-inline: auto; padding: 28px 0 56px; }
+.stryven-page { min-width: 0; animation: stryven-page-in .28s ease both; }
+
+[data-theme] .card,
+[data-theme] .glass,
+[data-theme] .card-premium {
+  background: linear-gradient(145deg, rgba(14,18,27,.94), rgba(8,11,17,.88)) !important;
+  border: 1px solid rgba(148,163,184,.13) !important;
+  box-shadow: 0 18px 45px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.025) !important;
+}
+
+[data-theme] .card:hover,
+[data-theme] .card-premium:hover {
+  border-color: rgba(34,211,238,.25) !important;
+  box-shadow: 0 22px 55px rgba(0,0,0,.34), 0 0 28px rgba(34,211,238,.06), inset 0 1px 0 rgba(255,255,255,.035) !important;
+  transform: translateY(-1px);
+}
+
+[data-theme] .btn-primary {
+  background: linear-gradient(135deg, var(--stryven-blue), var(--stryven-purple)) !important;
+  box-shadow: 0 8px 24px rgba(59,130,246,.2);
+}
+[data-theme] .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+[data-theme] .btn-ghost {
+  background: rgba(16,21,30,.72) !important;
+  border-color: rgba(148,163,184,.14) !important;
+}
+
+[data-theme] .input,
+[data-theme] input,
+[data-theme] textarea,
+[data-theme] select {
+  background: rgba(8,12,18,.78) !important;
+  border-color: rgba(148,163,184,.14) !important;
+}
+
+.stryven-page-loader,
+.stryven-auth-loader {
+  min-height: 45vh;
+  display: grid;
+  place-items: center;
+  color: var(--stryven-cyan);
+}
+
+.stryven-install { margin-top: 20px; }
+
+@keyframes stryven-page-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 767px) {
+  .stryven-page-frame { width: min(100% - 20px, 680px); padding: 16px 0 36px; }
+  .stryven-page { animation-duration: .2s; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stryven-page { animation: none; }
+  [data-theme] .card, [data-theme] .card-premium { transition: none !important; transform: none !important; }
+}

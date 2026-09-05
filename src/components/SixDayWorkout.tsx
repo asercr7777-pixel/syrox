@@ -123,7 +123,7 @@ export function SixDayWorkout() {
         <div>{editingDay ? <div className="flex gap-2"><input autoFocus value={dayName} onChange={e => setDayName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveDayName()} className="input" placeholder="Day name" /><button onClick={saveDayName} className="btn-primary">Save</button><button onClick={() => setEditingDay(false)} className="btn-ghost"><X size={16}/></button></div> : <div><div className="flex items-center gap-2"><h2 className="font-display text-2xl font-bold">{current.name}</h2><button className="btn-ghost p-2" onClick={() => { setDayName(current.name); setEditingDay(true); }} disabled={running}><Pencil size={15}/></button></div><p className="text-sm text-ink-400">Day {active + 1} • {progress}% complete</p></div>}</div>
         <button onClick={() => setExerciseDraft({ name: '', sets: 3, reps: '8-12', section: 'main' })} className="btn-primary" disabled={running}><Plus size={17}/> Add Exercise</button>
       </div>
-      <div className="h-2 bg-ink-950 rounded-full overflow-hidden mt-5"><div className="h-full bg-gradient-to-r from-ember-500 to-gold-500 transition-all" style={{ width: `${progress}%` }}/></div>
+      <div className="relative isolate z-[1] h-2 bg-ink-950 rounded-full overflow-hidden mt-5"><div className="relative z-[2] h-full bg-gradient-to-r from-ember-500 to-gold-500 transition-all" style={{ width: `${progress}%` }}/></div>
     </div>
 
     <div className="card-premium p-5 sm:p-6 border border-white/10">

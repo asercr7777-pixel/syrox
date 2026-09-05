@@ -43,8 +43,11 @@ export function Navigation({ current, onNavigate }: NavigationProps) {
       <button className="stryven-mobile-more" onClick={() => setMoreOpen((v) => !v)} aria-label={moreOpen ? 'Close navigation' : 'Open navigation'} aria-expanded={moreOpen}>{moreOpen ? <X size={21} /> : <Menu size={21} />}</button>
     </div>
 
-    {moreOpen && <div className="stryven-mobile-sheet" role="dialog" aria-label="Navigation menu">
+    {moreOpen && <div className="stryven-mobile-sheet" role="dialog" aria-modal="true" aria-label="Navigation menu">
+      <button className="stryven-sheet-backdrop" aria-label="Close navigation" onClick={() => setMoreOpen(false)} />
       <div className="stryven-mobile-sheet-inner">
+        <div className="stryven-mobile-sheet-handle" aria-hidden="true" />
+        <div className="stryven-mobile-sheet-title">System Menu</div>
         {secondary.map((item) => { const Icon = item.icon; return <button key={item.id} className={`stryven-sheet-item ${current === item.id ? 'is-active' : ''}`} aria-current={current === item.id ? 'page' : undefined} onClick={() => handleNav(item.id)}><Icon size={19} /><span>{item.label}</span></button>; })}
         <button className="stryven-sheet-item is-danger" onClick={handleSignOut}><LogOut size={19} /><span>Sign out</span></button>
       </div>

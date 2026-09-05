@@ -7,10 +7,33 @@ import { Modal } from '../components/ui/Modal';
 import { toast } from '../components/ui/Toast';
 import { triggerConfetti } from '../components/ui/Confetti';
 import { playSound } from '../lib/sound';
-import { Swords, Lock, Check, Zap, Coins, Sparkles, Trophy, Award, Shield, Dumbbell, X } from 'lucide-react';
+import { Swords, Lock, Check, Zap, Coins, Sparkles, Trophy, Award, Shield, Dumbbell, X, ChevronRight, Skull, Target, Crown } from 'lucide-react';
 
 const RARITY_COLORS: Record<string, string> = {
   common: '#9ca3af', rare: '#3b82f6', epic: '#a855f7', legendary: '#f59e0b', mythic: '#ef4444', secret: '#fbbf24',
+};
+
+const DUNGEON_IMAGES: Record<string, string> = {
+  'Awakening Gate': '/awakening-gate.webp.jpg',
+  'Whispering Hollow': '/whispering-hollow.webp.jpg',
+  'Stone Trial': '/stone-trial.webp.jpg',
+  'Frost Cavern': '/frost-cavern.webp.jpg',
+  'Storm Spire': '/storm-spire.webp.jpg',
+  'Crimson Sanctum': '/crimson-sanctum.webp.jpg',
+  'Inferno Keep': '/inferno-keep.webp.jpg',
+  'Thunder Vault': '/thunder-vault.webp.jpg',
+  'Dark Abyss': '/dark-abyss.webp.jpg',
+  'Shadow Labyrinth': '/shadow-labyrinth.webp.jpg',
+  "Hunter's Gauntlet": '/hunters-gauntlet.webp.jpg',
+  "Monarch's Throne": '/monarchs-throne.webp.jpg',
+  "Slayer's Coliseum": '/slayers-coliseum.webp.jpg',
+  'Nightmare Sanctum': '/nightmare-sanctum.webp.jpg',
+  'Doom Crucible': '/doom-crucible.webp.jpg',
+  "Executioner's Block": '/executioners-block.webp.jpg',
+  'Mythic Sanctuary': '/mythic-sanctuary.webp.jpg',
+  'Hall of the Immortal': '/hall-of-the-immortal.webp.jpg',
+  "Shadow King's Court": '/shadow-kings-court.webp.jpg',
+  'System Overlord Citadel': '/system-overlord-citadel.webp.jpg',
 };
 
 export function Dungeons() {
@@ -54,111 +77,109 @@ export function Dungeons() {
   const allExercisesDone = activeDungeon && activeDungeon.exercises.length > 0 && activeDungeon.exercises.every((_, i) => completedExercise[i]);
 
   return (
-    <div className="space-y-6">
-      <div className="card-premium p-6 md:p-8 relative overflow-hidden page-enter">
-        <div className="absolute inset-0 opacity-30 pointer-events-none" style={{ background: `radial-gradient(circle at 30% 0%, ${currentRank.glow}, transparent 60%)` }} />
-        <div className="relative flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: `${currentRank.color}20`, border: `1px solid ${currentRank.color}40` }}><Swords size={24} style={{ color: currentRank.color }} /></div>
-          <div>
-            <h1 className="section-title">Daily Dungeon</h1>
-            <p className="text-sm text-ink-300 mt-1">{dungeonCompletedToday ? "Today's dungeon has been cleared. The gate resets at midnight." : `Your rank's dungeon awaits, ${currentRank.name} hunter.`}</p>
+    <div className="stryven-raids">
+      <section className="raid-hero">
+        <div className="raid-hero__image" />
+        <div className="raid-hero__veil" />
+        <div className="raid-hero__content">
+          <div className="raid-kicker"><span className="raid-kicker__line" /> DAILY RAID <span className="raid-kicker__line" /></div>
+          <h1 className="raid-title">THE DUNGEONS</h1>
+          <p className="raid-subtitle">Twenty trials. One hunter. Conquer the path from Awakening Gate to the System Overlord.</p>
+          <div className="raid-status-row">
+            <div className="raid-status"><Target size={15} /><span>RANK</span><strong>{currentRank.name}</strong></div>
+            <div className="raid-status"><Zap size={15} /><span>XP</span><strong>{state.xp.toLocaleString()}</strong></div>
+            <div className={`raid-status ${dungeonCompletedToday ? 'is-cleared' : ''}`}><Swords size={15} /><span>DAILY RAID</span><strong>{dungeonCompletedToday ? 'CLEARED' : 'READY'}</strong></div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <section className="raid-section-head">
+        <div>
+          <div className="raid-section-kicker">THE RAID PATH</div>
+          <h2>Choose your trial</h2>
+        </div>
+        <div className="raid-count">20 <span>RAIDS</span></div>
+      </section>
+
+      <section className="raid-rail" aria-label="Dungeon raids">
         {DUNGEONS.map((dungeon, idx) => {
           const rankIdx = rankIds.indexOf(dungeon.rankId);
-          // Unlock is permanent: once a rank is reached, that dungeon stays available forever.
           const isUnlocked = rankIdx <= currentRankIndex;
           const isCurrent = rankIdx === currentRankIndex;
           const rank = RANKS.find((r) => r.id === dungeon.rankId)!;
-          const canEnter = isUnlocked && !dungeonCompletedToday;
-
+          const image = DUNGEON_IMAGES[dungeon.name];
           return (
-            <div key={dungeon.id} className={`card-premium p-5 relative overflow-hidden stagger-in ${isCurrent && !dungeonCompletedToday ? 'glow-ring' : ''}`} style={{ borderColor: isUnlocked ? `${rank.color}30` : 'rgba(255,255,255,0.05)', ['--glow-color' as any]: rank.color, animationDelay: `${Math.min(idx * 0.04, 0.5)}s` }}>
-              {isUnlocked && <div className="absolute inset-0 opacity-15 pointer-events-none" style={{ background: `radial-gradient(circle at 50% 0%, ${rank.color}, transparent 70%)` }} />}
-
-              {!isUnlocked && (
-                <div className="absolute inset-0 bg-ink-950/80 backdrop-blur-sm flex items-center justify-center z-10">
-                  <div className="text-center"><Lock size={28} className="mx-auto text-ink-500 mb-2" /><p className="text-sm font-semibold text-ink-400">{rank.name}</p><p className="text-xs text-ink-500 mt-1">Reach {rank.name} to unlock</p></div>
-                </div>
-              )}
-
-              {isCurrent && dungeonCompletedToday && (
-                <div className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald2-500/20 border border-emerald2-500/30"><Check size={12} className="text-emerald2-400" /><span className="text-xs font-semibold text-emerald2-400">Cleared</span></div>
-              )}
-
-              <div className="relative">
-                <div className="flex items-center gap-2 mb-2"><span className="text-2xl">{rank.emoji}</span><div><h3 className="font-display text-lg font-bold" style={{ color: isUnlocked ? rank.color : '#64748b' }}>{dungeon.name}</h3><p className="text-xs text-ink-400">{dungeon.theme}</p></div></div>
-                <p className="text-sm text-ink-300 mb-3">{dungeon.description}</p>
-                <div className="space-y-1.5 mb-4">
-                  {dungeon.exercises.map((ex, i) => <div key={i} className="flex items-center gap-2 text-sm"><Dumbbell size={14} className="text-ember-400" /><span className="text-ink-200">{ex.name}</span><span className="text-ink-400 ml-auto font-semibold tabular-nums">{ex.reps}{ex.isTime ? 's' : ' reps'}</span></div>)}
-                </div>
-                <div className="flex flex-wrap gap-1.5 mb-4">{dungeon.rewards.map((reward, i) => <RewardChip key={i} reward={reward} />)}</div>
-
-                {canEnter && (
-                  <button onClick={() => setSelectedDungeon(dungeon)} className={`btn-primary btn-sheen w-full ${isCurrent ? '' : 'opacity-90'}`}>
-                    <Swords size={16} /> {isCurrent ? 'Enter Dungeon' : 'Replay Dungeon'}
-                  </button>
-                )}
-                {isCurrent && dungeonCompletedToday && <div className="w-full py-2 rounded-xl bg-emerald2-500/10 border border-emerald2-500/20 text-center text-sm text-emerald2-400 font-semibold">Completed Today</div>}
-                {!isCurrent && isUnlocked && dungeonCompletedToday && <div className="w-full py-2 rounded-xl bg-ink-800/60 border border-white/5 text-center text-sm text-ink-400">Available again tomorrow</div>}
-              </div>
-            </div>
+            <button
+              key={dungeon.id}
+              className={`raid-card ${isCurrent ? 'is-current' : ''} ${!isUnlocked ? 'is-locked' : ''} ${dungeonCompletedToday && isCurrent ? 'is-cleared' : ''}`}
+              style={{ ['--rank-color' as any]: rank.color, ['--delay' as any]: `${Math.min(idx * 35, 500)}ms` }}
+              onClick={() => isUnlocked && setSelectedDungeon(dungeon)}
+              disabled={!isUnlocked}
+            >
+              <img src={image} alt="" className="raid-card__image" loading={idx < 4 ? 'eager' : 'lazy'} />
+              <span className="raid-card__shade" />
+              <span className="raid-card__top"><span className="raid-card__number">{String(idx + 1).padStart(2, '0')}</span><span className="raid-card__rank">{rank.name}</span></span>
+              <span className="raid-card__bottom">
+                <span className="raid-card__theme">{dungeon.theme}</span>
+                <strong>{dungeon.name}</strong>
+                <span className="raid-card__meta"><Zap size={11} /> {dungeon.rewardXp.toLocaleString()} XP <i /> {dungeon.exercises.length} TRIALS</span>
+              </span>
+              {!isUnlocked && <span className="raid-card__lock"><Lock size={18} /><small>LOCKED</small><em>{rank.name}</em></span>}
+              {dungeonCompletedToday && isCurrent && <span className="raid-card__clear"><Check size={13} /> CLEARED TODAY</span>}
+              {isCurrent && !dungeonCompletedToday && <span className="raid-card__current">CURRENT TRIAL</span>}
+            </button>
           );
         })}
-      </div>
+      </section>
 
-      <Modal open={selectedDungeon !== null} onClose={() => setSelectedDungeon(null)} title="Dungeon Preview" size="md">
-        {selectedDungeon && <div className="text-center">
-          <div className="w-20 h-20 mx-auto rounded-2xl flex items-center justify-center mb-4" style={{ background: `${currentRank.color}20`, boxShadow: `0 0 40px ${currentRank.glow}` }}><Swords size={32} style={{ color: currentRank.color }} /></div>
-          <h3 className="font-display text-xl font-bold">{selectedDungeon.name}</h3><p className="text-sm text-ink-300 mt-1">{selectedDungeon.description}</p>
-          <div className="mt-4 space-y-2 text-left"><p className="text-xs font-semibold uppercase tracking-wider text-ember-400">Exercises</p>{selectedDungeon.exercises.map((ex, i) => <div key={i} className="flex items-center gap-2 p-3 rounded-xl bg-ink-950/40 border border-white/5"><Dumbbell size={16} className="text-ember-400" /><span className="text-sm text-ink-200">{ex.name}</span><span className="text-sm font-bold text-ember-400 ml-auto tabular-nums">{ex.reps}{ex.isTime ? 's' : ' reps'}</span></div>)}</div>
-          <div className="mt-4 text-left"><p className="text-xs font-semibold uppercase tracking-wider text-gold-400 mb-2">Rewards</p><div className="grid grid-cols-2 gap-2">{selectedDungeon.rewards.map((reward, i) => <RewardCard key={i} reward={reward} />)}</div></div>
-          <button onClick={() => handleEnterDungeon(selectedDungeon)} className="btn-primary btn-sheen w-full mt-5"><Swords size={18} /> Enter Dungeon</button>
-        </div>}
+      <div className="raid-scroll-hint"><ChevronRight size={14} /> DRAG OR SHIFT + SCROLL TO EXPLORE ALL RAIDS <ChevronRight size={14} /></div>
+
+      <section className="raid-footer-panel">
+        <div className="raid-footer-art" />
+        <div className="raid-footer-copy"><span>THE FINAL DESTINATION</span><strong>Every raid gets harder.<br />The last gate waits.</strong></div>
+        <div className="raid-footer-stats"><div><Skull size={17} /><b>20</b><span>RAIDS</span></div><div><Crown size={17} /><b>SS</b><span>APEX TIER</span></div><div><Trophy size={17} /><b>1</b><span>DAILY CLEAR</span></div></div>
+      </section>
+
+      <Modal open={selectedDungeon !== null} onClose={() => setSelectedDungeon(null)} title="" size="lg">
+        {selectedDungeon && <DungeonPreview dungeon={selectedDungeon} currentRank={currentRank} onEnter={handleEnterDungeon} image={DUNGEON_IMAGES[selectedDungeon.name]} />}
       </Modal>
 
       <Modal open={activeDungeon !== null} onClose={() => setActiveDungeon(null)} title="" size="md">
-        {activeDungeon && <div className="text-center">
-          <div className="flex items-center justify-between mb-3"><div className="w-16 h-16 rounded-2xl flex items-center justify-center energy-pulse" style={{ background: `${currentRank.color}20` }}><Swords size={24} style={{ color: currentRank.color }} /></div><button onClick={() => setActiveDungeon(null)} className="p-2 rounded-lg text-ink-400 hover:text-ink-200 hover:bg-white/5 transition"><X size={18} /></button></div>
-          <h3 className="font-display text-xl font-bold">{activeDungeon.name}</h3><p className="text-xs text-ink-400 mt-1">Complete all exercises to clear the dungeon</p>
-          <div className="h-2 bg-ink-950 rounded-full overflow-hidden my-4 border border-white/5"><div className="h-full bg-gradient-to-r from-ember-500 to-gold-500 rounded-full transition-all duration-500" style={{ width: `${activeDungeon.exercises.length > 0 ? (Object.values(completedExercise).filter(Boolean).length / activeDungeon.exercises.length) * 100 : 0}%` }} /></div>
-          <div className="space-y-2 text-left">{activeDungeon.exercises.map((ex, i) => { const done = completedExercise[i]; return <button key={i} onClick={() => !done && handleCompleteExercise(i)} disabled={done} className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${done ? 'bg-emerald2-500/10 border-emerald2-500/40' : 'bg-ink-950/40 border-white/5 hover:border-ember-500/30 hover:bg-ink-800/60'}`}><div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${done ? 'bg-emerald2-500 border-emerald2-500' : 'border-ink-500'}`}>{done && <Check size={14} className="text-white check-pop" />}</div><Dumbbell size={16} className={done ? 'text-emerald2-400' : 'text-ember-400'} /><span className={`text-sm flex-1 text-left ${done ? 'text-emerald2-400 line-through' : 'text-ink-200'}`}>{ex.name}</span><span className={`text-sm font-bold tabular-nums ${done ? 'text-emerald2-400' : 'text-ember-400'}`}>{ex.reps}{ex.isTime ? 's' : ' reps'}</span></button>; })}</div>
-          {allExercisesDone && <button onClick={handleCompleteDungeon} className="btn-primary btn-sheen w-full mt-5 animate-pulse"><Trophy size={18} /> Claim Rewards</button>}
+        {activeDungeon && <div className="raid-run-modal">
+          <div className="raid-run-art" style={{ backgroundImage: `url(${DUNGEON_IMAGES[activeDungeon.name]})` }}><div><span>RAID IN PROGRESS</span><strong>{activeDungeon.name}</strong></div><button onClick={() => setActiveDungeon(null)} aria-label="Close"><X size={18} /></button></div>
+          <div className="raid-run-body">
+            <p className="raid-run-copy">Complete every trial to clear the raid.</p>
+            <div className="raid-progress"><span style={{ width: `${activeDungeon.exercises.length ? (Object.values(completedExercise).filter(Boolean).length / activeDungeon.exercises.length) * 100 : 0}%` }} /></div>
+            <div className="raid-exercises">{activeDungeon.exercises.map((ex, i) => { const done = completedExercise[i]; return <button key={i} onClick={() => !done && handleCompleteExercise(i)} disabled={done} className={done ? 'done' : ''}><span className="raid-exercise-check">{done && <Check size={13} />}</span><Dumbbell size={16} /><span>{ex.name}</span><b>{ex.reps}{ex.isTime ? 's' : ' reps'}</b></button>; })}</div>
+            {allExercisesDone && <button onClick={handleCompleteDungeon} className="raid-claim"><Trophy size={17} /> CLAIM RAID REWARDS</button>}
+          </div>
         </div>}
       </Modal>
 
-      <Modal open={showReward !== null} onClose={() => setShowReward(null)} title="Dungeon Cleared!" size="md">
-        {showReward && <div className="text-center">
-          <div className="w-20 h-20 mx-auto rounded-2xl flex items-center justify-center mb-4 rank-burst" style={{ background: `${currentRank.color}20`, boxShadow: `0 0 50px ${currentRank.glow}` }}><Trophy size={32} style={{ color: currentRank.color }} /></div>
-          <h3 className="font-display text-2xl font-bold text-gradient-gold">Dungeon Cleared!</h3><p className="text-sm text-ink-300 mt-1">{showReward.name}</p>
-          <div className="mt-5 space-y-2">{showReward.rewards.map((reward, i) => <RewardDisplayCard key={i} reward={reward} index={i} />)}{rewardDrops.length > 0 && <><p className="text-xs font-semibold uppercase tracking-wider text-shadow-400 mt-3 mb-1">Bonus Drops</p>{rewardDrops.map((drop, i) => <div key={`drop-${i}`} className="stagger-in flex items-center gap-3 p-3 rounded-xl bg-ink-950/40 border border-white/5" style={{ animationDelay: `${(showReward.rewards.length + i) * 0.1}s` }}><Sparkles size={16} className="text-shadow-400" /><span className="text-sm text-ink-200 flex-1 text-left">{drop.label}</span>{drop.rarity && <span className="text-xs font-semibold uppercase" style={{ color: RARITY_META[drop.rarity as Rarity]?.color }}>{RARITY_META[drop.rarity as Rarity]?.label}</span>}</div>)}</>}</div>
-          <button onClick={() => setShowReward(null)} className="btn-ghost btn-sheen w-full mt-5">Continue</button>
+      <Modal open={showReward !== null} onClose={() => setShowReward(null)} title="" size="md">
+        {showReward && <div className="raid-reward-modal">
+          <div className="raid-reward-art" style={{ backgroundImage: `url(${DUNGEON_IMAGES[showReward.name]})` }}><div className="raid-reward-badge"><Trophy size={27} /></div></div>
+          <div className="raid-reward-body"><span>RAID CLEARED</span><h3>{showReward.name}</h3><div className="raid-reward-list">{showReward.rewards.map((reward, i) => <RewardDisplayCard key={i} reward={reward} index={i} />)}{rewardDrops.length > 0 && rewardDrops.map((drop, i) => <div key={`drop-${i}`} className="raid-drop"><Sparkles size={15} /><span>{drop.label}</span>{drop.rarity && <b style={{ color: RARITY_META[drop.rarity as Rarity]?.color }}>{RARITY_META[drop.rarity as Rarity]?.label}</b>}</div>)}</div><button onClick={() => setShowReward(null)} className="raid-continue">CONTINUE</button></div>
         </div>}
       </Modal>
     </div>
   );
 }
 
-function RewardChip({ reward }: { reward: DungeonReward }) {
-  const color = reward.rarity ? RARITY_COLORS[reward.rarity] ?? '#9ca3af' : '#fbbf24';
-  const icons: Record<string, typeof Zap> = { xp: Zap, coins: Coins, aura: Sparkles, title: Award, weapon: Swords, shield: Shield, badge: Trophy };
-  const Icon = icons[reward.type] ?? Zap;
-  return <div className="flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium" style={{ background: `${color}15`, color, border: `1px solid ${color}30` }}><Icon size={10} /><span className="truncate max-w-[100px]">{reward.label}</span></div>;
+function DungeonPreview({ dungeon, currentRank, onEnter, image }: { dungeon: Dungeon; currentRank: ReturnType<typeof getRankByXp>; onEnter: (dungeon: Dungeon) => void; image: string }) {
+  return <div className="raid-preview"><div className="raid-preview__art" style={{ backgroundImage: `url(${image})` }}><div className="raid-preview__overlay" /><div className="raid-preview__title"><span>{dungeon.theme}</span><h3>{dungeon.name}</h3><p>{dungeon.description}</p></div></div><div className="raid-preview__body"><div className="raid-preview__stats"><div><Zap size={15} /><span>REWARD XP</span><b>{dungeon.rewardXp.toLocaleString()}</b></div><div><Target size={15} /><span>TRIALS</span><b>{dungeon.exercises.length}</b></div><div><Crown size={15} /><span>RANK</span><b>{currentRank.name}</b></div></div><div className="raid-preview__label">TRIAL REQUIREMENTS</div><div className="raid-preview__exercises">{dungeon.exercises.map((ex, i) => <div key={i}><Dumbbell size={15} /><span>{ex.name}</span><b>{ex.reps}{ex.isTime ? 's' : ' reps'}</b></div>)}</div><div className="raid-preview__label">REWARDS</div><div className="raid-preview__rewards">{dungeon.rewards.filter((reward) => reward.type !== 'coins').map((reward, i) => <RewardCard key={i} reward={reward} />)}</div><button onClick={() => onEnter(dungeon)} className="raid-enter"><Swords size={17} /> ENTER RAID</button></div></div>;
 }
 
 function RewardCard({ reward }: { reward: DungeonReward }) {
   const color = reward.rarity ? RARITY_COLORS[reward.rarity] ?? '#9ca3af' : '#fbbf24';
   const icons: Record<string, typeof Zap> = { xp: Zap, coins: Coins, aura: Sparkles, title: Award, weapon: Swords, shield: Shield, badge: Trophy };
   const Icon = icons[reward.type] ?? Zap;
-  return <div className="flex items-center gap-2 p-2.5 rounded-xl border" style={{ background: `${color}08`, borderColor: `${color}20` }}><div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${color}20` }}><Icon size={14} style={{ color }} /></div><span className="text-xs font-medium text-ink-200 truncate">{reward.label}</span></div>;
+  return <div className="raid-reward-chip" style={{ ['--reward-color' as any]: color }}><Icon size={14} /><span>{reward.label}</span></div>;
 }
 
 function RewardDisplayCard({ reward, index }: { reward: DungeonReward; index: number }) {
   const color = reward.rarity ? RARITY_COLORS[reward.rarity] ?? '#9ca3af' : '#fbbf24';
   const icons: Record<string, typeof Zap> = { xp: Zap, coins: Coins, aura: Sparkles, title: Award, weapon: Swords, shield: Shield, badge: Trophy };
   const Icon = icons[reward.type] ?? Zap;
-  return <div className="stagger-in flex items-center gap-3 p-3 rounded-xl border" style={{ background: `${color}10`, borderColor: `${color}30`, animationDelay: `${index * 0.1}s` }}><div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${color}20`, boxShadow: `0 0 15px ${color}40` }}><Icon size={18} style={{ color }} /></div><div className="flex-1 text-left"><p className="text-sm font-semibold text-ink-100">{reward.label}</p>{reward.rarity && <p className="text-xs font-semibold uppercase" style={{ color }}>{RARITY_META[reward.rarity as Rarity]?.label ?? reward.rarity}</p>}</div></div>;
+  return <div className="raid-reward-display" style={{ ['--reward-color' as any]: color, animationDelay: `${index * 80}ms` }}><div><Icon size={17} /></div><span>{reward.label}</span>{reward.rarity && <b>{RARITY_META[reward.rarity as Rarity]?.label ?? reward.rarity}</b>}</div>;
 }

@@ -12,14 +12,19 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const { state, toggleCoreTask, toggleCustomTask } = useStore();
   const rank = getRankByXp(state.xp);
   const nextRank = getNextRank(state.xp);
-  const enabledMainTasks = state.mainTasks.filter((t) => t.enabled);
+  const enabledMainTasks = state.mainTasks.filter((t) => t.enabled).sort((a, b) => a.order - b.order);
+  const customTasks = state.customTasks;
   const completedCount = enabledMainTasks.filter((t) => state.coreCompleted[t.id]).length;
-  const extraCompleted = Object.values(state.customCompleted).filter(Boolean).length;
-  const totalTasks = enabledMainTasks.length + state.customTasks.length;
+  const extraCompleted = customTasks.filter((t) => state.customCompleted[t.id]).length;
+  const totalTasks = enabledMainTasks.length + customTasks.length;
   const totalDone = completedCount + extraCompleted;
   const dailyPct = state.dailyCap > 0 ? Math.min(100, (state.dailyXp / state.dailyCap) * 100) : 0;
   const chapter = ALL_CHAPTERS[Math.min(state.storyChapter, ALL_CHAPTERS.length - 1)];
   const bossesDefeated = Object.values(state.storyBossDefeated).filter(Boolean).length;
+  const allTasks = [
+    ...enabledMainTasks.map((task) => ({ ...task, kind: 'core' as const })),
+    ...customTasks.map((task) => ({ ...task, kind: 'extra' as const })),
+  ];
 
   return (
     <div className="space-y-6 pb-8">
@@ -72,9 +77,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       <section className="rounded-2xl border border-white/10 bg-[#090909]">
         <div className="flex flex-col gap-3 border-b border-white/5 p-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[.25em] text-ember-400">Live objectives</p><h2 className="mt-1 font-display text-xl font-black uppercase">Today’s missions</h2></div><span className="text-xs text-ink-500">{totalDone} completed / {totalTasks} total</span></div>
         <div className="grid gap-2 p-3 sm:grid-cols-2 lg:grid-cols-3">
-          {enabledMainTasks.slice(0, 6).map((task, i) => <MissionRow key={task.id} index={i + 1} emoji={task.emoji} label={task.label} xp={task.points} done={!!state.coreCompleted[task.id]} onClick={() => toggleCoreTask(task.id)} />)}
-          {state.customTasks.slice(0, Math.max(0, 6 - enabledMainTasks.length)).map((task, i) => <MissionRow key={task.id} index={enabledMainTasks.length + i + 1} emoji={task.emoji} label={task.label} xp={task.points} done={!!state.customCompleted[task.id]} onClick={() => toggleCustomTask(task.id)} />)}
-          {totalTasks === 0 && <div className="col-span-full py-10 text-center text-sm text-ink-500">No missions configured.</div>}
+          {allTasks.map((task, i) => <MissionRow key={task.id} index={i + 1} kind={task.kind} emoji={task.emoji} label={task.label} xp={task.points} done={task.kind === 'core' ? !!state.coreCompleted[task.id] : !!state.customCompleted[task.id]} onClick={() => task.kind === 'core' ? toggleCoreTask(task.id) : toggleCustomTask(task.id)} />)}
+          {allTasks.length === 0 && <div className="col-span-full py-10 text-center text-sm text-ink-500">No missions configured.</div>}
         </div>
       </section>
 
@@ -91,8 +95,8 @@ function StatusCell({ icon, label, value }: { icon: React.ReactNode; label: stri
   return <div className="bg-[#090909] p-4 sm:p-5"><div className="mb-2 flex items-center gap-2 text-ember-400">{icon}<span className="text-[9px] font-bold uppercase tracking-[.2em] text-ink-500">{label}</span></div><p className="truncate font-display text-lg font-black text-ink-100">{value}</p></div>;
 }
 
-function MissionRow({ index, emoji, label, xp, done, onClick }: { index: number; emoji: string; label: string; xp: number; done: boolean; onClick: () => void }) {
-  return <button onClick={onClick} className={`group flex min-w-0 items-center gap-3 rounded-xl border p-3 text-left transition-all ${done ? 'border-emerald2-500/25 bg-emerald2-500/[.07]' : 'border-white/5 bg-black/20 hover:border-ember-500/20 hover:bg-white/[.025]'}`}><span className="w-5 text-center font-mono text-[9px] text-ink-600">{String(index).padStart(2, '0')}</span><span className={`text-lg ${done ? 'opacity-50' : ''}`}>{done ? '✓' : emoji}</span><span className="min-w-0 flex-1"><span className={`block truncate text-sm font-semibold ${done ? 'text-ink-500 line-through' : 'text-ink-100'}`}>{label}</span><span className="text-[10px] uppercase tracking-wider text-ink-600">+{xp} XP</span></span><Check size={14} className={done ? 'text-emerald2-400' : 'text-ink-700 group-hover:text-ember-400'} /></button>;
+function MissionRow({ index, kind, emoji, label, xp, done, onClick }: { index: number; kind: 'core' | 'extra'; emoji: string; label: string; xp: number; done: boolean; onClick: () => void }) {
+  return <button onClick={onClick} className={`group flex min-w-0 items-center gap-3 rounded-xl border p-3 text-left transition-all ${done ? 'border-emerald2-500/25 bg-emerald2-500/[.07]' : 'border-white/5 bg-black/20 hover:border-ember-500/20 hover:bg-white/[.025]'}`}><span className="w-5 text-center font-mono text-[9px] text-ink-600">{String(index).padStart(2, '0')}</span><span className={`text-lg ${done ? 'opacity-50' : ''}`}>{done ? '✓' : emoji}</span><span className="min-w-0 flex-1"><span className="mb-0.5 flex items-center gap-2"><span className={`block min-w-0 truncate text-sm font-semibold ${done ? 'text-ink-500 line-through' : 'text-ink-100'}`}>{label}</span><span className="shrink-0 text-[8px] font-black uppercase tracking-[.16em] text-ink-600">{kind}</span></span><span className="text-[10px] uppercase tracking-wider text-ink-600">+{xp} XP</span></span><Check size={14} className={done ? 'text-emerald2-400' : 'text-ink-700 group-hover:text-ember-400'} /></button>;
 }
 
 function CommandAction({ icon, title, text, onClick }: { icon: React.ReactNode; title: string; text: string; onClick: () => void }) {

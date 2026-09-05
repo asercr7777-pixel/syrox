@@ -10,6 +10,19 @@ aside{background:rgba(4,6,9,.9)!important;border-right:1px solid rgba(255,255,25
 h1,h2,h3{color:#f4f5f7!important;letter-spacing:-.025em}.text-gradient-ember{background:linear-gradient(100deg,#fff,#ff9b55 55%,#ff5b12)!important;-webkit-background-clip:text!important;background-clip:text!important}.label{color:#777e89!important;font-size:.65rem!important;letter-spacing:.14em!important}
 .xp-bar-fill{background:linear-gradient(90deg,#ff4f0b,#ff8a3d,#ffd0ae)!important;box-shadow:0 0 16px rgba(255,106,26,.42)!important}.progress-glow{box-shadow:0 0 18px rgba(255,106,26,.3)!important}.rounded-3xl{border-radius:18px!important}.rounded-2xl{border-radius:14px!important}.rounded-xl{border-radius:10px!important}
 .theme-atmosphere::after{opacity:.09!important}.theme-atmosphere::before{opacity:.22!important}
+/* Mission board */
+main > .space-y-6 > .card:has(h2:first-child){border-radius:20px!important;padding:clamp(18px,3vw,30px)!important;position:relative;overflow:hidden}
+main > .space-y-6 > .card:has(h2:first-child)::before{content:"MISSION BOARD // DAILY OBJECTIVES";display:block;font-size:10px;letter-spacing:.2em;color:#656b76;margin-bottom:18px}
+main > .space-y-6 > .card:has(h2:first-child) > div:first-child{padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.06)}
+main > .space-y-6 > .card:has(h2:first-child) > div:nth-child(2) > div{background:linear-gradient(120deg,rgba(255,255,255,.035),rgba(255,106,26,.025))!important;border-color:rgba(255,255,255,.08)!important;border-radius:14px!important;padding:14px!important;box-shadow:inset 3px 0 rgba(255,106,26,.6)}
+main > .space-y-6 > .card:has(h2:first-child) > div:nth-child(2) > div:hover{background:rgba(255,106,26,.055)!important;transform:translateX(3px)}
+/* Dungeon command deck */
+main > .space-y-6 > .card-premium:first-child{min-height:150px!important;border-radius:22px!important;display:flex!important;align-items:center!important}
+main > .space-y-6 > .card-premium:first-child h1{font-size:clamp(1.5rem,3vw,2.2rem)!important}
+main > .space-y-6 > .grid > .card-premium{border-radius:18px!important;min-height:360px!important;display:flex!important;flex-direction:column!important;justify-content:space-between!important}
+main > .space-y-6 > .grid > .card-premium:hover{transform:translateY(-5px) scale(1.005)!important}
+main > .space-y-6 > .grid > .card-premium h3{letter-spacing:-.03em!important}
+main > .space-y-6 > .grid > .card-premium .btn-primary{min-height:44px!important}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 @media(max-width:1023px){main{padding-top:72px!important;padding-bottom:88px!important}aside{box-shadow:0 20px 60px rgba(0,0,0,.5)!important}.card,.card-premium,.glass,.glass-soft{backdrop-filter:blur(12px)!important}}
-@media(max-width:640px){main{padding-left:12px!important;padding-right:12px!important}.card,.card-premium,.glass,.glass-soft{border-radius:12px!important}.btn{min-height:40px}}
+@media(max-width:640px){main{padding-left:12px!important;padding-right:12px!important}.card,.card-premium,.glass,.glass-soft{border-radius:12px!important}.btn{min-height:40px!important}main > .space-y-6 > .grid > .card-premium{min-height:320px!important}}

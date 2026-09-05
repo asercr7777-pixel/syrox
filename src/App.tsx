@@ -20,6 +20,7 @@ import './theme-identities.css';
 import './theme-motion.css';
 import './mobile.css';
 import './stryven-redesign.css';
+import './stryven-shell.css';
 
 const Dashboard = lazy(() => import('./views/Dashboard').then((m) => ({ default: m.Dashboard })));
 const Tasks = lazy(() => import('./views/Tasks').then((m) => ({ default: m.Tasks })));
@@ -35,17 +36,13 @@ const Auth = lazy(() => import('./views/Auth').then((m) => ({ default: m.Auth })
 const ResetPassword = lazy(() => import('./views/ResetPassword').then((m) => ({ default: m.ResetPassword })));
 
 const VALID_VIEWS = new Set<ViewId>(['dashboard', 'tasks', 'story', 'workout', 'dungeons', 'profile', 'achievements', 'leaderboard', 'skilltree', 'settings']);
-
 function getViewFromUrl(): ViewId {
   if (typeof window === 'undefined') return 'dashboard';
   const requested = new URLSearchParams(window.location.search).get('view');
   if (requested === 'worldmap') return 'story';
   return requested && VALID_VIEWS.has(requested as ViewId) ? (requested as ViewId) : 'dashboard';
 }
-
-function PageLoader() {
-  return <div className="flex min-h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-[rgb(var(--accent-400))]" size={32} /></div>;
-}
+function PageLoader() { return <div className="stryven-page-loader"><Loader2 className="animate-spin" size={30} /></div>; }
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -53,91 +50,39 @@ function AppContent() {
   const [view, setView] = useState<ViewId>(getViewFromUrl);
   const { isInstalled, isInstallable, promptInstall } = usePWA();
   const isReset = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('reset') === '1';
-
   useEffect(() => { syncSoundFlag(state.soundEnabled); }, [state.soundEnabled]);
-
-  useEffect(() => {
-    let cancelled = false;
-    if (!user) {
-      setUserId(null);
-      return;
-    }
-    void Promise.allSettled([ensureStoryReset(user.id), loadFromCloud(user.id)]).then(() => {
-      if (cancelled) return;
-    });
-    return () => { cancelled = true; };
-  }, [user, setUserId, loadFromCloud]);
-
-  useEffect(() => {
-    let timeout = 0;
-    const onScroll = () => {
-      document.documentElement.classList.add('is-scrolling');
-      window.clearTimeout(timeout);
-      timeout = window.setTimeout(() => document.documentElement.classList.remove('is-scrolling'), 120);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      window.clearTimeout(timeout);
-      document.documentElement.classList.remove('is-scrolling');
-    };
-  }, []);
-
-  useEffect(() => {
-    const onPopState = () => setView(getViewFromUrl());
-    window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', state.theme);
-    document.body.setAttribute('data-theme', state.theme);
-    return () => {
-      document.documentElement.removeAttribute('data-theme');
-      document.body.removeAttribute('data-theme');
-    };
-  }, [state.theme]);
-
-  const handleNavigate = (v: ViewId) => {
-    const target = v === 'worldmap' ? 'story' : v;
-    setView(target);
-    const url = new URL(window.location.href);
-    url.searchParams.set('view', target);
-    if (target === 'story') url.searchParams.delete('chapter');
-    window.history.replaceState({}, '', url);
-  };
-
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-[rgb(var(--accent-400))]" size={40} /></div>;
+  useEffect(() => { let cancelled = false; if (!user) { setUserId(null); return; } void Promise.allSettled([ensureStoryReset(user.id), loadFromCloud(user.id)]).then(() => { if (cancelled) return; }); return () => { cancelled = true; }; }, [user, setUserId, loadFromCloud]);
+  useEffect(() => { let timeout = 0; const onScroll = () => { document.documentElement.classList.add('is-scrolling'); window.clearTimeout(timeout); timeout = window.setTimeout(() => document.documentElement.classList.remove('is-scrolling'), 120); }; window.addEventListener('scroll', onScroll, { passive: true }); return () => { window.removeEventListener('scroll', onScroll); window.clearTimeout(timeout); document.documentElement.classList.remove('is-scrolling'); }; }, []);
+  useEffect(() => { const onPopState = () => setView(getViewFromUrl()); window.addEventListener('popstate', onPopState); return () => window.removeEventListener('popstate', onPopState); }, []);
+  useEffect(() => { document.documentElement.setAttribute('data-theme', state.theme); document.body.setAttribute('data-theme', state.theme); return () => { document.documentElement.removeAttribute('data-theme'); document.body.removeAttribute('data-theme'); }; }, [state.theme]);
+  const handleNavigate = (v: ViewId) => { const target = v === 'worldmap' ? 'story' : v; setView(target); const url = new URL(window.location.href); url.searchParams.set('view', target); if (target === 'story') url.searchParams.delete('chapter'); window.history.replaceState({}, '', url); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  if (loading) return <div className="stryven-auth-loader"><Loader2 className="animate-spin" size={38} /></div>;
   if (isReset) return <><Background /><Suspense fallback={<PageLoader />}><ResetPassword /></Suspense></>;
   if (!user) return <><Background /><Suspense fallback={<PageLoader />}><Auth /></Suspense></>;
-
-  return <div className="min-h-screen isolate" data-theme={state.theme}>
+  return <div className="stryven-app-shell" data-theme={state.theme}>
     <Background />
     <Navigation current={view} onNavigate={handleNavigate} />
     <ToastContainer />
     <Confetti />
     <StoryProgressBridge />
-    <main className="relative z-10 lg:ml-60 pt-16 lg:pt-6 px-3 sm:px-4 pb-24 lg:pb-8 max-w-6xl mx-auto overflow-x-hidden">
-      {view === 'settings' && <SettingsAppearance />}
-      <Suspense fallback={<PageLoader />}>
-        {view === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
-        {view === 'dashboard' && !isInstalled && <div className="flex justify-center mt-5 mb-1"><InstallButton isInstallable={isInstallable} isInstalled={isInstalled} onInstall={promptInstall}>Install STRYVEN</InstallButton></div>}
-        {view === 'tasks' && <Tasks />}
-        {view === 'story' && <StoryMode />}
-        {view === 'skilltree' && <SkillTree />}
-        {view === 'workout' && <WorkoutWithAIPlan />}
-        {view === 'dungeons' && <Dungeons />}
-        {view === 'profile' && <Profile />}
-        {view === 'achievements' && <Achievements />}
-        {view === 'leaderboard' && <Leaderboard />}
-        {view === 'settings' && <Settings />}
-      </Suspense>
+    <main className={`stryven-main stryven-view-${view}`}>
+      <div className="stryven-page-frame">
+        {view === 'settings' && <SettingsAppearance />}
+        <Suspense fallback={<PageLoader />}>
+          {view === 'dashboard' && <section className="stryven-page"><Dashboard onNavigate={handleNavigate} />{!isInstalled && <div className="stryven-install"><InstallButton isInstallable={isInstallable} isInstalled={isInstalled} onInstall={promptInstall}>Install STRYVEN</InstallButton></div>}</section>}
+          {view === 'tasks' && <section className="stryven-page"><Tasks /></section>}
+          {view === 'story' && <section className="stryven-page stryven-story-page"><StoryMode /></section>}
+          {view === 'skilltree' && <section className="stryven-page"><SkillTree /></section>}
+          {view === 'workout' && <section className="stryven-page"><WorkoutWithAIPlan /></section>}
+          {view === 'dungeons' && <section className="stryven-page"><Dungeons /></section>}
+          {view === 'profile' && <section className="stryven-page"><Profile /></section>}
+          {view === 'achievements' && <section className="stryven-page"><Achievements /></section>}
+          {view === 'leaderboard' && <section className="stryven-page"><Leaderboard /></section>}
+          {view === 'settings' && <section className="stryven-page"><Settings /></section>}
+        </Suspense>
+      </div>
     </main>
   </div>;
 }
-
-function App() {
-  return <ErrorBoundary><AuthProvider><AppContent /></AuthProvider></ErrorBoundary>;
-}
-
+function App() { return <ErrorBoundary><AuthProvider><AppContent /></AuthProvider></ErrorBoundary>; }
 export default App;

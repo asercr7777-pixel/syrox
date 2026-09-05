@@ -25,6 +25,7 @@ import './stryven-pages.css';
 import './stryven-settings.css';
 import './stryven-dungeons.css';
 import './story-map-responsive.css';
+import './stryven-character.css';
 
 const Dashboard = lazy(() => import('./views/Dashboard').then((m) => ({ default: m.Dashboard })));
 const Tasks = lazy(() => import('./views/Tasks').then((m) => ({ default: m.Tasks })));

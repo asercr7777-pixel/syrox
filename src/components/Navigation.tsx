@@ -1,17 +1,16 @@
-import { LayoutDashboard, CheckSquare, BookOpen, Dumbbell, User, Store, Users, Settings, Menu, X, LogOut, MessageCircle, Swords, Brain } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, BookOpen, Dumbbell, User, Users, Settings, Menu, X, LogOut, Swords } from 'lucide-react';
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { playSound } from '../lib/sound';
 import { useAuth } from '../lib/auth';
 
-export type ViewId = 'dashboard' | 'tasks' | 'story' | 'workout' | 'shadowai' | 'dungeons' | 'profile' | 'marketplace' | 'inventory' | 'achievements' | 'leaderboard' | 'community' | 'skilltree' | 'worldmap' | 'settings' | 'iteminspection';
+export type ViewId = 'dashboard' | 'tasks' | 'story' | 'workout' | 'dungeons' | 'profile' | 'achievements' | 'leaderboard' | 'skilltree' | 'worldmap' | 'settings';
 interface NavItem { id: ViewId; label: string; icon: typeof LayoutDashboard; }
 const NAV_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard }, { id: 'tasks', label: 'Tasks', icon: CheckSquare },
   { id: 'story', label: 'Story Mode', icon: BookOpen }, { id: 'workout', label: 'Workout', icon: Dumbbell },
-  { id: 'shadowai', label: 'Shadow AI', icon: Brain }, { id: 'dungeons', label: 'Dungeons', icon: Swords }, { id: 'profile', label: 'Hunter Profile', icon: User },
-  { id: 'marketplace', label: 'Marketplace', icon: Store }, { id: 'leaderboard', label: 'Leaderboard', icon: Users },
-  { id: 'community', label: 'Community', icon: MessageCircle }, { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'dungeons', label: 'Dungeons', icon: Swords }, { id: 'profile', label: 'Hunter Profile', icon: User },
+  { id: 'leaderboard', label: 'Leaderboard', icon: Users }, { id: 'settings', label: 'Settings', icon: Settings },
 ];
 interface NavigationProps { current: ViewId; onNavigate: (v: ViewId) => void; }
 export function Navigation({ current, onNavigate }: NavigationProps) {

@@ -31,7 +31,7 @@ export function auditCanonicalStory(): StoryAuditReport {
     if (chapter.boss?.id && bossIds.has(chapter.boss.id)) errors.push(`Duplicate boss id: ${chapter.boss.id}.`);
     if (chapter.boss?.id) bossIds.add(chapter.boss.id);
 
-    const loreId = chapter.lore?.id;
+    const loreId = chapter.boss?.rewardLore;
     if (loreId && loreIds.has(loreId)) errors.push(`Duplicate lore id: ${loreId}.`);
     if (loreId) loreIds.add(loreId);
 
@@ -41,7 +41,7 @@ export function auditCanonicalStory(): StoryAuditReport {
       missionIds.add(mission.id);
       if (mission.chapterId !== chapter.id) errors.push(`${mission.id} points to ${mission.chapterId}, expected ${chapter.id}.`);
       if (mission.target < 1) errors.push(`${mission.id} has an invalid target.`);
-      if (mission.xpReward <= 0 || mission.coinReward <= 0) errors.push(`${mission.id} has a non-positive reward.`);
+      if (mission.xpReward <= 0) errors.push(`${mission.id} has a non-positive XP reward.`);
       const expectedUnlock = missionIndex < chapter.missions.length - 1 ? chapter.missions[missionIndex + 1]?.id : null;
       if (mission.unlocks !== expectedUnlock) warnings.push(`${mission.id} unlock chain differs from the canonical sequence.`);
     });

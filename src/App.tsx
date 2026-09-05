@@ -50,15 +50,67 @@ function AppContent() {
   const [view, setView] = useState<ViewId>(getViewFromUrl);
   const { isInstalled, isInstallable, promptInstall } = usePWA();
   const isReset = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('reset') === '1';
+
   useEffect(() => { syncSoundFlag(state.soundEnabled); }, [state.soundEnabled]);
-  useEffect(() => { if (!user) { setUserId(null); return; } void Promise.allSettled([ensureStoryReset(user.id), loadFromCloud(user.id)]); }, [user, setUserId, loadFromCloud]);
-  useEffect(() => { let timeout = 0; const onScroll = () => { document.documentElement.classList.add('is-scrolling'); window.clearTimeout(timeout); timeout = window.setTimeout(() => document.documentElement.classList.remove('is-scrolling'), 120); }; window.addEventListener('scroll', onScroll, { passive: true }); return () => { window.removeEventListener('scroll', onScroll); window.clearTimeout(timeout); document.documentElement.classList.remove('is-scrolling'); }; }, []);
-  useEffect(() => { const onPopState = () => setView(getViewFromUrl()); window.addEventListener('popstate', onPopState); return () => window.removeEventListener('popstate', onPopState); }, []);
-  useEffect(() => { document.documentElement.setAttribute('data-theme', state.theme); document.body.setAttribute('data-theme', state.theme); return () => { document.documentElement.removeAttribute('data-theme'); document.body.removeAttribute('data-theme'); }; }, [state.theme]);
-  const handleNavigate = (v: ViewId) => { const target = v === 'worldmap' ? 'story' : v; setView(target); const url = new URL(window.location.href); url.searchParams.set('view', target); if (target === 'story') url.searchParams.delete('chapter'); window.history.replaceState({}, '', url); window.scrollTo({ top: 0, behavior: 'auto' }); };
+  useEffect(() => {
+    if (!user) { setUserId(null); return; }
+    void Promise.allSettled([ensureStoryReset(user.id), loadFromCloud(user.id)]);
+  }, [user, setUserId, loadFromCloud]);
+
+  // Keep the scroll effect lightweight: one animation-frame update at a time.
+  useEffect(() => {
+    let raf = 0;
+    let timeout = 0;
+    let scrolling = false;
+    const onScroll = () => {
+      if (!scrolling) {
+        scrolling = true;
+        raf = window.requestAnimationFrame(() => {
+          document.documentElement.classList.add('is-scrolling');
+          scrolling = false;
+        });
+      }
+      window.clearTimeout(timeout);
+      timeout = window.setTimeout(() => document.documentElement.classList.remove('is-scrolling'), 120);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.cancelAnimationFrame(raf);
+      window.clearTimeout(timeout);
+      document.documentElement.classList.remove('is-scrolling');
+    };
+  }, []);
+
+  useEffect(() => {
+    const onPopState = () => setView(getViewFromUrl());
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', state.theme);
+    document.body.setAttribute('data-theme', state.theme);
+    return () => {
+      document.documentElement.removeAttribute('data-theme');
+      document.body.removeAttribute('data-theme');
+    };
+  }, [state.theme]);
+
+  const handleNavigate = (v: ViewId) => {
+    const target = v === 'worldmap' ? 'story' : v;
+    setView(target);
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', target);
+    if (target === 'story') url.searchParams.delete('chapter');
+    window.history.replaceState({}, '', url);
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  };
+
   if (loading) return <div className="stryven-auth-loader"><Loader2 className="animate-spin" size={38} /></div>;
   if (isReset) return <><Background /><Suspense fallback={<PageLoader />}><ResetPassword /></Suspense></>;
   if (!user) return <><Background /><Suspense fallback={<PageLoader />}><Auth /></Suspense></>;
+
   return <div className="stryven-app-shell" data-theme={state.theme}>
     <Background /><Navigation current={view} onNavigate={handleNavigate} /><ToastContainer /><Confetti /><StoryProgressBridge />
     <main className={`stryven-main stryven-view-${view}`}><div className="stryven-page-frame"><Suspense fallback={<PageLoader />}>

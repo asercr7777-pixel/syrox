@@ -19,6 +19,12 @@
   will-change: auto;
   transform: translateZ(0);
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Preserve the original artwork without the previous visual filter softening it. */
+.raid-hero__image {
+  filter: none !important;
 }
 
 /* Don't keep all 20 large 4K card surfaces in the active paint workload. */
@@ -32,6 +38,7 @@
   display: block;
   image-rendering: auto;
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 /* Only promote a card while it is actually being interacted with. */
@@ -47,6 +54,7 @@
   scroll-behavior: auto;
   transform: translateZ(0);
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   touch-action: pan-x;
 }
 

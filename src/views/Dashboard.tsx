@@ -3,6 +3,7 @@ import { getRankByXp, getNextRank } from '../data/ranks';
 import { UserAvatar } from '../components/ui/UserAvatar';
 import { XpBar } from '../components/ui/XpBar';
 import type { ViewId } from '../components/Navigation';
+import type { ReactNode } from 'react';
 import { Flame, ChevronRight, Target, Check, BookOpen, Dumbbell, Swords, Trophy } from 'lucide-react';
 import { ALL_CHAPTERS } from '../data/story';
 
@@ -102,11 +103,11 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   );
 }
 
-function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function StatCard({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return <div className="card-premium flex min-w-0 items-center gap-3 p-3.5 sm:p-4"><div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-ember-500/15 bg-ember-500/10 text-ember-400">{icon}</div><div className="min-w-0"><p className="text-[10px] uppercase tracking-wider text-ink-500">{label}</p><p className="truncate text-sm font-bold text-ink-100 sm:text-base">{value}</p></div></div>;
 }
 
-function QuickAction({ icon, label, description, onClick }: { icon: React.ReactNode; label: string; description: string; onClick: () => void }) {
+function QuickAction({ icon, label, description, onClick }: { icon: ReactNode; label: string; description: string; onClick: () => void }) {
   return <button onClick={onClick} className="group card-premium flex items-center gap-3 p-4 text-left transition-all hover:-translate-y-0.5 hover:border-ember-500/20"><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-ember-400 transition-colors group-hover:bg-ember-500/10">{icon}</div><div className="min-w-0"><p className="text-sm font-bold text-ink-100">{label}</p><p className="text-xs text-ink-500">{description}</p></div><ChevronRight size={15} className="ml-auto shrink-0 text-ink-600 transition-transform group-hover:translate-x-1 group-hover:text-ember-400" /></button>;
 }
 

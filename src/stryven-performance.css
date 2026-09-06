@@ -1,20 +1,25 @@
-/* STRYVEN performance layer: keep visual identity while reducing paint/layout pressure. */
+/* STRYVEN performance layer: prioritize interaction and first paint. */
 .stryven-page{content-visibility:auto;contain:layout style}
 
-/* Decorative layers stop doing expensive work while the user scrolls. */
+/* Decorative layers stop doing expensive work while scrolling. */
 .is-scrolling .theme-atmosphere::before,
 .is-scrolling .theme-atmosphere::after,
 .is-scrolling .theme-atmosphere .theme-particle{animation-play-state:paused!important;filter:none!important}
 
-/* Hover effects are desktop-only; avoiding them on touch devices removes needless repaints. */
-@media (max-width: 768px){
+/* Touch devices do not need hover transforms or decorative particles. */
+@media (max-width:768px){
   .stryven-page{animation:none!important}
-  .stryven-card:hover,
-  [data-theme] .card:hover,
-  [data-theme] .card-premium:hover{transform:none!important}
+  .stryven-card:hover,[data-theme] .card:hover,[data-theme] .card-premium:hover{transform:none!important}
   .theme-atmosphere .theme-particle{display:none!important}
 }
 
-@media (prefers-reduced-motion: reduce){
-  .stryven-page,.stryven-page *{animation:none!important;transition-duration:.01ms!important}
+/* Keep the splash visually identical but GPU-light and independent of framer-motion. */
+.stryven-splash{background:linear-gradient(180deg,#0a0c14 0%,#14141f 50%,#0a0c14 100%);contain:strict}
+.stryven-splash-glow{position:absolute;inset:0;opacity:.4;pointer-events:none;background:radial-gradient(ellipse at center,rgba(255,122,24,.12),transparent 60%)}
+.stryven-splash-glow::after{content:'';position:absolute;inset:0;opacity:.03;background-image:linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px);background-size:40px 40px}
+.stryven-splash-pulse{background:radial-gradient(circle,rgba(255,122,24,.3),transparent 70%);animation:splashPulse 1.4s ease-in-out infinite}
+@keyframes splashPulse{50%{transform:scale(1.06);opacity:.45}}
+
+@media (prefers-reduced-motion:reduce){
+  .stryven-page,.stryven-page *,.stryven-splash *{animation:none!important;transition-duration:.01ms!important}
 }

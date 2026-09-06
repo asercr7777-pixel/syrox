@@ -68,5 +68,8 @@
 @keyframes overdriveSweep{from{transform:translate3d(-5%,0,0)}to{transform:translate3d(18%,0,0)}}
 @keyframes overdriveFlash{0%,100%{transform:translateX(-12%);opacity:0}45%{opacity:.8}60%{transform:translateX(20%);opacity:0}}
 
-@media(max-width:768px){.theme-atmosphere{opacity:.72}.theme-atmosphere::before{filter:blur(26px)}}
+/* Performance guard: decorative animation should never compete with scrolling. */
+.is-scrolling .theme-atmosphere::before,.is-scrolling .theme-atmosphere::after,.is-scrolling .theme-atmosphere .theme-particle{animation-play-state:paused!important;filter:none!important}
+.is-scrolling .theme-atmosphere{contain:strict}
+@media(max-width:768px){.theme-atmosphere{opacity:.72}.theme-atmosphere::before{filter:blur(26px)}.theme-atmosphere .theme-particle{display:none!important}}
 @media(prefers-reduced-motion:reduce){.theme-atmosphere::before,.theme-atmosphere::after,.theme-atmosphere .theme-particle{animation:none!important}}

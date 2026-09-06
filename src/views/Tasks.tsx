@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import { Modal, ConfirmModal } from '../components/ui/Modal';
 import { toast } from '../components/ui/Toast';
-import { Check, ChevronDown, ChevronUp, Crosshair, GripVertical, ListChecks, Loader2, Pencil, Plus, Power, Target, Trash2, Zap } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Crosshair, GripVertical, ListChecks, Loader2, Pencil, Plus, Power, Target, Trash2 } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import type { MainTask } from '../store/types';
 
@@ -72,7 +72,6 @@ export function Tasks() {
   const sorted = [...state.mainTasks].sort((a, b) => a.order - b.order);
   const active = sorted.filter((t) => t.enabled);
   const completed = active.filter((t) => !!state.coreCompleted[t.id]).length;
-  const missionXP = active.reduce((sum, t) => sum + t.points, 0);
   const completedXP = active.filter((t) => !!state.coreCompleted[t.id]).reduce((sum, t) => sum + t.points, 0);
   const missionPct = active.length ? Math.round((completed / active.length) * 100) : 0;
   const dailyXP = Math.max(0, Math.min(1000, state.dailyXp));
@@ -115,8 +114,6 @@ export function Tasks() {
       </div>
     </section>
 
-    <div className="grid gap-3 sm:grid-cols-2"><InfoCard icon={<Zap size={17}/>} label="Daily XP remaining" value={`${remainingXP} XP`} note={dailyXP>=1000?'Daily cap reached':'Complete missions to earn XP'}/><InfoCard icon={<Check size={17}/>} label="Daily status" value={missionPct===100&&active.length?'COMPLETE':missionPct?'IN PROGRESS':'STANDBY'} note={`${completedXP}/${missionXP} mission XP completed`}/></div>
-
     <Modal open={mainAddOpen||mainEditId!==null} onClose={()=>{setMainAddOpen(false);setMainEditId(null);resetForm();}} title={mainEditId?'Edit Core Mission':'Add Core Mission'}><TaskForm form={form} setForm={setForm} showDetails onSave={saveMain} onCancel={()=>{setMainAddOpen(false);setMainEditId(null);resetForm();}} saveLabel={mainEditId?'Save Changes':'Add Mission'}/></Modal>
     <Modal open={customAddOpen||customEditId!==null} onClose={()=>{setCustomAddOpen(false);setCustomEditId(null);resetForm();}} title={customEditId?'Edit Objective':'Add Bonus Objective'}><TaskForm form={form} setForm={setForm} onSave={saveCustom} onCancel={()=>{setCustomAddOpen(false);setCustomEditId(null);resetForm();}} saveLabel={customEditId?'Save Changes':'Add Objective'}/></Modal>
     <ConfirmModal open={mainDeleteId!==null} onClose={()=>setMainDeleteId(null)} onConfirm={()=>{if(mainDeleteId){deleteMainTask(mainDeleteId);toast({title:'Mission deleted',type:'success'});setMainDeleteId(null);}}} title="Delete Core Mission" message="This removes the mission and its completion state." confirmLabel="Delete" danger/>
@@ -127,7 +124,6 @@ export function Tasks() {
 function Metric({label,value}:{label:string;value:string}) { return <div className="rounded-xl border border-white/5 bg-white/[0.025] px-3 py-2.5"><div className="text-[9px] font-bold uppercase tracking-widest text-ink-500">{label}</div><div className="mt-1 font-display text-sm font-bold text-white sm:text-base">{value}</div></div>; }
 function ProgressPanel({label,value,percent,sub}:{label:string;value:string;percent:number;sub?:string}) { return <div className="rounded-xl border border-white/5 bg-white/[0.025] p-4"><div className="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-widest"><span className="text-ink-400">{label}</span><span className="text-white">{value}</span></div><div className="stryven-progress mt-3"><div className="stryven-progress-fill" style={{width:`${percent}%`}}/></div>{sub&&<div className="mt-2 text-[10px] text-ink-500">{sub}</div>}</div>; }
 function SectionHeader({icon,title,subtitle,action,onAction}:{icon:ReactNode;title:string;subtitle:string;action:string;onAction:()=>void}) { return <div className="border-b border-white/5 px-4 py-4 sm:px-5"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-3"><div className="flex h-9 w-9 items-center justify-center rounded-lg bg-ember-500/10 text-ember-400">{icon}</div><div><h2 className="font-display text-base font-bold uppercase tracking-wide">{title}</h2><p className="text-xs text-ink-400">{subtitle}</p></div></div><button onClick={onAction} className="btn-primary w-full sm:w-auto"><Plus size={16}/>{action}</button></div></div>; }
-function InfoCard({icon,label,value,note}:{icon:ReactNode;label:string;value:string;note:string}) { return <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4"><div className="flex items-center gap-3"><span className="text-ember-400">{icon}</span><div><p className="text-xs font-bold uppercase tracking-widest text-ink-400">{label}</p><p className="mt-1 font-display text-xl font-bold">{value}</p><p className="mt-1 text-[10px] text-ink-500">{note}</p></div></div></div>; }
 function EmptyState({title,action,onClick}:{title:string;action:string;onClick:()=>void}) { return <div className="px-5 py-12 text-center"><p className="text-sm font-semibold text-ink-300">{title}</p><button onClick={onClick} className="btn-ghost mt-3">{action}</button></div>; }
 function TaskForm({form,setForm,showDetails,onSave,onCancel,saveLabel}:{form:FormData;setForm:Dispatch<SetStateAction<FormData>>;showDetails?:boolean;onSave:()=>void;onCancel:()=>void;saveLabel:string}) {
   return <div className="space-y-4 p-1"><label className="block"><span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-400">Name</span><input autoFocus value={form.label} onChange={(e)=>setForm({...form,label:e.target.value})} maxLength={80} className="stryven-input w-full" placeholder="e.g. Train for 60 minutes"/></label>

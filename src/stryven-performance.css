@@ -1,0 +1,20 @@
+/* STRYVEN performance layer: keep visual identity while reducing paint/layout pressure. */
+.stryven-page{content-visibility:auto;contain:layout style}
+
+/* Decorative layers stop doing expensive work while the user scrolls. */
+.is-scrolling .theme-atmosphere::before,
+.is-scrolling .theme-atmosphere::after,
+.is-scrolling .theme-atmosphere .theme-particle{animation-play-state:paused!important;filter:none!important}
+
+/* Hover effects are desktop-only; avoiding them on touch devices removes needless repaints. */
+@media (max-width: 768px){
+  .stryven-page{animation:none!important}
+  .stryven-card:hover,
+  [data-theme] .card:hover,
+  [data-theme] .card-premium:hover{transform:none!important}
+  .theme-atmosphere .theme-particle{display:none!important}
+}
+
+@media (prefers-reduced-motion: reduce){
+  .stryven-page,.stryven-page *{animation:none!important;transition-duration:.01ms!important}
+}

@@ -11,6 +11,13 @@ main { contain: layout paint; }
 html.is-scrolling .theme-atmosphere, html.is-scrolling .theme-atmosphere::before, html.is-scrolling .theme-atmosphere::after, html.is-scrolling .theme-particle, html.is-scrolling video { animation-play-state: paused !important; }
 html.is-scrolling .theme-atmosphere::before, html.is-scrolling .theme-atmosphere::after, html.is-scrolling .theme-particle { opacity: .35 !important; }
 .theme-atmosphere { contain: strict; }
+
+/* Keep the large horizontal Story Map isolated as one paint/compositing surface. */
+.syrox-map-scroll { contain: layout paint; }
+.syrox-map-canvas { contain: layout paint; }
+.syrox-map-image { display: block; contain: paint; backface-visibility: hidden; }
+.syrox-map-canvas svg { contain: strict; }
+
 @media (max-width: 768px) {
  .theme-atmosphere, .theme-particle { display:none !important; }
  video { animation:none !important; }

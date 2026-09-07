@@ -37,7 +37,7 @@
   main .grid { min-width: 0; }
   main .grid > * { min-width: 0; max-width: 100%; }
 
-  /* Story */
+  /* Legacy story layouts kept compatible with older saved routes. */
   main:has(.shadow-guide) { width: 100%; max-width: 100%; min-width: 0; overflow-x: hidden; }
   main:has(.shadow-guide) section, main:has(.shadow-guide) > div { min-width: 0; max-width: 100%; width: 100%; }
   main:has(.shadow-guide) .grid { min-width: 0; max-width: 100%; }
@@ -72,37 +72,29 @@
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
 }
 
-/* Story Mode: keep the RPG world map wide on phones, never stack the chapters. */
+/* Story Mode: the current World Map stays wide on phones and scrolls horizontally. */
 @media (max-width: 767px) {
-  main div[class~="mx-3"][class~="mb-5"][class~="mt-3"][class~="overflow-hidden"] {
+  .syrox-map-scroll {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     overflow-x: auto !important;
     overflow-y: hidden !important;
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-x pan-y;
+    touch-action: pan-x;
     overscroll-behavior-x: contain;
     scrollbar-width: auto;
     scrollbar-gutter: stable;
     padding-bottom: 10px;
   }
-
-  main div[class~="mx-3"][class~="mb-5"][class~="mt-3"][class~="overflow-hidden"] > div[class~="min-h-[680px]"] {
-    width: 1800px !important;
-    min-width: 1800px !important;
-    min-height: 680px !important;
-    height: 680px !important;
+  .syrox-map-canvas {
+    width: 3200px !important;
+    min-width: 3200px !important;
+    height: 520px !important;
+    min-height: 520px !important;
   }
-
-  main div[class~="mx-3"][class~="mb-5"][class~="mt-3"][class~="overflow-hidden"]::-webkit-scrollbar {
-    height: 9px;
-  }
-
-  main div[class~="mx-3"][class~="mb-5"][class~="mt-3"][class~="overflow-hidden"]::-webkit-scrollbar-thumb {
-    border-radius: 999px;
-    background: rgba(245, 215, 145, 0.42);
-  }
-
-  main div[class~="mx-3"][class~="mb-5"][class~="mt-3"][class~="overflow-hidden"]::-webkit-scrollbar-track {
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.06);
-  }
+  .syrox-map-image { width: 3200px !important; max-width: none !important; height: 520px !important; }
+  .syrox-map-scroll::-webkit-scrollbar { height: 9px; }
+  .syrox-map-scroll::-webkit-scrollbar-thumb { border-radius: 999px; background: rgba(245, 215, 145, 0.42); }
+  .syrox-map-scroll::-webkit-scrollbar-track { border-radius: 999px; background: rgba(255, 255, 255, 0.06); }
 }

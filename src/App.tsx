@@ -60,29 +60,8 @@ function AppContent() {
     void Promise.allSettled([ensureStoryReset(user.id), loadFromCloud(user.id)]);
   }, [user, setUserId, loadFromCloud]);
 
-  useEffect(() => {
-    let raf = 0;
-    let timeout = 0;
-    let scrolling = false;
-    const onScroll = () => {
-      if (!scrolling) {
-        scrolling = true;
-        raf = window.requestAnimationFrame(() => {
-          document.documentElement.classList.add('is-scrolling');
-          scrolling = false;
-        });
-      }
-      window.clearTimeout(timeout);
-      timeout = window.setTimeout(() => document.documentElement.classList.remove('is-scrolling'), 120);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      window.cancelAnimationFrame(raf);
-      window.clearTimeout(timeout);
-      document.documentElement.classList.remove('is-scrolling');
-    };
-  }, []);
+  // Scroll performance is managed once at the application root (src/main.tsx).
+  // Keeping a single passive listener avoids duplicate RAF/timer work on every scroll event.
 
   useEffect(() => {
     const onPopState = () => setView(getViewFromUrl());

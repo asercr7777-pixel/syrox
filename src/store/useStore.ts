@@ -11,18 +11,11 @@ import { ALL_CHAPTERS, getTotalChapters } from '../data/story';
 import { getChestById } from '../data/chests';
 import { getBattlePassReward } from '../data/battlepass';
 import { getMilestoneById } from '../data/milestones';
-
-const ALL_STORY_CHAPTER_COUNT = getTotalChapters();
-const VALID_STORY_MISSION_IDS = new Set(ALL_CHAPTERS.flatMap((chapter) => chapter.missions.map((mission) => mission.id)));
-const VALID_STORY_BOSS_IDS = new Set(ALL_CHAPTERS.map((chapter) => chapter.boss.id));
-const VALID_STORY_LORE_IDS = new Set(ALL_CHAPTERS.flatMap((chapter) => chapter.boss.rewardLore ? [chapter.boss.rewardLore] : []));
-let globalState: AppState = createDefaultState();
-let globalCloudLoaded = false;
-let globalUserId: string | null = null;
-let dailyResetDone = false;
-let saveTimer: number | null = null;
-let leaderboardSyncTimer: number | null = null;
-const listeners = new Set<() => void>();
+const ALL_STORY_CHAPTER_COUNT=getTotalChapters();
+const VALID_STORY_MISSION_IDS=new Set(ALL_CHAPTERS.flatMap(chapter=>chapter.missions.map(mission=>mission.id)));
+const VALID_STORY_BOSS_IDS=new Set(ALL_CHAPTERS.map(chapter=>chapter.boss.id));
+const VALID_STORY_LORE_IDS=new Set(ALL_CHAPTERS.flatMap(chapter=>chapter.boss.rewardLore?[chapter.boss.rewardLore]:[]));
+let globalState:AppState=createDefaultState();let globalCloudLoaded=false;let globalUserId:string|null=null;let dailyResetDone=false;let saveTimer:number|null=null;let leaderboardSyncTimer:number|null=null;const listeners=new Set<()=>void>();
 function notify(){listeners.forEach(l=>l());}
 function capTaskXp(value:number){return Math.min(200,Math.max(0,Math.floor(Number.isFinite(value)?value:0)));}
 function pickValidRecord<T>(record:Record<string,T>|undefined,validIds:Set<string>):Record<string,T>{if(!record)return{};return Object.fromEntries(Object.entries(record).filter(([id])=>validIds.has(id)));}
@@ -78,7 +71,7 @@ function setBackgroundDarken(n:number){setState(s=>({...s,backgroundDarken:n}));
 function setBackgroundBrightness(n:number){setState(s=>({...s,backgroundBrightness:n}));}
 function setSelectedBackground(id:string|null){setState(s=>({...s,selectedBackgroundId:id}));}
 function toggleSound(){setState(s=>({...s,soundEnabled:!s.soundEnabled}));}
-function updateNotifications(patch:Partial<AppState['notifications']){setState(s=>({...s,notifications:{...s.notifications,...patch}}));}
+function updateNotifications(patch:Partial<AppState['notifications']>){setState(s=>({...s,notifications:{...s.notifications,...patch}}));}
 function sendChat(text:string){const userMsg={id:uid(),role:'user' as const,text,at:Date.now()};setState(s=>({...s,chat:[...s.chat,userMsg]}));}
 function addAIMessage(text:string){const aiMsg={id:uid(),role:'ai' as const,text,at:Date.now()};setState(s=>({...s,chat:[...s.chat,aiMsg]}));}
 function addFriend(name:string){setState(s=>({...s,friends:[...s.friends,{id:uid(),name,level:1,rankId:'E' as const,streak:0,xp:0,auraColor:'#ff7a18'}]}));}

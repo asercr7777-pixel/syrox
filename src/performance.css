@@ -18,6 +18,14 @@ html.is-scrolling .theme-atmosphere::before, html.is-scrolling .theme-atmosphere
 .syrox-map-image { display: block; contain: paint; backface-visibility: hidden; }
 .syrox-map-canvas svg { contain: strict; }
 
+/* The route coordinates are node centers, so anchor every chapter marker on them. */
+.syrox-chapter-node {
+  position: absolute !important;
+  z-index: 10;
+  margin: 0 !important;
+  transform: translate(-50%, -50%);
+}
+
 @media (max-width: 768px) {
  .theme-atmosphere, .theme-particle { display:none !important; }
  video { animation:none !important; }

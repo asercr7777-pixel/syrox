@@ -78,5 +78,15 @@ html.is-scrolling .theme-atmosphere::before, html.is-scrolling .theme-atmosphere
 .story-rewards span, .story-loot { display:inline-flex; align-items:center; gap:6px; padding:8px 10px; border-radius:10px; background:rgba(255,255,255,.04); color:rgb(226 232 240); font-size:10px; }
 .story-loot { display:flex; flex-direction:column; margin:0 auto; max-width:300px; }
 .story-loot span { color:rgb(100 116 139); font-size:9px; }
+
+/* Lightweight replacement for the removed animation dependency in the PWA modal. */
+.pwa-install-overlay { will-change: opacity; }
+.pwa-install-modal { will-change: transform, opacity; }
+.pwa-fade-in { animation: pwaFadeIn .18s ease-out both; }
+.pwa-modal-in { animation: pwaModalIn .22s cubic-bezier(.16,1,.3,1) both; }
+@keyframes pwaFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pwaModalIn { from { opacity: 0; transform: translateY(12px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@media(prefers-reduced-motion:reduce){ .pwa-fade-in,.pwa-modal-in { animation:none!important; } }
+
 @media(max-width:640px){ .story-simple{padding:0 0 12px}.story-card{border-radius:16px;padding:13px}.story-status b{font-size:11px}.story-chapter{padding:10px}.story-main-title{font-size:31px}.story-title-row h1{font-size:22px}.story-mission{padding:9px}.mission-copy b{font-size:10px}.story-boss-head h1{font-size:21px} }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}

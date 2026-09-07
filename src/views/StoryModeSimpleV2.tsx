@@ -21,7 +21,14 @@ const nodes: [number, number][] = [
 function smoothPath(points: [number, number][]) { if (!points.length) return ''; if (points.length === 1) return `M ${points[0][0]} ${points[0][1]}`; let d = `M ${points[0][0]} ${points[0][1]}`; for (let i = 1; i < points.length; i += 1) { const [x0, y0] = points[i - 1]; const [x1, y1] = points[i]; d += ` Q ${(x0 + x1) / 2} ${(y0 + y1) / 2} ${x1} ${y1}`; } return d; }
 const routeD = smoothPath(nodes);
 const dateKey = (t: number) => new Date(t).toISOString().slice(0, 10);
-function progress(state: ReturnType<typeof useStore>['state'], m: StoryMission) { switch (m.type) { case 'tasks': return Math.min(m.target, Object.values(state.coreCompleted).filter(Boolean).length + Object.values(state.customCompleted).filter(Boolean).length); case 'workout': { const today = dateKey(Date.now()); const sessions = state.workoutSessions.filter(s => dateKey(s.completedAt) === today).length; const history = state.history.some(d => d.date === today && d.workoutCompleted); return Math.min(m.target, Math.max(state.workoutsCompletedToday, sessions, history ? 1 : 0)); } case 'pray': return state.coreCompleted.pray ? 1 : 0; case 'water': return state.coreCompleted.water ? 1 : 0; case 'sleep': return state.coreCompleted.sleep ? 1 : 0; case 'read_quran': return state.coreCompleted.read_quran ? 1 : 0; case 'read_book': return state.coreCompleted.read ? 1 : 0; case 'streak': return Math.min(m.target, state.streak); case 'dungeon': return Math.min(m.target, state.dungeonsCleared); case 'discipline_score': { const enabled = state.mainTasks.filter(t => t.enabled); const done = enabled.filter(t => state.coreCompleted[t.id]).length; return enabled.length ? Math.round(done / enabled.length * 100) : 0; } default: return 0; } }
+type StoryProgressSnapshot = {
+  taskCount: number;
+  todayWorkoutSessions: number;
+  todayWorkoutHistory: boolean;
+  today: string;
+  disciplineScore: number;
+};
+function progress(snapshot: StoryProgressSnapshot, state: ReturnType<typeof useStore>['state'], m: StoryMission) { switch (m.type) { case 'tasks': return Math.min(m.target, snapshot.taskCount); case 'workout': return Math.min(m.target, Math.max(state.workoutsCompletedToday, snapshot.todayWorkoutSessions, snapshot.todayWorkoutHistory ? 1 : 0)); case 'pray': return state.coreCompleted.pray ? 1 : 0; case 'water': return state.coreCompleted.water ? 1 : 0; case 'sleep': return state.coreCompleted.sleep ? 1 : 0; case 'read_quran': return state.coreCompleted.read_quran ? 1 : 0; case 'read_book': return state.coreCompleted.read ? 1 : 0; case 'streak': return Math.min(m.target, state.streak); case 'dungeon': return Math.min(m.target, state.dungeonsCleared); case 'discipline_score': return snapshot.disciplineScore; default: return 0; } }
 
 export default function StoryModeSimpleV2() {
   const { state, completeStoryMission, defeatStoryBoss, advanceStoryChapter, unlockLore, unlockStoryAchievement } = useStore();
@@ -31,10 +38,19 @@ export default function StoryModeSimpleV2() {
   const [music, setMusic] = useState(isMusicEnabled());
   const [reward, setReward] = useState<{ xp: number; title?: string; lore?: string } | null>(null);
   const current = Math.min(state.storyChapter + 1, 30);
-  const rows = useMemo(() => selected.missions.map(m => ({ m, p: progress(state, m), done: Boolean(state.storyCompletedMissions[m.id]) })), [selected, state]);
+  const progressSnapshot = useMemo<StoryProgressSnapshot>(() => {
+    const today = dateKey(Date.now());
+    const taskCount = Object.values(state.coreCompleted).filter(Boolean).length + Object.values(state.customCompleted).filter(Boolean).length;
+    const todayWorkoutSessions = state.workoutSessions.filter(s => dateKey(s.completedAt) === today).length;
+    const todayWorkoutHistory = state.history.some(d => d.date === today && d.workoutCompleted);
+    const enabled = state.mainTasks.filter(t => t.enabled);
+    const done = enabled.filter(t => state.coreCompleted[t.id]).length;
+    return { taskCount, todayWorkoutSessions, todayWorkoutHistory, today, disciplineScore: enabled.length ? Math.round(done / enabled.length * 100) : 0 };
+  }, [state]);
+  const rows = useMemo(() => selected.missions.map(m => ({ m, p: progress(progressSnapshot, state, m), done: Boolean(state.storyCompletedMissions[m.id]) })), [selected, state, progressSnapshot]);
   const done = rows.filter(x => x.done).length;
   const open = (c: StoryChapter) => { if (c.number > current) return; setSelected(c); setScreen('chapter'); };
-  const complete = (m: StoryMission) => { if (state.storyCompletedMissions[m.id]) return; const p = progress(state, m); if (p < m.target) { toast({ title: 'Mission not complete', message: `Complete: ${m.title}`, type: 'info', icon: '◈' }); return; } completeStoryMission(m.id, { xp: m.xpReward }); toast({ title: 'Mission complete', message: `+${m.xpReward} XP`, type: 'success', icon: '✓' }); };
+  const complete = (m: StoryMission) => { if (state.storyCompletedMissions[m.id]) return; const p = progress(progressSnapshot, state, m); if (p < m.target) { toast({ title: 'Mission not complete', message: `Complete: ${m.title}`, type: 'info', icon: '◈' }); return; } completeStoryMission(m.id, { xp: m.xpReward }); toast({ title: 'Mission complete', message: `+${m.xpReward} XP`, type: 'success', icon: '✓' }); };
   const hitBoss = () => { if (bossPhase < 2) { setBossPhase(v => v + 1); return; } const b = selected.boss; if (state.storyBossDefeated[b.id]) { setScreen('world'); return; } defeatStoryBoss(b.id); if (b.rewardTitle) unlockStoryAchievement(b.rewardTitle); if (b.rewardLore) unlockLore(b.rewardLore); completeStoryMission(`boss_${b.id}`, { xp: b.xpReward }); setReward({ xp: b.xpReward, title: b.rewardTitle, lore: b.rewardLore }); triggerConfetti(30); setScreen('reward'); };
   const claim = () => { setReward(null); if (selected.number === current && selected.number < 30) advanceStoryChapter(); setScreen('world'); };
 

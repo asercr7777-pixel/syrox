@@ -7,6 +7,7 @@ import './performance.css';
 import './global-scroll-performance.css';
 import './mobile.css';
 import './stryven-premium.css';
+import './scroll-fix.css';
 
 function safeSessionGet(key: string) {
   try { return window.sessionStorage.getItem(key); } catch { return null; }

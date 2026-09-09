@@ -3,8 +3,6 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import { SplashScreen } from './components/pwa/SplashScreen.tsx';
 import './index.css';
-import './performance.css';
-import './global-scroll-performance.css';
 import './mobile.css';
 import './stryven-premium.css';
 import './scroll-fix.css';

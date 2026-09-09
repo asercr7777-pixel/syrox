@@ -12,7 +12,15 @@ body {
 .stryven-app-shell,
 .stryven-main,
 .stryven-page-frame,
-.stryven-page {
+.stryven-page,
+.stryven-view-dashboard,
+.stryven-view-tasks,
+.stryven-view-story,
+.stryven-view-workout,
+.stryven-view-dungeons,
+.stryven-view-profile,
+.stryven-view-leaderboard,
+.stryven-view-settings {
   height: auto !important;
   max-height: none !important;
   min-height: 0;
@@ -33,18 +41,19 @@ main {
 /* Keep Story Map's own horizontal rail working. */
 .stryven-story-page {
   overflow: visible !important;
+  contain: none !important;
 }
 
 .stryven-story-page .overflow-x-auto,
 .stryven-story-page [class*="overflow-x-auto"],
 .syrox-map-scroll {
-  overflow-y: hidden;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
 }
 
-/* Fixed UI/background layers must never capture page scrolling. */
+/* Visual background layers must never capture page scrolling. */
 .theme-atmosphere,
-.theme-particle,
-.stryven-mobile-sheet {
+.theme-particle {
   pointer-events: none;
 }
 

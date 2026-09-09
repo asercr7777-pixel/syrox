@@ -22,7 +22,18 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const missionPct = totalTasks > 0 ? Math.min(100, Math.round((totalDone / totalTasks) * 100)) : 0;
   const chapter = ALL_CHAPTERS[Math.min(state.storyChapter, ALL_CHAPTERS.length - 1)];
   const bossesDefeated = Object.values(state.storyBossDefeated).filter(Boolean).length;
-  const weekly = useMemo(() => { const now = Date.now(); const history = Array.isArray(state.history) ? state.history : []; const last7 = history.filter((item: any) => { const t = new Date(item.date ?? item.timestamp ?? 0).getTime(); return Number.isFinite(t) && now - t < 7 * 86400000; }); const xp = last7.reduce((sum: number, item: any) => sum + Number(item.xp ?? item.dailyXp ?? 0), 0); const activeDays = new Set(last7.map((item: any) => new Date(item.date ?? item.timestamp).toISOString().slice(0, 10))).size; const previous = history.filter((item: any) => { const t = new Date(item.date ?? item.timestamp ?? 0).getTime(); return Number.isFinite(t) && now - t >= 7 * 86400000 && now - t < 14 * 86400000; }).reduce((sum: number, item: any) => sum + Number(item.xp ?? item.dailyXp ?? 0), 0); return { xp, activeDays, delta: xp - previous }; }, [state.history]);
+  const weekly = useMemo(() => {
+    const now = Date.now();
+    const history = Array.isArray(state.history) ? state.history : [];
+    const getTime = (item: any) => new Date(item.date ?? item.timestamp ?? 0).getTime();
+    const xpOf = (item: any) => Number(item.xpGained ?? 0);
+    const last7 = history.filter((item: any) => { const t = getTime(item); return Number.isFinite(t) && now - t >= 0 && now - t < 7 * 86400000; });
+    const previous7 = history.filter((item: any) => { const t = getTime(item); return Number.isFinite(t) && now - t >= 7 * 86400000 && now - t < 14 * 86400000; });
+    const xp = last7.reduce((sum: number, item: any) => sum + xpOf(item), 0);
+    const previousXp = previous7.reduce((sum: number, item: any) => sum + xpOf(item), 0);
+    const activeDays = new Set(last7.map((item: any) => String(item.date ?? '').slice(0, 10)).filter(Boolean)).size;
+    return { xp, activeDays, delta: xp - previousXp };
+  }, [state.history]);
 
   return (
     <div className="stryven-command-deck space-y-6 pb-8">

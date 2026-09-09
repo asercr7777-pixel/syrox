@@ -1,0 +1,53 @@
+/* STRYVEN scroll recovery layer.
+   Restores native document scrolling on desktop + mobile without
+   changing horizontal Story Map rails or fixed navigation. */
+html {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  min-height: 100%;
+  height: auto;
+  touch-action: auto !important;
+}
+
+body {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  min-height: 100%;
+  height: auto;
+  touch-action: auto !important;
+}
+
+#root {
+  min-height: 100dvh;
+  height: auto !important;
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+  touch-action: auto !important;
+}
+
+.stryven-app-shell {
+  min-height: 100dvh !important;
+  height: auto !important;
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+}
+
+.stryven-main {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* Do not let the performance containment layer accidentally turn the
+   main document into a clipped/isolated scrolling surface. */
+main {
+  contain: layout !important;
+  overflow: visible !important;
+}
+
+/* Preserve the horizontal Story Map interaction. */
+.stryven-story-page,
+.stryven-story-page .overflow-x-auto,
+.stryven-story-page [class*="overflow-x-auto"] {
+  overflow-y: visible;
+}

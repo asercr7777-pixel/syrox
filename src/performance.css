@@ -1,7 +1,8 @@
 /* SYROX performance layer — prioritize fast paint and responsive scrolling. */
 html { scroll-behavior: auto !important; }
 body { overscroll-behavior-y: none; }
-main { contain: layout paint; }
+/* Never contain the main document: containment can clip/decouple page overflow from native scrolling. */
+main { contain: none !important; }
 .glass, .glass-soft { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
 .card, .card-premium, .card-hover { box-shadow: 0 2px 10px rgba(0,0,0,.18) !important; }
 .card-hover, .card-premium, .btn { transition: none !important; }
@@ -10,7 +11,7 @@ main { contain: layout paint; }
 .glow-ring::before { transition: none !important; }
 html.is-scrolling .theme-atmosphere, html.is-scrolling .theme-atmosphere::before, html.is-scrolling .theme-atmosphere::after, html.is-scrolling .theme-particle, html.is-scrolling video { animation-play-state: paused !important; }
 html.is-scrolling .theme-atmosphere::before, html.is-scrolling .theme-atmosphere::after, html.is-scrolling .theme-particle { opacity: .35 !important; }
-.theme-atmosphere { contain: strict; }
+.theme-atmosphere { contain: none; }
 
 /* Keep the large horizontal Story Map isolated as one paint/compositing surface. */
 .syrox-map-scroll { contain: layout paint; }

@@ -22,6 +22,26 @@ function Root() {
   }, []);
 
   useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const root = document.getElementById('root');
+
+    // Make the browser's document the only vertical scroll owner.
+    html.style.setProperty('overflow-y', 'scroll', 'important');
+    html.style.setProperty('overflow-x', 'hidden', 'important');
+    html.style.setProperty('height', 'auto', 'important');
+    html.style.setProperty('touch-action', 'pan-y', 'important');
+
+    body.style.setProperty('overflow-y', 'visible', 'important');
+    body.style.setProperty('overflow-x', 'hidden', 'important');
+    body.style.setProperty('height', 'auto', 'important');
+    body.style.setProperty('min-height', '100%', 'important');
+    body.style.setProperty('touch-action', 'pan-y', 'important');
+
+    root?.style.setProperty('overflow', 'visible', 'important');
+    root?.style.setProperty('height', 'auto', 'important');
+    root?.style.setProperty('max-height', 'none', 'important');
+
     let rafId = 0;
     let endTimer: number | undefined;
     let scrolling = false;
@@ -32,12 +52,12 @@ function Root() {
         rafId = 0;
         if (!scrolling) {
           scrolling = true;
-          document.documentElement.classList.add('is-scrolling');
+          html.classList.add('is-scrolling');
         }
         if (endTimer) window.clearTimeout(endTimer);
         endTimer = window.setTimeout(() => {
           scrolling = false;
-          document.documentElement.classList.remove('is-scrolling');
+          html.classList.remove('is-scrolling');
           endTimer = undefined;
         }, 110);
       });
@@ -49,7 +69,7 @@ function Root() {
       window.removeEventListener('scroll', markScrolling);
       if (rafId) window.cancelAnimationFrame(rafId);
       if (endTimer) window.clearTimeout(endTimer);
-      document.documentElement.classList.remove('is-scrolling');
+      html.classList.remove('is-scrolling');
     };
   }, []);
 

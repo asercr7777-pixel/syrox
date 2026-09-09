@@ -1,14 +1,39 @@
-/* STRYVEN scroll recovery layer — native document scrolling. */
-html,
-body {
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  height: auto !important;
+/* STRYVEN — GLOBAL SCROLL RECOVERY
+   The document is the single vertical scroll owner on desktop + mobile.
+   Do not add overflow:hidden / fixed-height scroll containers to the app shell. */
+html {
+  width: 100%;
   min-height: 100%;
+  height: auto !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior-y: auto !important;
   touch-action: pan-y !important;
+  -webkit-overflow-scrolling: touch;
 }
 
-#root,
+body {
+  width: 100%;
+  min-height: 100vh !important;
+  height: auto !important;
+  margin: 0;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior-y: auto !important;
+  touch-action: pan-y !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  overscroll-behavior: auto !important;
+  contain: none !important;
+}
+
 .stryven-app-shell,
 .stryven-main,
 .stryven-page-frame,
@@ -25,23 +50,53 @@ body {
   max-height: none !important;
   min-height: 0;
   overflow: visible !important;
+  overflow-y: visible !important;
   contain: none !important;
 }
 
-#root,
 .stryven-app-shell {
-  min-height: 100dvh;
+  min-height: 100vh !important;
+  min-height: 100dvh !important;
 }
 
 main {
-  contain: none !important;
+  height: auto !important;
+  max-height: none !important;
   overflow: visible !important;
+  overflow-y: visible !important;
+  contain: none !important;
 }
 
-/* Keep Story Map's own horizontal rail working. */
+/* Prevent decorative/fixed layers from intercepting wheel/touch scrolling. */
+.stryven-app-shell > .fixed,
+.stryven-app-shell > video,
+.theme-atmosphere,
+.theme-particle,
+[class*="background"].fixed,
+.fixed.inset-0 {
+  pointer-events: none !important;
+}
+
+/* Navigation controls remain interactive. */
+.stryven-topbar,
+.stryven-mobile-header,
+.stryven-bottomnav,
+.stryven-mobile-sheet {
+  pointer-events: auto;
+}
+
+.stryven-topbar,
+.stryven-mobile-header,
+.stryven-bottomnav {
+  touch-action: manipulation;
+}
+
+/* Keep Story Map's own horizontal rail working without stealing vertical page scroll. */
 .stryven-story-page {
   overflow: visible !important;
+  overflow-y: visible !important;
   contain: none !important;
+  touch-action: pan-y !important;
 }
 
 .stryven-story-page .overflow-x-auto,
@@ -49,16 +104,23 @@ main {
 .syrox-map-scroll {
   overflow-x: auto !important;
   overflow-y: hidden !important;
+  touch-action: pan-x !important;
+  overscroll-behavior-x: contain !important;
+  overscroll-behavior-y: auto !important;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Visual background layers must never capture page scrolling. */
-.theme-atmosphere,
-.theme-particle {
-  pointer-events: none;
+/* Never let animations create a fixed-height/scroll-locking container. */
+.page-enter,
+.stagger-in {
+  overflow: visible !important;
 }
 
-.stryven-topbar,
-.stryven-mobile-header,
-.stryven-bottomnav {
-  touch-action: manipulation;
+/* Browser fallback: if another stylesheet tries to lock the document, this wins. */
+@media (max-width: 1023px) {
+  html,
+  body {
+    overflow-y: auto !important;
+    touch-action: pan-y !important;
+  }
 }

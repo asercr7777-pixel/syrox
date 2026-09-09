@@ -1,53 +1,55 @@
-/* STRYVEN scroll recovery layer.
-   Restores native document scrolling on desktop + mobile without
-   changing horizontal Story Map rails or fixed navigation. */
-html {
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  min-height: 100%;
-  height: auto;
-  touch-action: auto !important;
-}
-
+/* STRYVEN scroll recovery layer — native document scrolling. */
+html,
 body {
   overflow-y: auto !important;
   overflow-x: hidden !important;
+  height: auto !important;
   min-height: 100%;
-  height: auto;
-  touch-action: auto !important;
+  touch-action: pan-y !important;
 }
 
-#root {
-  min-height: 100dvh;
-  height: auto !important;
-  overflow-x: hidden !important;
-  overflow-y: visible !important;
-  touch-action: auto !important;
-}
-
-.stryven-app-shell {
-  min-height: 100dvh !important;
-  height: auto !important;
-  overflow-x: hidden !important;
-  overflow-y: visible !important;
-}
-
-.stryven-main {
+#root,
+.stryven-app-shell,
+.stryven-main,
+.stryven-page-frame,
+.stryven-page {
   height: auto !important;
   max-height: none !important;
+  min-height: 0;
   overflow: visible !important;
+  contain: none !important;
 }
 
-/* Do not let the performance containment layer accidentally turn the
-   main document into a clipped/isolated scrolling surface. */
+#root,
+.stryven-app-shell {
+  min-height: 100dvh;
+}
+
 main {
-  contain: layout !important;
+  contain: none !important;
   overflow: visible !important;
 }
 
-/* Preserve the horizontal Story Map interaction. */
-.stryven-story-page,
+/* Keep Story Map's own horizontal rail working. */
+.stryven-story-page {
+  overflow: visible !important;
+}
+
 .stryven-story-page .overflow-x-auto,
-.stryven-story-page [class*="overflow-x-auto"] {
-  overflow-y: visible;
+.stryven-story-page [class*="overflow-x-auto"],
+.syrox-map-scroll {
+  overflow-y: hidden;
+}
+
+/* Fixed UI/background layers must never capture page scrolling. */
+.theme-atmosphere,
+.theme-particle,
+.stryven-mobile-sheet {
+  pointer-events: none;
+}
+
+.stryven-topbar,
+.stryven-mobile-header,
+.stryven-bottomnav {
+  touch-action: manipulation;
 }

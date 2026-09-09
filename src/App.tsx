@@ -26,6 +26,7 @@ import './story-map-responsive.css';
 import './stryven-character.css';
 import './stryven-ui-polish.css';
 import './stryven-performance.css';
+import './progress-systems.css';
 import './scroll-fix.css';
 
 const Dashboard = lazy(() => import('./views/Dashboard').then((m) => ({ default: m.Dashboard })));
@@ -60,9 +61,6 @@ function AppContent() {
     if (!user) { setUserId(null); return; }
     void Promise.allSettled([ensureStoryReset(user.id), loadFromCloud(user.id)]);
   }, [user, setUserId, loadFromCloud]);
-
-  // Scroll performance is managed once at the application root (src/main.tsx).
-  // Keeping a single passive listener avoids duplicate RAF/timer work on every scroll event.
 
   useEffect(() => {
     const onPopState = () => setView(getViewFromUrl());

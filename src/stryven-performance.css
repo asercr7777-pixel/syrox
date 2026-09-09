@@ -1,19 +1,16 @@
 /* STRYVEN performance layer: prioritize interaction and first paint. */
-.stryven-page{content-visibility:auto;contain:layout style}
+/* Do not use content-visibility/contain on page roots: native document scrolling must remain intact. */
 
-/* Decorative layers stop doing expensive work while scrolling. */
 .is-scrolling .theme-atmosphere::before,
 .is-scrolling .theme-atmosphere::after,
 .is-scrolling .theme-atmosphere .theme-particle{animation-play-state:paused!important;filter:none!important}
 
-/* Touch devices do not need hover transforms or decorative particles. */
 @media (max-width:768px){
   .stryven-page{animation:none!important}
   .stryven-card:hover,[data-theme] .card:hover,[data-theme] .card-premium:hover{transform:none!important}
   .theme-atmosphere .theme-particle{display:none!important}
 }
 
-/* Keep the splash visually identical but GPU-light and independent of framer-motion. */
 .stryven-splash{background:linear-gradient(180deg,#0a0c14 0%,#14141f 50%,#0a0c14 100%);contain:strict}
 .stryven-splash-glow{position:absolute;inset:0;opacity:.4;pointer-events:none;background:radial-gradient(ellipse at center,rgba(255,122,24,.12),transparent 60%)}
 .stryven-splash-glow::after{content:'';position:absolute;inset:0;opacity:.03;background-image:linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px);background-size:40px 40px}

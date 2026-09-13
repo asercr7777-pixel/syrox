@@ -67,21 +67,23 @@ main {
   contain: none !important;
 }
 
-/* Prevent decorative/fixed layers from intercepting wheel/touch scrolling. */
+/* Decorative/fixed layers must not intercept wheel/touch scrolling.
+   IMPORTANT: modal dialogs are interactive and must remain pointer-enabled. */
 .stryven-app-shell > .fixed,
 .stryven-app-shell > video,
 .theme-atmosphere,
 .theme-particle,
 [class*="background"].fixed,
-.fixed.inset-0 {
+.fixed.inset-0:not([role="dialog"]) {
   pointer-events: none !important;
 }
 
-/* Navigation controls remain interactive. */
+/* Navigation controls and interactive overlays remain interactive. */
 .stryven-topbar,
 .stryven-mobile-header,
 .stryven-bottomnav,
-.stryven-mobile-sheet {
+.stryven-mobile-sheet,
+[role="dialog"] {
   pointer-events: auto;
 }
 

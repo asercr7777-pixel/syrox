@@ -5,13 +5,13 @@ import { useAuth } from '../lib/auth';
 import { getRankByXp, getNextRank } from '../data/ranks';
 import { XpBar } from '../components/ui/XpBar';
 import { UserAvatar } from '../components/ui/UserAvatar';
-import { WORKOUT_HISTORY_KEY, type WorkoutHistoryEntry } from '../components/SixDayWorkout';
 import { uploadBackground } from '../lib/backgroundUpload';
-import { isSupabaseConfigured } from '../lib/supabase';
+import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import { toast } from '../components/ui/Toast';
 import { ProgressSystems } from '../components/ProgressSystems';
 import { Award, CalendarDays, Clock3, Dumbbell, Flame, Gauge, Shield, Target, Trophy, Upload, Zap } from 'lucide-react';
 
+type WorkoutHistoryEntry = { id: string; dayName: string; startedAt: number; completedAt: number; durationSeconds: number };
 const formatDuration = (seconds: number) => { const safe = Math.max(0, Math.floor(seconds)); const hours = Math.floor(safe / 3600); const minutes = Math.floor((safe % 3600) / 60); return hours ? `${hours}h ${minutes}m` : `${minutes}m`; };
 const formatDate = (timestamp: number) => new Date(timestamp).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 const formatTime = (timestamp: number) => new Date(timestamp).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
@@ -23,7 +23,27 @@ export function Profile() {
   const perfectDays = useMemo(() => state.history.filter((day) => day.allMainDone).length, [state.history]); const successRate = state.history.length ? Math.round((perfectDays / state.history.length) * 100) : 0;
   const totalWorkoutSeconds = useMemo(() => workoutHistory.reduce((sum, entry) => sum + Math.max(0, entry.durationSeconds), 0), [workoutHistory]); const clearedBosses = Object.values(state.storyBossDefeated).filter(Boolean).length; const clearedStoryMissions = Object.values(state.storyCompletedMissions).filter(Boolean).length;
 
-  useEffect(() => { const loadHistory = () => { try { const raw = localStorage.getItem(WORKOUT_HISTORY_KEY); const parsed = raw ? JSON.parse(raw) : []; setWorkoutHistory(Array.isArray(parsed) ? parsed : []); } catch { setWorkoutHistory([]); } }; loadHistory(); window.addEventListener('storage', loadHistory); window.addEventListener('stryven-workout-history-updated', loadHistory); return () => { window.removeEventListener('storage', loadHistory); window.removeEventListener('stryven-workout-history-updated', loadHistory); }; }, []);
+  useEffect(() => {
+    let cancelled = false;
+    const loadHistory = async () => {
+      if (!user || !isSupabaseConfigured()) { if (!cancelled) setWorkoutHistory([]); return; }
+      const { data, error } = await supabase.from('workout_sessions').select('id, duration_seconds, completed_at, started_at, ended_at, metadata').eq('user_id', user.id).order('completed_at', { ascending: false }).limit(100);
+      if (cancelled) return;
+      if (error) { console.error('[Profile] workout history load failed:', error); setWorkoutHistory([]); return; }
+      setWorkoutHistory((data ?? []).map((row: any) => ({
+        id: row.id,
+        dayName: String(row.metadata?.dayName ?? row.workout_type ?? 'Workout'),
+        startedAt: new Date(row.started_at ?? row.completed_at).getTime(),
+        completedAt: new Date(row.ended_at ?? row.completed_at).getTime(),
+        durationSeconds: Math.max(0, Number(row.duration_seconds) || 0),
+      })));
+    };
+    void loadHistory();
+    const refresh = () => void loadHistory();
+    window.addEventListener('focus', refresh);
+    window.addEventListener('stryven-workout-history-updated', refresh);
+    return () => { cancelled = true; window.removeEventListener('focus', refresh); window.removeEventListener('stryven-workout-history-updated', refresh); };
+  }, [user]);
 
   const handleAvatarUpload = async (event: ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; if (!file) return; if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type) || file.size > 2 * 1024 * 1024) { toast({ title: 'Invalid profile image', message: 'Use JPG, PNG, WebP or GIF up to 2MB.', type: 'error' }); event.target.value = ''; return; } setUploading(true); try { if (user && isSupabaseConfigured()) { const result = await uploadBackground(user.id, file, 'image'); if (result.error || !result.url) throw new Error(result.error || 'Upload failed'); updateProfile({ avatar: result.url }); } else { const url = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = reject; reader.readAsDataURL(file); }); updateProfile({ avatar: url }); } toast({ title: 'Hunter image updated', type: 'success' }); } catch (error) { toast({ title: 'Upload failed', message: error instanceof Error ? error.message : 'Please try again.', type: 'error' }); } finally { setUploading(false); event.target.value = ''; } };
 

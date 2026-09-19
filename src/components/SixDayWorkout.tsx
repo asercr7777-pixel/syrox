@@ -6,7 +6,7 @@ import { ALL_CHAPTERS } from '../data/story';
 import { playSound } from '../lib/sound';
 
 type Section = 'stretching' | 'main' | 'plyometric';
-type Exercise = { id: string; name: string; sets: number; reps: string; section: Section; done: boolean };
+type Exercise = { id: string; name: string; sets: number; reps: string; section: Section; done: boolean; image?: string };
 type Day = { id: string; name: string; exercises: Exercise[] };
 export type WorkoutHistoryEntry = { id: string; dayId: string; dayName: string; startedAt: number; completedAt: number; durationSeconds: number };
 
@@ -34,7 +34,7 @@ export function SixDayWorkout() {
   const [active, setActive] = useState(0);
   const [editingDay, setEditingDay] = useState(false);
   const [dayName, setDayName] = useState('');
-  const [exerciseDraft, setExerciseDraft] = useState<{ id?: string; name: string; sets: number; reps: string; section: Section } | null>(null);
+  const [exerciseDraft, setExerciseDraft] = useState<{ id?: string; name: string; sets: number; reps: string; section: Section; image?: string } | null>(null);
   const [history, setHistory] = useState<WorkoutHistoryEntry[]>(loadHistory);
   const [running, setRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -76,12 +76,44 @@ export function SixDayWorkout() {
     updateCurrent(d => ({
       ...d,
       exercises: exerciseDraft.id
-        ? d.exercises.map(e => e.id === exerciseDraft.id ? { ...e, name, sets, reps, section: exerciseDraft.section } : e)
-        : [...d.exercises, { id: `${Date.now()}-${Math.random()}`, name, sets, reps, section: exerciseDraft.section, done: false }]
+        ? d.exercises.map(e => e.id === exerciseDraft.id ? { ...e, name, sets, reps, section: exerciseDraft.section, image: exerciseDraft.image } : e)
+        : [...d.exercises, { id: `${Date.now()}-${Math.random()}`, name, sets, reps, section: exerciseDraft.section, done: false, image: exerciseDraft.image }]
     }));
     setExerciseDraft(null);
   };
   const remove = (id: string) => updateCurrent(d => ({ ...d, exercises: d.exercises.filter(e => e.id !== id) }));
+
+  const compressExerciseImage = (file: File) => new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error);
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Unable to read image'));
+      img.onload = () => {
+        const maxSize = 1200;
+        const scale = Math.min(1, maxSize / Math.max(img.naturalWidth, img.naturalHeight));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+        canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { reject(new Error('Canvas unavailable')); return; }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.82));
+      };
+      img.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  const handleExerciseImage = async (file?: File) => {
+    if (!file || !file.type.startsWith('image/') || !exerciseDraft) return;
+    try {
+      const image = await compressExerciseImage(file);
+      setExerciseDraft({ ...exerciseDraft, image });
+    } catch (error) {
+      console.error('[exercise image] failed to process image:', error);
+    }
+  };
 
   useEffect(() => {
     const checkNewDay = () => {
@@ -138,6 +170,28 @@ export function SixDayWorkout() {
         <select className="input" value={exerciseDraft.section} onChange={e => setExerciseDraft({ ...exerciseDraft, section: e.target.value as Section })}>
           <option value="stretching">Stretching</option><option value="main">Main Training</option><option value="plyometric">Plyometric</option>
         </select>
+        <div className="space-y-2">
+          <label className="text-xs text-ink-400">Exercise image</label>
+          <input
+            className="input"
+            type="file"
+            accept="image/*"
+            onChange={e => { void handleExerciseImage(e.target.files?.[0]); e.currentTarget.value = ''; }}
+          />
+          {exerciseDraft.image && (
+            <div className="relative overflow-hidden rounded-xl border border-white/10 bg-ink-950/40">
+              <img src={exerciseDraft.image} alt="Exercise preview" className="w-full max-h-52 object-contain" />
+              <button
+                type="button"
+                className="btn-ghost absolute right-2 top-2 p-2"
+                onClick={() => setExerciseDraft({ ...exerciseDraft, image: undefined })}
+                aria-label="Remove exercise image"
+              >
+                <X size={16}/>
+              </button>
+            </div>
+          )}
+        </div>
         <button type="button" className="btn-primary w-full" onClick={saveExercise} disabled={!exerciseDraft.name.trim() || !exerciseDraft.reps.trim()}>Save Exercise</button>
       </div>
     </div>,
@@ -163,7 +217,10 @@ export function SixDayWorkout() {
       <div className="flex flex-wrap justify-center gap-2 mt-4">{!running ? <button type="button" className="btn-primary" onClick={startTimer}><Play size={16}/> {elapsed > 0 ? 'Resume' : 'Start Session'}</button> : <button type="button" className="btn-ghost" onClick={pauseTimer}><Pause size={16}/> Pause</button>}<button type="button" className="btn-ghost" onClick={resetTimer} disabled={elapsed === 0}><RotateCcw size={16}/> Reset</button><button type="button" className="btn-primary" onClick={finishTimer} disabled={startedAt === null || elapsed === 0}><Square size={15}/> Finish & Save</button></div>
     </div>
 
-    {(['stretching','main','plyometric'] as Section[]).map(section => { const items = current.exercises.filter(e => e.section === section); return <div key={section} className="card p-4 sm:p-5"><div className="flex items-center justify-between mb-3"><h3 className="font-display font-bold uppercase tracking-wider theme-accent">{labels[section]}</h3><span className="text-xs text-ink-400">{items.filter(e => e.done).length}/{items.length}</span></div>{items.length === 0 ? <p className="text-sm text-ink-400 py-3">No exercises yet.</p> : <div className="space-y-2">{items.map(ex => <div key={ex.id} className={`flex items-center gap-3 rounded-xl border p-3 transition-all ${ex.done ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-white/5 bg-ink-950/30'}`}><button type="button" onClick={() => toggle(ex.id)} className={`w-7 h-7 shrink-0 rounded-md border-2 flex items-center justify-center transition-all ${ex.done ? 'bg-emerald-500 border-emerald-500' : 'border-ink-500 hover:border-white/50'}`} aria-label={ex.done ? 'Mark incomplete' : 'Mark complete'}>{ex.done && <Check size={15}/>}</button><div className="flex-1 min-w-0"><p className={`font-medium ${ex.done ? 'line-through text-ink-400' : ''}`}>{ex.name}</p><p className="text-xs text-ink-400">{ex.sets} sets × {ex.reps}</p></div><button type="button" className="btn-ghost p-2" onClick={() => setExerciseDraft({ id: ex.id, name: ex.name, sets: ex.sets, reps: ex.reps, section: ex.section })} disabled={running}><Pencil size={14}/></button><button type="button" className="btn-ghost p-2 text-danger-400" onClick={() => remove(ex.id)} disabled={running}><Trash2 size={14}/></button></div>)}</div>}</div>; })}
+    {(['stretching','main','plyometric'] as Section[]).map(section => { const items = current.exercises.filter(e => e.section === section); return <div key={section} className="card p-4 sm:p-5"><div className="flex items-center justify-between mb-3"><h3 className="font-display font-bold uppercase tracking-wider theme-accent">{labels[section]}</h3><span className="text-xs text-ink-400">{items.filter(e => e.done).length}/{items.length}</span></div>{items.length === 0 ? <p className="text-sm text-ink-400 py-3">No exercises yet.</p> : <div className="space-y-2">{items.map(ex => <div key={ex.id} className={`flex items-center gap-3 rounded-xl border p-3 transition-all ${ex.done ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-white/5 bg-ink-950/30'}`}><button type="button" onClick={() => toggle(ex.id)} className={`w-7 h-7 shrink-0 rounded-md border-2 flex items-center justify-center transition-all ${ex.done ? 'bg-emerald-500 border-emerald-500' : 'border-ink-500 hover:border-white/50'}`} aria-label={ex.done ? 'Mark incomplete' : 'Mark complete'}>{ex.done && <Check size={15}/>}</button><div className="flex-1 min-w-0 flex items-center gap-3">
+  {ex.image && <img src={ex.image} alt="" className="w-12 h-12 rounded-lg object-cover border border-white/10 shrink-0" />}
+  <div className="min-w-0"><p className={`font-medium ${ex.done ? 'line-through text-ink-400' : ''}`}>{ex.name}</p><p className="text-xs text-ink-400">{ex.sets} sets × {ex.reps}</p></div>
+</div><button type="button" className="btn-ghost p-2" onClick={() => setExerciseDraft({ id: ex.id, name: ex.name, sets: ex.sets, reps: ex.reps, section: ex.section, image: ex.image })} disabled={running}><Pencil size={14}/></button><button type="button" className="btn-ghost p-2 text-danger-400" onClick={() => remove(ex.id)} disabled={running}><Trash2 size={14}/></button></div>)}</div>}</div>; })}
 
     <div className="card-premium p-5 sm:p-6">
       <div className="flex items-center gap-2 mb-4"><History size={18} className="theme-accent"/><div><h2 className="font-display text-lg font-bold">Workout History</h2><p className="text-xs text-ink-400">Duration, time and training day are preserved for every saved session.</p></div></div>

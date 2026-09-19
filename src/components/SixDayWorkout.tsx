@@ -90,7 +90,7 @@ export function SixDayWorkout() {
       const img = new Image();
       img.onerror = () => reject(new Error('Unable to read image'));
       img.onload = () => {
-        const maxSize = 1200;
+        const maxSize = 640;
         const scale = Math.min(1, maxSize / Math.max(img.naturalWidth, img.naturalHeight));
         const canvas = document.createElement('canvas');
         canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
@@ -98,7 +98,8 @@ export function SixDayWorkout() {
         const ctx = canvas.getContext('2d');
         if (!ctx) { reject(new Error('Canvas unavailable')); return; }
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.82));
+        const webp = canvas.toDataURL('image/webp', 0.7);
+        resolve(webp.startsWith('data:image/webp') ? webp : canvas.toDataURL('image/jpeg', 0.65));
       };
       img.src = String(reader.result);
     };
@@ -107,11 +108,16 @@ export function SixDayWorkout() {
 
   const handleExerciseImage = async (file?: File) => {
     if (!file || !file.type.startsWith('image/') || !exerciseDraft) return;
+    if (file.size > 10 * 1024 * 1024) {
+      window.alert('Image is too large. Please choose an image under 10 MB.');
+      return;
+    }
     try {
       const image = await compressExerciseImage(file);
       setExerciseDraft({ ...exerciseDraft, image });
     } catch (error) {
       console.error('[exercise image] failed to process image:', error);
+      window.alert('Could not load this image. Please choose a JPG, PNG, or WebP image.');
     }
   };
 

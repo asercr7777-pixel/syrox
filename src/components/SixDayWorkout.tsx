@@ -163,7 +163,7 @@ export function SixDayWorkout() {
 
   const exerciseModal = exerciseDraft && typeof document !== 'undefined' ? createPortal(
     <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70 p-3 sm:p-5" role="dialog" aria-modal="true" onClick={() => setExerciseDraft(null)}>
-      <div className="card !w-[min(92vw,560px)] !max-w-[560px] max-h-[calc(100vh-2rem)] sm:max-h-[88vh] overflow-y-auto p-4 sm:p-5 space-y-3 sm:space-y-4" onClick={e => e.stopPropagation()}>
+      <div className="card !w-[min(92vw,560px)] !max-w-[560px] max-h-[calc(100dvh-1rem)] sm:max-h-[88dvh] overflow-y-auto overscroll-contain p-4 sm:p-5 space-y-3 sm:space-y-4" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center gap-3">
           <h2 className="font-display text-lg sm:text-xl font-bold truncate">{exerciseDraft.id ? 'Edit Exercise' : 'Add Exercise'}</h2>
           <button type="button" aria-label="Close" className="btn-ghost p-2 flex-shrink-0" onClick={() => setExerciseDraft(null)}><X size={19}/></button>
@@ -186,7 +186,7 @@ export function SixDayWorkout() {
           />
           {exerciseDraft.image && (
             <div className="relative overflow-hidden rounded-xl border border-white/10 bg-ink-950/40">
-              <img src={exerciseDraft.image} alt="Exercise preview" className="w-full max-h-52 object-contain" />
+              <img src={exerciseDraft.image} alt="Exercise preview" className="w-full max-h-40 sm:max-h-52 object-contain" />
               <button
                 type="button"
                 className="btn-ghost absolute right-2 top-2 p-2"

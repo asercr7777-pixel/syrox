@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import type { ChangeEvent } from 'react';
+import type { ChangeEvent, ReactNode } from 'react';
 import { Award, CalendarDays, CheckCircle2, Clock3, Crown, Dumbbell, Shield, Target, Trophy, Upload, Zap } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useAuth } from '../lib/auth';
@@ -135,7 +135,7 @@ export function Profile() {
   </div>;
 }
 
-function Attribute({icon,name,value}:{icon:React.ReactNode;name:string;value:number}){
+function Attribute({icon,name,value}:{icon:ReactNode;name:string;value:number}){
   return <div className="sv-attribute"><div>{icon}</div><span>{name}</span><strong>{value}</strong><i><b style={{width:value+'%'}}/></i></div>;
 }
 function PanelHead({icon,eyebrow,title}:{icon:React.ReactNode;eyebrow:string;title:string}){

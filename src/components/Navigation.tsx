@@ -33,19 +33,7 @@ export function Navigation({ current, onNavigate }: NavigationProps) {
   const brand = <div className="stryven-brand select-none" aria-label="SYROX"><span>SYROX</span><i aria-hidden="true" /></div>;
 
   return <>
-    <header className="stryven-topbar">
-      <div className="stryven-topbar-brand">{brand}</div>
-      <nav className="stryven-topnav" aria-label="Primary navigation">
-        {NAV_ITEMS.map(item => {
-          const Icon = item.icon;
-          const active = current === item.id;
-          return <button key={item.id} onClick={() => handleNav(item.id)} aria-current={active ? 'page' : undefined} className={`stryven-topnav-item ${active ? 'is-active' : ''}`}>
-            <Icon size={17} strokeWidth={active ? 2.4 : 1.8}/><span>{item.label}</span>
-          </button>;
-        })}
-      </nav>
-      <button className="stryven-signout" onClick={handleSignOut} aria-label="Sign out"><LogOut size={17}/></button>
-    </header>
+    <header className="stryven-topbar"><div className="stryven-topbar-brand">{brand}<small>PERSONAL SYSTEM</small></div><nav className="stryven-topnav" aria-label="Primary navigation">{NAV_ITEMS.map(item=>{const Icon=item.icon;const active=current===item.id;return <button key={item.id} onClick={()=>handleNav(item.id)} aria-current={active?'page':undefined} className={'stryven-topnav-item '+(active?'is-active':'')}><Icon size={16}/><span>{item.label}</span></button>;})}</nav><div className="stryven-topbar-end"><span className="stryven-live">ONLINE</span><button className="stryven-signout" onClick={handleSignOut} aria-label="Sign out"><LogOut size={16}/></button></div></header>
 
     <div className="stryven-mobile-header">
       {brand}

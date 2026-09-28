@@ -1,42 +1,146 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import type { ChangeEvent, CSSProperties, ReactNode } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import type { ChangeEvent } from 'react';
+import { Award, CalendarDays, CheckCircle2, Clock3, Crown, Dumbbell, Shield, Target, Trophy, Upload, Zap } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useAuth } from '../lib/auth';
 import { getRankByXp, getNextRank } from '../data/ranks';
+import { TITLES } from '../data/collections';
 import { XpBar } from '../components/ui/XpBar';
 import { UserAvatar } from '../components/ui/UserAvatar';
-import { WORKOUT_HISTORY_KEY, type WorkoutHistoryEntry } from '../components/SixDayWorkout';
 import { uploadBackground } from '../lib/backgroundUpload';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { toast } from '../components/ui/Toast';
-import { Award, CalendarDays, Clock3, Dumbbell, Flame, Gauge, Shield, Target, Trophy, Upload, Zap } from 'lucide-react';
 
-const formatDuration = (seconds: number) => { const safe = Math.max(0, Math.floor(seconds)); const hours = Math.floor(safe / 3600); const minutes = Math.floor((safe % 3600) / 60); return hours ? `${hours}h ${minutes}m` : `${minutes}m`; };
-const formatDate = (timestamp: number) => new Date(timestamp).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-const formatTime = (timestamp: number) => new Date(timestamp).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+const formatDuration = (seconds:number) => {
+  const safe=Math.max(0,Math.floor(seconds));
+  const hours=Math.floor(safe/3600);
+  const minutes=Math.floor((safe%3600)/60);
+  return hours ? hours+'h '+minutes+'m' : minutes+'m';
+};
 
 export function Profile() {
-  const { state, updateProfile } = useStore(); const { user } = useAuth(); const inputRef = useRef<HTMLInputElement>(null); const [uploading, setUploading] = useState(false); const [workoutHistory, setWorkoutHistory] = useState<WorkoutHistoryEntry[]>([]);
-  const rank = getRankByXp(state.xp); const nextRank = getNextRank(state.xp); const accountAgeDays = Math.max(1, Math.floor((Date.now() - state.createdAt) / 86400000));
-  const totalTasks = useMemo(() => state.history.reduce((total, day) => total + Object.values(day.coreCompleted).filter(Boolean).length + Object.values(day.customCompleted).filter(Boolean).length, 0), [state.history]);
-  const perfectDays = useMemo(() => state.history.filter((day) => day.allMainDone).length, [state.history]); const successRate = state.history.length ? Math.round((perfectDays / state.history.length) * 100) : 0;
-  const totalWorkoutSeconds = useMemo(() => workoutHistory.reduce((sum, entry) => sum + Math.max(0, entry.durationSeconds), 0), [workoutHistory]); const clearedBosses = Object.values(state.storyBossDefeated).filter(Boolean).length; const clearedStoryMissions = Object.values(state.storyCompletedMissions).filter(Boolean).length;
+  const { state, updateProfile } = useStore();
+  const { user } = useAuth();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading,setUploading]=useState(false);
+  const rank=getRankByXp(state.xp);
+  const nextRank=getNextRank(state.xp);
+  const completedMissions=state.history.reduce((sum,day)=>sum+Object.values(day.coreCompleted).filter(Boolean).length,0);
+  const completedActions=state.history.reduce((sum,day)=>sum+Object.values(day.customCompleted).filter(Boolean).length,0);
+  const totalActions=state.customTasks.length+completedActions;
+  const totalSessions=state.workoutSessions.length;
+  const completedDays=state.history.filter(day=>day.allMainDone).length;
+  const discipline=state.history.length ? Math.round((completedDays/state.history.length)*100) : 0;
+  const consistency=state.history.length ? Math.min(100,Math.round((completedMissions+completedActions)/Math.max(1,state.history.length*5)*100)) : 0;
+  const focus=totalActions ? Math.min(100,Math.round((completedActions/totalActions)*100)) : 0;
+  const strength=Math.min(100,totalSessions*5);
+  const accountAge=Math.max(1,Math.floor((Date.now()-state.createdAt)/86400000));
+  const equippedTitle=TITLES.find(t=>t.id===state.equipped.title);
+  const recentRecord=useMemo(()=>[
+    ...state.history.slice(-8).reverse().map(day=>({date:day.date,label:day.allMainDone?'FULL SYSTEM CLEAR':'FIELD ACTIVITY',detail:day.xpGained+' XP EARNED'}))
+  ],[state.history]);
 
-  useEffect(() => { const loadHistory = () => { try { const raw = localStorage.getItem(WORKOUT_HISTORY_KEY); const parsed = raw ? JSON.parse(raw) : []; setWorkoutHistory(Array.isArray(parsed) ? parsed : []); } catch { setWorkoutHistory([]); } }; loadHistory(); window.addEventListener('storage', loadHistory); window.addEventListener('stryven-workout-history-updated', loadHistory); return () => { window.removeEventListener('storage', loadHistory); window.removeEventListener('stryven-workout-history-updated', loadHistory); }; }, []);
+  const handleUpload=async(event:ChangeEvent<HTMLInputElement>)=>{
+    const file=event.target.files?.[0]; if(!file)return;
+    if(!['image/jpeg','image/png','image/webp','image/gif'].includes(file.type)||file.size>2*1024*1024){
+      toast({title:'Invalid profile image',message:'Use JPG, PNG, WebP or GIF up to 2MB.',type:'error'});event.target.value='';return;
+    }
+    setUploading(true);
+    try{
+      if(user&&isSupabaseConfigured()){
+        const result=await uploadBackground(user.id,file,'image');
+        if(result.error||!result.url)throw new Error(result.error||'Upload failed');
+        updateProfile({avatar:result.url});
+      }else{
+        const url=await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=reject;reader.readAsDataURL(file);});
+        updateProfile({avatar:url});
+      }
+      toast({title:'Identity image updated',type:'success'});
+    }catch(error){toast({title:'Upload failed',message:error instanceof Error?error.message:'Please try again.',type:'error'});}
+    finally{setUploading(false);event.target.value='';}
+  };
 
-  const handleAvatarUpload = async (event: ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; if (!file) return; if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type) || file.size > 2 * 1024 * 1024) { toast({ title: 'Invalid profile image', message: 'Use JPG, PNG, WebP or GIF up to 2MB.', type: 'error' }); event.target.value = ''; return; } setUploading(true); try { if (user && isSupabaseConfigured()) { const result = await uploadBackground(user.id, file, 'image'); if (result.error || !result.url) throw new Error(result.error || 'Upload failed'); updateProfile({ avatar: result.url }); } else { const url = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = reject; reader.readAsDataURL(file); }); updateProfile({ avatar: url }); } toast({ title: 'Hunter image updated', type: 'success' }); } catch (error) { toast({ title: 'Upload failed', message: error instanceof Error ? error.message : 'Please try again.', type: 'error' }); } finally { setUploading(false); event.target.value = ''; } };
+  return <div className="sv-identity-page">
+    <header className="sv-identity-head">
+      <div><span className="sv-eyebrow">HUNTER // IDENTITY RECORD</span><h1>Hunter Identity</h1><p>The record of what you have become through completed actions.</p></div>
+      <div className="sv-identity-rank" style={{borderColor:rank.color+'66'}}><span>{rank.emoji}</span><b style={{color:rank.color}}>{rank.name}</b></div>
+    </header>
 
-  return <div className="stryven-character-sheet">
-    <header className="character-sheet-header"><div><p className="character-kicker">HUNTER // CHARACTER RECORD</p><h1 className="character-title">Hunter Profile</h1><p className="character-subtitle">Your identity, progression and field record in one command sheet.</p></div><div className="character-rank-mark" style={{ borderColor: `${rank.color}55`, color: rank.color }}><span>{rank.emoji}</span><strong>{rank.name}</strong></div></header>
-    <section className="character-identity"><div className="character-portrait"><UserAvatar avatar={state.avatar} rank={rank} size="lg" /><button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className="character-upload" title="Upload profile image" aria-label="Upload profile image"><Upload size={15} className={uploading ? 'animate-spin' : ''} /></button><input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleAvatarUpload} className="hidden" /></div><div className="character-identity-main"><span className="character-label">OPERATIVE</span><h2 style={{ color: state.nameColor }}>{state.username || 'Hunter'}</h2><div className="character-badges"><span className="character-badge" style={{ color: rank.color, borderColor: `${rank.color}40`, background: `${rank.color}12` }}>{rank.name}</span><span className="character-badge">LEVEL {state.level}</span><span className="character-badge">STREAK {state.streak}</span></div><div className="character-xp"><XpBar xp={state.xp} />{nextRank && <p><b>{Math.max(0, nextRank.xpRequired - state.xp).toLocaleString()}</b> XP until {nextRank.name}</p>}</div></div><div className="character-primary-stat"><span>TOTAL XP</span><strong>{state.xp.toLocaleString()}</strong><small>PROGRESSION</small></div></section>
-    <section className="character-stat-grid"><StatBox icon={Zap} label="Total XP" value={state.xp.toLocaleString()} color="#ff7a18" /><StatBox icon={Flame} label="Best Streak" value={`${state.bestStreak} days`} color="#f43f5e" /><StatBox icon={Dumbbell} label="Training Time" value={formatDuration(totalWorkoutSeconds)} color="#a855f7" /><StatBox icon={Gauge} label="Success Rate" value={`${successRate}%`} color="#10b981" /></section>
-    <section className="character-panel"><PanelHeading eyebrow="PROGRESSION CORE" title="Hunter Overview" icon={<Shield size={19} />} /><div className="character-record-list"><Record icon={<Zap size={15} />} label="Current XP" value={state.xp.toLocaleString()} /><Record icon={<Trophy size={15} />} label="Level" value={String(state.level)} /><Record icon={<Flame size={15} />} label="Current Streak" value={`${state.streak} days`} /><Record icon={<Award size={15} />} label="Achievements" value={String(state.achievements.length)} /><Record icon={<Trophy size={15} />} label="Story Bosses" value={String(clearedBosses)} /><Record icon={<Target size={15} />} label="Story Objectives" value={String(clearedStoryMissions)} /><Record icon={<CalendarDays size={15} />} label="Perfect Days" value={String(perfectDays)} /></div></section>
-    <section className="character-panel"><PanelHeading eyebrow="FIELD PERFORMANCE" title="Combat Record" icon={<Gauge size={19} />} /><div className="character-stat-grid character-stat-grid-compact"><StatBox icon={Dumbbell} label="Sessions" value={String(workoutHistory.length)} color="#a855f7" /><StatBox icon={Clock3} label="Training Time" value={formatDuration(totalWorkoutSeconds)} color="#3b82f6" /><StatBox icon={Target} label="Tasks Done" value={String(totalTasks)} color="#10b981" /><StatBox icon={Trophy} label="Perfect Days" value={String(perfectDays)} color="#f59e0b" /></div></section>
-    <section className="character-panel character-history"><PanelHeading eyebrow="FIELD LOG" title="Workout History" icon={<Clock3 size={19} />} />{workoutHistory.length === 0 ? <div className="character-empty">No completed workouts yet. Finish a session from Training and the field log will appear here.</div> : <div className="character-history-list">{workoutHistory.slice(0, 12).map((entry) => <div key={entry.id} className="character-history-row"><div><strong>{entry.dayName}</strong><span>{formatDate(entry.completedAt)} · Started {formatTime(entry.startedAt)}</span></div><b><Clock3 size={14} />{formatDuration(entry.durationSeconds)}</b></div>)}</div>}</section>
-    <section className="character-panel character-account"><PanelHeading eyebrow="IDENTITY" title="Account Record" icon={<Shield size={19} />} /><div className="character-account-grid">{user?.email && <div><span>Email</span><strong>{user.email}</strong></div>}<div><span>Member Since</span><strong>{new Date(state.createdAt).toLocaleDateString()}</strong></div><div><span>Account Age</span><strong>{accountAgeDays} days</strong></div><div><span>System Theme</span><strong>{state.theme.toUpperCase()}</strong></div></div></section>
+    <section className="sv-identity-hero">
+      <div className="sv-identity-portrait">
+        <UserAvatar avatar={state.avatar} rank={rank} size="lg"/>
+        <button onClick={()=>inputRef.current?.click()} disabled={uploading} aria-label="Upload identity image"><Upload size={15}/></button>
+        <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleUpload} className="hidden"/>
+      </div>
+      <div className="sv-identity-main">
+        <span>OPERATIVE</span>
+        <h2 style={{color:state.nameColor}}>{state.username||'Hunter'}</h2>
+        <div className="sv-title-line"><Crown size={14}/>{equippedTitle?.name || 'No Title Equipped'}</div>
+        <div className="sv-identity-level"><b>LEVEL {state.level}</b><span>{state.xp.toLocaleString()} XP</span></div>
+        <XpBar xp={state.xp}/>
+        {nextRank&&<small>{Math.max(0,nextRank.xpRequired-state.xp).toLocaleString()} XP UNTIL {nextRank.name.toUpperCase()}</small>}
+      </div>
+      <div className="sv-identity-xp"><span>TOTAL XP</span><strong>{state.xp.toLocaleString()}</strong><small>RANK {rank.name.toUpperCase()}</small></div>
+    </section>
+
+    <section className="sv-attribute-grid">
+      <Attribute icon={<Shield size={15}/>} name="DISCIPLINE" value={discipline}/>
+      <Attribute icon={<Dumbbell size={15}/>} name="STRENGTH" value={strength}/>
+      <Attribute icon={<Target size={15}/>} name="CONSISTENCY" value={consistency}/>
+      <Attribute icon={<Zap size={15}/>} name="FOCUS" value={focus}/>
+    </section>
+
+    <section className="sv-identity-grid">
+      <div className="sv-identity-panel sv-identity-panel--wide">
+        <PanelHead icon={<Trophy size={17}/>} eyebrow="PROGRESSION" title="Core Record"/>
+        <div className="sv-record-grid">
+          <Record label="MISSIONS COMPLETED" value={String(completedMissions)}/>
+          <Record label="ACTIONS COMPLETED" value={String(completedActions)}/>
+          <Record label="TRAINING SESSIONS" value={String(totalSessions)}/>
+          <Record label="TRAINING TIME" value={formatDuration(state.totalWorkoutSeconds)}/>
+          <Record label="ACCOUNT AGE" value={accountAge+' DAYS'}/>
+          <Record label="CURRENT LEVEL" value={String(state.level)}/>
+        </div>
+      </div>
+
+      <div className="sv-identity-panel">
+        <PanelHead icon={<Award size={17}/>} eyebrow="ACHIEVEMENTS" title="Hunter Feats"/>
+        <div className="sv-feat-list">
+          <Feat label="FIRST AWAKENING" unlocked={state.xp>0}/>
+          <Feat label="FIRST TRAINING" unlocked={totalSessions>0}/>
+          <Feat label="1,000 XP" unlocked={state.xp>=1000}/>
+          <Feat label="5,000 XP" unlocked={state.xp>=5000}/>
+          <Feat label="50 ACTIONS" unlocked={completedActions>=50}/>
+        </div>
+      </div>
+
+      <div className="sv-identity-panel">
+        <PanelHead icon={<Clock3 size={17}/>} eyebrow="FIELD RECORD" title="Recent Activity"/>
+        <div className="sv-record-list">
+          {recentRecord.length===0&&<div className="sv-empty-record">NO FIELD RECORD YET</div>}
+          {recentRecord.map((item,index)=><div key={index}><span>{item.date}</span><b>{item.label}</b><small>{item.detail}</small></div>)}
+        </div>
+      </div>
+
+      <div className="sv-identity-panel sv-identity-panel--wide">
+        <PanelHead icon={<CheckCircle2 size={17}/>} eyebrow="IDENTITY DATA" title="System Facts"/>
+        <div className="sv-facts">
+          <Fact icon={<CalendarDays size={14}/>} label="ACCOUNT CREATED" value={new Date(state.createdAt).toLocaleDateString()}/>
+          <Fact icon={<Target size={14}/>} label="CURRENT RANK" value={rank.name}/>
+          <Fact icon={<Trophy size={14}/>} label="ACHIEVEMENTS" value={String(state.achievements.length)}/>
+          <Fact icon={<Zap size={14}/>} label="TODAY XP" value={'+'+state.dailyXp}/>
+        </div>
+      </div>
+    </section>
   </div>;
 }
 
-function PanelHeading({ eyebrow, title, icon }: { eyebrow: string; title: string; icon: ReactNode }) { return <div className="character-panel-heading"><div><span>{eyebrow}</span><h2>{title}</h2></div>{icon}</div>; }
-function Record({ icon, label, value }: { icon: ReactNode; label: string; value: string }) { return <div><span>{icon}{label}</span><strong>{value}</strong></div>; }
-function StatBox({ icon: Icon, label, value, color }: { icon: typeof Flame; label: string; value: string; color: string }) { return <div className="character-stat" style={{ '--stat-color': color } as CSSProperties}><div><Icon size={16} /></div><strong>{value}</strong><span>{label}</span></div>; }
+function Attribute({icon,name,value}:{icon:React.ReactNode;name:string;value:number}){
+  return <div className="sv-attribute"><div>{icon}</div><span>{name}</span><strong>{value}</strong><i><b style={{width:value+'%'}}/></i></div>;
+}
+function PanelHead({icon,eyebrow,title}:{icon:React.ReactNode;eyebrow:string;title:string}){
+  return <div className="sv-panel-head"><div>{icon}</div><span>{eyebrow}</span><h2>{title}</h2></div>;
+}
+function Record({label,value}:{label:string;value:string}){return <div className="sv-record"><span>{label}</span><strong>{value}</strong></div>;}
+function Feat({label,unlocked}:{label:string;unlocked:boolean}){return <div className={unlocked?'is-unlocked':''}><span>{unlocked?'◆':'◇'}</span><b>{label}</b><small>{unlocked?'UNLOCKED':'LOCKED'}</small></div>;}
+function Fact({icon,label,value}:{icon:React.ReactNode;label:string;value:string}){return <div><span>{icon}</span><label>{label}</label><b>{value}</b></div>;}

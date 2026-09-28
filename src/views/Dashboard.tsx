@@ -4,10 +4,9 @@ import { useStore } from '../store/useStore';
 import { getRankByXp, getNextRank } from '../data/ranks';
 import { UserAvatar } from '../components/ui/UserAvatar';
 import { XpBar } from '../components/ui/XpBar';
-import { Activity, Dumbbell, Settings, Target } from 'lucide-react';
+import { Activity, ArrowUpRight, Dumbbell, Settings, Target, Zap } from 'lucide-react';
 
 const Tasks = lazy(() => import('./Tasks').then(m => ({ default: m.Tasks })));
-
 interface DashboardProps { onNavigate: (v: ViewId) => void; }
 
 export function Dashboard({ onNavigate }: DashboardProps) {
@@ -21,47 +20,49 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const totalDone = mainDone + bonusDone;
   const progress = totalTasks ? Math.round((totalDone / totalTasks) * 100) : 0;
 
-  return <div className="space-y-5 pb-10">
-    <section className="relative overflow-hidden rounded-[26px] border border-white/10 bg-[#080808] p-5 sm:p-7 lg:p-8">
-      <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full blur-3xl opacity-20" style={{ background: rank.glow }} />
-      <div className="relative grid gap-7 lg:grid-cols-[1.2fr_.8fr] lg:items-end">
-        <div className="flex min-w-0 items-center gap-4 sm:gap-5">
-          <UserAvatar avatar={state.avatar} rank={rank} size="lg" />
-          <div className="min-w-0">
-            <div className="mb-1 flex items-center gap-2 text-[9px] font-black uppercase tracking-[.28em] text-ember-400"><Activity size={12}/> System active</div>
-            <h1 className="truncate font-display text-2xl font-black uppercase sm:text-4xl" style={{ color: state.nameColor }}>{state.username}</h1>
-            <p className="mt-1 text-xs text-ink-400">{rank.name} · Level {state.level} · {state.streak} day streak</p>
+  return <div className="syrox-dashboard">
+    <section className="syrox-hero">
+      <div className="syrox-hero-grid">
+        <div className="syrox-hero-copy">
+          <div className="syrox-overline"><span className="syrox-status-dot"/><span>PERSONAL COMMAND CENTER</span><span className="syrox-overline-line"/></div>
+          <div className="syrox-identity-row">
+            <UserAvatar avatar={state.avatar} rank={rank} size="lg" />
+            <div className="syrox-identity-copy">
+              <p>WELCOME BACK</p>
+              <h1 style={{ color: state.nameColor }}>{state.username || 'Hunter'}</h1>
+              <div><span style={{ color: rank.color }}>{rank.name}</span><b>LEVEL {state.level}</b><span>{state.streak} DAY STREAK</span></div>
+            </div>
+          </div>
+          <p className="syrox-hero-description">Your system is active. Keep the day simple: complete the mission, train with intent, and move forward.</p>
+          <div className="syrox-hero-actions">
+            <button onClick={() => onNavigate('workout')} className="syrox-primary-action"><Dumbbell size={17}/> START TRAINING <ArrowUpRight size={15}/></button>
+            <button onClick={() => onNavigate('profile')} className="syrox-secondary-action"><Target size={16}/> VIEW PROFILE</button>
           </div>
         </div>
-        <div>
-          <div className="mb-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-[.18em] text-ink-500"><span>XP progression</span><span className="text-ink-200">{state.xp.toLocaleString()} XP</span></div>
+        <div className="syrox-xp-module">
+          <div className="syrox-xp-top"><span>RANK PROGRESS</span><strong>{state.xp.toLocaleString()} XP</strong></div>
+          <div className="syrox-rank-orbit"><div className="syrox-rank-core" style={{ borderColor: rank.color, boxShadow: '0 0 50px ' + rank.glow }}><span>{rank.emoji}</span><b style={{ color: rank.color }}>{rank.name}</b></div></div>
           <XpBar xp={state.xp} />
-          {nextRank && <p className="mt-2 text-[11px] text-ink-500"><b className="text-ember-400">{(nextRank.xpRequired - state.xp).toLocaleString()}</b> XP to {nextRank.name}</p>}
+          {nextRank ? <p><strong>{Math.max(0, nextRank.xpRequired - state.xp).toLocaleString()}</strong> XP until {nextRank.name}</p> : <p>MAX RANK REACHED</p>}
         </div>
       </div>
     </section>
-
-    <section className="grid gap-2 sm:grid-cols-3">
-      <SystemStat label="Today's missions" value={`${totalDone}/${totalTasks}`} />
-      <SystemStat label="Mission progress" value={`${progress}%`} />
-      <SystemStat label="XP today" value={state.dailyXp.toLocaleString()} />
+    <section className="syrox-metric-strip">
+      <Metric icon={<Target size={15}/>} label="MISSIONS" value={totalDone + '/' + totalTasks} detail={progress + '% complete'} />
+      <Metric icon={<Zap size={15}/>} label="TODAY XP" value={state.dailyXp.toLocaleString()} detail="earned today" />
+      <Metric icon={<Activity size={15}/>} label="LEVEL" value={String(state.level)} detail={rank.name} />
+      <Metric icon={<Dumbbell size={15}/>} label="NEXT ACTION" value="TRAIN" detail="keep momentum" />
     </section>
-
-    <section className="rounded-[22px] border border-white/10 bg-[#090909] p-4 sm:p-5">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div><p className="text-[9px] font-black uppercase tracking-[.3em] text-ember-400">Command center</p><h2 className="mt-1 font-display text-xl font-black uppercase sm:text-2xl">Today's focus</h2></div>
-        <div className="flex gap-2">
-          <button onClick={() => onNavigate('workout')} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[.03] px-3 py-2 text-xs font-bold text-ink-200 transition hover:border-ember-500/30 hover:text-ember-400"><Dumbbell size={14}/> Training</button>
-          <button onClick={() => onNavigate('profile')} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[.03] px-3 py-2 text-xs font-bold text-ink-200 transition hover:border-ember-500/30 hover:text-ember-400"><Target size={14}/> Profile</button>
-        </div>
-      </div>
-      <Suspense fallback={<div className="py-12 text-center text-sm text-ink-500">Loading missions…</div>}><Tasks /></Suspense>
+    <section className="syrox-focus">
+      <div className="syrox-section-heading"><div><span>01 // DAILY OPERATIONS</span><h2>Today's Mission</h2><p>One board. Everything you need for today.</p></div><button onClick={() => onNavigate('settings')} aria-label="Open settings"><Settings size={17}/></button></div>
+      <div className="syrox-mission-board"><Suspense fallback={<div className="syrox-loading">Loading mission board…</div>}><Tasks /></Suspense></div>
     </section>
-
-    <button onClick={() => onNavigate('settings')} className="mx-auto flex items-center gap-2 text-[9px] font-bold uppercase tracking-[.22em] text-ink-600 transition hover:text-ink-300"><Settings size={12}/> System settings</button>
+    <section className="syrox-next-grid">
+      <button className="syrox-next-card syrox-next-card--training" onClick={() => onNavigate('workout')}><div><span>02 // PHYSICAL</span><h3>Training</h3><p>Enter the training system and complete your session.</p></div><span className="syrox-card-arrow"><Dumbbell size={18}/><ArrowUpRight size={15}/></span></button>
+      <button className="syrox-next-card" onClick={() => onNavigate('profile')}><div><span>03 // IDENTITY</span><h3>Hunter Profile</h3><p>Review your progression, records and personal identity.</p></div><span className="syrox-card-arrow"><Target size={18}/><ArrowUpRight size={15}/></span></button>
+    </section>
   </div>;
 }
-
-function SystemStat({ label, value }: { label: string; value: string }) {
-  return <div className="rounded-xl border border-white/10 bg-[#090909] px-4 py-3"><p className="text-[9px] font-bold uppercase tracking-[.18em] text-ink-600">{label}</p><p className="mt-1 font-display text-lg font-black text-ink-100">{value}</p></div>;
+function Metric({ icon, label, value, detail }: { icon: React.ReactNode; label: string; value: string; detail: string }) {
+  return <div className="syrox-metric"><div className="syrox-metric-icon">{icon}</div><div><span>{label}</span><strong>{value}</strong><small>{detail}</small></div></div>;
 }

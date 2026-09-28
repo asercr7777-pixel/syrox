@@ -23,7 +23,6 @@ import './stryven-settings.css';
 import './stryven-character.css';
 import './stryven-ui-polish.css';
 import './stryven-performance.css';
-import './progress-systems.css';
 import './scroll-fix.css';
 
 const Dashboard = lazy(() => import('./views/Dashboard').then(m => ({ default: m.Dashboard })));

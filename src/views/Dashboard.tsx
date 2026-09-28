@@ -1,4 +1,5 @@
 import { lazy, Suspense, useMemo } from 'react';
+import type { ReactNode } from 'react';
 import type { ViewId } from '../components/Navigation';
 import { useStore } from '../store/useStore';
 import { getRankByXp, getNextRank } from '../data/ranks';
@@ -97,6 +98,6 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   </div>;
 }
 
-function Metric({icon,label,value,detail}:{icon:React.ReactNode;label:string;value:string;detail:string}) {
+function Metric({icon,label,value,detail}:{icon:ReactNode;label:string;value:string;detail:string}) {
   return <div className="sv-metric"><div className="sv-metric__icon">{icon}</div><div><span>{label}</span><strong>{value}</strong><small>{detail}</small></div></div>;
 }

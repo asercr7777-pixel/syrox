@@ -85,7 +85,7 @@ function AppContent() {
     <main className={`stryven-main stryven-view-${view}`}>
       <div className="stryven-page-frame">
         <Suspense fallback={<PageLoader/>}>
-          {view === 'dashboard' && <section className="stryven-page"><Dashboard onNavigate={handleNavigate}/>{!isInstalled && <div className="stryven-install"><InstallButton isInstallable={isInstallable} isInstalled={isInstalled} onInstall={promptInstall}>Install SYROX</InstallButton></div>}</section>}
+          {view === 'dashboard' && <section className="stryven-page"><Dashboard onNavigate={handleNavigate}/>{!isInstalled && <div className="stryven-install"><InstallButton isInstallable={isInstallable} isInstalled={isInstalled} onInstall={promptInstall}>Install STRYVEN</InstallButton></div>}</section>}
           {view === 'workout' && <section className="stryven-page"><WorkoutWithAIPlan/></section>}
           {view === 'profile' && <section className="stryven-page"><Profile/></section>}
           {view === 'settings' && <section className="stryven-page stryven-settings"><Settings/></section>}

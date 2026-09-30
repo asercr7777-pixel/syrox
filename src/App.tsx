@@ -24,6 +24,7 @@ import './stryven-ui-polish.css';
 import './stryven-performance.css';
 import './stryven-ascension.css';
 import './stryven-v2.css';
+import './stryven-v2-pages.css';
 
 const Dashboard=lazy(()=>import('./views/Dashboard').then(m=>({default:m.Dashboard})));
 const WorkoutWithAIPlan=lazy(()=>import('./components/WorkoutWithAIPlan').then(m=>({default:m.WorkoutWithAIPlan})));

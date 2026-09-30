@@ -20,10 +20,8 @@ import './stryven-redesign.css';
 import './stryven-shell.css';
 import './stryven-pages.css';
 import './stryven-settings.css';
-import './stryven-character.css';
 import './stryven-ui-polish.css';
 import './stryven-performance.css';
-import './scroll-fix.css';
 import './stryven-ascension.css';
 
 const Dashboard=lazy(()=>import('./views/Dashboard').then(m=>({default:m.Dashboard})));

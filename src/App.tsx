@@ -12,21 +12,8 @@ import { usePWA } from './hooks/usePWA';
 import { InstallButton } from './components/pwa/InstallButton';
 import { Loader2 } from 'lucide-react';
 import './theme.css';
-import './theme-overrides.css';
-import './theme-identities.css';
-import './theme-motion.css';
-import './stryven-ui-system.css';
-import './solo-system-v3.css';
-import './stryven-training-system.css';
-import './stryven-redesign.css';
-import './stryven-shell.css';
-import './stryven-pages.css';
-import './stryven-settings.css';
-import './stryven-ui-polish.css';
-import './stryven-performance.css';
-import './stryven-ascension.css';
-import './stryven-v2.css';
-import './stryven-v2-pages.css';
+import './index.css';
+import './stryven-system.css';
 
 const Dashboard=lazy(()=>import('./views/Dashboard').then(m=>({default:m.Dashboard})));
 const WorkoutWithAIPlan=lazy(()=>import('./components/WorkoutWithAIPlan').then(m=>({default:m.WorkoutWithAIPlan})));
@@ -47,7 +34,7 @@ function AppContent(){
   if(loading)return <div className="stryven-auth-loader"><Loader2 className="animate-spin" size={38}/></div>;
   if(isReset)return <><Background/><Suspense fallback={<PageLoader/>}><ResetPassword/></Suspense></>;
   if(!user)return <><Background/><Suspense fallback={<PageLoader/>}><Auth/></Suspense></>;
-  return <div className="stryven-app-shell" data-theme={state.theme}><Background/><Navigation current={view} onNavigate={handleNavigate}/><ToastContainer/><Confetti/><main className={`stryven-main stryven-view-${view}`}><div className="stryven-page-frame"><Suspense fallback={<PageLoader/>}>{view==='dashboard'&&<section className="stryven-page"><Dashboard onNavigate={handleNavigate}/>{!isInstalled&&<div className="stryven-install"><InstallButton isInstallable={isInstallable} isInstalled={isInstalled} onInstall={promptInstall}>Install STRYVEN</InstallButton></div>}</section>}{view==='workout'&&<section className="stryven-page"><WorkoutWithAIPlan/></section>}{view==='profile'&&<section className="stryven-page"><Profile/></section>}{view==='settings'&&<section className="stryven-page stryven-settings"><Settings/></section>}</Suspense></div></main></div>
+  return <div className="sx-app" data-theme={state.theme}><Background/><Navigation current={view} onNavigate={handleNavigate}/><ToastContainer/><Confetti/><main className="sx-main"><div><Suspense fallback={<PageLoader/>}>{view==='dashboard'&&<section><Dashboard onNavigate={handleNavigate}/>{!isInstalled&&<div className="stryven-install"><InstallButton isInstallable={isInstallable} isInstalled={isInstalled} onInstall={promptInstall}>Install STRYVEN</InstallButton></div>}</section>}{view==='workout'&&<section className="sx-page"><WorkoutWithAIPlan/></section>}{view==='profile'&&<section className="sx-page"><Profile/></section>}{view==='settings'&&<section className="sx-page"><Settings/></section>}</Suspense></div></main></div>
 }
 function App(){return <ErrorBoundary><AuthProvider><AppContent/></AuthProvider></ErrorBoundary>}
 export default App;

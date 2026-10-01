@@ -204,7 +204,7 @@ export function SixDayWorkout() {
     document.body
   ) : null;
 
-  return <div className="space-y-5">
+  return <div className="stryven-training-system space-y-5">
     <div><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl card flex items-center justify-center theme-accent-bg"><Trophy size={19} className="theme-accent"/></div><div><h1 className="section-title">6-Day Workout</h1><p className="text-sm text-ink-300">Your split. Your exercises. Your progression.</p></div></div></div>
 
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">{days.map((d, i) => <button type="button" key={d.id} onClick={() => { if (!running) setActive(i); }} className={`card p-3 text-left transition-all ${active === i ? 'theme-accent-border theme-accent-bg' : 'hover:border-white/20'} ${running ? 'cursor-default' : ''}`}><p className="text-xs text-ink-400">DAY {i + 1}</p><p className="font-bold truncate mt-1">{d.name}</p><p className="text-xs text-ink-400 mt-1">{d.exercises.filter(e => e.done).length}/{d.exercises.length} complete</p></button>)}</div>

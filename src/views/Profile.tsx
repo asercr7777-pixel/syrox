@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { Award, CalendarDays, CheckCircle2, Clock3, Crown, Dumbbell, Shield, Target, Trophy, Zap, Flame, Activity } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { getRankByXp, getNextRank } from '../data/ranks';

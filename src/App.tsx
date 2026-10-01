@@ -16,6 +16,7 @@ import './theme-overrides.css';
 import './theme-identities.css';
 import './theme-motion.css';
 import './stryven-ui-system.css';
+import './solo-system-v3.css';
 import './stryven-redesign.css';
 import './stryven-shell.css';
 import './stryven-pages.css';

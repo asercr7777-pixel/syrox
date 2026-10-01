@@ -12,7 +12,6 @@ import { usePWA } from './hooks/usePWA';
 import { InstallButton } from './components/pwa/InstallButton';
 import { Loader2 } from 'lucide-react';
 import './theme.css';
-import './index.css';
 import './stryven-system.css';
 
 const Dashboard=lazy(()=>import('./views/Dashboard').then(m=>({default:m.Dashboard})));

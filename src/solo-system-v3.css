@@ -297,3 +297,22 @@ body:after{
 @media(prefers-reduced-motion:reduce){
   .sv-command-hero:before{animation:none!important;}
 }
+
+/* SYSTEM V3 — navigation + interaction pass */
+.stryven-rail-status{display:flex!important;align-items:center!important;gap:7px!important;}
+.stryven-rail-status span{margin-left:auto;color:#394b63;font-size:7px;letter-spacing:.15em;}
+.stryven-rail-system{display:grid;gap:4px;padding:0 12px 14px;color:#43556d;font-size:7px;letter-spacing:.16em;}
+.stryven-rail-system b{color:#647a96;font-size:8px;letter-spacing:.1em;}
+.stryven-rail-footer{padding-bottom:14px!important;}
+.stryven-rail-item .stryven-rail-label{text-transform:uppercase;letter-spacing:.12em;}
+.sv-command-hero__main,.sv-directive,.sv-metric,.sv-section,.sv-route-card,.sv-identity-panel,.sv-config-section{transition:border-color .22s ease,box-shadow .22s ease,transform .22s ease;}
+.sv-command-hero:hover{border-color:rgba(111,154,226,.26)!important;}
+.sv-directive:hover,.sv-section:hover,.sv-identity-panel:hover,.sv-config-section:hover{border-color:rgba(105,148,217,.2)!important;}
+.sv-route-card:hover{transform:translateY(-2px);border-color:rgba(95,149,231,.3)!important;box-shadow:0 20px 55px rgba(0,0,0,.38),0 0 28px rgba(66,127,255,.05)!important;}
+.sv-route-card b svg,.sv-btn svg{transition:transform .2s ease;}
+.sv-route-card:hover b svg,.sv-btn:hover svg{transform:translateX(2px);}
+.sv-command-hero__progress .sv-xp-bar{margin-top:22px!important;}
+.sv-command-hero__progress .sv-xp-bar>div{background:linear-gradient(90deg,#427fff,#8c62ff)!important;box-shadow:0 0 16px rgba(80,126,255,.25)!important;}
+.sv-command-hero__progress .sv-xp-bar{background:#111a28!important;}
+.sv-today-strip{font-family:ui-monospace,SFMono-Regular,Menlo,monospace!important;}
+@media(max-width:900px){.stryven-rail-system{display:none!important;}}

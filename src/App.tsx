@@ -46,7 +46,7 @@ function AppContent(){
   const handleNavigate=(target:ViewId)=>{setView(target);const url=new URL(window.location.href);url.searchParams.set('view',target);window.history.replaceState({},'',url);window.scrollTo({top:0,behavior:'auto'})};
   if(loading)return <div className="stryven-auth-loader"><Loader2 className="animate-spin" size={38}/></div>;
   if(isReset)return <><Background/><Suspense fallback={<PageLoader/>}><ResetPassword/></Suspense></>;
-  if(!user)return <><Background/><Suspense fallback={<PageLoader/>}><Auth/></Suspense></>;
+  if(!user)return <><Background/><ToastContainer/><Suspense fallback={<PageLoader/>}><Auth/></Suspense></>;
   return <div className="stryven-app-shell" data-theme={state.theme}><Background/><Navigation current={view} onNavigate={handleNavigate}/><ToastContainer/><Confetti/><main className={`stryven-main stryven-view-${view}`}><div className="stryven-page-frame"><Suspense fallback={<PageLoader/>}>{view==='dashboard'&&<section className="stryven-page"><Dashboard onNavigate={handleNavigate}/>{!isInstalled&&<div className="stryven-install"><InstallButton isInstallable={isInstallable} isInstalled={isInstalled} onInstall={promptInstall}>Install STRYVEN</InstallButton></div>}</section>}{view==='workout'&&<section className="stryven-page"><WorkoutWithAIPlan/></section>}{view==='profile'&&<section className="stryven-page"><Profile/></section>}{view==='settings'&&<section className="stryven-page stryven-settings"><Settings/></section>}</Suspense></div></main></div>
 }
 function App(){return <ErrorBoundary><AuthProvider><AppContent/></AuthProvider></ErrorBoundary>}

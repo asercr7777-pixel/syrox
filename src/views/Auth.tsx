@@ -46,15 +46,24 @@ export function Auth() {
     e.preventDefault();
     if (!canSubmit) return;
     setLoading(true);
-    if (mode === 'login') {
-      const { error } = await signIn(email, password);
-      if (error) toast({ title: 'Login failed', message: error, type: 'error' });
-    } else {
-      const { error } = await signUp(email, password, username);
-      if (error) toast({ title: 'Sign up failed', message: error, type: 'error' });
-      else toast({ title: 'Welcome to STRYVEN!', message: 'Account created. You are now signed in.', type: 'success' });
+    try {
+      if (mode === 'login') {
+        const { error } = await signIn(email.trim(), password);
+        if (error) toast({ title: 'Login failed', message: error, type: 'error' });
+      } else {
+        const { error } = await signUp(email.trim(), password, username.trim());
+        if (error) toast({ title: 'Sign up failed', message: error, type: 'error' });
+        else toast({ title: 'Welcome to STRYVEN!', message: 'Account created. You are now signed in.', type: 'success' });
+      }
+    } catch (error) {
+      toast({
+        title: mode === 'login' ? 'Login failed' : 'Sign up failed',
+        message: error instanceof Error ? error.message : 'Something went wrong. Please try again.',
+        type: 'error',
+      });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleForgot = async (e: React.FormEvent) => {

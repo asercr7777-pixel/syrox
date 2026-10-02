@@ -17,7 +17,7 @@ const CATEGORIES: { id: MainTask['category']; label: string }[] = [
 interface FormData { label: string; emoji: string; points: number; description: string; category: MainTask['category']; }
 
 export function Tasks() {
-  const { state, toggleCoreTask, toggleCustomTask, addCustomTask, updateCustomTask, deleteCustomTask, addMainTask, updateMainTask, deleteMainTask, reorderMainTask } = useStore();
+  const { state, toggleCoreTask, addCustomTask, updateCustomTask, deleteCustomTask, addMainTask, updateMainTask, deleteMainTask, reorderMainTask } = useStore();
   const [mainAddOpen, setMainAddOpen] = useState(false);
   const [mainEditId, setMainEditId] = useState<string | null>(null);
   const [mainDeleteId, setMainDeleteId] = useState<string | null>(null);

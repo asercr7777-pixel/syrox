@@ -38,12 +38,6 @@ export function Tasks() {
     try { toggleCoreTask(id); toast({ title: state.coreCompleted[id] ? 'Mission reopened' : 'Mission completed', type: 'success' }); }
     catch { toast({ title: 'Could not update mission', type: 'error' }); }
   };
-  const completeCustom = (id: string) => {
-    if (busyIds.has(id)) return;
-    markBusy(id);
-    try { toggleCustomTask(id); toast({ title: state.customCompleted[id] ? 'Objective reopened' : 'Objective completed', type: 'success' }); }
-    catch { toast({ title: 'Could not update objective', type: 'error' }); }
-  };
   const openMainAdd = () => { resetForm(); setMainAddOpen(true); };
   const openMainEdit = (task: MainTask) => { setForm({ label: task.label, emoji: task.emoji, points: Math.min(MAX_TASK_XP, task.points), description: task.description ?? '', category: task.category }); setMainEditId(task.id); };
   const saveMain = () => {

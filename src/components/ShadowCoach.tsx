@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { Activity, Brain, CalendarDays, CheckCircle2, Flame, MessageCircle, Shield, Sparkles, Target, TrendingUp, Zap } from 'lucide-react';
+import { Activity, Brain, CalendarDays, Flame, MessageCircle, Shield, Sparkles, Target, TrendingUp, Zap } from 'lucide-react';
 import { useStore } from '../store/useStore';
 
 type Props={children:ReactNode};

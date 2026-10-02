@@ -65,8 +65,6 @@ export const SHADOW_EXERCISES: ShadowExercise[] = [
 ];
 
 const difficultyRank: Record<ShadowDifficulty, number> = { beginner: 1, intermediate: 2, advanced: 3 };
-const groupTitle: Record<ShadowGroup, string> = { push:'Push', pull:'Pull', legs:'Legs', core:'Core', plyometric:'Power', mobility:'Mobility', conditioning:'Conditioning' };
-
 function candidates(group: ShadowGroup, equipment: ShadowEquipment, goal: ShadowGoal, difficulty: ShadowDifficulty, used: Set<string>, week: number) {
   return SHADOW_EXERCISES.filter(x => x.group === group && x.equipment.includes(equipment) && x.goals.includes(goal) && difficultyRank[x.difficulty] <= difficultyRank[difficulty] && !used.has(x.id))
     .sort((a,b) => (b.goals.includes(goal) ? 1 : 0) - (a.goals.includes(goal) ? 1 : 0) || a.fatigue - b.fatigue || ((a.id.length + week) % 3) - ((b.id.length + week) % 3));

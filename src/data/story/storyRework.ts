@@ -1,4 +1,4 @@
-import type { DialogueLine, StoryChapter, StoryMission, StoryChoice } from './types';
+import type { DialogueLine, StoryChapter, StoryMission } from './types';
 
 type Seed={title:string;subtitle:string;plot:string;reveal:string;boss:string;bossTitle:string;bossDesc:string};
 const seeds:Seed[]=[

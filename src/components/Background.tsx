@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from '../store/useStore';
 import { BACKGROUNDS } from '../data/collections';
 
@@ -21,7 +21,6 @@ export function Background() {
   const blur = Math.min(Math.max(state.backgroundBlur, 0), 4);
   const blurFilter = blur > 0 ? `blur(${blur}px)` : 'none';
   const transform = blur > 0 ? 'scale(1.01)' : 'none';
-  const handleImgError = useCallback(() => setImgError(true), []);
   const handleVideoError = useCallback(() => setVideoError(true), []);
 
   const customVisualActive = Boolean(

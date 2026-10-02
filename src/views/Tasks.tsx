@@ -17,10 +17,13 @@ const CATEGORIES: { id: MainTask['category']; label: string }[] = [
 interface FormData { label: string; emoji: string; points: number; description: string; category: MainTask['category']; }
 
 export function Tasks() {
-  const { state, toggleCoreTask, addMainTask, updateMainTask, deleteMainTask, reorderMainTask } = useStore();
+  const { state, toggleCoreTask, toggleCustomTask, addCustomTask, updateCustomTask, deleteCustomTask, addMainTask, updateMainTask, deleteMainTask, reorderMainTask } = useStore();
   const [mainAddOpen, setMainAddOpen] = useState(false);
   const [mainEditId, setMainEditId] = useState<string | null>(null);
   const [mainDeleteId, setMainDeleteId] = useState<string | null>(null);
+  const [customAddOpen, setCustomAddOpen] = useState(false);
+  const [customEditId, setCustomEditId] = useState<string | null>(null);
+  const [customDeleteId, setCustomDeleteId] = useState<string | null>(null);
   const [busyIds, setBusyIds] = useState<Set<string>>(new Set());
   const [form, setForm] = useState<FormData>({ label: '', emoji: '🎯', points: 50, description: '', category: 'body' });
 
@@ -101,7 +104,9 @@ export function Tasks() {
     </section>
 
     <Modal open={mainAddOpen||mainEditId!==null} onClose={()=>{setMainAddOpen(false);setMainEditId(null);resetForm();}} title={mainEditId?'Edit Core Mission':'Add Core Mission'}><TaskForm form={form} setForm={setForm} showDetails onSave={saveMain} onCancel={()=>{setMainAddOpen(false);setMainEditId(null);resetForm();}} saveLabel={mainEditId?'Save Changes':'Add Mission'}/></Modal>
+    <Modal open={customAddOpen||customEditId!==null} onClose={()=>{setCustomAddOpen(false);setCustomEditId(null);resetForm();}} title={customEditId?'Edit Objective':'Add Bonus Objective'}><TaskForm form={form} setForm={setForm} onSave={saveCustom} onCancel={()=>{setCustomAddOpen(false);setCustomEditId(null);resetForm();}} saveLabel={customEditId?'Save Changes':'Add Objective'}/></Modal>
     <ConfirmModal open={mainDeleteId!==null} onClose={()=>setMainDeleteId(null)} onConfirm={()=>{if(mainDeleteId){deleteMainTask(mainDeleteId);toast({title:'Mission deleted',type:'success'});setMainDeleteId(null);}}} title="Delete Core Mission" message="This removes the mission and its completion state." confirmLabel="Delete" danger/>
+    <ConfirmModal open={customDeleteId!==null} onClose={()=>setCustomDeleteId(null)} onConfirm={()=>{if(customDeleteId){deleteCustomTask(customDeleteId);toast({title:'Objective deleted',type:'success'});setCustomDeleteId(null);}}} title="Delete Bonus Objective" message="This removes the objective and its completion state." confirmLabel="Delete" danger/>
   </div>;
 }
 

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, Archive, CheckCircle2, Circle, Clock3, Dumbbell, ImagePlus, Loader2, Pause, Play, Plus, RefreshCw, Save, ShieldCheck, Target, TimerReset, Trash2, Upload, X, Zap } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Activity, Archive, CheckCircle2, Circle, Clock3, Dumbbell, ImagePlus, Loader2, Pause, Play, Plus, RefreshCw, Save, ShieldCheck, Target, TimerReset, X } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { supabase } from '../lib/supabase';
 import { useStore } from '../store/useStore';
@@ -100,15 +100,15 @@ export function TrainingCommand() {
   const totalPlannedSets = activeWorkout?.exercises.reduce((sum,item)=>sum+item.config.sets,0) ?? 0;
   const totalLoggedSets = activeWorkout?.sets.filter(item=>item.status==='completed').length ?? 0;
 
-  async function signedExercise(row: ExerciseRow): Promise<ExerciseRow> {
+  const signedExercise = useCallback(async (row: ExerciseRow): Promise<ExerciseRow> => {
     if (!row.image_path) return { ...row, imageUrl: undefined };
     try {
       const { data } = await supabase.storage.from('workout-exercises').createSignedUrl(row.image_path, 3600);
       return { ...row, imageUrl: data?.signedUrl };
     } catch { return { ...row, imageUrl: undefined }; }
-  }
+  }, []);
 
-  async function hydrateSession(session: SessionRow): Promise<ActiveWorkout | null> {
+  const hydrateSession = useCallback(async (session: SessionRow): Promise<ActiveWorkout | null> => {
     const { data: routineData, error: routineError } = await supabase.from('syrox_routines').select('*').eq('id', session.routine_id).eq('user_id', session.user_id).maybeSingle();
     if (routineError) throw routineError;
     const routine = routineData as RoutineRow | null;
@@ -139,14 +139,16 @@ export function TrainingCommand() {
       currentIndex += 1;
       currentSet = Math.max(1, sets.filter(item=>item.routine_exercise_id===joined[currentIndex].config.id && item.status==='completed').length + 1);
     }
-    const phase = session.status === 'PAUSED' ? (saved?.phase ?? 'exercise') : (saved?.phase ?? 'exercise');
+    const allDone = joined.every(item=>sets.filter(set=>set.routine_exercise_id===item.config.id&&set.status==='completed').length>=item.config.sets);
+    if (allDone) { currentIndex = joined.length - 1; currentSet = joined[currentIndex].config.sets; }
+    const phase = allDone ? 'exercise' : (saved?.phase ?? 'exercise');
     return {
       session, routine, exercises: joined, sets, currentIndex, currentSet,
-      phase, targetTimestamp: saved?.target_timestamp ?? null, enteredValues: saved?.entered_values ?? EMPTY_INPUTS
+      phase, targetTimestamp: saved?.target_timestamp ?? null, enteredValues: { ...EMPTY_INPUTS, ...(saved?.entered_values ?? {}) }
     };
-  }
+  }, [signedExercise]);
 
-  async function loadAll(cancelled: () => boolean) {
+  const loadAll = useCallback(async (cancelled: () => boolean) => {
     if (!userId) { setLoading(false); return; }
     setLoading(true);
     try {
@@ -170,13 +172,13 @@ export function TrainingCommand() {
     } catch (error) {
       if (!cancelled()) toast({ title: 'Training data unavailable', message: error instanceof Error ? error.message : 'Could not load your saved training data.', type: 'error' });
     } finally { if (!cancelled()) setLoading(false); }
-  }
+  }, [userId, signedExercise, hydrateSession]);
 
   useEffect(() => {
     let cancelled = false;
     void loadAll(() => cancelled);
     return () => { cancelled = true; };
-  }, [userId]);
+  }, [loadAll]);
 
   useEffect(() => {
     if (!activeWorkout) return;
@@ -434,7 +436,6 @@ export function TrainingCommand() {
     finally {setBusy(false);}
   }
 
-  const completedSetIds = new Set(activeWorkout?.sets.filter(item=>item.status==='completed').map(item=>`${item.routine_exercise_id}:${item.set_number}`) ?? []);
   const paused = activeWorkout?.session.status==='PAUSED';
   const exerciseFormContent = showExerciseForm && <div className="sv-training-form-wrap"><form className="sv-training-form" onSubmit={event=>{event.preventDefault();void saveExercise();}}>
     <div className="sv-section-head"><div><span className="sv-eyebrow">{editingExerciseId?'EDIT EXERCISE':'EXERCISE LIBRARY'}</span><h2>{editingExerciseId?'Update exercise':'Add exercise'}</h2><p>Saved to your private exercise library.</p></div><button type="button" onClick={()=>{setShowExerciseForm(false);resetExerciseForm();}} aria-label="Close exercise form"><X size={18}/></button></div>

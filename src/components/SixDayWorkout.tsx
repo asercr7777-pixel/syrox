@@ -15,11 +15,6 @@ const DATE_KEY = 'stryven-six-day-workout-date-v1';
 const STORY_WORKOUT_KEY = 'stryven-story-workout-events-v1';
 export const WORKOUT_HISTORY_KEY = 'stryven-workout-history-v1';
 const seedNames = ['Day 1','Day 2','Day 3','Day 4','Day 5','Day 6'];
-const seedExercises = (day: number): Exercise[] => [
-  { id: `s-${day}`, name: 'Dynamic Stretching', sets: 1, reps: '5 min', section: 'stretching', done: false },
-  { id: `m-${day}`, name: 'Main Strength Exercise', sets: 3, reps: '8-12', section: 'main', done: false },
-  { id: `p-${day}`, name: 'Plyometric Drill', sets: 3, reps: '6-10', section: 'plyometric', done: false },
-];
 function initial(): Day[] { return seedNames.map((name, i) => ({ id: `day-${i + 1}`, name, exercises: [] })); }
 function load(): Day[] {
   try {

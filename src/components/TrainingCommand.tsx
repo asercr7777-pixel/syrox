@@ -329,15 +329,18 @@ export function TrainingCommand() {
     setBusy(true);
     const now = new Date();
     const restLeft = activeWorkout.phase==='rest' && activeWorkout.targetTimestamp ? Math.max(0,Math.ceil((new Date(activeWorkout.targetTimestamp).getTime()-now.getTime())/1000)) : 0;
-    const next = {...activeWorkout,session:{...activeWorkout.session,status:'PAUSED' as const,paused_at:now.toISOString()},targetTimestamp:activeWorkout.phase==='rest'?new Date(now.getTime()+restLeft*1000).toISOString():activeWorkout.targetTimestamp};
+    const next: ActiveWorkout = {...activeWorkout,session:{...activeWorkout.session,status:'PAUSED',paused_at:now.toISOString()},targetTimestamp:activeWorkout.phase==='rest'?new Date(now.getTime()+restLeft*1000).toISOString():activeWorkout.targetTimestamp,enteredValues:inputs};
     try {
       const { data, error } = await supabase.from('syrox_workout_sessions').update({status:'PAUSED',paused_at:now.toISOString()}).eq('id',activeWorkout.session.id).eq('user_id',userId).select('*').single();
       if (error) throw error;
       next.session = data as SessionRow;
-      await persistSessionState(next,inputs,true);
-      next.enteredValues = inputs;
       setActiveWorkout(next);
-      toast({title:'Workout paused',message:'Your timer and current set are saved. Resume whenever you are ready.',type:'success'});
+      try {
+        await persistSessionState(next,inputs,true);
+        toast({title:'Workout paused',message:'Your timer and current set are saved. Resume whenever you are ready.',type:'success'});
+      } catch(checkpointError) {
+        toast({title:'Workout paused; checkpoint warning',message:checkpointError instanceof Error?checkpointError.message:'The pause is saved, but the resume checkpoint needs attention.',type:'error'});
+      }
     } catch(error) { toast({title:'Could not pause workout',message:error instanceof Error?error.message:'Please retry.',type:'error'}); }
     finally {setBusy(false);}
   }
@@ -350,10 +353,14 @@ export function TrainingCommand() {
       const pausedSeconds = activeWorkout.session.paused_at ? Math.max(0,Math.floor((now.getTime()-new Date(activeWorkout.session.paused_at).getTime())/1000)) : 0;
       const { data, error } = await supabase.from('syrox_workout_sessions').update({status:'ACTIVE',paused_at:null,accumulated_pause_seconds:activeWorkout.session.accumulated_pause_seconds+pausedSeconds}).eq('id',activeWorkout.session.id).eq('user_id',userId).select('*').single();
       if (error) throw error;
-      const next = {...activeWorkout,session:data as SessionRow,enteredValues:inputs};
-      await persistSessionState(next,inputs,false);
+      const next: ActiveWorkout = {...activeWorkout,session:data as SessionRow,enteredValues:inputs};
       setActiveWorkout(next);
-      toast({title:'Workout resumed',type:'success'});
+      try {
+        await persistSessionState(next,inputs,false);
+        toast({title:'Workout resumed',type:'success'});
+      } catch(checkpointError) {
+        toast({title:'Workout resumed; checkpoint warning',message:checkpointError instanceof Error?checkpointError.message:'Your session is active, but the resume checkpoint could not be refreshed.',type:'error'});
+      }
     } catch(error) { toast({title:'Could not resume workout',message:error instanceof Error?error.message:'Please retry.',type:'error'}); }
     finally {setBusy(false);}
   }
@@ -363,6 +370,7 @@ export function TrainingCommand() {
     const allSetsDone = totalPlannedSets > 0 && totalLoggedSets >= totalPlannedSets;
     if (!allSetsDone && !window.confirm('Finish this session early? Only sets already saved will be recorded.')) return;
     setBusy(true);
+    let finishConfirmed = false;
     try {
       let session = activeWorkout.session;
       if (session.status==='PAUSED' && session.paused_at) {
@@ -370,21 +378,26 @@ export function TrainingCommand() {
         const {data,error}=await supabase.from('syrox_workout_sessions').update({accumulated_pause_seconds:session.accumulated_pause_seconds+pausedSeconds,paused_at:null}).eq('id',session.id).eq('user_id',userId).select('*').single();
         if(error) throw error;
         session=data as SessionRow;
+        setActiveWorkout({...activeWorkout,session});
       }
       const {data,error}=await supabase.rpc('syrox_finish_session',{p_session_id:session.id});
       if(error) throw error;
+      finishConfirmed = true;
       const result=firstRow<{status:string;duration_seconds?:number;sets_completed?:number;exercises_completed?:number}>(data);
       const duration=Number(result?.duration_seconds ?? elapsedSeconds);
-      saveWorkoutSession('custom',Math.max(0,Math.floor(duration)));
-      await supabase.from('syrox_routines').update({archived:true}).eq('id',activeWorkout.routine.id).eq('user_id',userId);
-      const {data:historyData,error:historyError}=await supabase.from('syrox_workout_history').select('*').eq('user_id',userId).order('completed_at',{ascending:false}).limit(20);
-      if(historyError) throw historyError;
-      setHistory((historyData??[]) as HistoryRow[]);
       setActiveWorkout(null);
       setInputs(EMPTY_INPUTS);
+      saveWorkoutSession('custom',Math.max(0,Math.floor(duration)));
       toast({title:'Workout saved',message:`${result?.sets_completed ?? totalLoggedSets} sets recorded. Your session is now in history.`,type:'success'});
-    } catch(error) { toast({title:'Could not finish workout',message:error instanceof Error?error.message:'The session remains available to resume.',type:'error'}); }
-    finally {setBusy(false);}
+      const archiveResult = await supabase.from('syrox_routines').update({archived:true}).eq('id',activeWorkout.routine.id).eq('user_id',userId);
+      if (archiveResult.error) toast({title:'Workout saved; cleanup pending',message:'Your session is saved. The temporary routine could not be archived.',type:'error'});
+      const {data:historyData,error:historyError}=await supabase.from('syrox_workout_history').select('*').eq('user_id',userId).order('completed_at',{ascending:false}).limit(20);
+      if(historyError) toast({title:'Workout saved; history refresh pending',message:historyError.message,type:'error'});
+      else setHistory((historyData??[]) as HistoryRow[]);
+    } catch(error) {
+      if (finishConfirmed) toast({title:'Workout saved; refresh warning',message:error instanceof Error?error.message:'The session is complete; some summary data could not refresh.',type:'error'});
+      else toast({title:'Could not finish workout',message:error instanceof Error?error.message:'The session remains available to resume.',type:'error'});
+    } finally {setBusy(false);}
   }
 
   function editExercise(exercise: ExerciseRow) {

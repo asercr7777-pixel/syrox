@@ -40,6 +40,14 @@ type ActiveWorkout = {
 };
 type HistoryRow = { id: string; session_id: string; routine_name: string; started_at: string; completed_at: string; duration_seconds: number; exercises_completed: number; sets_completed: number };
 type HistorySet = SetRow & { exercise_name: string };
+type LegacyExerciseRow = { id?: string; name?: string; sets?: number; reps?: string; section?: string; done?: boolean; image?: string };
+type LegacyHistoryRow = { id: string; dayName: string; startedAt: number; completedAt: number; durationSeconds: number; completedExercises?: number; totalExercises?: number; exerciseResults?: { id: string; name: string; sets: number; reps: string; completedSets: number; actualReps: string; done: boolean }[] };
+const LEGACY_LIBRARY_KEY = 'stryven-six-day-workout-v1';
+const LEGACY_HISTORY_KEY = 'stryven-workout-history-v1';
+function loadLegacyHistory(): LegacyHistoryRow[] {
+  try { const raw = localStorage.getItem(LEGACY_HISTORY_KEY); const parsed = raw ? JSON.parse(raw) : []; return Array.isArray(parsed) ? parsed.filter(item => item && Number.isFinite(item.completedAt) && Number.isFinite(item.durationSeconds)) : []; }
+  catch { return []; }
+}
 
 const EMPTY_INPUTS: InputValues = { reps: '', weight: '', durationSeconds: '', distance: '', notes: '' };
 const ACTIVE_STATUSES = ['STARTING', 'ACTIVE', 'RESTING', 'PAUSED', 'COMPLETING'];
@@ -73,6 +81,7 @@ export function TrainingCommand() {
   const [busy, setBusy] = useState(false);
   const [exercises, setExercises] = useState<ExerciseRow[]>([]);
   const [history, setHistory] = useState<HistoryRow[]>([]);
+  const [legacyHistory] = useState<LegacyHistoryRow[]>(loadLegacyHistory);
   const [historyDetails, setHistoryDetails] = useState<Record<string,HistorySet[]>>({});
   const [expandedHistoryId, setExpandedHistoryId] = useState<string|null>(null);
   const [loadingHistoryId, setLoadingHistoryId] = useState<string|null>(null);
@@ -111,6 +120,55 @@ export function TrainingCommand() {
       return { ...row, imageUrl: data?.signedUrl };
     } catch { return { ...row, imageUrl: undefined }; }
   }, []);
+
+  const migrateLegacyExercises = useCallback(async (ownerId: string, existing: ExerciseRow[]): Promise<ExerciseRow[]> => {
+    let migrationKey = `stryven-training-library-migrated-v1:${ownerId}`;
+    try { if (localStorage.getItem(migrationKey) === '1') return []; } catch { return []; }
+    let raw: string | null = null;
+    try { raw = localStorage.getItem(LEGACY_LIBRARY_KEY); } catch { return []; }
+    if (!raw) { try { localStorage.setItem(migrationKey,'1'); } catch {} return []; }
+    let days: { exercises?: LegacyExerciseRow[] }[];
+    try { const parsed = JSON.parse(raw); if (!Array.isArray(parsed)) throw new Error('Legacy exercise data is invalid.'); days = parsed; }
+    catch { toast({title:'Legacy exercise import skipped',message:'The previous local exercise list could not be read. Your cloud data was left unchanged.',type:'error'}); return []; }
+    const placeholders = new Set(['Dynamic Stretching','Main Strength Exercise','Plyometric Drill']);
+    const unique = new Map<string,LegacyExerciseRow>();
+    for (const day of days) for (const item of Array.isArray(day?.exercises)?day.exercises:[]) {
+      const name = typeof item?.name==='string' ? item.name.trim() : '';
+      if (!name || placeholders.has(name) || name.length>120) continue;
+      if (!unique.has(name.toLocaleLowerCase())) unique.set(name.toLocaleLowerCase(),item);
+    }
+    const known = new Set(existing.map(item=>item.name.trim().toLocaleLowerCase()));
+    const imported: ExerciseRow[] = [];
+    let imageWarning = false;
+    for (const item of unique.values()) {
+      const name = item.name!.trim();
+      if (known.has(name.toLocaleLowerCase())) continue;
+      let imagePath: string | null = null;
+      if (typeof item.image==='string' && item.image.startsWith('data:image/')) {
+        try {
+          const blob = await fetch(item.image).then(response=>response.blob());
+          const ext = blob.type==='image/png'?'png':blob.type==='image/webp'?'webp':blob.type==='image/gif'?'gif':'jpg';
+          const path = `${ownerId}/legacy-${crypto.randomUUID()}.${ext}`;
+          const {error} = await supabase.storage.from('workout-exercises').upload(path,blob,{contentType:blob.type,upsert:false});
+          if (error) throw error;
+          imagePath = path;
+        } catch { imageWarning = true; }
+      }
+      const previousTarget = Number.isFinite(item.sets) && item.reps ? `Previous target: ${Math.max(1,Math.min(50,Math.floor(item.sets!)))} sets × ${item.reps}. ` : '';
+      const {data,error} = await supabase.from('syrox_user_exercises').insert({
+        user_id:ownerId,name,muscle_group:null,equipment:null,category:item.section??'strength',
+        instructions:null,notes:`Imported from your previous local training library. ${previousTarget}`.trim(),
+        exercise_type:'reps',image_path:imagePath,archived:false
+      }).select('*').single();
+      if (error) throw error;
+      known.add(name.toLocaleLowerCase());
+      imported.push(await signedExercise(data as ExerciseRow));
+    }
+    try { localStorage.setItem(migrationKey,'1'); } catch {}
+    if (imported.length) toast({title:'Previous exercise library restored',message:`${imported.length} exercise(s) were imported into your account.`,type:'success'});
+    if (imageWarning) toast({title:'Some old images could not be copied',message:'The exercise records were preserved; you can add their images again from the editor.',type:'error'});
+    return imported;
+  }, [signedExercise]);
 
   const hydrateSession = useCallback(async (session: SessionRow): Promise<ActiveWorkout | null> => {
     const { data: routineData, error: routineError } = await supabase.from('syrox_routines').select('*').eq('id', session.routine_id).eq('user_id', session.user_id).maybeSingle();
@@ -164,9 +222,11 @@ export function TrainingCommand() {
       if (exerciseResult.error) throw exerciseResult.error;
       if (historyResult.error) throw historyResult.error;
       if (activeResult.error) throw activeResult.error;
-      const signed = await Promise.all(((exerciseResult.data ?? []) as ExerciseRow[]).map(signedExercise));
+      const existingRows = (exerciseResult.data ?? []) as ExerciseRow[];
+      const imported = await migrateLegacyExercises(userId, existingRows);
+      const signed = await Promise.all(existingRows.map(signedExercise));
       if (cancelled()) return;
-      setExercises(signed);
+      setExercises([...imported, ...signed]);
       setHistory((historyResult.data ?? []) as HistoryRow[]);
       const session = activeResult.data as SessionRow | null;
       if (session) {
@@ -176,7 +236,7 @@ export function TrainingCommand() {
     } catch (error) {
       if (!cancelled()) toast({ title: 'Training data unavailable', message: error instanceof Error ? error.message : 'Could not load your saved training data.', type: 'error' });
     } finally { if (!cancelled()) setLoading(false); }
-  }, [userId, signedExercise, hydrateSession]);
+  }, [userId, signedExercise, hydrateSession, migrateLegacyExercises]);
 
   useEffect(() => {
     let cancelled = false;
@@ -564,6 +624,7 @@ export function TrainingCommand() {
     {exerciseFormContent}
     <section className="sv-section sv-surface"><div className="sv-section-head"><div><span className="sv-eyebrow">SESSION ARCHIVE</span><h2>Workout History</h2><p>Completed sessions saved by the workout database.</p></div><button type="button" className="sv-btn sv-btn--ghost" onClick={()=>void loadAll(()=>false)} disabled={loading}><RefreshCw size={14}/> Refresh</button></div>
       {history.length ? <div className="sv-training-history">{history.map(item=><div className="sv-history-record" key={item.id}><article><button type="button" className="sv-training-history-main" onClick={()=>void toggleHistoryDetails(item)} aria-expanded={expandedHistoryId===item.id}><span className="sv-training-history-icon"><Activity size={17}/></span><span className="sv-training-history-copy"><b>{item.routine_name}</b><span>{dateLabel(item.completed_at)}</span><small>{item.exercises_completed} exercises · {item.sets_completed} sets</small></span>{loadingHistoryId===item.id?<Loader2 size={14} className="animate-spin"/>:expandedHistoryId===item.id?<ChevronUp size={15}/>:<ChevronDown size={15}/>}</button><strong>{durationLabel(item.duration_seconds)}</strong></article>{expandedHistoryId===item.id&&<div className="sv-training-history-details">{(historyDetails[item.id]??[]).length ? historyDetails[item.id]!.map(set=><div key={set.id}><b>{set.exercise_name}</b><span>SET {set.set_number}</span><strong>{set.reps!==null?`${set.reps} reps`:set.duration_seconds!==null?`${set.duration_seconds}s`:set.distance!==null?`${set.distance} distance`:'Completed'}</strong>{set.weight!==null&&<small>{set.weight} weight</small>}{set.notes&&<small>{set.notes}</small>}</div>) : <p>No set details were recorded for this session.</p>}</div>}</div>)}</div> : <div className="sv-empty-record">NO COMPLETED WORKOUTS SAVED YET. YOUR FINISHED SESSIONS WILL APPEAR HERE.</div>}
+      {legacyHistory.length>0&&<div className="sv-legacy-history"><p className="sv-eyebrow">PREVIOUS DEVICE HISTORY // PRESERVED</p><p className="sv-legacy-history-note">These sessions were saved locally by the previous Training page. They remain on this device and are not mixed into cloud totals.</p>{[...legacyHistory].sort((a,b)=>b.completedAt-a.completedAt).slice(0,12).map(item=><article key={item.id}><div><b>{item.dayName}</b><span>{dateLabel(new Date(item.completedAt).toISOString())}</span><small>{item.completedExercises??0}/{item.totalExercises??0} exercises · {item.exerciseResults?.reduce((sum,exercise)=>sum+exercise.completedSets,0)??0} sets recorded</small></div><strong>{durationLabel(item.durationSeconds)}</strong></article>)}</div>}
     </section>
   </div>;
 }

@@ -29,16 +29,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
+    let mounted = true;
+    let authEventSeen = false;
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
+      authEventSeen = true;
+      if (!mounted) return;
+      setSession(sess);
       setLoading(false);
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
-      setSession(sess);
-    });
+    void supabase.auth.getSession()
+      .then(({ data, error }) => {
+        if (error) throw error;
+        if (mounted && !authEventSeen) setSession(data.session);
+      })
+      .catch((error: unknown) => {
+        console.error('[auth] initial session lookup failed:', error);
+        if (mounted && !authEventSeen) setSession(null);
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
 
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {

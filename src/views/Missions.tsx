@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { CheckCircle2, Circle, Plus, Target, Zap, CalendarDays } from 'lucide-react';
 import { useStore } from '../store/useStore';
-import { DAILY_CHALLENGES } from '../data/tasks';
+import { DAILY_CHALLENGES, WEEKLY_MISSIONS } from '../data/tasks';
 
 export function Missions() {
-  const { state, toggleCoreTask, toggleCustomTask, addCustomTask, claimChallenge } = useStore();
+  const { state, toggleCoreTask, toggleCustomTask, addCustomTask, claimChallenge, claimWeeklyMission } = useStore();
   const [label, setLabel] = useState('');
   const [points, setPoints] = useState('50');
   const core = state.mainTasks.filter(task => task.enabled);
@@ -13,6 +13,9 @@ export function Missions() {
   const total = core.length + state.customTasks.length;
   const challenges = DAILY_CHALLENGES.filter(item => state.dailyChallengeIds.includes(item.id));
   const challengeDone = challenges.filter(item => Boolean(state.dailyChallengeCompleted[item.id])).length;
+  const weeklyMissions = WEEKLY_MISSIONS.filter(item => state.weeklyMissionIds.includes(item.id));
+  const weeklyDone = weeklyMissions.filter(item => Boolean(state.weeklyMissionCompleted[item.id])).length;
+  const completedToday = [...core.filter(task => Boolean(state.coreCompleted[task.id])).map(task => ({ id: task.id, label: task.label, points: task.points, custom: false })), ...state.customTasks.filter(task => Boolean(state.customCompleted[task.id])).map(task => ({ id: task.id, label: task.label, points: task.points, custom: true }))];
 
   function addMission(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -30,6 +33,12 @@ export function Missions() {
       {state.customTasks.map(task => {const complete=Boolean(state.customCompleted[task.id]);return <article className={`sv-mission-row ${complete?'is-complete':''}`} key={task.id}><button aria-label={complete?'Mark incomplete':'Confirm mission complete'} onClick={()=>toggleCustomTask(task.id)}>{complete?<CheckCircle2 size={22}/>:<Circle size={22}/>}</button><span className="sv-mission-icon">✦</span><div className="sv-mission-copy"><b>{task.label}</b><small>PERSONAL MISSION</small></div><strong>+{task.points} XP</strong></article>})}
       </div>
       <form className="sv-add-mission" onSubmit={addMission}><label><span>ADD A PERSONAL MISSION</span><input value={label} onChange={e=>setLabel(e.target.value)} maxLength={90} placeholder="What will you accomplish?" required/></label><label className="sv-xp-input"><span>XP</span><input type="number" min="0" max="200" value={points} onChange={e=>setPoints(e.target.value)}/></label><button type="submit"><Plus size={16}/> Add mission</button></form>
+    </section>
+    <section className="sv-section sv-surface"><div className="sv-section-head"><div><p className="sv-eyebrow">WEEKLY PROTOCOL</p><h2>Weekly Missions</h2><p>Progress is calculated from activity saved in the last seven days.</p></div><span>{weeklyDone}/{weeklyMissions.length}</span></div>
+      <div className="sv-weekly-grid">{weeklyMissions.map(mission=>{const claimed=Boolean(state.weeklyMissionCompleted[mission.id]);const progress=Math.min(mission.target,Math.max(0,mission.progress(state)));return <article className="sv-weekly-card" key={mission.id}><div className="sv-challenge-top"><Target size={17}/><span>{claimed?'REWARD CLAIMED':progress>=mission.target?'READY TO CLAIM':'IN PROGRESS'}</span></div><h3>{mission.label}</h3><p>{mission.description}</p><div className="sv-page-progress"><span style={{width:`${Math.min(100,progress/mission.target*100)}%`}}/></div><div className="sv-weekly-progress">{progress.toLocaleString()} / {mission.target.toLocaleString()}</div><div className="sv-challenge-reward">+{mission.xp} XP <i/> {mission.coins} COINS</div><button disabled={claimed||progress<mission.target} onClick={()=>claimWeeklyMission(mission.id)}>{claimed?'Reward claimed':progress>=mission.target?'Claim reward':'Complete requirement first'}</button></article>})}</div>
+    </section>
+    <section className="sv-section sv-surface"><div className="sv-section-head"><div><p className="sv-eyebrow">COMPLETED TODAY</p><h2>Completed Missions</h2><p>Only actions you manually confirmed are listed here.</p></div><span>{completedToday.length}</span></div>
+      {completedToday.length ? <div className="sv-earned-list">{completedToday.map(task=><div key={task.id}><CheckCircle2 size={17}/><b>{task.label}</b><small>+{task.points} XP {task.custom?'· PERSONAL':'· SYSTEM'}</small></div>)}</div> : <div className="sv-empty-record">NO MISSIONS CONFIRMED YET TODAY.</div>}
     </section>
     <section className="sv-section sv-surface"><div className="sv-section-head"><div><p className="sv-eyebrow">SYSTEM CHALLENGES</p><h2>Special Challenges</h2><p>Rewards are claimable only after the requirement is met.</p></div><span>{challengeDone}/{challenges.length}</span></div>
       <div className="sv-challenge-grid">{challenges.map(challenge=>{const claimed=Boolean(state.dailyChallengeCompleted[challenge.id]);const eligible=challenge.check(state);return <article className="sv-challenge-card" key={challenge.id}><div className="sv-challenge-top"><CalendarDays size={18}/><span>{claimed?'CLAIMED':eligible?'READY TO CLAIM':'IN PROGRESS'}</span></div><h3>{challenge.label}</h3><p>{challenge.description}</p><div className="sv-challenge-reward">+{challenge.xp} XP <i/> {challenge.coins} COINS</div><button disabled={claimed||!eligible} onClick={()=>claimChallenge(challenge.id)}>{claimed?'Reward claimed':eligible?'Claim reward':'Complete requirement first'}</button></article>})}</div>

@@ -144,7 +144,7 @@ export function TrainingCommand() {
     const phase = allDone ? 'exercise' : (saved?.phase ?? 'exercise');
     return {
       session, routine, exercises: joined, sets, currentIndex, currentSet,
-      phase, targetTimestamp: saved?.target_timestamp ?? null, enteredValues: { ...EMPTY_INPUTS, ...(saved?.entered_values ?? {}) }
+      phase, targetTimestamp: allDone ? null : (saved?.target_timestamp ?? null), enteredValues: { ...EMPTY_INPUTS, ...(saved?.entered_values ?? {}) }
     };
   }, [signedExercise]);
 
@@ -180,11 +180,12 @@ export function TrainingCommand() {
     return () => { cancelled = true; };
   }, [loadAll]);
 
+  const activeSessionId = activeWorkout?.session.id;
   useEffect(() => {
-    if (!activeWorkout) return;
+    if (!activeSessionId) return;
     const timer = window.setInterval(()=>setClockNow(Date.now()),1000);
     return ()=>window.clearInterval(timer);
-  }, [activeWorkout?.session.id]);
+  }, [activeSessionId]);
 
   useEffect(() => {
     if (!activeWorkout || activeWorkout.phase !== 'rest' || activeWorkout.session.status === 'PAUSED' || !activeWorkout.targetTimestamp || restRemaining > 0 || restTransition.current) return;
@@ -194,13 +195,13 @@ export function TrainingCommand() {
       setActiveWorkout(next);
       setInputs(EMPTY_INPUTS);
     }).catch(error=>toast({title:'Could not save rest timer state',message:error instanceof Error?error.message:'Please retry.',type:'error'})).finally(()=>{restTransition.current=false;});
-  }, [activeWorkout, restRemaining]);
+  }, [activeWorkout, restRemaining, persistSessionState]);
 
   useEffect(() => {
     if (activeWorkout) setInputs(activeWorkout.enteredValues ?? EMPTY_INPUTS);
-  }, [activeWorkout?.session.id, activeWorkout?.currentIndex, activeWorkout?.currentSet]);
+  }, [activeWorkout?.session.id, activeWorkout?.currentIndex, activeWorkout?.currentSet, activeWorkout?.enteredValues]);
 
-  async function persistSessionState(workout: ActiveWorkout, values: InputValues, paused = workout.session.status === 'PAUSED') {
+  const persistSessionState = useCallback(async (workout: ActiveWorkout, values: InputValues, paused = workout.session.status === 'PAUSED') => {
     const item = workout.exercises[Math.min(workout.currentIndex,workout.exercises.length-1)];
     if (!item) return;
     const { error } = await supabase.rpc('syrox_save_session_state', {
@@ -213,7 +214,7 @@ export function TrainingCommand() {
       p_entered_values: values
     });
     if (error) throw error;
-  }
+  }, []);
 
   function toggleSelected(exerciseId: string) {
     setSelectedIds(old=>old.includes(exerciseId)?old.filter(id=>id!==exerciseId):[...old,exerciseId]);
@@ -291,7 +292,7 @@ export function TrainingCommand() {
       const finishedCurrentExercise = activeWorkout.currentSet >= currentExercise.config.sets;
       const nextIndex = finishedCurrentExercise ? Math.min(activeWorkout.currentIndex+1,activeWorkout.exercises.length-1) : activeWorkout.currentIndex;
       const isLastSet = finishedCurrentExercise && activeWorkout.currentIndex === activeWorkout.exercises.length-1;
-      const nextSet = finishedCurrentExercise ? 1 : activeWorkout.currentSet+1;
+      const nextSet = isLastSet ? currentExercise.config.sets : finishedCurrentExercise ? 1 : activeWorkout.currentSet+1;
       const restSeconds = currentExercise.config.rest_seconds;
       const shouldRest = !isLastSet && restSeconds > 0;
       const next: ActiveWorkout = {...activeWorkout,sets,currentIndex:nextIndex,currentSet:nextSet,phase:shouldRest?'rest':'exercise',targetTimestamp:shouldRest?new Date(Date.now()+restSeconds*1000).toISOString():null,enteredValues:EMPTY_INPUTS};

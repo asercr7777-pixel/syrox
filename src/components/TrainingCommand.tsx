@@ -122,11 +122,11 @@ export function TrainingCommand() {
   }, []);
 
   const migrateLegacyExercises = useCallback(async (ownerId: string, existing: ExerciseRow[]): Promise<ExerciseRow[]> => {
-    let migrationKey = `stryven-training-library-migrated-v1:${ownerId}`;
+    const migrationKey = `stryven-training-library-migrated-v1:${ownerId}`;
     try { if (localStorage.getItem(migrationKey) === '1') return []; } catch { return []; }
     let raw: string | null = null;
     try { raw = localStorage.getItem(LEGACY_LIBRARY_KEY); } catch { return []; }
-    if (!raw) { try { localStorage.setItem(migrationKey,'1'); } catch {} return []; }
+    if (!raw) { try { localStorage.setItem(migrationKey,'1'); } catch { return []; } return []; }
     let days: { exercises?: LegacyExerciseRow[] }[];
     try { const parsed = JSON.parse(raw); if (!Array.isArray(parsed)) throw new Error('Legacy exercise data is invalid.'); days = parsed; }
     catch { toast({title:'Legacy exercise import skipped',message:'The previous local exercise list could not be read. Your cloud data was left unchanged.',type:'error'}); return []; }
@@ -164,7 +164,7 @@ export function TrainingCommand() {
       known.add(name.toLocaleLowerCase());
       imported.push(await signedExercise(data as ExerciseRow));
     }
-    try { localStorage.setItem(migrationKey,'1'); } catch {}
+    try { localStorage.setItem(migrationKey,'1'); } catch (error) { console.warn('[training] could not mark legacy exercise migration complete', error); }
     if (imported.length) toast({title:'Previous exercise library restored',message:`${imported.length} exercise(s) were imported into your account.`,type:'success'});
     if (imageWarning) toast({title:'Some old images could not be copied',message:'The exercise records were preserved; you can add their images again from the editor.',type:'error'});
     return imported;

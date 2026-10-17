@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2.0.3';
+const CACHE_VERSION = 'v2.0.4';
 const STATIC_CACHE = `forged-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `forged-runtime-${CACHE_VERSION}`;
 const IMAGE_CACHE = `forged-images-${CACHE_VERSION}`;

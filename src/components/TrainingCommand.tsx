@@ -178,6 +178,21 @@ export function TrainingCommand() {
     } finally { if (!cancelled()) setLoading(false); }
   }, [userId, signedExercise, hydrateSession]);
 
+  const persistSessionState = useCallback(async (workout: ActiveWorkout, values: InputValues, paused = workout.session.status === 'PAUSED') => {
+    const item = workout.exercises[Math.min(workout.currentIndex,workout.exercises.length-1)];
+    if (!item) return;
+    const { error } = await supabase.rpc('syrox_save_session_state', {
+      p_session_id: workout.session.id,
+      p_routine_exercise_id: item.config.id,
+      p_current_set: Math.max(1,Math.min(50,workout.currentSet)),
+      p_phase: workout.phase,
+      p_target_timestamp: workout.targetTimestamp,
+      p_paused: paused,
+      p_entered_values: values
+    });
+    if (error) throw error;
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     void loadAll(() => cancelled);
@@ -220,21 +235,6 @@ export function TrainingCommand() {
     }, 550);
     return () => window.clearTimeout(timeout);
   }, [activeWorkout, inputs, persistSessionState]);
-
-  const persistSessionState = useCallback(async (workout: ActiveWorkout, values: InputValues, paused = workout.session.status === 'PAUSED') => {
-    const item = workout.exercises[Math.min(workout.currentIndex,workout.exercises.length-1)];
-    if (!item) return;
-    const { error } = await supabase.rpc('syrox_save_session_state', {
-      p_session_id: workout.session.id,
-      p_routine_exercise_id: item.config.id,
-      p_current_set: Math.max(1,Math.min(50,workout.currentSet)),
-      p_phase: workout.phase,
-      p_target_timestamp: workout.targetTimestamp,
-      p_paused: paused,
-      p_entered_values: values
-    });
-    if (error) throw error;
-  }, []);
 
   function toggleSelected(exerciseId: string) {
     setSelectedIds(old=>old.includes(exerciseId)?old.filter(id=>id!==exerciseId):[...old,exerciseId]);

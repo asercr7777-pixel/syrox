@@ -32,6 +32,7 @@ export function Auth() {
   const [remember, setRemember] = useState(true);
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSent, setForgotSent] = useState(false);
@@ -47,13 +48,23 @@ export function Auth() {
     if (!canSubmit) return;
     setLoading(true);
     try {
+      setFormError(null);
       if (mode === 'login') {
         const { error } = await signIn(email.trim(), password);
-        if (error) toast({ title: 'Login failed', message: error, type: 'error' });
+        if (error) {
+          setFormError(error);
+          toast({ title: 'Login failed', message: error, type: 'error' });
+        }
       } else {
-        const { error } = await signUp(email.trim(), password, username.trim());
-        if (error) toast({ title: 'Sign up failed', message: error, type: 'error' });
-        else toast({ title: 'Welcome to STRYVEN!', message: 'Account created. You are now signed in.', type: 'success' });
+        const { error, needsEmailConfirmation } = await signUp(email.trim(), password, username.trim());
+        if (error) {
+          setFormError(error);
+          toast({ title: 'Sign up failed', message: error, type: 'error' });
+        } else if (needsEmailConfirmation) {
+          toast({ title: 'Confirm your email', message: 'Your account was created. Check your inbox to confirm your email before signing in.', type: 'success' });
+        } else {
+          toast({ title: 'Welcome to STRYVEN!', message: 'Account created successfully.', type: 'success' });
+        }
       }
     } catch (error) {
       toast({
@@ -83,11 +94,12 @@ export function Auth() {
       <div className="relative w-full max-w-md py-3 sm:py-6">
         <div className="mb-6 text-center sm:mb-8"><div className="mb-3 inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-ember-500/30 bg-gradient-to-br from-ember-500/20 to-shadow-500/20 sm:mb-4 sm:h-16 sm:w-16"><Shield className="text-ember-400" size={30} /></div><h1 className="font-display text-3xl font-bold text-gradient-ember">STRYVEN</h1><p className="mt-1 text-xs text-ink-300 sm:text-sm">Arise, Hunter. Your awakening begins now.</p></div>
         <div className="card p-4 sm:p-6 md:p-8">
-          <div className="mb-5 flex gap-1 rounded-xl border border-white/5 bg-ink-950/60 p-1 sm:mb-6"><button type="button" onClick={() => setMode('login')} className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition ${mode === 'login' ? 'bg-ember-500/20 text-ember-400' : 'text-ink-300 hover:text-ink-100'}`}>Sign In</button><button type="button" onClick={() => setMode('signup')} className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition ${mode === 'signup' ? 'bg-ember-500/20 text-ember-400' : 'text-ink-300 hover:text-ink-100'}`}>Sign Up</button></div>
+          <div className="mb-5 flex gap-1 rounded-xl border border-white/5 bg-ink-950/60 p-1 sm:mb-6"><button type="button" onClick={() => { setMode('login'); setFormError(null); }} className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition ${mode === 'login' ? 'bg-ember-500/20 text-ember-400' : 'text-ink-300 hover:text-ink-100'}`}>Sign In</button><button type="button" onClick={() => { setMode('signup'); setFormError(null); }} className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition ${mode === 'signup' ? 'bg-ember-500/20 text-ember-400' : 'text-ink-300 hover:text-ink-100'}`}>Sign Up</button></div>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {formError && <div role="alert" className="rounded-xl border border-danger-500/30 bg-danger-500/10 px-3 py-3 text-sm text-danger-300">{formError}</div>}
             {mode === 'signup' && <div><label className="label">Username</label><div className="relative mt-1"><UserIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" /><input className="input pl-10" placeholder="ShadowHunter" value={username} onChange={(e) => setUsername(e.target.value)} maxLength={20} autoComplete="username" /></div>{username.length > 0 && username.length < 3 && <p className="mt-1 text-xs text-danger-400">At least 3 characters</p>}</div>}
-            <div><label className="label">Email</label><div className="relative mt-1"><Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" /><input type="email" className={`input pl-10 ${!emailValid ? 'border-danger-500/50' : ''}`} placeholder="hunter@system.com" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" /></div>{!emailValid && <p className="mt-1 text-xs text-danger-400">Invalid email address</p>}</div>
-            <div><label className="label">Password</label><div className="relative mt-1"><Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" /><input type={showPw ? 'text' : 'password'} className="input pl-10 pr-10" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} /><button type="button" aria-label={showPw ? 'Hide password' : 'Show password'} onClick={() => setShowPw(!showPw)} className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-lg p-2 text-ink-400 hover:text-ink-200">{showPw ? <EyeOff size={16} /> : <Eye size={16} />}</button></div>{mode === 'signup' && password.length > 0 && <div className="mt-2"><div className="flex gap-1">{[0,1,2,3,4].map((i) => <div key={i} className="h-1 flex-1 rounded-full transition-all" style={{ background: i < strength.score ? strength.color : 'rgba(255,255,255,0.08)' }} />)}</div><p className="mt-1 text-xs" style={{ color: strength.color }}>{strength.label}</p></div>}</div>
+            <div><label className="label">Email</label><div className="relative mt-1"><Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" /><input type="email" className={`input pl-10 ${!emailValid ? 'border-danger-500/50' : ''}`} placeholder="hunter@system.com" value={email} onChange={(e) => { setEmail(e.target.value); setFormError(null); }} autoComplete="email" /></div>{!emailValid && <p className="mt-1 text-xs text-danger-400">Invalid email address</p>}</div>
+            <div><label className="label">Password</label><div className="relative mt-1"><Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" /><input type={showPw ? 'text' : 'password'} className="input pl-10 pr-10" placeholder="••••••••" value={password} onChange={(e) => { setPassword(e.target.value); setFormError(null); }} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} /><button type="button" aria-label={showPw ? 'Hide password' : 'Show password'} onClick={() => setShowPw(!showPw)} className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-lg p-2 text-ink-400 hover:text-ink-200">{showPw ? <EyeOff size={16} /> : <Eye size={16} />}</button></div>{mode === 'signup' && password.length > 0 && <div className="mt-2"><div className="flex gap-1">{[0,1,2,3,4].map((i) => <div key={i} className="h-1 flex-1 rounded-full transition-all" style={{ background: i < strength.score ? strength.color : 'rgba(255,255,255,0.08)' }} />)}</div><p className="mt-1 text-xs" style={{ color: strength.color }}>{strength.label}</p></div>}</div>
             {mode === 'signup' && <div><label className="label">Confirm Password</label><div className="relative mt-1"><Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" /><input type={showPw ? 'text' : 'password'} className={`input pl-10 ${!passwordsMatch ? 'border-danger-500/50' : ''}`} placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" /></div>{!passwordsMatch && <p className="mt-1 text-xs text-danger-400">Passwords do not match</p>}</div>}
             {mode === 'login' && <div className="flex flex-wrap items-center justify-between gap-3"><label className="flex cursor-pointer items-center gap-2"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="h-4 w-4 rounded border-ink-500 bg-ink-950 accent-ember-500" /><span className="text-xs text-ink-300">Remember me</span></label><button type="button" onClick={() => { setForgotOpen(true); setForgotSent(false); }} className="text-xs font-semibold text-ember-400 hover:text-ember-300">Forgot password?</button></div>}
             <button type="submit" disabled={!canSubmit} className="btn-primary w-full py-3 disabled:opacity-50">{loading ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}{mode === 'login' ? 'Enter STRYVEN' : 'Begin Awakening'}</button>

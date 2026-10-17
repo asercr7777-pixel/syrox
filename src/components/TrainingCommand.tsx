@@ -194,11 +194,16 @@ export function TrainingCommand() {
     void persistSessionState(next, EMPTY_INPUTS).then(()=>{
       setActiveWorkout(next);
       setInputs(EMPTY_INPUTS);
-    }).catch(error=>toast({title:'Could not save rest timer state',message:error instanceof Error?error.message:'Please retry.',type:'error'})).finally(()=>{restTransition.current=false;});
+    }).catch(error=>{
+      setActiveWorkout(next);
+      setInputs(EMPTY_INPUTS);
+      toast({title:'Rest timer advanced; checkpoint warning',message:error instanceof Error?error.message:'The timer state will be retried on your next action.',type:'error'});
+    }).finally(()=>{restTransition.current=false;});
   }, [activeWorkout, restRemaining, persistSessionState]);
 
   useEffect(() => {
-    if (activeWorkout) setInputs(activeWorkout.enteredValues ?? EMPTY_INPUTS);
+    const values = activeWorkout?.enteredValues;
+    if (values) setInputs({ ...EMPTY_INPUTS, ...values });
   }, [activeWorkout?.session.id, activeWorkout?.currentIndex, activeWorkout?.currentSet, activeWorkout?.enteredValues]);
 
   const persistSessionState = useCallback(async (workout: ActiveWorkout, values: InputValues, paused = workout.session.status === 'PAUSED') => {
@@ -271,6 +276,16 @@ export function TrainingCommand() {
 
   async function logSet() {
     if (!activeWorkout || !currentExercise || !userId || busy) return;
+    const type = currentExercise.exercise.exercise_type;
+    if (['reps','weight_reps','custom'].includes(type) && safeNumber(inputs.reps) === null) {
+      toast({title:'Enter actual reps',message:'Record the reps you completed before saving this set.',type:'error'}); return;
+    }
+    if (['time','hold'].includes(type) && safeNumber(inputs.durationSeconds) === null) {
+      toast({title:'Enter actual duration',message:'Record the completed duration in seconds before saving this set.',type:'error'}); return;
+    }
+    if (type === 'distance' && safeNumber(inputs.distance) === null) {
+      toast({title:'Enter actual distance',message:'Record the distance you completed before saving this set.',type:'error'}); return;
+    }
     setBusy(true);
     try {
       const { data, error } = await supabase.rpc('syrox_complete_set', {
@@ -282,7 +297,7 @@ export function TrainingCommand() {
         p_duration_seconds: safeNumber(inputs.durationSeconds),
         p_distance: safeNumber(inputs.distance),
         p_notes: inputs.notes.trim(),
-        p_configuration: { exercise_type: currentExercise.exercise.exercise_type },
+        p_configuration: { exercise_type: type },
         p_action_token: crypto.randomUUID()
       });
       if (error) throw error;
@@ -298,8 +313,12 @@ export function TrainingCommand() {
       const next: ActiveWorkout = {...activeWorkout,sets,currentIndex:nextIndex,currentSet:nextSet,phase:shouldRest?'rest':'exercise',targetTimestamp:shouldRest?new Date(Date.now()+restSeconds*1000).toISOString():null,enteredValues:EMPTY_INPUTS};
       setActiveWorkout(next);
       setInputs(EMPTY_INPUTS);
-      await persistSessionState(next,EMPTY_INPUTS,false);
-      toast({title:'Set recorded',message:`Set ${logged.set_number} saved to your workout history.`,type:'success'});
+      try {
+        await persistSessionState(next,EMPTY_INPUTS,false);
+        toast({title:'Set recorded',message:`Set ${logged.set_number} saved to your workout history.`,type:'success'});
+      } catch (checkpointError) {
+        toast({title:'Set recorded; checkpoint warning',message:checkpointError instanceof Error?checkpointError.message:'Your set is saved; the resume checkpoint could not be updated.',type:'error'});
+      }
     } catch (error) {
       toast({title:'Set was not confirmed',message:error instanceof Error?error.message:'Please retry. The session remains open.',type:'error'});
     } finally { setBusy(false); }

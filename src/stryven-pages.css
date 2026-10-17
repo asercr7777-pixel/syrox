@@ -217,3 +217,85 @@
 .sv-weekly-card>button:disabled{opacity:.42;cursor:not-allowed}
 @media(max-width:1100px){.sv-weekly-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.sv-weekly-grid{grid-template-columns:1fr}}
+
+/* ---------- DATABASE-BACKED TRAINING CHAMBER ---------- */
+.sv-training-page{display:flex;flex-direction:column;gap:13px;min-width:0}
+.sv-training-page .sv-surface{padding:21px;border:1px solid rgba(148,163,184,.14);border-radius:16px;background:linear-gradient(145deg,rgba(14,18,27,.97),rgba(7,10,15,.95))}
+.sv-routine-name{display:flex;flex-direction:column;gap:7px;margin:15px 0 12px;font-size:8px;font-weight:900;letter-spacing:.12em;color:#9aa5b4}
+.sv-routine-name input,.sv-training-form input,.sv-training-form select,.sv-training-form textarea,.sv-library-config input,.sv-set-input-grid input{width:100%;min-width:0;min-height:40px;padding:10px 12px;border:1px solid rgba(148,163,184,.17);border-radius:9px;background:#06090d;color:#f2f5f8;outline:none;font-size:11px;letter-spacing:normal}
+.sv-routine-name input:focus,.sv-training-form input:focus,.sv-training-form select:focus,.sv-training-form textarea:focus,.sv-library-config input:focus,.sv-set-input-grid input:focus{border-color:rgba(105,199,255,.5)}
+.sv-training-builder-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid rgba(148,163,184,.12);border-bottom:1px solid rgba(148,163,184,.12)}
+.sv-training-builder-toolbar>div{display:flex;flex-direction:column;gap:5px}.sv-training-builder-toolbar b{font-size:12px}.sv-training-builder-toolbar span{font-size:9px;color:#8d98a8}
+.sv-training-library{display:flex;flex-direction:column;gap:8px;margin-top:13px}
+.sv-library-exercise{display:grid;grid-template-columns:27px 54px minmax(0,1fr) auto;align-items:center;gap:11px;min-width:0;padding:12px;border:1px solid rgba(148,163,184,.13);border-radius:12px;background:rgba(255,255,255,.015)}
+.sv-library-exercise.is-selected{border-color:rgba(225,91,107,.45);background:rgba(225,91,107,.035)}
+.sv-library-select{display:grid;place-items:center;width:27px;height:30px;border:0;background:transparent;color:#8995a4}
+.sv-library-exercise.is-selected .sv-library-select{color:#e45b6b}
+.sv-library-image{width:54px;height:54px;object-fit:cover;border-radius:9px;border:1px solid rgba(148,163,184,.14)}
+.sv-library-image-empty{display:grid;place-items:center;color:#8995a4;background:rgba(255,255,255,.025)}
+.sv-library-copy{display:flex;flex-direction:column;gap:5px;min-width:0}
+.sv-library-copy b{font-size:12px;overflow-wrap:anywhere}
+.sv-library-copy small{font-size:9px;color:#8d98a8;overflow-wrap:anywhere}
+.sv-library-copy span{font-size:8px;color:#b9c4d0;text-transform:uppercase;letter-spacing:.07em}
+.sv-library-actions{display:flex;gap:5px}.sv-library-actions button{display:grid;place-items:center;width:30px;height:30px;border:1px solid rgba(148,163,184,.13);border-radius:8px;background:rgba(255,255,255,.025);color:#9ba7b5}
+.sv-library-config{grid-column:2/-1;display:grid;grid-template-columns:70px minmax(0,1fr) 90px;gap:8px;padding-top:11px;border-top:1px solid rgba(148,163,184,.1)}
+.sv-library-config label{display:flex;flex-direction:column;gap:6px;font-size:8px;color:#9aa5b4;font-weight:850;letter-spacing:.08em}
+.sv-library-config input{min-height:35px;padding:8px;font-size:10px}
+.sv-start-session-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:17px;padding:14px;border:1px solid rgba(105,199,255,.17);border-radius:12px;background:rgba(105,199,255,.025)}
+.sv-start-session-bar>div{display:flex;flex-direction:column;gap:5px}.sv-start-session-bar small{font-size:7px;letter-spacing:.13em;color:#8d98a8}.sv-start-session-bar b{font-size:12px}.sv-start-session-bar span{font-size:9px;color:#8d98a8}
+.sv-training-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:180px;padding:24px;text-align:center;color:#8d98a8}
+.sv-training-empty svg{color:#aab5c3}.sv-training-empty b{font-size:12px;color:#e1e7ee}.sv-training-empty span{font-size:10px;line-height:1.7}
+.sv-training-empty .sv-btn{margin-top:6px}
+.sv-active-workout{display:flex;flex-direction:column;gap:16px}
+.sv-session-live{padding:7px 10px;border:1px solid rgba(83,214,162,.25);border-radius:7px;background:rgba(83,214,162,.05);font-size:7px;letter-spacing:.12em;color:#8be2bd;font-weight:900;white-space:nowrap}
+.sv-workout-timer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sv-workout-clock{display:flex;flex-direction:column;gap:7px;min-width:0;padding:17px;border:1px solid rgba(105,199,255,.16);border-radius:13px;background:radial-gradient(circle at 0 0,rgba(105,199,255,.08),transparent 70%),rgba(255,255,255,.012)}
+.sv-workout-clock>svg{color:#8bcfff}.sv-workout-clock>small{font-size:7px;letter-spacing:.13em;color:#8d98a8;font-weight:900}
+.sv-workout-clock>strong{font-size:clamp(26px,4vw,38px);line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.04em}
+.sv-workout-clock>span{font-size:9px;color:#8d98a8;line-height:1.6}
+.sv-workout-clock.is-rest{border-color:rgba(225,91,107,.17);background:radial-gradient(circle at 0 0,rgba(225,91,107,.08),transparent 70%),rgba(255,255,255,.012)}
+.sv-workout-clock.is-rest>svg{color:#e17a88}
+.sv-workout-progress-line>div:first-child{display:flex;justify-content:space-between;gap:10px;font-size:8px;letter-spacing:.1em;color:#8d98a8}
+.sv-workout-progress-line>div:first-child b{color:#e4ebf2}
+.sv-current-exercise{padding:17px;border:1px solid rgba(148,163,184,.14);border-radius:14px;background:rgba(255,255,255,.015)}
+.sv-current-exercise-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sv-set-counter{padding:6px 8px;border:1px solid rgba(225,91,107,.22);border-radius:7px;color:#e5a0a8;font-size:8px;font-weight:900;letter-spacing:.08em;white-space:nowrap}
+.sv-current-exercise-info{display:flex;align-items:center;gap:15px;margin:18px 0}
+.sv-current-exercise-info>img{width:80px;height:80px;object-fit:cover;border-radius:12px;border:1px solid rgba(148,163,184,.15)}
+.sv-current-exercise-info h3{margin:0 0 6px;font-size:clamp(18px,3vw,25px);letter-spacing:-.03em}
+.sv-current-exercise-info p{margin:0 0 8px;font-size:9px;color:#8d98a8}.sv-current-exercise-info strong{font-size:10px;color:#e3a0a8}
+.sv-set-input-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.sv-set-input-grid label{display:flex;flex-direction:column;gap:6px;min-width:0;font-size:8px;letter-spacing:.06em;color:#9aa5b4;font-weight:850}
+.sv-set-input-grid input{min-height:38px;font-size:10px}
+.sv-set-input-grid .sv-set-notes{grid-column:1/-1}
+.sv-current-exercise-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}
+.sv-current-exercise-actions>span{font-size:9px;color:#8d98a8}
+.sv-rest-banner{display:flex;align-items:center;gap:11px;margin:12px 0;padding:13px;border:1px solid rgba(225,91,107,.22);border-radius:10px;background:rgba(225,91,107,.045);color:#e8a0a8}
+.sv-rest-banner>div{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}.sv-rest-banner b{font-size:11px}.sv-rest-banner span{font-size:9px;line-height:1.6;color:#a8aeb8}
+.sv-rest-banner button{padding:7px 9px;border:1px solid rgba(225,91,107,.24);border-radius:7px;background:rgba(225,91,107,.06);font-size:8px;font-weight:900;white-space:nowrap}
+.sv-workout-exercise-list{display:flex;flex-direction:column;gap:6px;margin-top:18px}
+.sv-workout-exercise-list>div{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid rgba(148,163,184,.1);border-radius:9px}
+.sv-workout-exercise-list>div>span{color:#8d98a8}.sv-workout-exercise-list>div>div{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.sv-workout-exercise-list b{font-size:10px}.sv-workout-exercise-list small{font-size:8px;color:#8d98a8}
+.sv-workout-exercise-list i{font-size:7px;font-style:normal;letter-spacing:.1em;color:#e6a0a8}
+.sv-workout-exercise-list>div.is-current{border-color:rgba(225,91,107,.27);background:rgba(225,91,107,.035)}
+.sv-active-workout-footer{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding-top:15px;border-top:1px solid rgba(148,163,184,.12)}
+.sv-training-form-wrap{position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:12px;background:rgba(0,0,0,.76);backdrop-filter:blur(8px)}
+.sv-training-form{display:flex;flex-direction:column;gap:12px;width:min(100%,640px);max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;margin:auto 0;padding:21px;border:1px solid rgba(148,163,184,.18);border-radius:16px;background:#090d13;box-shadow:0 24px 80px rgba(0,0,0,.55)}
+.sv-training-form label{display:flex;flex-direction:column;gap:6px;min-width:0;font-size:8px;font-weight:900;letter-spacing:.1em;color:#9aa5b4}
+.sv-training-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sv-training-form textarea{resize:vertical;min-height:70px}
+.sv-training-image-upload{display:grid;grid-template-columns:minmax(0,1fr) minmax(160px,.8fr);align-items:center;gap:12px;padding:12px;border:1px dashed rgba(148,163,184,.22);border-radius:10px;background:rgba(255,255,255,.015)}
+.sv-training-image-upload>div{display:grid;grid-template-columns:22px minmax(0,1fr);gap:5px 8px;align-items:center}
+.sv-training-image-upload>div svg{grid-row:1/3;color:#aeb8c6}.sv-training-image-upload b{font-size:10px}.sv-training-image-upload small{font-size:8px;color:#8d98a8;line-height:1.5}
+.sv-training-image-upload input{font-size:9px;padding:7px}
+.sv-training-image-upload img{grid-column:1/-1;width:100%;max-height:150px;object-fit:contain;border-radius:8px;background:#05070a}
+.sv-training-form-actions{position:sticky;bottom:-21px;display:flex;justify-content:flex-end;gap:8px;padding:14px 0 0;background:linear-gradient(180deg,rgba(9,13,19,.86),#090d13 25%)}
+.sv-training-history{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.sv-training-history article{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid rgba(148,163,184,.12);border-radius:11px;background:rgba(255,255,255,.015)}
+.sv-training-history-icon{display:grid;place-items:center;width:36px;height:36px;flex:none;border:1px solid rgba(105,199,255,.16);border-radius:9px;color:#8bcfff}
+.sv-training-history article>div:nth-child(2){display:flex;flex-direction:column;gap:5px;flex:1;min-width:0}
+.sv-training-history b{font-size:11px;overflow-wrap:anywhere}.sv-training-history span,.sv-training-history small{font-size:8px;color:#8d98a8}
+.sv-training-history strong{font-size:10px;font-variant-numeric:tabular-nums;white-space:nowrap}
+@media(max-width:760px){.sv-library-exercise{grid-template-columns:26px 45px minmax(0,1fr) auto;gap:8px;padding:10px}.sv-library-image{width:45px;height:45px}.sv-library-actions{flex-direction:column}.sv-set-input-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sv-set-input-grid .sv-set-notes{grid-column:1/-1}}
+@media(max-width:520px){.sv-training-page .sv-surface{padding:15px}.sv-library-exercise{grid-template-columns:25px 42px minmax(0,1fr);gap:8px}.sv-library-image{width:42px;height:42px}.sv-library-actions{grid-column:2/-1;flex-direction:row;justify-content:flex-end}.sv-library-config{grid-column:1/-1;grid-template-columns:64px minmax(0,1fr) 72px}.sv-workout-timer-grid{grid-template-columns:1fr 1fr;gap:7px}.sv-workout-clock{padding:12px}.sv-workout-clock>strong{font-size:25px}.sv-current-exercise{padding:12px}.sv-current-exercise-info>img{width:58px;height:58px}.sv-current-exercise-head{align-items:flex-start;flex-direction:column}.sv-set-input-grid{grid-template-columns:1fr}.sv-set-input-grid .sv-set-notes{grid-column:auto}.sv-active-workout-footer{flex-direction:column}.sv-active-workout-footer .sv-btn{width:100%;justify-content:center}.sv-start-session-bar{align-items:stretch;flex-direction:column}.sv-start-session-bar .sv-btn{justify-content:center}.sv-training-form{padding:15px}.sv-training-form-grid{grid-template-columns:1fr}.sv-training-image-upload{grid-template-columns:1fr}.sv-training-history article{gap:8px}.sv-training-history strong{font-size:9px}}

@@ -1,14 +1,18 @@
 {
   "name": "STRYVEN",
   "short_name": "STRYVEN",
-  "description": "A gamified self-improvement RPG. Complete tasks, train your body, climb ranks, conquer dungeons, and build unstoppable discipline.",
+  "description": "A cinematic self-improvement system for missions, training, XP, ranks, achievements, and personal progression.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
   "theme_color": "#0a0c14",
   "background_color": "#0a0c14",
-  "categories": ["productivity", "lifestyle", "games", "education"],
+  "categories": [
+    "productivity",
+    "lifestyle",
+    "games",
+    "education"
+  ],
   "lang": "en",
   "dir": "ltr",
   "id": "./",
@@ -21,10 +25,58 @@
     }
   ],
   "shortcuts": [
-    { "name": "Dashboard", "short_name": "Home", "description": "View your daily dashboard", "url": "./?view=dashboard", "icons": [{ "src": "icons/ChatGPT%20Image%20Aug%2023%2C%202026%2C%2012_50_30%20PM.png", "sizes": "any", "type": "image/png" }] },
-    { "name": "Tasks", "short_name": "Tasks", "description": "Complete your daily tasks", "url": "./?view=tasks", "icons": [{ "src": "icons/ChatGPT%20Image%20Aug%2023%2C%202026%2C%2012_50_30%20PM.png", "sizes": "any", "type": "image/png" }] },
-    { "name": "Story Mode", "short_name": "Story", "description": "Continue your journey", "url": "./?view=story", "icons": [{ "src": "icons/ChatGPT%20Image%20Aug%2023%2C%202026%2C%2012_50_30%20PM.png", "sizes": "any", "type": "image/png" }] },
-    { "name": "Dungeons", "short_name": "Dungeons", "description": "Enter dungeons and fight bosses", "url": "./?view=dungeons", "icons": [{ "src": "icons/ChatGPT%20Image%20Aug%2023%2C%202026%2C%2012_50_30%20PM.png", "sizes": "any", "type": "image/png" }] }
+    {
+      "name": "Dashboard",
+      "short_name": "Home",
+      "description": "Open your STRYVEN command center",
+      "url": "./?view=dashboard",
+      "icons": [
+        {
+          "src": "icons/ChatGPT%20Image%20Aug%2023%2C%202026%2C%2012_50_30%20PM.png",
+          "sizes": "any",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Missions",
+      "short_name": "Missions",
+      "description": "Review and confirm your missions",
+      "url": "./?view=missions",
+      "icons": [
+        {
+          "src": "icons/ChatGPT%20Image%20Aug%2023%2C%202026%2C%2012_50_30%20PM.png",
+          "sizes": "any",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Training",
+      "short_name": "Training",
+      "description": "Start or resume a training session",
+      "url": "./?view=workout",
+      "icons": [
+        {
+          "src": "icons/ChatGPT%20Image%20Aug%2023%2C%202026%2C%2012_50_30%20PM.png",
+          "sizes": "any",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Hunter Profile",
+      "short_name": "Profile",
+      "description": "View your hunter profile and rank",
+      "url": "./?view=profile",
+      "icons": [
+        {
+          "src": "icons/ChatGPT%20Image%20Aug%2023%2C%202026%2C%2012_50_30%20PM.png",
+          "sizes": "any",
+          "type": "image/png"
+        }
+      ]
+    }
   ],
   "screenshots": [],
   "prefer_related_applications": false

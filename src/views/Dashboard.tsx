@@ -3,7 +3,7 @@ import { getRankByXp, getNextRank } from '../data/ranks';
 import { UserAvatar } from '../components/ui/UserAvatar';
 import { XpBar } from '../components/ui/XpBar';
 import { ALL_CHAPTERS } from '../data/story';
-import { Activity, ArrowUpRight, Award, CheckCircle2, Circle, Clock3, Dumbbell, Flame, Ghost, Target, TrendingUp, Zap } from 'lucide-react';
+import { ArrowUpRight, Award, CheckCircle2, Circle, Clock3, Dumbbell, Flame, Ghost, Target, Zap } from 'lucide-react';
 import type { ViewId } from '../components/Navigation';
 
 interface DashboardProps { onNavigate: (v: ViewId) => void; }

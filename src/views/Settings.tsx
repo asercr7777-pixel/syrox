@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import { useAuth } from '../lib/auth';
 import { ConfirmModal } from '../components/ui/Modal';
 import { BACKGROUNDS, AURAS } from '../data/collections';
+import type { SiteTheme } from '../store/types';
 import { getRankByXp } from '../data/ranks';
 import { RankBadge } from '../components/ui/RankBadge';
 import { Upload, Trash2, Volume2, VolumeX, Palette, User as UserIcon, Image as ImageIcon, Video, Sparkles, LogOut, Moon, Shield, Eye, Cloud, RotateCcw } from 'lucide-react';
@@ -16,6 +17,16 @@ const BANNER_COLORS = ['#1e1b4b','#7f1d1d','#0c4a6e','#14532d','#78350f','#4c1d9
 const ALLOWED_IMAGE_TYPES = ['image/jpeg','image/png','image/webp','image/gif'];
 const ALLOWED_VIDEO_TYPES = ['video/mp4','video/webm','video/ogg'];
 type BgType = 'default' | 'image' | 'video' | 'animated';
+const THEMES: { id: SiteTheme; label: string; detail: string }[] = [
+  { id: 'forge', label: 'Forge', detail: 'Ember / graphite' },
+  { id: 'void', label: 'Void', detail: 'Violet / abyss' },
+  { id: 'nexus', label: 'Nexus', detail: 'Cyan / deep space' },
+  { id: 'shogun', label: 'Shogun', detail: 'Crimson / black' },
+  { id: 'titan', label: 'Titan', detail: 'Gold / stone' },
+  { id: 'rogue', label: 'Rogue', detail: 'Lime / forest' },
+  { id: 'eclipse', label: 'Eclipse', detail: 'Purple / night' },
+  { id: 'overdrive', label: 'Overdrive', detail: 'Electric / steel' },
+];
 
 export function Settings() {
   const { state, updateProfile, setCustomBackground, setBackgroundVideo, setBackgroundType, setBackgroundBlur, setBackgroundDarken, setBackgroundBrightness, setSelectedBackground, toggleSound, resetAll, syncLeaderboard } = useStore();
@@ -29,7 +40,7 @@ export function Settings() {
   const rank = getRankByXp(state.xp);
   const aura = state.equipped.aura ? AURAS.find((a) => a.id === state.equipped.aura) : null;
 
-  useEffect(() => () => { mounted.current = false; }, []);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>, kind: 'image' | 'video') => {
     const file = event.target.files?.[0];
@@ -103,9 +114,10 @@ export function Settings() {
         <section className="sv-settings-card">
           <div className="sv-settings-card__head"><div className="sv-settings-icon"><Palette size={18} /></div><div><span>APPEARANCE</span><h2>Interface</h2></div></div>
           <div className="sv-settings-list">
-            <div className="sv-setting-row"><div><Moon size={16} /><span>Theme</span></div><strong>{state.theme}</strong></div>
+            <div className="sv-setting-row"><div><Moon size={16} /><span>Active theme</span></div><strong>{THEMES.find(theme => theme.id === state.theme)?.label || state.theme}</strong></div>
             <div className="sv-setting-row"><div><Eye size={16} /><span>Current Rank</span></div><strong style={{ color: rank.color }}>{rank.name}</strong></div>
           </div>
+          <div className="sv-theme-grid" aria-label="Choose interface theme">{THEMES.map(theme => <button type="button" key={theme.id} className={state.theme === theme.id ? 'is-selected' : ''} onClick={() => { updateProfile({ theme: theme.id }); playSound('click'); }} aria-pressed={state.theme === theme.id}><span className={`sv-theme-swatch sv-theme-swatch--${theme.id}`}/><b>{theme.label}</b><small>{theme.detail}</small>{state.theme === theme.id && <i>ACTIVE</i>}</button>)}</div>
         </section>
 
         <section className="sv-settings-card sv-settings-card--wide">
@@ -126,7 +138,7 @@ export function Settings() {
 
         <section className="sv-settings-card">
           <div className="sv-settings-card__head"><div className="sv-settings-icon"><Shield size={18} /></div><div><span>DATA</span><h2>Cloud & Storage</h2></div></div>
-          <div className="sv-action-grid"><button className="sv-secondary" onClick={() => syncLeaderboard()}><Cloud size={15} /> Sync Cloud</button><button className="sv-danger" onClick={() => setResetOpen(true)}><RotateCcw size={15} /> Reset Data</button></div>
+          <div className="sv-action-grid"><button className="sv-secondary" onClick={() => syncLeaderboard()}><Cloud size={15} /> Sync Leaderboard</button><button className="sv-danger" onClick={() => setResetOpen(true)}><RotateCcw size={15} /> Reset Data</button></div>
         </section>
 
         <section className="sv-settings-card sv-settings-card--wide sv-settings-card--danger">

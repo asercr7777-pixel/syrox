@@ -8,10 +8,11 @@ import { playSound } from '../lib/sound';
 type Section = 'stretching' | 'main' | 'plyometric';
 type Exercise = { id: string; name: string; sets: number; reps: string; section: Section; done: boolean; image?: string };
 type Day = { id: string; name: string; exercises: Exercise[] };
-export type WorkoutHistoryEntry = { id: string; dayId: string; dayName: string; startedAt: number; completedAt: number; durationSeconds: number };
+export type WorkoutHistoryEntry = { id: string; dayId: string; dayName: string; startedAt: number; completedAt: number; durationSeconds: number; completedExercises?: number; totalExercises?: number };
 
 const KEY = 'stryven-six-day-workout-v1';
 const DATE_KEY = 'stryven-six-day-workout-date-v1';
+const ACTIVE_SESSION_KEY = 'stryven-active-workout-session-v1';
 const STORY_WORKOUT_KEY = 'stryven-story-workout-events-v1';
 export const WORKOUT_HISTORY_KEY = 'stryven-workout-history-v1';
 const seedNames = ['Day 1','Day 2','Day 3','Day 4','Day 5','Day 6'];
@@ -30,6 +31,7 @@ function load(): Day[] {
   return initial();
 }
 function loadHistory(): WorkoutHistoryEntry[] { try { const raw = localStorage.getItem(WORKOUT_HISTORY_KEY); const value = raw ? JSON.parse(raw) : []; return Array.isArray(value) ? value : []; } catch { return []; } }
+function loadActiveSession(): { active: number; elapsed: number; startedAt: number | null } { try { const raw = localStorage.getItem(ACTIVE_SESSION_KEY); if (!raw) return { active: 0, elapsed: 0, startedAt: null }; const value = JSON.parse(raw); return { active: Number.isInteger(value.active) && value.active >= 0 && value.active < 6 ? value.active : 0, elapsed: Number.isFinite(value.elapsed) ? Math.max(0, Math.floor(value.elapsed)) : 0, startedAt: Number.isFinite(value.startedAt) ? value.startedAt : null }; } catch { return { active: 0, elapsed: 0, startedAt: null }; } }
 function todayKey() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function dayKey(timestamp: number) { const d = new Date(timestamp); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function loadStoryWorkoutEvents(): Record<string, number> { try { const raw = localStorage.getItem(STORY_WORKOUT_KEY); const value = raw ? JSON.parse(raw) : {}; return value && typeof value === 'object' ? value : {}; } catch { return {}; } }
@@ -38,14 +40,15 @@ const labels: Record<Section, string> = { stretching: 'Stretching', main: 'Main 
 export function SixDayWorkout() {
   const { state, saveWorkoutSession, completeStoryMission } = useStore();
   const [days, setDays] = useState<Day[]>(load);
-  const [active, setActive] = useState(0);
+  const [savedSession] = useState(loadActiveSession);
+  const [active, setActive] = useState(savedSession.active);
   const [editingDay, setEditingDay] = useState(false);
   const [dayName, setDayName] = useState('');
   const [exerciseDraft, setExerciseDraft] = useState<{ id?: string; name: string; sets: number; reps: string; section: Section; image?: string } | null>(null);
   const [history, setHistory] = useState<WorkoutHistoryEntry[]>(loadHistory);
   const [running, setRunning] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
-  const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [elapsed, setElapsed] = useState(savedSession.elapsed);
+  const [startedAt, setStartedAt] = useState<number | null>(savedSession.startedAt);
 
   const current = days[active];
   const progress = useMemo(() => { const total = current.exercises.length; return total ? Math.round(current.exercises.filter(e => e.done).length / total * 100) : 0; }, [current]);
@@ -146,6 +149,7 @@ export function SixDayWorkout() {
   }, []);
 
   useEffect(() => { const onHistory = () => setHistory(loadHistory()); window.addEventListener('stryven-workout-history-updated', onHistory); return () => window.removeEventListener('stryven-workout-history-updated', onHistory); }, []);
+  useEffect(() => { try { if (startedAt === null && elapsed === 0) localStorage.removeItem(ACTIVE_SESSION_KEY); else localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify({ active, elapsed, startedAt })); } catch { /* Storage may be unavailable; the active session remains usable in memory. */ } }, [active, elapsed, startedAt]);
   useEffect(() => { if (!running || startedAt === null) return; const tick = () => setElapsed(Math.max(0, Math.floor((Date.now() - startedAt) / 1000))); tick(); const id = window.setInterval(tick, 1000); return () => window.clearInterval(id); }, [running, startedAt]);
 
   const startTimer = () => { if (running) return; const now = Date.now(); setStartedAt(now - elapsed * 1000); setRunning(true); playSound('click'); };
@@ -154,7 +158,7 @@ export function SixDayWorkout() {
   const finishTimer = () => {
     if (startedAt === null || elapsed <= 0) return;
     const completedAt = Date.now();
-    const entry: WorkoutHistoryEntry = { id: `${completedAt}-${Math.random()}`, dayId: current.id, dayName: current.name, startedAt, completedAt, durationSeconds: elapsed };
+    const entry: WorkoutHistoryEntry = { id: `${completedAt}-${Math.random()}`, dayId: current.id, dayName: current.name, startedAt, completedAt, durationSeconds: elapsed, completedExercises: current.exercises.filter(exercise => exercise.done).length, totalExercises: current.exercises.length };
     const nextHistory = [entry, ...loadHistory()].slice(0, 100);
     localStorage.setItem(WORKOUT_HISTORY_KEY, JSON.stringify(nextHistory));
     setHistory(nextHistory);
@@ -212,9 +216,9 @@ export function SixDayWorkout() {
   ) : null;
 
   return <div className="stryven-training-system space-y-5">
-    <div><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl card flex items-center justify-center theme-accent-bg"><Trophy size={19} className="theme-accent"/></div><div><h1 className="section-title">6-Day Workout</h1><p className="text-sm text-ink-300">Your split. Your exercises. Your progression.</p></div></div></div>
+    <div><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl card flex items-center justify-center theme-accent-bg"><Trophy size={19} className="theme-accent"/></div><div><h1 className="section-title">Training Command</h1><p className="text-sm text-ink-300">Build each session from exercises you choose. No preset routine is forced on you.</p></div></div></div>
 
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">{days.map((d, i) => <button type="button" key={d.id} onClick={() => { if (!running) setActive(i); }} className={`card p-3 text-left transition-all ${active === i ? 'theme-accent-border theme-accent-bg' : 'hover:border-white/20'} ${running ? 'cursor-default' : ''}`}><p className="text-xs text-ink-400">DAY {i + 1}</p><p className="font-bold truncate mt-1">{d.name}</p><p className="text-xs text-ink-400 mt-1">{d.exercises.filter(e => e.done).length}/{d.exercises.length} complete</p></button>)}</div>
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">{days.map((d, i) => <button type="button" key={d.id} onClick={() => { if (!running && startedAt === null) setActive(i); }} disabled={running || startedAt !== null} className={`card p-3 text-left transition-all ${active === i ? 'theme-accent-border theme-accent-bg' : 'hover:border-white/20'} ${running || startedAt !== null ? 'cursor-default opacity-80' : ''}`}><p className="text-xs text-ink-400">DAY {i + 1}</p><p className="font-bold truncate mt-1">{d.name}</p><p className="text-xs text-ink-400 mt-1">{d.exercises.filter(e => e.done).length}/{d.exercises.length} complete</p></button>)}</div>
 
     <div className="card-premium p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -237,7 +241,7 @@ export function SixDayWorkout() {
 
     <div className="card-premium p-5 sm:p-6">
       <div className="flex items-center gap-2 mb-4"><History size={18} className="theme-accent"/><div><h2 className="font-display text-lg font-bold">Workout History</h2><p className="text-xs text-ink-400">Duration, time and training day are preserved for every saved session.</p></div></div>
-      {history.length === 0 ? <div className="py-7 text-center text-sm text-ink-400">No completed sessions yet. Start the timer and finish your first workout.</div> : <div className="space-y-2">{history.slice(0, 8).map(entry => <div key={entry.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-white/5 bg-ink-950/30 p-3"><div className="w-9 h-9 rounded-lg card flex items-center justify-center"><Clock size={16} className="theme-accent"/></div><div className="flex-1 min-w-[140px]"><p className="font-semibold">{entry.dayName}</p><p className="text-xs text-ink-400">{formatDate(entry.completedAt)}</p></div><div className="text-sm font-mono font-semibold">{formatDuration(entry.durationSeconds)}</div></div>)}</div>}
+      {history.length === 0 ? <div className="py-7 text-center text-sm text-ink-400">No completed sessions yet. Start the timer and finish your first workout.</div> : <div className="space-y-2">{history.slice(0, 8).map(entry => <div key={entry.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-white/5 bg-ink-950/30 p-3"><div className="w-9 h-9 rounded-lg card flex items-center justify-center"><Clock size={16} className="theme-accent"/></div><div className="flex-1 min-w-[140px]"><p className="font-semibold">{entry.dayName}</p><p className="text-xs text-ink-400">{formatDate(entry.completedAt)}</p>{typeof entry.completedExercises === 'number' && <p className="text-xs text-ink-400">{entry.completedExercises}/{entry.totalExercises ?? entry.completedExercises} exercises confirmed</p>}</div><div className="text-sm font-mono font-semibold">{formatDuration(entry.durationSeconds)}</div></div>)}</div>}
     </div>
 
     {exerciseModal}

@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
-import { Award, CalendarDays, CheckCircle2, Clock3, Crown, Dumbbell, Ghost, ImageUp, Shield, Target, Trophy, Upload, Zap } from 'lucide-react';
+import { Award, CalendarDays, CheckCircle2, Clock3, Crown, Dumbbell, ImageUp, Shield, Target, Trophy, Upload, Zap } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useAuth } from '../lib/auth';
 import { getRankByXp, getNextRank } from '../data/ranks';
@@ -19,7 +19,7 @@ const formatDuration = (seconds:number) => {
 };
 
 export function Profile() {
-  const { state } = useStore();
+  const { state, updateProfile } = useStore();
   const { user } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading,setUploading]=useState(false);
@@ -44,11 +44,9 @@ export function Profile() {
         const result=await uploadBackground(user.id,file,'image');
         if(result.error||!result.url)throw new Error(result.error||'Upload failed');
         // Avatar URL is stored in the account state, not in an untrusted client-only field.
-        const { updateProfile } = useProfileUpdate();
         updateProfile({avatar:result.url});
       }else{
         const url=await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=reject;reader.readAsDataURL(file);});
-        const { updateProfile } = useProfileUpdate();
         updateProfile({avatar:url});
       }
       toast({title:'Identity image updated',type:'success'});
@@ -113,10 +111,6 @@ export function Profile() {
       <div className="sv-profile-footer-facts"><div><small>ACCOUNT CREATED</small><b>{new Date(state.createdAt).toLocaleDateString()}</b></div><div><small>FULL-CLEAR DAYS</small><b>{completedDays}</b></div><div><small>RANK</small><b>{rank.name}</b></div></div>
     </section>
   </div>;
-}
-
-function useProfileUpdate() {
-  return useStore();
 }
 function ProfileStat({icon,label,value,detail}:{icon:React.ReactNode;label:string;value:string;detail:string}) {
   return <article className="sv-dashboard-stat"><span>{icon}</span><div><small>{label}</small><strong>{value}</strong><p>{detail}</p></div></article>;

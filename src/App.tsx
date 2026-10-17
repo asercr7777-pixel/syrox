@@ -46,7 +46,8 @@ function PageLoader(){return <div className="stryven-page-loader" role="status" 
 function AppContent(){
   const {user,loading}=useAuth(); const {state,loadFromCloud,setUserId}=useStore(); const [view,setView]=useState<ViewId>(getViewFromUrl); const {isInstalled,isInstallable,promptInstall}=usePWA(); const isReset=typeof window!=='undefined'&&new URLSearchParams(window.location.search).get('reset')==='1';
   useEffect(()=>{syncSoundFlag(state.soundEnabled)},[state.soundEnabled]);
-  useEffect(()=>{if(!user){setUserId(null);return}void Promise.allSettled([ensureStoryReset(user.id),loadFromCloud(user.id)])},[user,setUserId,loadFromCloud]);
+  const userId=user?.id??null;
+  useEffect(()=>{if(!userId){setUserId(null);return}void Promise.allSettled([ensureStoryReset(userId),loadFromCloud(userId)])},[userId,setUserId,loadFromCloud]);
   useEffect(()=>{const onPopState=()=>setView(getViewFromUrl());window.addEventListener('popstate',onPopState);return()=>window.removeEventListener('popstate',onPopState)},[]);
   useEffect(()=>{document.documentElement.setAttribute('data-theme',state.theme);document.body.setAttribute('data-theme',state.theme);return()=>{document.documentElement.removeAttribute('data-theme');document.body.removeAttribute('data-theme')}},[state.theme]);
   const handleNavigate=(target:ViewId)=>{setView(target);const url=new URL(window.location.href);url.searchParams.set('view',target);window.history.pushState({},'',url);window.scrollTo({top:0,behavior:'auto'})};

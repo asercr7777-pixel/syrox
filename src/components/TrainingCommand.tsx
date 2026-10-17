@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, Archive, CheckCircle2, Circle, Clock3, Dumbbell, ImagePlus, Loader2, Pause, Play, Plus, RefreshCw, Save, ShieldCheck, Target, TimerReset, X } from 'lucide-react';
+import { Activity, Archive, CheckCircle2, ChevronDown, ChevronUp, Circle, Clock3, Dumbbell, ImagePlus, Loader2, Pause, Play, Plus, RefreshCw, Save, ShieldCheck, Target, TimerReset, X } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { supabase } from '../lib/supabase';
 import { useStore } from '../store/useStore';
@@ -39,6 +39,7 @@ type ActiveWorkout = {
   enteredValues: InputValues;
 };
 type HistoryRow = { id: string; session_id: string; routine_name: string; started_at: string; completed_at: string; duration_seconds: number; exercises_completed: number; sets_completed: number };
+type HistorySet = SetRow & { exercise_name: string };
 
 const EMPTY_INPUTS: InputValues = { reps: '', weight: '', durationSeconds: '', distance: '', notes: '' };
 const ACTIVE_STATUSES = ['STARTING', 'ACTIVE', 'RESTING', 'PAUSED', 'COMPLETING'];
@@ -72,6 +73,9 @@ export function TrainingCommand() {
   const [busy, setBusy] = useState(false);
   const [exercises, setExercises] = useState<ExerciseRow[]>([]);
   const [history, setHistory] = useState<HistoryRow[]>([]);
+  const [historyDetails, setHistoryDetails] = useState<Record<string,HistorySet[]>>({});
+  const [expandedHistoryId, setExpandedHistoryId] = useState<string|null>(null);
+  const [loadingHistoryId, setLoadingHistoryId] = useState<string|null>(null);
   const [activeWorkout, setActiveWorkout] = useState<ActiveWorkout | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [routineName, setRoutineName] = useState('');
@@ -411,6 +415,31 @@ export function TrainingCommand() {
     } finally {setBusy(false);}
   }
 
+  async function toggleHistoryDetails(item: HistoryRow) {
+    if (!userId) return;
+    if (expandedHistoryId === item.id) { setExpandedHistoryId(null); return; }
+    setExpandedHistoryId(item.id);
+    if (historyDetails[item.id]) return;
+    setLoadingHistoryId(item.id);
+    try {
+      const {data:setRows,error:setError}=await supabase.from('syrox_workout_session_sets').select('*').eq('session_id',item.session_id).eq('user_id',userId).order('set_number');
+      if(setError) throw setError;
+      const rows=(setRows??[]) as SetRow[];
+      const configIds=[...new Set(rows.map(row=>row.routine_exercise_id))];
+      const configResult=configIds.length?await supabase.from('syrox_routine_exercises').select('id,exercise_id').in('id',configIds):{data:[],error:null};
+      if(configResult.error) throw configResult.error;
+      const exerciseIds=[...new Set(((configResult.data??[]) as {id:string;exercise_id:string}[]).map(row=>row.exercise_id))];
+      const exerciseResult=exerciseIds.length?await supabase.from('syrox_user_exercises').select('id,name').eq('user_id',userId).in('id',exerciseIds):{data:[],error:null};
+      if(exerciseResult.error) throw exerciseResult.error;
+      const nameMap=new Map(((exerciseResult.data??[]) as {id:string;name:string}[]).map(row=>[row.id,row.name]));
+      const exerciseMap=new Map(((configResult.data??[]) as {id:string;exercise_id:string}[]).map(row=>[row.id,nameMap.get(row.exercise_id)??'Archived exercise']));
+      setHistoryDetails(old=>({...old,[item.id]:rows.map(row=>({...row,exercise_name:exerciseMap.get(row.routine_exercise_id)??'Exercise'}))}));
+    } catch(error) {
+      toast({title:'Could not load set details',message:error instanceof Error?error.message:'Please retry.',type:'error'});
+      setExpandedHistoryId(null);
+    } finally {setLoadingHistoryId(null);}
+  }
+
   function editExercise(exercise: ExerciseRow) {
     setEditingExerciseId(exercise.id);
     setExerciseForm({name:exercise.name,muscleGroup:exercise.muscle_group??'',equipment:exercise.equipment??'',category:exercise.category??'strength',instructions:exercise.instructions??'',notes:exercise.notes??'',exerciseType:exercise.exercise_type});
@@ -534,7 +563,7 @@ export function TrainingCommand() {
 
     {exerciseFormContent}
     <section className="sv-section sv-surface"><div className="sv-section-head"><div><span className="sv-eyebrow">SESSION ARCHIVE</span><h2>Workout History</h2><p>Completed sessions saved by the workout database.</p></div><button type="button" className="sv-btn sv-btn--ghost" onClick={()=>void loadAll(()=>false)} disabled={loading}><RefreshCw size={14}/> Refresh</button></div>
-      {history.length ? <div className="sv-training-history">{history.map(item=><article key={item.id}><div className="sv-training-history-icon"><Activity size={17}/></div><div><b>{item.routine_name}</b><span>{dateLabel(item.completed_at)}</span><small>{item.exercises_completed} exercises · {item.sets_completed} sets</small></div><strong>{durationLabel(item.duration_seconds)}</strong></article>)}</div> : <div className="sv-empty-record">NO COMPLETED WORKOUTS SAVED YET. YOUR FINISHED SESSIONS WILL APPEAR HERE.</div>}
+      {history.length ? <div className="sv-training-history">{history.map(item=><div className="sv-history-record" key={item.id}><article><button type="button" className="sv-training-history-main" onClick={()=>void toggleHistoryDetails(item)} aria-expanded={expandedHistoryId===item.id}><span className="sv-training-history-icon"><Activity size={17}/></span><span className="sv-training-history-copy"><b>{item.routine_name}</b><span>{dateLabel(item.completed_at)}</span><small>{item.exercises_completed} exercises · {item.sets_completed} sets</small></span>{loadingHistoryId===item.id?<Loader2 size={14} className="animate-spin"/>:expandedHistoryId===item.id?<ChevronUp size={15}/>:<ChevronDown size={15}/>}</button><strong>{durationLabel(item.duration_seconds)}</strong></article>{expandedHistoryId===item.id&&<div className="sv-training-history-details">{(historyDetails[item.id]??[]).length ? historyDetails[item.id].map(set=><div key={set.id}><b>{set.exercise_name}</b><span>SET {set.set_number}</span><strong>{set.reps!==null?`${set.reps} reps`:set.duration_seconds!==null?`${set.duration_seconds}s`:set.distance!==null?`${set.distance} distance`:'Completed'}</strong>{set.weight!==null&&<small>{set.weight} weight</small>}{set.notes&&<small>{set.notes}</small>}</div>) : <p>No set details were recorded for this session.</p>}</div>}</div>)}</div> : <div className="sv-empty-record">NO COMPLETED WORKOUTS SAVED YET. YOUR FINISHED SESSIONS WILL APPEAR HERE.</div>}
     </section>
   </div>;
 }

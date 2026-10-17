@@ -206,6 +206,17 @@ export function TrainingCommand() {
     if (values) setInputs({ ...EMPTY_INPUTS, ...values });
   }, [activeWorkout?.session.id, activeWorkout?.currentIndex, activeWorkout?.currentSet, activeWorkout?.enteredValues]);
 
+  useEffect(() => {
+    if (!activeWorkout || activeWorkout.session.status === 'PAUSED') return;
+    const timeout = window.setTimeout(() => {
+      const checkpoint = { ...activeWorkout, enteredValues: inputs };
+      void persistSessionState(checkpoint, inputs, false).catch(() => {
+        // A later input, pause, or set completion will retry the checkpoint.
+      });
+    }, 550);
+    return () => window.clearTimeout(timeout);
+  }, [activeWorkout, inputs, persistSessionState]);
+
   const persistSessionState = useCallback(async (workout: ActiveWorkout, values: InputValues, paused = workout.session.status === 'PAUSED') => {
     const item = workout.exercises[Math.min(workout.currentIndex,workout.exercises.length-1)];
     if (!item) return;

@@ -1,6 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /api/
-Disallow: /functions/
 
-Sitemap: https://discipline.app/sitemap.xml
+Sitemap: https://stryven.vercel.app/sitemap.xml

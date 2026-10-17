@@ -84,6 +84,39 @@ export const DAILY_CHALLENGES: DailyChallenge[] = [
   { id: 'dungeon_run', label: 'Clear a dungeon', description: 'Complete today\'s dungeon.', xp: 200, coins: 200, check: (s) => s && s.dungeonClearedToday },
 ];
 
+export interface WeeklyMission {
+  id: string;
+  label: string;
+  description: string;
+  target: number;
+  xp: number;
+  coins: number;
+  progress: (state: any) => number;
+}
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+function recentHistory(state: any) {
+  const cutoff = Date.now() - WEEK_MS;
+  return (state.history ?? []).filter((day: any) => {
+    const stamp = new Date(`${day.date}T00:00:00`).getTime();
+    return Number.isFinite(stamp) && stamp >= cutoff;
+  });
+}
+function recentTrainingSessions(state: any) {
+  const cutoff = Date.now() - WEEK_MS;
+  return (state.workoutSessions ?? []).filter((session: any) => session.completedAt >= cutoff && session.completedAt <= Date.now());
+}
+function recentMissionCount(state: any) {
+  return recentHistory(state).reduce((sum: number, day: any) =>
+    sum + Object.values(day.coreCompleted ?? {}).filter(Boolean).length + Object.values(day.customCompleted ?? {}).filter(Boolean).length, 0);
+}
+export const WEEKLY_MISSIONS: WeeklyMission[] = [
+  { id: 'weekly_training_3', label: 'Training Protocol', description: 'Log three training sessions in the last seven days.', target: 3, xp: 250, coins: 150, progress: (state) => recentTrainingSessions(state).length },
+  { id: 'weekly_missions_20', label: 'Objective Hunter', description: 'Confirm twenty missions across the last seven days.', target: 20, xp: 250, coins: 100, progress: (state) => recentMissionCount(state) },
+  { id: 'weekly_clear_3', label: 'System Clear', description: 'Complete all main missions on three recorded days.', target: 3, xp: 300, coins: 200, progress: (state) => recentHistory(state).filter((day: any) => day.allMainDone).length },
+  { id: 'weekly_streak_5', label: 'Unbroken Will', description: 'Reach a five-day current streak.', target: 5, xp: 200, coins: 100, progress: (state) => Math.max(0, state.streak ?? 0) },
+  { id: 'weekly_xp_1500', label: 'Power Surge', description: 'Earn 1,500 XP across the last seven days.', target: 1500, xp: 200, coins: 150, progress: (state) => recentHistory(state).reduce((sum: number, day: any) => sum + Math.max(0, day.xpGained ?? 0), 0) },
+];
+
 // The store currently converts the old "shards" reward type into Coins because
 // there is no persistent shard balance in AppState. Keep these rewards honest
 // and consistent with what the player actually receives.

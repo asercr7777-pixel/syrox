@@ -1,7 +1,7 @@
-import { SixDayWorkout } from './SixDayWorkout';
+import { TrainingCommand } from './TrainingCommand';
 
 export function WorkoutWithAIPlan() {
-  return <SixDayWorkout />;
+  return <TrainingCommand />;
 }
 
 export default WorkoutWithAIPlan;

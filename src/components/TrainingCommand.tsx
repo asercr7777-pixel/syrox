@@ -178,6 +178,12 @@ export function TrainingCommand() {
     } finally { if (!cancelled()) setLoading(false); }
   }, [userId, signedExercise, hydrateSession]);
 
+  useEffect(() => {
+    let cancelled = false;
+    void loadAll(() => cancelled);
+    return () => { cancelled = true; };
+  }, [loadAll]);
+
   const persistSessionState = useCallback(async (workout: ActiveWorkout, values: InputValues, paused = workout.session.status === 'PAUSED') => {
     const item = workout.exercises[Math.min(workout.currentIndex,workout.exercises.length-1)];
     if (!item) return;
@@ -192,12 +198,6 @@ export function TrainingCommand() {
     });
     if (error) throw error;
   }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    void loadAll(() => cancelled);
-    return () => { cancelled = true; };
-  }, [loadAll]);
 
   const activeSessionId = activeWorkout?.session.id;
   useEffect(() => {

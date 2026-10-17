@@ -10,6 +10,7 @@ import { Upload, Trash2, Volume2, VolumeX, Palette, User as UserIcon, Image as I
 import { toast } from '../components/ui/Toast';
 import { playSound } from '../lib/sound';
 import { uploadBackground } from '../lib/backgroundUpload';
+import { supabase } from '../lib/supabase';
 
 const AVATARS = ['🐺','😈','👑','🔥','⚡','🌑','🗡️','🛡️','⚔️','🐉','👻','🦅','🦁','🐍','🦊','🐲','💀','🤴','🥷','🧙'];
 const NAME_COLORS = ['#fbbf24','#ff7a18','#a855f7','#06b6d4','#10b981','#f43f5e','#3b82f6','#ec4899'];
@@ -34,6 +35,7 @@ export function Settings() {
   const [resetOpen, setResetOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [sendingReset, setSendingReset] = useState(false);
   const imageRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
   const mounted = useRef(true);
@@ -92,6 +94,17 @@ export function Settings() {
   };
 
   const signOutNow = async () => { playSound('click'); await signOut(); };
+  const sendPasswordReset = async () => {
+    if (!user?.email) { toast({ title: 'Email unavailable', message: 'This account has no email address available for recovery.', type: 'error' }); return; }
+    setSendingReset(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, { redirectTo: `${window.location.origin}/?view=auth&reset=1` });
+      if (error) throw error;
+      toast({ title: 'Password reset email sent', message: 'Check your inbox for a secure password reset link.', type: 'success' });
+    } catch (error) {
+      toast({ title: 'Could not send reset email', message: error instanceof Error ? error.message : 'Please try again.', type: 'error' });
+    } finally { setSendingReset(false); }
+  };
 
   return (
     <div className="sv-settings">
@@ -143,6 +156,7 @@ export function Settings() {
 
         <section className="sv-settings-card sv-settings-card--wide sv-settings-card--danger">
           <div className="sv-settings-card__head"><div className="sv-settings-icon"><LogOut size={18} /></div><div><span>SESSION</span><h2>Account Session</h2></div></div>
+          <div className="sv-session-row"><div><b>Signed-in account</b><span>{user?.email || 'Account email unavailable'}</span></div><button className="sv-secondary" disabled={sendingReset || !user?.email} onClick={sendPasswordReset}><Shield size={15} />{sendingReset ? 'Sending…' : 'Reset Password'}</button></div>
           <div className="sv-session-row"><div><b>Sign out of STRYVEN</b><span>Your cloud progress remains saved.</span></div><button className="sv-danger" onClick={() => setLogoutOpen(true)}><LogOut size={15} /> Sign Out</button></div>
         </section>
       </div>

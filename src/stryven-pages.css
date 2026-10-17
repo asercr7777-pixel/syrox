@@ -16,3 +16,93 @@
 .stryven-view-settings .card{height:100%}
 @media(max-width:900px){.stryven-view-profile .space-y-6>div:nth-child(3){grid-template-columns:repeat(3,minmax(0,1fr))}.stryven-view-profile .space-y-6>div:nth-child(4){grid-template-columns:repeat(3,minmax(0,1fr))}.stryven-view-settings .space-y-6>div:nth-child(n+2){grid-column:1/-1}}
 @media(max-width:560px){.stryven-view-profile .space-y-6>div:nth-child(3),.stryven-view-profile .space-y-6>div:nth-child(4){grid-template-columns:repeat(2,minmax(0,1fr))}.stryven-view-settings .space-y-6{gap:10px}}
+
+/* ---------- CORE PAGE MODULES ---------- */
+.sv-page-module{display:flex;flex-direction:column;gap:14px;min-width:0}
+.sv-module-header{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:2px}
+.sv-module-header h1{font-size:clamp(36px,5vw,58px);letter-spacing:-.055em;line-height:.98;margin:9px 0 6px;font-weight:950}
+.sv-module-header p:not(.sv-eyebrow){margin:0;color:var(--sv-dim,#8d98a8);font-size:12px;line-height:1.7}
+.sv-eyebrow{display:flex;align-items:center;gap:7px;color:var(--sv-blue,#69c7ff);font-size:8px;font-weight:900;letter-spacing:.17em;text-transform:uppercase;margin:0}
+.sv-page-module .sv-surface{padding:21px;border:1px solid rgba(148,163,184,.14);border-radius:16px;background:linear-gradient(145deg,rgba(14,18,27,.97),rgba(7,10,15,.95));box-shadow:0 18px 45px rgba(0,0,0,.2)}
+.sv-page-progress{height:5px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.07);margin:12px 0}
+.sv-page-progress>span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#8c2635,#e45b6b);transition:width .25s ease}
+.sv-mission-list{display:flex;flex-direction:column;gap:7px;margin-top:14px}
+.sv-mission-row{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid rgba(148,163,184,.12);border-radius:11px;background:rgba(255,255,255,.018);min-width:0}
+.sv-mission-row>button{display:grid;place-items:center;flex:none;width:30px;height:30px;color:#aeb8c3;background:transparent;border:0;cursor:pointer}
+.sv-mission-row.is-complete>button{color:#53d6a2}
+.sv-mission-icon{display:grid;place-items:center;flex:none;width:38px;height:38px;border-radius:10px;background:rgba(225,77,91,.07);border:1px solid rgba(225,77,91,.16);font-size:17px}
+.sv-mission-copy{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.sv-mission-copy b{font-size:12px;overflow-wrap:anywhere}
+.sv-mission-copy small,.sv-mission-row>strong{font-size:8px;letter-spacing:.08em;color:#8d98a8}
+.sv-mission-row>strong{white-space:nowrap;color:#e5a1a8}
+.sv-mission-row.is-complete .sv-mission-copy b{text-decoration:line-through;color:#8d98a8}
+.sv-add-mission{display:grid;grid-template-columns:minmax(0,1fr) 84px auto;gap:9px;align-items:end;margin-top:15px}
+.sv-add-mission label{display:flex;flex-direction:column;gap:7px;min-width:0}
+.sv-add-mission label>span{font-size:8px;font-weight:900;letter-spacing:.12em;color:#9aa5b4}
+.sv-add-mission input{width:100%;min-width:0;min-height:41px;padding:10px 12px;color:#f4f7fb;background:#06090d;border:1px solid rgba(148,163,184,.18);border-radius:9px;outline:none}
+.sv-add-mission input:focus{border-color:rgba(105,199,255,.5)}
+.sv-add-mission button,.sv-achievement-notice button{min-height:41px;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:0 14px;border-radius:9px;background:#e5edf5;color:#080b10;font-size:10px;font-weight:900;border:1px solid #fff}
+.sv-challenge-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.sv-challenge-card{min-width:0;padding:16px;border:1px solid rgba(148,163,184,.13);border-radius:13px;background:rgba(255,255,255,.018);display:flex;flex-direction:column}
+.sv-challenge-top{display:flex;justify-content:space-between;gap:8px;align-items:center;color:#a9b7c7}
+.sv-challenge-top span{font-size:7px;letter-spacing:.1em;color:#8d98a8;text-align:right}
+.sv-challenge-card h3{font-size:15px;margin:16px 0 7px}
+.sv-challenge-card p{font-size:10px;line-height:1.7;color:#8d98a8;margin:0;flex:1}
+.sv-challenge-reward{display:flex;gap:8px;align-items:center;margin:15px 0;font-size:9px;font-weight:900;color:#e6a1a8}
+.sv-challenge-reward i{width:3px;height:3px;border-radius:50%;background:#677283}
+.sv-challenge-card>button{min-height:36px;border:1px solid rgba(255,255,255,.14);border-radius:8px;background:rgba(255,255,255,.06);color:#eef2f7;font-size:9px;font-weight:800}
+.sv-challenge-card>button:disabled{opacity:.42;cursor:not-allowed}
+.sv-analytics-metrics{margin-top:0!important}
+.sv-chart-bars{height:230px;display:flex;align-items:stretch;gap:8px;padding-top:18px;overflow-x:auto}
+.sv-chart-column{display:flex;flex:1;min-width:35px;flex-direction:column;align-items:center;gap:8px}
+.sv-chart-column>strong{font-size:8px;color:#9da8b7}
+.sv-chart-column>span{display:flex;align-items:flex-end;justify-content:center;width:100%;height:100%;background:rgba(255,255,255,.018);border-radius:7px;overflow:hidden}
+.sv-chart-column>span>i{display:block;width:62%;min-height:3px;background:linear-gradient(180deg,#e45b6b,#742331);border-radius:5px 5px 0 0}
+.sv-chart-column>small{font-size:8px;color:#8d98a8;white-space:nowrap}
+.sv-analytics-foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:#8d98a8;font-size:9px}
+.sv-analytics-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:18px}
+.sv-analytics-summary>div,.sv-loadout-grid>div{padding:13px;border:1px solid rgba(148,163,184,.12);border-radius:10px;background:rgba(255,255,255,.018)}
+.sv-analytics-summary small,.sv-loadout-grid small{display:block;color:#8d98a8;font-size:8px;letter-spacing:.1em}
+.sv-analytics-summary b,.sv-loadout-grid b{display:block;margin-top:7px;font-size:13px;overflow-wrap:anywhere}
+.sv-achievement-notice{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px;border:1px solid rgba(83,214,162,.22);border-radius:13px;background:rgba(83,214,162,.045)}
+.sv-achievement-notice b{font-size:12px}.sv-achievement-notice p{margin:5px 0 0;color:#9aa5b4;font-size:10px;line-height:1.6}
+.sv-achievement-grid,.sv-shadow-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.sv-achievement-card,.sv-shadow-card{min-width:0;padding:19px;border:1px solid rgba(148,163,184,.13);border-radius:15px;background:linear-gradient(145deg,rgba(14,18,27,.96),rgba(7,10,15,.96))}
+.sv-achievement-card.is-unlocked{border-color:rgba(83,214,162,.27);background:linear-gradient(145deg,rgba(9,30,26,.55),rgba(7,10,15,.96))}
+.sv-achievement-emblem,.sv-shadow-avatar,.sv-shadow-mark{display:grid;place-items:center;width:56px;height:56px;margin-bottom:20px;border:1px solid rgba(148,163,184,.18);border-radius:14px;background:rgba(255,255,255,.025);color:#8793a3}
+.sv-achievement-card.is-unlocked .sv-achievement-emblem{color:#53d6a2;border-color:rgba(83,214,162,.28)}
+.sv-achievement-card h2,.sv-shadow-card h3{font-size:18px;margin:9px 0}
+.sv-achievement-card p,.sv-shadow-card p{font-size:10px;line-height:1.7;color:#8d98a8;min-height:34px}
+.sv-achievement-card>small,.sv-shadow-card>small{font-size:8px;color:#8d98a8;letter-spacing:.06em}
+.sv-earned-list{display:flex;flex-direction:column;gap:7px}
+.sv-earned-list>div{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid rgba(148,163,184,.12);border-radius:9px}
+.sv-earned-list>div svg{color:#e3b45e}.sv-earned-list b{font-size:11px;text-transform:capitalize}.sv-earned-list small{margin-left:auto;color:#8d98a8;font-size:9px}
+.sv-shadow-hero{display:flex;align-items:center;gap:20px}
+.sv-shadow-mark{width:84px;height:84px;flex:none;margin:0;color:#df6b7a;border-color:rgba(225,77,91,.24);background:radial-gradient(circle,rgba(225,77,91,.14),transparent 70%)}
+.sv-shadow-hero h2{font-size:clamp(22px,3vw,34px);letter-spacing:-.04em;margin:8px 0}
+.sv-shadow-hero p:not(.sv-eyebrow){font-size:11px;line-height:1.8;color:#9aa5b4;max-width:760px;margin:0}
+.sv-loadout-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.sv-shadow-card{background:radial-gradient(circle at 50% 0,rgba(128,52,69,.14),transparent 45%),linear-gradient(145deg,rgba(14,18,27,.96),rgba(7,10,15,.96))}
+.sv-shadow-avatar{color:#d66c7a}
+.sv-empty-record{padding:25px 12px;text-align:center;color:#8d98a8;font-size:9px;letter-spacing:.12em;line-height:1.8}
+.stryven-rail-nav{overflow-y:auto;scrollbar-width:thin;min-height:0}
+.stryven-rail-item{min-width:0}
+.stryven-rail-label{white-space:normal;line-height:1.25}
+.stryven-mobile-sheet-inner{max-height:calc(100dvh - 36px);overflow-y:auto;overscroll-behavior:contain}
+.stryven-sheet-item{min-height:48px}
+.stryven-page-loader{display:flex;align-items:center;justify-content:center;gap:12px;min-height:45vh;color:#9aa5b4;font-size:11px}
+@media(max-width:1100px){.sv-challenge-grid,.sv-achievement-grid,.sv-shadow-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.stryven-rail-label{font-size:11px}}
+@media(max-width:860px){.stryven-rail-nav{overflow-y:auto}.stryven-rail-item{min-height:43px}.sv-module-header{align-items:flex-start}.sv-module-header>.sv-identity-rank{flex:none}}
+@media(max-width:620px){
+ .sv-module-header{display:block}.sv-module-header>.sv-identity-rank{display:inline-flex;margin-top:13px}
+ .sv-page-module .sv-surface{padding:15px;border-radius:13px}
+ .sv-add-mission{grid-template-columns:minmax(0,1fr) 74px}.sv-add-mission>button{grid-column:1/-1;width:100%}
+ .sv-challenge-grid,.sv-achievement-grid,.sv-shadow-grid{grid-template-columns:1fr}
+ .sv-analytics-summary,.sv-loadout-grid{grid-template-columns:1fr 1fr}
+ .sv-shadow-hero{align-items:flex-start;flex-direction:column}.sv-shadow-mark{width:65px;height:65px}
+ .sv-mission-row{gap:8px;padding:9px}.sv-mission-icon{width:32px;height:32px}
+ .sv-mission-copy b{font-size:11px}.sv-mission-row>strong{font-size:7px}
+ .sv-achievement-notice{align-items:flex-start;flex-direction:column}.sv-achievement-notice button{width:100%}
+ .sv-earned-list small{font-size:8px}
+}
+@media(prefers-reduced-motion:reduce){.sv-page-progress>span{transition:none}}

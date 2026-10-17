@@ -20,8 +20,20 @@ const seedExercises = (day: number): Exercise[] => [
   { id: `m-${day}`, name: 'Main Strength Exercise', sets: 3, reps: '8-12', section: 'main', done: false },
   { id: `p-${day}`, name: 'Plyometric Drill', sets: 3, reps: '6-10', section: 'plyometric', done: false },
 ];
-function initial(): Day[] { return seedNames.map((name, i) => ({ id: `day-${i + 1}`, name, exercises: seedExercises(i + 1) })); }
-function load(): Day[] { try { const raw = localStorage.getItem(KEY); if (raw) { const value = JSON.parse(raw); if (Array.isArray(value) && value.length === 6) return value; } } catch { return initial(); } return initial(); }
+function initial(): Day[] { return seedNames.map((name, i) => ({ id: `day-${i + 1}`, name, exercises: [] })); }
+function load(): Day[] {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) {
+      const value = JSON.parse(raw);
+      if (Array.isArray(value) && value.length === 6) {
+        const placeholders = new Set(['Dynamic Stretching', 'Main Strength Exercise', 'Plyometric Drill']);
+        return value.map(day => ({ ...day, exercises: Array.isArray(day.exercises) ? day.exercises.filter((exercise: Exercise) => !placeholders.has(exercise.name)) : [] }));
+      }
+    }
+  } catch { return initial(); }
+  return initial();
+}
 function loadHistory(): WorkoutHistoryEntry[] { try { const raw = localStorage.getItem(WORKOUT_HISTORY_KEY); const value = raw ? JSON.parse(raw) : []; return Array.isArray(value) ? value : []; } catch { return []; } }
 function todayKey() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function dayKey(timestamp: number) { const d = new Date(timestamp); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
@@ -162,8 +174,8 @@ export function SixDayWorkout() {
   const formatDuration = (seconds: number) => `${Math.floor(seconds / 60)}m ${String(seconds % 60).padStart(2,'0')}s`;
 
   const exerciseModal = exerciseDraft && typeof document !== 'undefined' ? createPortal(
-    <div className="fixed inset-0 z-[99999] flex items-start sm:items-center justify-center overflow-y-auto overscroll-contain bg-black/70 p-3 sm:p-5" role="dialog" aria-modal="true" onClick={() => setExerciseDraft(null)}>
-      <div className="card !w-[min(92vw,560px)] !max-w-[560px] !overflow-visible p-4 sm:p-5 space-y-3 sm:space-y-4 my-0 sm:my-auto shrink-0" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[99999] flex items-start sm:items-center justify-center overflow-y-auto overscroll-contain bg-black/70 p-3 sm:p-5" role="presentation" onClick={() => setExerciseDraft(null)}>
+      <div role="dialog" aria-modal="true" aria-label={exerciseDraft.id ? 'Edit exercise' : 'Add exercise'} className="card !w-[min(92vw,560px)] !max-w-[560px] !max-h-[calc(100dvh-1.5rem)] !overflow-y-auto overscroll-contain p-4 sm:p-5 space-y-3 sm:space-y-4 my-0 sm:my-auto shrink-0" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center gap-3">
           <h2 className="font-display text-lg sm:text-xl font-bold truncate">{exerciseDraft.id ? 'Edit Exercise' : 'Add Exercise'}</h2>
           <button type="button" aria-label="Close" className="btn-ghost p-2 flex-shrink-0" onClick={() => setExerciseDraft(null)}><X size={19}/></button>
@@ -198,7 +210,7 @@ export function SixDayWorkout() {
             </div>
           )}
         </div>
-        <button type="button" className="btn-primary w-full" onClick={saveExercise} disabled={!exerciseDraft.name.trim() || !exerciseDraft.reps.trim()}>Save Exercise</button>
+        <button type="button" className="btn-primary sticky bottom-0 z-10 w-full py-3 bg-ink-950/95 backdrop-blur" onClick={saveExercise} disabled={!exerciseDraft.name.trim() || !exerciseDraft.reps.trim()}>Save Exercise</button>
       </div>
     </div>,
     document.body

@@ -7,7 +7,7 @@ interface AuthContextValue {
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string, username: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, username: string) => Promise<{ error: string | null; needsEmailConfirmation?: boolean }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: 'Account was created, but the username could not be saved. Please try again.' };
       }
     }
-    return { error: null };
+    return { error: null, needsEmailConfirmation: Boolean(data.user && !data.session) };
   };
 
   const signInWithGoogle = async () => {

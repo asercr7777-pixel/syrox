@@ -22,7 +22,7 @@ export function ResetPassword() {
       return;
     }
     setDone(true);
-    toast({ title: 'Password updated', message: 'Your new password is active. You can enter SYROX now.', type: 'success' });
+    toast({ title: 'Password updated', message: 'Your new password is active. You can enter STRYVEN now.', type: 'success' });
   };
 
   const enter = () => {
@@ -39,10 +39,10 @@ export function ResetPassword() {
         <div className="mb-6 text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-ember-500/30 bg-ember-500/10"><ShieldCheck className="text-ember-400" size={28} /></div>
           <h1 className="font-display text-2xl font-black text-white">Reset your password</h1>
-          <p className="mt-2 text-sm text-ink-400">Choose a new password for your SYROX account.</p>
+          <p className="mt-2 text-sm text-ink-400">Choose a new password for your STRYVEN account.</p>
         </div>
         {done ? (
-          <button onClick={enter} className="btn-primary w-full py-3">Enter SYROX</button>
+          <button onClick={enter} className="btn-primary w-full py-3">Enter STRYVEN</button>
         ) : (
           <form onSubmit={submit} className="space-y-4">
             <div><label className="label">New password</label><div className="relative mt-1"><Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" /><input className="input pl-10 pr-10" type={show ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} autoComplete="new-password" placeholder="At least 8 characters" /><button type="button" onClick={() => setShow(!show)} className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-ink-400">{show ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></div>

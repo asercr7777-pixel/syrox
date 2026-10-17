@@ -189,3 +189,19 @@
 @media(max-width:1000px){.sv-profile-grid{grid-template-columns:1fr}.sv-profile-hero{grid-template-columns:85px minmax(0,1fr)}.sv-profile-upload-note{grid-column:1/-1;flex-direction:row;align-items:center;border-left:0;border-top:1px solid rgba(148,163,184,.14);padding:13px 0 0}.sv-profile-upload-note span{margin-left:auto;max-width:45%}}
 @media(max-width:760px){.sv-profile-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sv-profile-attribute-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.sv-profile-hero{grid-template-columns:1fr;padding:17px;gap:13px}.sv-profile-avatar{margin:auto}.sv-profile-identity{text-align:center}.sv-profile-identity .sv-profile-title{justify-content:center}.sv-profile-level{font-size:8px}.sv-profile-upload-note{align-items:flex-start;flex-wrap:wrap}.sv-profile-upload-note span{margin-left:0;max-width:none}.sv-profile-stat-grid{gap:7px}.sv-profile-footer-facts{grid-template-columns:1fr}.sv-profile-history article{gap:8px}.sv-profile-history strong{font-size:9px}}
+
+/* ---------- SETTINGS THEME PICKER ---------- */
+.sv-theme-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:12px}
+.sv-theme-grid button{position:relative;display:grid;grid-template-columns:24px minmax(0,1fr);grid-template-rows:auto auto;column-gap:9px;align-items:center;min-width:0;padding:10px;text-align:left;border:1px solid rgba(148,163,184,.13);border-radius:10px;background:rgba(255,255,255,.016);color:#dce4ed}
+.sv-theme-grid button.is-selected{border-color:rgba(225,91,107,.52);background:rgba(225,91,107,.055);box-shadow:inset 0 0 0 1px rgba(225,91,107,.09)}
+.sv-theme-swatch{grid-row:1/3;width:24px;height:31px;border-radius:7px;border:1px solid rgba(255,255,255,.2);background:linear-gradient(135deg,#0a0b0e 48%,#ff7a18 49%)}
+.sv-theme-swatch--void{background:linear-gradient(135deg,#080912 48%,#7c3aed 49%)}
+.sv-theme-swatch--nexus{background:linear-gradient(135deg,#03101a 48%,#06b6d4 49%)}
+.sv-theme-swatch--shogun{background:linear-gradient(135deg,#120305 48%,#dc2626 49%)}
+.sv-theme-swatch--titan{background:linear-gradient(135deg,#0c0a07 48%,#ca8a04 49%)}
+.sv-theme-swatch--rogue{background:linear-gradient(135deg,#070b09 48%,#65a30d 49%)}
+.sv-theme-swatch--eclipse{background:linear-gradient(135deg,#08040f 48%,#8b5cf6 49%)}
+.sv-theme-swatch--overdrive{background:linear-gradient(135deg,#04070c 48%,#eab308 49%)}
+.sv-theme-grid b{font-size:10px}.sv-theme-grid small{font-size:8px;color:#8d98a8;overflow-wrap:anywhere}
+.sv-theme-grid i{position:absolute;right:7px;top:6px;font-size:6px;font-style:normal;letter-spacing:.1em;color:#e9a0a8}
+@media(max-width:520px){.sv-theme-grid{grid-template-columns:1fr}}

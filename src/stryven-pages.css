@@ -205,3 +205,15 @@
 .sv-theme-grid b{font-size:10px}.sv-theme-grid small{font-size:8px;color:#8d98a8;overflow-wrap:anywhere}
 .sv-theme-grid i{position:absolute;right:7px;top:6px;font-size:6px;font-style:normal;letter-spacing:.1em;color:#e9a0a8}
 @media(max-width:520px){.sv-theme-grid{grid-template-columns:1fr}}
+
+/* ---------- WEEKLY MISSION COMMAND ---------- */
+.sv-weekly-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.sv-weekly-card{display:flex;flex-direction:column;min-width:0;padding:16px;border:1px solid rgba(148,163,184,.13);border-radius:13px;background:rgba(255,255,255,.018)}
+.sv-weekly-card h3{margin:13px 0 6px;font-size:14px}
+.sv-weekly-card>p{flex:1;margin:0;color:#8d98a8;font-size:10px;line-height:1.7}
+.sv-weekly-progress{font-size:9px;color:#aeb8c6;text-align:right;margin-top:-5px}
+.sv-weekly-card .sv-challenge-reward{margin:11px 0}
+.sv-weekly-card>button{min-height:36px;border:1px solid rgba(255,255,255,.14);border-radius:8px;background:rgba(255,255,255,.06);color:#eef2f7;font-size:9px;font-weight:800}
+.sv-weekly-card>button:disabled{opacity:.42;cursor:not-allowed}
+@media(max-width:1100px){.sv-weekly-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.sv-weekly-grid{grid-template-columns:1fr}}

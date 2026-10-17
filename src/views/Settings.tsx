@@ -161,7 +161,7 @@ export function Settings() {
         </section>
       </div>
 
-      <ConfirmModal open={resetOpen} onClose={() => setResetOpen(false)} onConfirm={() => { resetAll(); setResetOpen(false); toast({ title: 'All data reset', type: 'success' }); }} title="Reset All Data" message="This permanently erases your progress and history. This cannot be undone." confirmLabel="Reset Everything" danger />
+      <ConfirmModal open={resetOpen} onClose={() => setResetOpen(false)} onConfirm={() => { resetAll(); setResetOpen(false); toast({ title: 'Progress state reset', message: 'Your STRYVEN progression state has been reset.', type: 'success' }); }} title="Reset Progress State" message="This resets your XP, missions, rank progression, inventory, story progress and profile preferences. Your account and saved training records in the workout database are not deleted." confirmLabel="Reset Progress" danger />
       <ConfirmModal open={logoutOpen} onClose={() => setLogoutOpen(false)} onConfirm={signOutNow} title="Sign Out" message="Your progress is saved to the cloud." confirmLabel="Sign Out" />
     </div>
   );

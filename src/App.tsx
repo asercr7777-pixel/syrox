@@ -36,20 +36,33 @@ const Profile=lazy(()=>import('./views/Profile').then(m=>({default:m.Profile})))
 const Settings=lazy(()=>import('./views/Settings').then(m=>({default:m.Settings})));
 const Auth=lazy(()=>import('./views/Auth').then(m=>({default:m.Auth})));
 const ResetPassword=lazy(()=>import('./views/ResetPassword').then(m=>({default:m.ResetPassword})));
-const VALID_VIEWS=new Set<ViewId>(['dashboard','workout','profile','settings']);
+const Missions=lazy(()=>import('./views/Missions').then(m=>({default:m.Missions})));
+const Analytics=lazy(()=>import('./views/Analytics').then(m=>({default:m.Analytics})));
+const Achievements=lazy(()=>import('./views/Achievements').then(m=>({default:m.Achievements})));
+const ShadowArmy=lazy(()=>import('./views/ShadowArmy').then(m=>({default:m.ShadowArmy})));
+const VALID_VIEWS=new Set<ViewId>(['dashboard','missions','workout','analytics','achievements','shadows','profile','settings']);
 function getViewFromUrl():ViewId{if(typeof window==='undefined')return'dashboard';const requested=new URLSearchParams(window.location.search).get('view');return requested&&VALID_VIEWS.has(requested as ViewId)?requested as ViewId:'dashboard'}
-function PageLoader(){return <div className="stryven-page-loader"><Loader2 className="animate-spin" size={30}/></div>}
+function PageLoader(){return <div className="stryven-page-loader" role="status" aria-label="Loading page"><Loader2 className="animate-spin" size={30}/><span>Loading system module…</span></div>}
 function AppContent(){
   const {user,loading}=useAuth(); const {state,loadFromCloud,setUserId}=useStore(); const [view,setView]=useState<ViewId>(getViewFromUrl); const {isInstalled,isInstallable,promptInstall}=usePWA(); const isReset=typeof window!=='undefined'&&new URLSearchParams(window.location.search).get('reset')==='1';
   useEffect(()=>{syncSoundFlag(state.soundEnabled)},[state.soundEnabled]);
   useEffect(()=>{if(!user){setUserId(null);return}void Promise.allSettled([ensureStoryReset(user.id),loadFromCloud(user.id)])},[user,setUserId,loadFromCloud]);
   useEffect(()=>{const onPopState=()=>setView(getViewFromUrl());window.addEventListener('popstate',onPopState);return()=>window.removeEventListener('popstate',onPopState)},[]);
   useEffect(()=>{document.documentElement.setAttribute('data-theme',state.theme);document.body.setAttribute('data-theme',state.theme);return()=>{document.documentElement.removeAttribute('data-theme');document.body.removeAttribute('data-theme')}},[state.theme]);
-  const handleNavigate=(target:ViewId)=>{setView(target);const url=new URL(window.location.href);url.searchParams.set('view',target);window.history.replaceState({},'',url);window.scrollTo({top:0,behavior:'auto'})};
-  if(loading)return <div className="stryven-auth-loader"><Loader2 className="animate-spin" size={38}/></div>;
+  const handleNavigate=(target:ViewId)=>{setView(target);const url=new URL(window.location.href);url.searchParams.set('view',target);window.history.pushState({},'',url);window.scrollTo({top:0,behavior:'auto'})};
+  if(loading)return <div className="stryven-auth-loader" role="status" aria-label="Loading session"><Loader2 className="animate-spin" size={38}/></div>;
   if(isReset)return <><Background/><Suspense fallback={<PageLoader/>}><ResetPassword/></Suspense></>;
   if(!user)return <><Background/><ToastContainer/><Suspense fallback={<PageLoader/>}><Auth/></Suspense></>;
-  return <div className="stryven-app-shell" data-theme={state.theme}><Background/><Navigation current={view} onNavigate={handleNavigate}/><ToastContainer/><Confetti/><main className={`stryven-main stryven-view-${view}`}><div className="stryven-page-frame"><Suspense fallback={<PageLoader/>}>{view==='dashboard'&&<section className="stryven-page"><Dashboard onNavigate={handleNavigate}/>{!isInstalled&&<div className="stryven-install"><InstallButton isInstallable={isInstallable} isInstalled={isInstalled} onInstall={promptInstall}>Install STRYVEN</InstallButton></div>}</section>}{view==='workout'&&<section className="stryven-page"><WorkoutWithAIPlan/></section>}{view==='profile'&&<section className="stryven-page"><Profile/></section>}{view==='settings'&&<section className="stryven-page stryven-settings"><Settings/></section>}</Suspense></div></main></div>
+  return <div className="stryven-app-shell" data-theme={state.theme}><Background/><Navigation current={view} onNavigate={handleNavigate}/><ToastContainer/><Confetti/><main className={`stryven-main stryven-view-${view}`}><div className="stryven-page-frame"><Suspense fallback={<PageLoader/>}>
+    {view==='dashboard'&&<section className="stryven-page"><Dashboard onNavigate={handleNavigate}/>{!isInstalled&&<div className="stryven-install"><InstallButton isInstallable={isInstallable} isInstalled={isInstalled} onInstall={promptInstall}>Install STRYVEN</InstallButton></div>}</section>}
+    {view==='missions'&&<section className="stryven-page"><Missions/></section>}
+    {view==='workout'&&<section className="stryven-page"><WorkoutWithAIPlan/></section>}
+    {view==='analytics'&&<section className="stryven-page"><Analytics/></section>}
+    {view==='achievements'&&<section className="stryven-page"><Achievements/></section>}
+    {view==='shadows'&&<section className="stryven-page"><ShadowArmy/></section>}
+    {view==='profile'&&<section className="stryven-page"><Profile/></section>}
+    {view==='settings'&&<section className="stryven-page stryven-settings"><Settings/></section>}
+  </Suspense></div></main></div>
 }
 function App(){return <ErrorBoundary><AuthProvider><AppContent/></AuthProvider></ErrorBoundary>}
 export default App;

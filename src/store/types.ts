@@ -30,7 +30,7 @@ export interface AppState {
   backgroundType: BackgroundType; customBackground: string | null; backgroundVideo: string | null; backgroundBlur: number; backgroundDarken: number; backgroundBrightness: number; selectedBackgroundId: string | null;
   achievements: AchievementState[]; history: DayRecord[]; notes: Record<string, string>; chat: ChatMessage[]; friends: Friend[];
   soundEnabled: boolean; notifications: NotificationSettings; seasonXp: number; seasonId: string; doubleXpUntil: number | null; easterEggsFound: string[]; createdAt: number;
-  storyChapter: number; storyMission: number; storyChoices: Record<string, string>; storyCompletedMissions: Record<string, boolean>; storyBossDefeated: Record<string, boolean>; storyNpcReputation: Record<string, number>; storyLoreUnlocked: string[]; storyAchievements: string[];
+  storyChapter: number; storyMission: number; storyChoices: Record<string, string>; storyCompletedMissions: Record<string, boolean>; storyBossDefeated: Record<string, boolean>; shadowExtractedBossIds: string[]; storyNpcReputation: Record<string, number>; storyLoreUnlocked: string[]; storyAchievements: string[];
   activeBossId: string | null; bossHpRemaining: Record<string, number>; bossDefeated: Record<string, boolean>; chestInventory: Record<string, number>;
   petId: string | null; petLevel: number; petXp: number; battlePassTier: number; battlePassXp: number; battlePassPremium: boolean; battlePassClaimedFree: number[]; battlePassClaimedPremium: number[];
   lastFortuneDate: string | null; lastFortuneLuck: number; lastFortuneQuote: string; milestoneClaimed: string[]; prestigeLevel: number; prestigeMultiplier: number;

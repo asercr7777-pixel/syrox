@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useStore } from '../store/useStore';
 import { getRankByXp, getNextRank } from '../data/ranks';
 import { UserAvatar } from '../components/ui/UserAvatar';
@@ -14,7 +15,13 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const nextRank = getNextRank(state.xp);
   const today = new Date();
   const greeting = today.getHours() < 12 ? 'Good morning' : today.getHours() < 18 ? 'Good afternoon' : 'Good evening';
-  const dateLabel = new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'long', day: 'numeric' }).format(today);
+  const dateLabel = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).format(today);
+  const [refreshSeconds, setRefreshSeconds] = useState(() => { const next = new Date(); next.setHours(24, 0, 0, 0); return Math.max(0, Math.floor((next.getTime() - Date.now()) / 1000)); });
+  useEffect(() => {
+    const update = () => { const next = new Date(); next.setHours(24, 0, 0, 0); setRefreshSeconds(Math.max(0, Math.floor((next.getTime() - Date.now()) / 1000))); };
+    const timer = window.setInterval(update, 1000); update(); return () => window.clearInterval(timer);
+  }, []);
+  const refreshCountdown = `${String(Math.floor(refreshSeconds / 3600)).padStart(2, '0')}:${String(Math.floor((refreshSeconds % 3600) / 60)).padStart(2, '0')}:${String(refreshSeconds % 60).padStart(2, '0')}`;
   const core = state.mainTasks.filter(task => task.enabled);
   const missions = [...core.map(task => ({ id: task.id, label: task.label, icon: task.emoji, xp: task.points, done: Boolean(state.coreCompleted[task.id]), custom: false })), ...state.customTasks.map(task => ({ id: task.id, label: task.label, icon: '✦', xp: task.points, done: Boolean(state.customCompleted[task.id]), custom: true }))];
   const completedToday = missions.filter(mission => mission.done).length;
@@ -34,7 +41,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         <div className="sv-eyebrow"><span className="sv-online-dot"/> STRYVEN // COMMAND CENTER</div>
         <div className="sv-hero-identity">
           <UserAvatar avatar={state.avatar} rank={rank} size="lg"/>
-          <div><span>{greeting.toUpperCase()} / HUNTER ONLINE</span><h1 style={{color:state.nameColor}}>{state.username || 'Hunter'}</h1><p><b style={{color:rank.color}}>{rank.name}</b><i/> LEVEL {state.level}</p></div>
+          <div><span>{greeting.toUpperCase()} // HUNTER ONLINE</span><h1 className="sv-system-title">THE SYSTEM</h1><p><b style={{color:rank.color}}>{rank.name}</b><i/> HUNTER: {state.username || 'Hunter'} <i/> LEVEL {state.level}</p></div>
         </div>
         <p className="sv-hero-copy">{dateLabel}. Your next level is built from the actions you confirm today. Choose a mission or enter training.</p>
         <div className="sv-hero-actions">
@@ -60,7 +67,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
     <div className="sv-dashboard-grid">
       <section className="sv-section sv-surface">
-        <div className="sv-section-head"><div><span className="sv-eyebrow">01 // DAILY OBJECTIVES</span><h2>Mission Board</h2><p>{completedToday} of {missions.length} missions confirmed today.</p></div><button onClick={()=>onNavigate('missions')}>ALL MISSIONS <ArrowUpRight size={13}/></button></div>
+        <div className="sv-section-head"><div><span className="sv-eyebrow">01 // DAILY QUESTS · REFRESHES IN {refreshCountdown}</span><h2>Mission Board</h2><p>{completedToday} of {missions.length} missions confirmed today.</p></div><button onClick={()=>onNavigate('missions')}>ALL MISSIONS <ArrowUpRight size={13}/></button></div>
         <div className="sv-page-progress"><span style={{width:`${missions.length?completedToday/missions.length*100:0}%`}}/></div>
         <div className="sv-dashboard-missions">{missions.slice(0,5).map(mission=><article key={mission.id} className={`sv-dashboard-mission ${mission.done?'is-complete':''}`}><button disabled={mission.done} title={mission.done?'Mission reward already claimed':'Confirm mission complete'} aria-label={mission.done?'Mission completed; reward already claimed':'Confirm mission complete'} onClick={()=>mission.custom?toggleCustomTask(mission.id):toggleCoreTask(mission.id)}>{mission.done?<CheckCircle2 size={19}/>:<Circle size={19}/>}</button><span className="sv-dashboard-mission-icon">{mission.icon}</span><div><b>{mission.label}</b><small>{mission.custom?'PERSONAL MISSION':'SYSTEM MISSION'}</small></div><strong>+{mission.xp} XP</strong></article>)}
           {missions.length===0&&<div className="sv-empty-record">NO ACTIVE MISSIONS. ADD A MISSION TO BEGIN.</div>}

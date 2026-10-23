@@ -2,13 +2,17 @@ import { Crown, Shield, Swords, Ghost, Sparkles, Orbit, Flame, Crosshair } from 
 import { useStore } from '../store/useStore';
 import { ALL_CHAPTERS } from '../data/story';
 import { AURAS, TITLES, WEAPONS } from '../data/collections';
+import { getRankByXp, getNextRank } from '../data/ranks';
 
 export function ShadowArmy() {
   const {state}=useStore();
   const shadows=ALL_CHAPTERS.flatMap(chapter=>chapter.boss ? [{id:chapter.boss.id,name:chapter.boss.name,chapter:chapter.title,defeated:Boolean(state.storyBossDefeated[chapter.boss.id])}] : []).filter(boss=>boss.defeated);
   const equipped=state.equipped;
+  const rank=getRankByXp(state.xp);
+  const nextRank=getNextRank(state.xp);
+  const bossProgress=ALL_CHAPTERS.length ? Math.min(100,Math.round(shadows.length/ALL_CHAPTERS.length*100)) : 0;
   const collections=[
-    {label:'SHADOWS BOUND',value:shadows.length,detail:'Confirmed victories'},
+    {label:'SHADOWS BOUND',value:shadows.length,detail:`${shadows.length} / ${ALL_CHAPTERS.length} boss victories`},
     {label:'AURAS COLLECTED',value:state.inventory.filter(i=>i.type==='aura').length,detail:'Saved collection'},
     {label:'WEAPONS COLLECTED',value:state.inventory.filter(i=>i.type==='weapon').length,detail:'Saved collection'},
     {label:'RELICS & TITLES',value:state.inventory.filter(i=>i.type==='title'||i.type==='shield').length,detail:'Saved collection'}
@@ -31,7 +35,7 @@ export function ShadowArmy() {
     <section className="sv-shadow-dominion" aria-labelledby="shadow-army-title">
       <div className="sv-shadow-dominion-top">
         <span className="sv-shadow-signal"><i/> STRYVEN / DOMINION PROTOCOL</span>
-        <span className="sv-shadow-rank-chip"><Crown size={14}/> MONARCH'S ARCHIVE</span>
+        <span className="sv-shadow-rank-chip"><Crown size={14}/> {rank.name.toUpperCase()} HUNTER</span>
       </div>
       <div className="sv-shadow-dominion-hero">
         <div className="sv-shadow-dominion-copy">
@@ -48,6 +52,17 @@ export function ShadowArmy() {
           <strong>{item.value.toLocaleString()}</strong>
           <span>{item.detail}</span>
         </div>)}
+      </div>
+      <div className="sv-shadow-progression">
+        <div className="sv-shadow-progression-copy">
+          <span>DOMINION RECORD</span>
+          <b>{shadows.length} / {ALL_CHAPTERS.length} boss victories confirmed</b>
+          <small>{nextRank ? `${Math.max(0,nextRank.xpRequired-state.xp).toLocaleString()} XP to ${nextRank.name}` : 'Maximum hunter rank reached'}</small>
+        </div>
+        <div className="sv-shadow-progression-track" role="progressbar" aria-label="Story boss victories" aria-valuemin={0} aria-valuemax={ALL_CHAPTERS.length} aria-valuenow={shadows.length}>
+          <span style={{width:`${bossProgress}%`}}/>
+        </div>
+        <div className="sv-shadow-rank-meta"><span>HUNTER RANK</span><b style={{color:rank.color}}>{rank.emoji} {rank.name}</b><span>{state.xp.toLocaleString()} XP</span></div>
       </div>
     </section>
 

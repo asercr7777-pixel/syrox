@@ -52,22 +52,22 @@ body {
     @apply bg-ink-800/60 backdrop-blur-md border border-white/5;
   }
   .card {
-    @apply rounded-2xl glass shadow-[0_8px_30px_rgba(0,0,0,0.4)];
+    @apply rounded-2xl bg-ink-900/70 backdrop-blur-xl border border-white/5 shadow-[0_8px_30px_rgba(0,0,0,0.4)];
   }
   .card-hover {
-    @apply card transition-all duration-300 hover:shadow-[0_12px_40px_rgba(0,0,0,0.5)] hover:border-white/10;
+    @apply rounded-2xl bg-ink-900/70 backdrop-blur-xl border border-white/5 shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-all duration-300 hover:shadow-[0_12px_40px_rgba(0,0,0,0.5)] hover:border-white/10;
   }
   .btn {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
   }
   .btn-primary {
-    @apply btn bg-gradient-to-br from-ember-500 to-ember-600 text-white shadow-lg shadow-ember-500/20 hover:shadow-ember-500/40 hover:brightness-110;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none bg-gradient-to-br from-ember-500 to-ember-600 text-white shadow-lg shadow-ember-500/20 hover:shadow-ember-500/40 hover:brightness-110;
   }
   .btn-ghost {
-    @apply btn bg-white/5 text-ink-100 hover:bg-white/10 border border-white/5;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none bg-white/5 text-ink-100 hover:bg-white/10 border border-white/5;
   }
   .btn-danger {
-    @apply btn bg-gradient-to-br from-danger-500 to-danger-600 text-white;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none bg-gradient-to-br from-danger-500 to-danger-600 text-white;
   }
   .input {
     @apply w-full bg-ink-950/60 border border-white/10 rounded-xl px-4 py-2.5 text-ink-100 placeholder-ink-400 focus:outline-none focus:border-ember-500/60 focus:ring-2 focus:ring-ember-500/20 transition;
@@ -241,7 +241,7 @@ input[type='range']::-moz-range-thumb {
 
 /* Premium card with subtle inner glow */
 .card-premium {
-  @apply rounded-2xl glass relative overflow-hidden;
+  @apply rounded-2xl bg-ink-900/70 backdrop-blur-xl border border-white/5 relative overflow-hidden;
   box-shadow:
     0 8px 30px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
@@ -394,7 +394,7 @@ input[type='range']::-moz-range-thumb {
 
 /* Glass panel with accent border */
 .glass-accent {
-  @apply glass border-l-2;
+  @apply bg-ink-900/70 backdrop-blur-xl border border-white/5 border-l-2;
   border-left-color: var(--accent-color, #ff7a18);
 }
 

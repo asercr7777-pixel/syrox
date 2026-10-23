@@ -5,7 +5,9 @@ import { RANKS } from '../data/ranks';
 
 export const STORAGE_KEY = 'discipline-system-v1';
 
-export function todayStr(): string { return new Date().toISOString().slice(0, 10); }
+function localDateString(date: Date): string { const year = date.getFullYear(); const month = String(date.getMonth() + 1).padStart(2, '0'); const day = String(date.getDate()).padStart(2, '0'); return `${year}-${month}-${day}`; }
+export function todayStr(): string { return localDateString(new Date()); }
+export function dateStrOffset(days: number): string { const date = new Date(); date.setDate(date.getDate() - days); return localDateString(date); }
 export function nowWeekKey(): string { const d=new Date(); const year=d.getFullYear(); const start=new Date(year,0,1); const diff=(d.getTime()-start.getTime())/86400000; const week=Math.ceil((diff+start.getDay()+1)/7); return `${year}-W${week}`; }
 export function uid(): string { return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4); }
 export function xpForLevel(level:number):number{return Math.floor(100*Math.pow(level,1.45));}

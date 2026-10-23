@@ -23,6 +23,10 @@ jobs:
           cache: npm
       - name: Install
         run: npm ci
+      - name: Dependency audit summary
+        run: |
+          npm audit --json > /tmp/npm-audit-report.json || true
+          node -e "const r = require('/tmp/npm-audit-report.json'); console.log('AUDIT SUMMARY ' + JSON.stringify(r.metadata?.vulnerabilities ?? {})); console.log('AUDIT PACKAGES ' + JSON.stringify(Object.entries(r.vulnerabilities ?? {}).map(([name, v]) => ({ name, severity: v.severity, direct: v.isDirect, range: v.range, fixAvailable: v.fixAvailable, via: v.via.map(item => typeof item === 'string' ? item : { name: item.name, title: item.title, range: item.range }) }))))"
       - name: Typecheck
         run: npm run typecheck
       - name: Lint

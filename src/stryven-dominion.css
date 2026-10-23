@@ -1,0 +1,165 @@
+
+/* STRYVEN — Shadow Dominion + Training Chronometer polish */
+.sv-shadow-dominion {
+  --sd-red: #f04452;
+  --sd-violet: #a58bff;
+  --sd-ice: #dce7f7;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid rgba(190, 205, 230, .13);
+  border-radius: 20px;
+  background: #06080c;
+  box-shadow: 0 28px 90px rgba(0,0,0,.45), inset 0 1px rgba(255,255,255,.035);
+}
+.sv-shadow-dominion::before {
+  content: "";
+  position: absolute; inset: 0; z-index: -2;
+  background:
+    linear-gradient(90deg, rgba(4,5,9,.98) 0%, rgba(4,5,9,.82) 43%, rgba(4,5,9,.28) 100%),
+    linear-gradient(0deg, rgba(4,5,9,.96) 0%, transparent 56%),
+    url('/shadow-kings-court.webp.jpg') center 35% / cover no-repeat;
+  opacity: .96;
+  transform: scale(1.015);
+}
+.sv-shadow-dominion::after {
+  content: ""; position:absolute; inset:0; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(ellipse at 78% 34%, rgba(123,78,255,.18), transparent 31%),
+    radial-gradient(ellipse at 94% 78%, rgba(240,68,82,.13), transparent 30%),
+    linear-gradient(115deg, transparent 55%, rgba(255,255,255,.025) 55.2%, transparent 55.5%);
+}
+.sv-shadow-dominion-top {
+  display:flex; align-items:center; justify-content:space-between; gap:18px;
+  padding:22px 24px 0;
+}
+.sv-shadow-signal {
+  display:inline-flex; align-items:center; gap:9px; color:#c5cddd;
+  font:700 10px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing:.2em; text-transform:uppercase;
+}
+.sv-shadow-signal i {
+  display:inline-block; width:7px; height:7px; border-radius:50%;
+  background:#a58bff; box-shadow:0 0 14px rgba(165,139,255,.8);
+}
+.sv-shadow-rank-chip {
+  display:flex; align-items:center; gap:8px; padding:9px 12px;
+  border:1px solid rgba(165,139,255,.25); border-radius:999px;
+  color:#e8e0ff; background:rgba(14,10,25,.56); backdrop-filter:blur(12px);
+  font:800 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing:.12em;
+}
+.sv-shadow-dominion-hero {
+  display:grid; grid-template-columns:minmax(0,1.05fr) minmax(240px,.75fr);
+  align-items:center; gap:20px; min-height:330px; padding:38px 28px 30px;
+}
+.sv-shadow-dominion-copy { max-width:620px; }
+.sv-shadow-dominion-copy .sv-eyebrow { color:#c4aaff; letter-spacing:.24em; }
+.sv-shadow-dominion-copy h2 {
+  max-width:600px; margin:13px 0 15px; color:#f5f4ff;
+  font-size:clamp(34px,5.3vw,68px); line-height:.98; letter-spacing:-.055em;
+  text-transform:uppercase; text-wrap:balance;
+  text-shadow:0 6px 45px rgba(0,0,0,.6);
+}
+.sv-shadow-dominion-copy h2 em { color:#b9a1ff; font-style:normal; }
+.sv-shadow-dominion-copy p { max-width:490px; color:#aeb5c5; line-height:1.75; font-size:13px; }
+.sv-shadow-dominion-copy .sv-shadow-subline {
+  display:flex; align-items:center; gap:10px; margin-top:23px; color:#e6e0f6;
+  font:700 10px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing:.13em;
+}
+.sv-shadow-dominion-copy .sv-shadow-subline::before { content:""; width:34px; height:1px; background:#a58bff; box-shadow:0 0 10px #8c69ff; }
+.sv-shadow-crest {
+  position:relative; justify-self:center; display:grid; place-items:center;
+  width:min(100%,290px); aspect-ratio:1; color:#b9a4ff;
+  filter:drop-shadow(0 0 38px rgba(126,86,255,.25));
+}
+.sv-shadow-crest::before,.sv-shadow-crest::after {
+  content:""; position:absolute; inset:10%; border:1px solid rgba(173,148,255,.2);
+  transform:rotate(45deg); box-shadow:inset 0 0 45px rgba(139,92,246,.06);
+}
+.sv-shadow-crest::after { inset:18%; transform:rotate(22.5deg); border-color:rgba(240,68,82,.22); }
+.sv-shadow-crest svg { width:36%; height:36%; position:relative; z-index:1; }
+.sv-shadow-dominion .sv-shadow-metrics {
+  display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1px;
+  background:rgba(184,196,220,.09); border-top:1px solid rgba(184,196,220,.11);
+}
+.sv-shadow-dominion .sv-shadow-metric {
+  min-width:0; padding:18px 20px; background:rgba(5,7,12,.78); backdrop-filter:blur(10px);
+}
+.sv-shadow-dominion .sv-shadow-metric small { display:block; color:#828da2; font:700 9px/1.4 ui-monospace,monospace; letter-spacing:.17em; }
+.sv-shadow-dominion .sv-shadow-metric strong { display:block; margin-top:8px; color:#f3f0ff; font-size:clamp(23px,3vw,34px); letter-spacing:-.04em; }
+.sv-shadow-dominion .sv-shadow-metric span { display:block; margin-top:5px; color:#7f899d; font-size:10px; }
+.sv-shadow-command-grid { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(280px,.9fr); gap:16px; margin-top:17px; }
+.sv-shadow-panel {
+  min-width:0; padding:22px; border:1px solid rgba(190,205,230,.11); border-radius:16px;
+  background:linear-gradient(145deg,rgba(16,17,26,.94),rgba(7,8,13,.97));
+  box-shadow:0 18px 50px rgba(0,0,0,.2);
+}
+.sv-shadow-panel-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:19px; }
+.sv-shadow-panel-head h2 { margin:5px 0 6px; color:#f0eef8; font-size:19px; letter-spacing:-.025em; }
+.sv-shadow-panel-head p { margin:0; color:#838da0; font-size:12px; line-height:1.6; }
+.sv-shadow-loadout-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+.sv-shadow-loadout-slot {
+  min-width:0; display:flex; align-items:center; gap:12px; padding:13px;
+  border:1px solid rgba(190,205,230,.09); border-radius:11px;
+  background:rgba(255,255,255,.018);
+}
+.sv-shadow-loadout-icon {
+  flex:none; display:grid; place-items:center; width:38px; height:38px;
+  border:1px solid rgba(165,139,255,.22); border-radius:10px;
+  color:#b6a2ff; background:rgba(126,86,255,.08);
+}
+.sv-shadow-loadout-slot small { display:block; color:#798398; font:700 9px/1.4 ui-monospace,monospace; letter-spacing:.14em; }
+.sv-shadow-loadout-slot b { display:block; margin-top:5px; overflow-wrap:anywhere; color:#dce2ef; font-size:12px; }
+.sv-shadow-roster { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.sv-shadow-unit {
+  position:relative; min-width:0; overflow:hidden; padding:16px;
+  border:1px solid rgba(165,139,255,.15); border-radius:13px;
+  background:radial-gradient(ellipse at 50% 0%,rgba(127,87,255,.1),transparent 65%),rgba(255,255,255,.015);
+  transition:transform .2s ease,border-color .2s ease,background .2s ease;
+}
+.sv-shadow-unit:hover { transform:translateY(-3px); border-color:rgba(165,139,255,.42); background-color:rgba(126,86,255,.04); }
+.sv-shadow-unit::after { content:""; position:absolute; top:0; left:16px; right:16px; height:1px; background:linear-gradient(90deg,transparent,#a58bff,transparent); opacity:.7; }
+.sv-shadow-unit-mark { display:grid; place-items:center; width:45px; height:45px; margin-bottom:16px; color:#bba8ff; border:1px solid rgba(165,139,255,.24); border-radius:12px; background:rgba(126,86,255,.08); }
+.sv-shadow-unit .sv-eyebrow { color:#9d8cc9; font-size:9px; letter-spacing:.14em; }
+.sv-shadow-unit h3 { margin:8px 0 5px; color:#f1edff; font-size:15px; overflow-wrap:anywhere; }
+.sv-shadow-unit p { margin:0 0 13px; color:#828ba0; font-size:11px; }
+.sv-shadow-unit small { color:#8fd6b3; font:700 9px/1.4 ui-monospace,monospace; letter-spacing:.09em; }
+.sv-shadow-empty {
+  display:grid; justify-items:center; text-align:center; padding:30px 18px;
+  border:1px dashed rgba(165,139,255,.2); border-radius:12px;
+  background:radial-gradient(ellipse at 50% 0%,rgba(126,86,255,.07),transparent 65%);
+}
+.sv-shadow-empty-icon { display:grid; place-items:center; width:56px; height:56px; margin-bottom:13px; border:1px solid rgba(165,139,255,.24); border-radius:16px; color:#b6a2ff; background:rgba(126,86,255,.08); }
+.sv-shadow-empty b { color:#e9e4fa; font-size:13px; }
+.sv-shadow-empty p { max-width:300px; margin:7px 0 0; color:#828ba0; font-size:11px; line-height:1.7; }
+.sv-shadow-footnote { margin-top:13px; color:#626d80; font-size:10px; line-height:1.6; }
+.sv-training-page .sv-active-workout { border-color:rgba(240,68,82,.28); box-shadow:0 24px 75px rgba(0,0,0,.35),inset 0 1px rgba(255,255,255,.03); }
+.sv-training-page .sv-workout-timer-grid { gap:12px; }
+.sv-training-page .sv-workout-clock {
+  position:relative; overflow:hidden; min-height:145px; padding:19px 21px;
+  border:1px solid rgba(240,68,82,.22); border-radius:15px;
+  background:radial-gradient(ellipse at 85% 0%,rgba(240,68,82,.12),transparent 48%),linear-gradient(145deg,rgba(19,12,17,.98),rgba(8,9,13,.98));
+}
+.sv-training-page .sv-workout-clock::after { content:""; position:absolute; left:20px; right:20px; bottom:0; height:2px; background:linear-gradient(90deg,#f04452,rgba(165,139,255,.55),transparent); opacity:.7; }
+.sv-training-page .sv-workout-clock strong { display:block; margin:12px 0 8px; color:#fff; font:800 clamp(35px,5vw,52px)/1 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:-.07em; font-variant-numeric:tabular-nums; text-shadow:0 0 30px rgba(240,68,82,.17); }
+.sv-training-page .sv-workout-clock small { color:#a7aebe; letter-spacing:.18em; }
+.sv-training-page .sv-workout-clock span { color:#8c95a5; font-size:11px; }
+.sv-training-page .sv-workout-clock.is-rest { border-color:rgba(165,139,255,.2); background:radial-gradient(ellipse at 85% 0%,rgba(126,86,255,.12),transparent 48%),linear-gradient(145deg,rgba(15,12,24,.98),rgba(8,9,13,.98)); }
+.sv-training-page .sv-workout-clock.is-rest::after { background:linear-gradient(90deg,#a58bff,rgba(165,139,255,.2),transparent); }
+@media (max-width:800px) {
+ .sv-shadow-dominion { border-radius:15px; }
+ .sv-shadow-dominion-top { padding:17px 16px 0; align-items:flex-start; }
+ .sv-shadow-dominion-hero { grid-template-columns:1fr; min-height:unset; padding:34px 19px 25px; }
+ .sv-shadow-crest { width:min(62%,220px); margin-top:-8px; }
+ .sv-shadow-dominion-copy h2 { font-size:clamp(34px,10vw,54px); }
+ .sv-shadow-dominion .sv-shadow-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .sv-shadow-dominion .sv-shadow-metric { padding:15px; }
+ .sv-shadow-command-grid { grid-template-columns:1fr; }
+}
+@media (max-width:480px) {
+ .sv-shadow-rank-chip { padding:8px; font-size:8px; letter-spacing:.06em; }
+ .sv-shadow-signal { font-size:8px; letter-spacing:.1em; }
+ .sv-shadow-loadout-grid,.sv-shadow-roster { grid-template-columns:1fr; }
+ .sv-shadow-panel { padding:16px; }
+ .sv-training-page .sv-workout-clock { min-height:125px; padding:16px; }
+}

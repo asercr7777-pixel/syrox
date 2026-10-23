@@ -53,6 +53,8 @@ Only use the public anon/publishable key in client-side configuration. Never put
 
 Database migrations are stored in `supabase/migrations/`. Review and apply migrations deliberately to the intended Supabase project; adding a migration file to Git does not apply it to a live database.
 
+**Migration history warning:** The connected production database has applied migration versions whose original SQL files are not all present in this repository. Do not use this repository as a fresh-database bootstrap or run a blanket migration push until the missing applied migration files are recovered and reconciled. Stale unapplied community/story-reset migration files have been removed to avoid accidentally replaying obsolete changes.
+
 ## Project conventions
 
 - Keep production changes on `main` unless a separate branch is explicitly requested.

@@ -1,9 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useStore } from '../../store/useStore';
 import { DAILY_LOGIN_REWARDS } from '../../data/tasks';
+import { todayStr } from '../../store/defaults';
 import { triggerConfetti } from './Confetti';
 import { Modal } from './Modal';
 import { Coins, Zap, Sparkles, Award, Lock, Check, Flame, ChevronRight } from 'lucide-react';
+
+type DailyLoginReward = (typeof DAILY_LOGIN_REWARDS)[number];
 
 const REWARD_ICONS: Record<string, typeof Coins> = {
   coins: Coins,
@@ -42,9 +45,9 @@ export function DailyRewards() {
   const { state, claimLoginReward } = useStore();
   const [showModal, setShowModal] = useState(false);
   const [countdown, setCountdown] = useState('');
-  const [claimedReward, setClaimedReward] = useState<any>(null);
+  const [claimedReward, setClaimedReward] = useState<DailyLoginReward | null>(null);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayStr();
   const claimedToday = state.lastLoginClaimDate === today;
   const claimedCycleDay = state.loginStreak > 0 ? ((state.loginStreak - 1) % 30) + 1 : 1;
   const currentDay = claimedToday ? claimedCycleDay : Math.max(1, claimedCycleDay);

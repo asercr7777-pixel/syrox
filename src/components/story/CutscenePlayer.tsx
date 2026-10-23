@@ -70,7 +70,7 @@ export function CutscenePlayer({ lines, onComplete, bgGradient, chapterEmoji, ch
       else if (i >= text.length && (!voiceOn || narrationFinishedRef.current)) { setDisplayedText(text); setIsTyping(false); if (typeRef.current) clearInterval(typeRef.current); }
     }, stepMs);
     return () => { if (typeRef.current) clearInterval(typeRef.current); };
-  }, [index, currentLine?.text, voiceOn, isShadow]);
+  }, [currentLine, index, voiceOn, isShadow]);
 
   useEffect(() => {
     if (!currentLine || !voiceOn) return;
@@ -80,7 +80,7 @@ export function CutscenePlayer({ lines, onComplete, bgGradient, chapterEmoji, ch
     });
     if (currentLine.sfx) playSfx(currentLine.sfx as SfxType);
     return () => { stopNarration(); duckMusic(false); narrationFinishedRef.current = true; };
-  }, [index, voiceOn, isShadow]);
+  }, [currentLine, index, voiceOn, isShadow]);
 
   const advance = () => {
     if (!currentLine) return;

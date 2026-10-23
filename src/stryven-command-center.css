@@ -37,3 +37,36 @@ body{background:radial-gradient(ellipse at 85% 0%,rgba(138,43,226,.13),transpare
 @media(max-width:900px){.sv-system-topbar{padding:11px 16px}.sv-system-topbar__signal small{display:none}.sv-system-topbar__right{gap:10px}.sv-system-clock{gap:6px;font-size:8px}.sv-system-user{padding-left:10px}.sv-system-user__icon{display:none}.sv-command-hero{min-height:390px}}
 @media(max-width:640px){.sv-system-topbar{min-height:58px;padding:10px 12px}.sv-system-topbar__signal strong{font-size:8px;letter-spacing:.07em}.sv-system-topbar__right{gap:7px}.sv-system-clock{display:grid;grid-template-columns:auto auto;gap:2px 6px;font-size:7px}.sv-system-clock svg,.sv-system-clock i{display:none}.sv-system-clock span{grid-column:1/-1}.sv-system-clock b{font-size:8px}.sv-system-user{display:none}.sv-system-notifications{width:30px;height:30px}.sv-system-title{font-size:clamp(39px,11vw,60px)!important;letter-spacing:0!important}.sv-arise-cinematic{padding:38px 18px 22px}.sv-shadow-filters button{flex:1 1 auto}}
 @media(prefers-reduced-motion:reduce){.sv-system-topbar *,.sv-shadow-command-center *,.sv-arise-overlay *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+
+/* Collapsible desktop rail */
+.stryven-system-rail { transition: width .24s ease, padding .24s ease; }
+.stryven-rail-brand { position:relative; display:flex; align-items:center; gap:8px; }
+.stryven-rail-collapse { display:grid; place-items:center; flex:none; width:28px; height:28px; margin-left:auto; border:1px solid rgba(159,153,199,.15); border-radius:8px; color:#8d91aa; background:rgba(255,255,255,.025); }
+.stryven-rail-collapse:hover { color:#00f0ff; border-color:rgba(0,240,255,.3); }
+.stryven-system-rail.is-collapsed { width:82px !important; padding-inline:9px !important; }
+.stryven-system-rail.is-collapsed .stryven-rail-brand { justify-content:center; min-height:42px; }
+.stryven-system-rail.is-collapsed .stryven-rail-brand .stryven-brand span,
+.stryven-system-rail.is-collapsed .stryven-rail-brand small,
+.stryven-system-rail.is-collapsed .stryven-rail-label,
+.stryven-system-rail.is-collapsed .stryven-rail-index,
+.stryven-system-rail.is-collapsed .stryven-rail-status span,
+.stryven-system-rail.is-collapsed .stryven-rail-system,
+.stryven-system-rail.is-collapsed .stryven-rail-rule,
+.stryven-system-rail.is-collapsed .stryven-rail-signout span { display:none !important; }
+.stryven-system-rail.is-collapsed .stryven-rail-brand .stryven-brand { display:grid; place-items:center; }
+.stryven-system-rail.is-collapsed .stryven-rail-brand .stryven-brand::after { content:"S"; color:#ffcc00; font-weight:1000; font-size:21px; }
+.stryven-system-rail.is-collapsed .stryven-rail-collapse { position:absolute; right:-3px; bottom:-12px; width:22px; height:22px; }
+.stryven-system-rail.is-collapsed .stryven-rail-status { justify-content:center; font-size:0; }
+.stryven-system-rail.is-collapsed .stryven-rail-nav { gap:7px; }
+.stryven-system-rail.is-collapsed .stryven-rail-item { justify-content:center; padding-inline:0 !important; }
+.stryven-system-rail.is-collapsed .stryven-rail-icon { margin:0 !important; }
+.stryven-system-rail.is-collapsed .stryven-rail-signout { justify-content:center; padding-inline:0 !important; }
+.stryven-app-shell:has(.stryven-system-rail.is-collapsed) .stryven-main { margin-left:110px; }
+@media (max-width:1180px) and (min-width:761px) {
+ .stryven-app-shell:has(.stryven-system-rail.is-collapsed) .stryven-main { margin-left:110px; }
+}
+@media (max-width:760px) {
+ .stryven-rail-collapse { display:none; }
+ .stryven-app-shell:has(.stryven-system-rail.is-collapsed) .stryven-main { margin-left:0; }
+}

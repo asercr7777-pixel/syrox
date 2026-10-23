@@ -1,4 +1,4 @@
-import { LayoutDashboard, Dumbbell, UserRound, Settings, LogOut, Target, Activity, Award, Ghost } from 'lucide-react';
+import { LayoutDashboard, Dumbbell, UserRound, Settings, LogOut, Target, Activity, Award, Ghost, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useState } from 'react';
 import { playSound } from '../lib/sound';
 import { useAuth } from '../lib/auth';
@@ -19,13 +19,13 @@ const MOBILE_PRIMARY=new Set<ViewId>(['dashboard','missions','workout','profile'
 interface NavigationProps{current:ViewId;onNavigate:(v:ViewId)=>void}
 
 export function Navigation({current,onNavigate}:NavigationProps){
- const {signOut}=useAuth(); const [moreOpen,setMoreOpen]=useState(false);
+ const {signOut}=useAuth(); const [moreOpen,setMoreOpen]=useState(false); const [collapsed,setCollapsed]=useState(false);
  const handleNav=(v:ViewId)=>{playSound('click');onNavigate(v);setMoreOpen(false)};
  const handleSignOut=async()=>{playSound('click');await signOut()};
  const brand=<div className="stryven-brand select-none" aria-label="STRYVEN"><span>STRYVEN</span><i aria-hidden="true"/></div>;
  return <>
-  <aside className="stryven-system-rail" aria-label="STRYVEN system navigation">
-   <div className="stryven-rail-brand">{brand}<small>SYS / 01</small></div>
+  <aside className={`stryven-system-rail ${collapsed?'is-collapsed':''}`} aria-label="STRYVEN system navigation">
+   <div className="stryven-rail-brand">{brand}<small>SYS / 01</small><button className="stryven-rail-collapse" onClick={()=>setCollapsed(value=>!value)} aria-label={collapsed?'Expand sidebar':'Collapse sidebar'} title={collapsed?'Expand sidebar':'Collapse sidebar'}>{collapsed?<PanelLeftOpen size={16}/>:<PanelLeftClose size={16}/>}</button></div>
    <div className="stryven-rail-status"><i/>ONLINE<span>CORE</span></div>
    <nav className="stryven-rail-nav">
     {NAV_ITEMS.map((item,index)=>{const Icon=item.icon;const active=current===item.id;return <button key={item.id} onClick={()=>handleNav(item.id)} aria-current={active?'page':undefined} className={'stryven-rail-item '+(active?'is-active':'')}><span className="stryven-rail-index">{String(index+1).padStart(2,'0')}</span><span className="stryven-rail-icon"><Icon size={18}/></span><span className="stryven-rail-label">{item.label}</span></button>})}

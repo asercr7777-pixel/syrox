@@ -18,7 +18,7 @@ export function InstallButton({ isInstallable, isInstalled, onInstall, children 
   const [showSuccess, setShowSuccess] = useState(false);
   const [sessionDismissed, setSessionDismissed] = useState(false);
 
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window);
 
   const shouldShowPrompt = useCallback(() => {
     if (isInstalled || sessionDismissed) return false;

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowUpRight, Check, Crown, Ghost, LockKeyhole, Orbit, Shield, Sparkles, Swords, X, Zap } from 'lucide-react';
+import { ArrowUpRight, Check, Crown, Ghost, LockKeyhole, Orbit, Shield, Sparkles, Swords, X, Zap, Crosshair, Skull, Users, ChevronRight } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { ALL_CHAPTERS } from '../data/story';
 import { AURAS, TITLES, WEAPONS } from '../data/collections';
@@ -21,7 +21,8 @@ export function ShadowArmy() {
     extracted: extractedIds.includes(chapter.boss.id),
   }] : []), [state.storyBossDefeated, extractedIds]);
   const defeated = bossRoster.filter(boss => boss.defeated);
-  const extractedCount = bossRoster.filter(boss => boss.extracted).length;
+  const extracted = bossRoster.filter(boss => boss.extracted);
+  const extractedCount = extracted.length;
   const available = defeated.find(boss => !boss.extracted) ?? null;
   const totalBosses = bossRoster.length;
   const xpBuff = Math.min(15, extractedCount);
@@ -49,77 +50,100 @@ export function ShadowArmy() {
     ? `Reach Level 10 or maintain a 30-day streak. Current level: ${state.level} · streak: ${state.streak} days.`
     : !available
       ? 'Defeat a story boss first. Every extraction is tied to a confirmed victory.'
-      : 'Extraction gate is open. One confirmed boss can now be bound to your Shadow Army.';
-
+      : 'A defeated boss is ready. Bind this victory to your persistent legion.';
   const handleExtract = () => {
     if (!canExtract || !available) return;
     if (extractShadow(available.id)) setRevealedShadow({id:available.id,name:available.name,chapter:available.chapter});
   };
 
-  return <div className="sv-command sv-page-module sv-shadow-army-page sv-shadow-command-center">
-    <section className="sv-shadow-dominion" aria-labelledby="shadow-army-title">
-      <div className="sv-shadow-dominion-top">
-        <span className="sv-shadow-signal"><i/> STRYVEN / SHADOW COMMAND</span>
-        <span className="sv-shadow-rank-chip"><Crown size={14}/> {rank.name.toUpperCase()} HUNTER</span>
+  return <div className="sv-command sv-page-module sv-shadow-army-page sv-shadow-command-center sv-legion-game">
+    <header className="legion-topline">
+      <div><span className="legion-live"><i/> COMMAND NETWORK ACTIVE</span><span className="legion-coordinate">STRYVEN / MILITARY DIVISION / 07</span></div>
+      <div className="legion-player-rank"><Crown size={15}/><span>{rank.name.toUpperCase()}</span><b>LVL {state.level}</b></div>
+    </header>
+
+    <section className="legion-war-hero" aria-labelledby="shadow-army-title">
+      <div className="legion-hero-grid" aria-hidden="true"/>
+      <div className="legion-hero-copy">
+        <p className="legion-kicker"><Crosshair size={14}/> HUNTER COMMAND // LEGION CONTROL</p>
+        <h1 id="shadow-army-title">SHADOW<br/><em>LEGION</em></h1>
+        <p className="legion-intro">A monarch does not fight alone. Build your force from conquered story bosses, command your formation, and grow stronger with every shadow bound to your name.</p>
+        <div className="legion-hero-actions"><span><Users size={15}/>{extractedCount} UNITS IN FORMATION</span><span><Zap size={15}/> +{xpBuff}% QUEST XP</span></div>
       </div>
-      <div className="sv-shadow-dominion-hero">
-        <div className="sv-shadow-dominion-copy">
-          <p className="sv-eyebrow"><Ghost size={14}/> TACTICAL HABIT & SKILL SYSTEM</p>
-          <h2 id="shadow-army-title">THE SHADOW<br/><em>DOMINION.</em></h2>
-          <p>Every soldier begins with a confirmed victory. Extract defeated story bosses, build your roster, and earn a persistent quest XP bonus through your actual saved progress.</p>
-          <div className="sv-shadow-subline">YOUR DISCIPLINE. THEIR POWER.</div>
-        </div>
-        <div className="sv-shadow-crest" aria-hidden="true"><Ghost strokeWidth={1.1}/></div>
+      <div className="legion-monarch-visual" aria-hidden="true">
+        <div className="legion-ring legion-ring-one"/><div className="legion-ring legion-ring-two"/><div className="legion-ring legion-ring-three"/>
+        <div className="legion-monarch-silhouette"><span/><i/><b/></div>
+        <div className="legion-visual-label"><i/> MONARCH LINK ESTABLISHED</div>
       </div>
-      <div className="sv-shadow-metrics">
-        <div className="sv-shadow-metric"><small>01 / SHADOWS EXTRACTED</small><strong>{extractedCount} <span className="sv-shadow-metric-total">/ {totalBosses}</span></strong><span>Bound to your saved account</span></div>
-        <div className="sv-shadow-metric"><small>02 / DAILY QUEST XP BUFF</small><strong>+{xpBuff}%</strong><span>{extractedCount} extracted · +1% each, capped at 15%</span></div>
-        <div className="sv-shadow-metric"><small>03 / BOSS VICTORIES</small><strong>{defeated.length}</strong><span>{totalBosses - defeated.length} encounters not yet cleared</span></div>
-        <div className="sv-shadow-metric"><small>04 / EXTRACTION GATE</small><strong className={canExtract && available ? 'is-gate-open' : ''}>{canExtract && available ? 'OPEN' : 'LOCKED'}</strong><span>{canExtract ? (available ? 'Victory record ready' : 'No unbound victory') : 'Level 10 or 30-day streak'}</span></div>
-      </div>
-      <div className="sv-shadow-progression">
-        <div className="sv-shadow-progression-copy"><span>HUNTER PROGRESSION</span><b>{state.xp.toLocaleString()} XP · {rank.name}</b><small>{nextRank ? `${Math.max(0,nextRank.xpRequired-state.xp).toLocaleString()} XP to ${nextRank.name}` : 'Maximum hunter rank reached'}</small></div>
-        <div className="sv-shadow-progression-track" role="progressbar" aria-label="Shadow extraction progress" aria-valuemin={0} aria-valuemax={Math.max(1,totalBosses)} aria-valuenow={extractedCount}><span style={{width:`${totalBosses ? extractedCount/totalBosses*100 : 0}%`}}/></div>
-        <div className="sv-shadow-rank-meta"><span>EXTRACTION RATE</span><b>{totalBosses ? Math.round(extractedCount/totalBosses*100) : 0}%</b><span>{extractedCount} / {totalBosses} bound</span></div>
+      <div className="legion-hero-footer"><span>YOUR ARMY. YOUR RULES.</span><span>PERSONAL LEGION DATA // SYNCED</span></div>
+    </section>
+
+    <section className="legion-command-stats" aria-label="Legion status">
+      <article><small>LEGION STRENGTH</small><strong>{String(extractedCount).padStart(2,'0')}<i> / {totalBosses}</i></strong><span>Shadows recruited</span></article>
+      <article><small>CONFIRMED VICTORIES</small><strong>{String(defeated.length).padStart(2,'0')}</strong><span>Bosses defeated</span></article>
+      <article><small>QUEST REWARD BOOST</small><strong className="legion-stat-red">+{xpBuff}%</strong><span>+1% per extracted shadow · max 15%</span></article>
+      <article><small>NEXT EXTRACTION</small><strong className={canExtract && available?'legion-stat-ready':''}>{canExtract && available?'READY':'LOCKED'}</strong><span>{canExtract ? (available ? 'Victory can be bound' : 'No eligible victory') : 'Level 10 or 30-day streak'}</span></article>
+    </section>
+
+    <section className="legion-battlefield" aria-labelledby="formation-title">
+      <div className="legion-section-head"><div><p className="legion-kicker">01 / ACTIVE DEPLOYMENT</p><h2 id="formation-title">THE FORMATION</h2><p>Only shadows you have actually extracted appear in your ranks.</p></div><div className="legion-head-coordinates">FORMATION / {String(extractedCount).padStart(2,'0')} ACTIVE</div></div>
+      <div className="legion-field">
+        <div className="legion-field-lines" aria-hidden="true"/>
+        <div className="legion-field-label"><span>FRONTLINE</span><span>MONARCH COMMAND</span><span>REAR GUARD</span></div>
+        {extracted.length ? <div className="legion-formation">
+          {extracted.map((unit,index)=><article className="legion-soldier" key={unit.id} style={{'--unit-index':index} as React.CSSProperties}>
+            <div className="legion-soldier-aura"><div className="legion-soldier-figure"><span/><i/><b/></div><span className="legion-soldier-level">SHADOW {String(index+1).padStart(2,'0')}</span></div>
+            <div className="legion-soldier-info"><b>{unit.name}</b><small>{unit.chapter}</small><span><i/> BOUND TO MONARCH</span></div>
+          </article>)}
+        </div> : <div className="legion-empty-army">
+          <div className="legion-empty-sigil"><Ghost size={37}/></div>
+          <span className="legion-empty-title">YOUR LEGION AWAITS ITS FIRST COMMAND</span>
+          <p>No shadows recruited yet. Clear a story boss, meet the extraction requirement, then bring your first soldier into formation.</p>
+          <div className="legion-empty-slots" aria-hidden="true">{[0,1,2,3,4,5,6].map(slot=><div key={slot}><Ghost size={19}/><span>EMPTY SLOT</span></div>)}</div>
+        </div>}
+        <div className="legion-field-footer"><span><i/> LIVE FORMATION</span><span>SHADOWS REGISTERED: {extractedCount}</span></div>
       </div>
     </section>
 
-    <div className="sv-shadow-command-grid">
-      <section className="sv-shadow-panel">
-        <div className="sv-shadow-panel-head"><div><p className="sv-eyebrow">01 // COMMAND EQUIPMENT</p><h2>Monarch's Loadout</h2><p>Equipment linked to your saved Hunter Profile.</p></div><Orbit size={20} color="#a58bff"/></div>
-        <div className="sv-shadow-loadout-grid">{loadout.map(item=>{const Icon=item.icon;return <article className="sv-shadow-loadout-slot" key={item.label}><span className="sv-shadow-loadout-icon"><Icon size={18}/></span><div><small>{item.label}</small><b>{item.value}</b></div></article>;})}</div>
-        <p className="sv-shadow-footnote">Equipment is read from your account state. No imaginary items or stats are added here.</p>
+    <div className="legion-lower-grid">
+      <section className="legion-panel legion-recruit-panel">
+        <div className="legion-section-head"><div><p className="legion-kicker">02 / RECRUITMENT RITUAL</p><h2>ARISE PROTOCOL</h2><p>Bind a confirmed boss victory to your account.</p></div><div className={canExtract && available?'legion-gate-open':'legion-gate-closed'}><i/>{canExtract && available?'GATE OPEN':'GATE SEALED'}</div></div>
+        <div className="legion-ritual">
+          <div className={canExtract && available?'legion-ritual-core is-ready':'legion-ritual-core'}><div className="legion-ritual-ring"/><div className="legion-ritual-symbol"><Ghost size={42}/></div><span>{canExtract && available?'READY FOR BINDING':'AWAITING OFFERING'}</span></div>
+          <div className="legion-ritual-copy"><small>ELIGIBILITY CHECK</small><b>{available ? available.name : 'No confirmed boss available'}</b><p>{extractionMessage}</p>{available&&<span className="legion-target-chapter"><Skull size={13}/>{available.chapter}</span>}</div>
+        </div>
+        <button className="legion-arise-button" disabled={!canExtract || !available} onClick={handleExtract}><Ghost size={19}/><span>EXTRACT SHADOW</span><b>ARISE <ArrowUpRight size={15}/></b></button>
+        <p className="legion-fineprint">Extraction is permanent and account-saved. Each recruited shadow adds +1% XP to daily quests, capped at +15%.</p>
       </section>
-      <section className="sv-shadow-panel sv-arise-panel">
-        <div className="sv-shadow-panel-head"><div><p className="sv-eyebrow">02 // EXTRACTION SHRINE</p><h2>Arise Protocol</h2><p>Bind one defeated story boss to your persistent roster.</p></div><Zap size={20} color="#a58bff"/></div>
-        <div className={canExtract && available ? 'sv-arise-seal is-ready' : 'sv-arise-seal'}><span><Ghost size={31}/></span><small>{canExtract && available ? 'GATE OPEN' : 'AWAITING REQUIREMENTS'}</small></div>
-        <div className="sv-arise-requirement"><LockKeyhole size={16}/><div><b>REQUIRES: LEVEL 10 OR 30-DAY STREAK</b><span>{extractionMessage}</span></div></div>
-        <button className="sv-arise-button" disabled={!canExtract || !available} onClick={handleExtract}><Ghost size={18}/><span>EXTRACT SHADOW</span><b>ARISE</b></button>
-        <p className="sv-shadow-footnote">Each extracted shadow permanently adds +1% XP to daily quests, up to +15%. Extraction records sync with your saved account.</p>
+
+      <section className="legion-panel">
+        <div className="legion-section-head"><div><p className="legion-kicker">03 / MONARCH EQUIPMENT</p><h2>COMMAND LOADOUT</h2><p>Current equipment from your Hunter Profile.</p></div><Orbit size={19}/></div>
+        <div className="legion-loadout">{loadout.map(item=>{const Icon=item.icon;return <article key={item.label}><span><Icon size={17}/></span><div><small>{item.label}</small><b>{item.value}</b></div><ChevronRight size={14}/></article>})}</div>
+        <div className="legion-xp-progress"><div><span>HUNTER PROGRESSION</span><b>{state.xp.toLocaleString()} XP</b></div><div className="legion-xp-track"><span style={{width:`${nextRank ? Math.max(0,Math.min(100,((state.xp-rank.xpRequired)/Math.max(1,nextRank.xpRequired-rank.xpRequired))*100)) : 100}%`}}/></div><small>{nextRank ? `${Math.max(0,nextRank.xpRequired-state.xp).toLocaleString()} XP TO ${nextRank.name.toUpperCase()}` : 'MAXIMUM RANK REACHED'}</small></div>
       </section>
     </div>
 
-    <section className="sv-shadow-panel sv-shadow-roster-panel">
-      <div className="sv-shadow-panel-head"><div><p className="sv-eyebrow">03 // SHADOW ROSTER</p><h2>Bound & Awaiting</h2><p>Only real story bosses and saved extraction records appear here.</p></div><span className="sv-shadow-rank-chip"><Ghost size={14}/>{extractedCount} EXTRACTED</span></div>
-      <div className="sv-shadow-filters" role="group" aria-label="Filter shadow roster">
-        {([{id:'all',label:'ALL'},{id:'extracted',label:'EXTRACTED'},{id:'ready',label:'READY TO EXTRACT'},{id:'locked',label:'LOCKED'}] as const).map(option=><button key={option.id} className={filter===option.id?'is-active':''} aria-pressed={filter===option.id} onClick={()=>setFilter(option.id)}>{option.label}</button>)}
+    <section className="legion-contracts">
+      <div className="legion-section-head"><div><p className="legion-kicker">04 / HUNTING BOARD</p><h2>SHADOW CONTRACTS</h2><p>Every name comes from your real story-boss records. Defeat the target in Story Mode before extraction.</p></div><span className="legion-contract-count">{roster.length} TARGETS</span></div>
+      <div className="legion-filters" role="group" aria-label="Filter shadow contracts">
+        {([{id:'all',label:'ALL TARGETS'},{id:'extracted',label:'RECRUITED'},{id:'ready',label:'READY TO BIND'},{id:'locked',label:'UNDEFEATED'}] as const).map(option=><button key={option.id} className={filter===option.id?'is-active':''} aria-pressed={filter===option.id} onClick={()=>setFilter(option.id)}>{option.label}</button>)}
       </div>
-      {roster.length ? <div className="sv-shadow-roster">{roster.map((boss,index)=><article className={`sv-shadow-unit ${boss.extracted?'is-extracted':boss.defeated?'is-ready':'is-locked'}`} key={boss.id}>
-        <div className="sv-shadow-unit-mark">{boss.extracted ? <Check size={23}/> : boss.defeated ? <Ghost size={23}/> : <LockKeyhole size={21}/>}</div>
-        <span className="sv-eyebrow">{boss.extracted ? 'SHADOW BOUND' : boss.defeated ? 'VICTORY CONFIRMED' : 'ENCOUNTER LOCKED'} / {String(index+1).padStart(2,'0')}</span>
-        <h3>{boss.name}</h3><p>{boss.chapter}</p>
-        <small>{boss.extracted ? '✓ EXTRACTED · XP BONUS ACTIVE' : boss.defeated ? 'READY FOR EXTRACTION' : 'DEFEAT THIS BOSS TO UNLOCK'}</small>
-      </article>)}</div> : <div className="sv-shadow-empty"><span className="sv-shadow-empty-icon"><Ghost size={26}/></span><b>NO SHADOWS MATCH THIS FILTER</b><p>Change the roster filter or clear a story encounter to begin extraction.</p></div>}
+      {roster.length ? <div className="legion-contract-list">{roster.map((boss,index)=><article key={boss.id} className={`legion-contract ${boss.extracted?'is-recruited':boss.defeated?'is-ready':'is-locked'}`}>
+        <div className="legion-contract-index">{String(index+1).padStart(2,'0')}</div>
+        <div className="legion-contract-emblem">{boss.extracted?<Check size={19}/>:boss.defeated?<Ghost size={20}/>:<LockKeyhole size={18}/>}</div>
+        <div className="legion-contract-details"><small>{boss.extracted?'LEGION MEMBER':boss.defeated?'EXTRACTION ELIGIBLE':'TARGET NOT CLEARED'}</small><b>{boss.name}</b><span>{boss.chapter}</span></div>
+        <div className="legion-contract-status">{boss.extracted?'RECRUITED':boss.defeated?'READY':'LOCKED'}</div>
+      </article>)}</div> : <div className="legion-no-contracts">No targets match this command. Select another contract filter.</div>}
     </section>
 
-    {revealedShadow && <div className="sv-arise-overlay" role="dialog" aria-modal="true" aria-labelledby="arise-title">
+    {revealedShadow && <div className="sv-arise-overlay legion-arise-overlay" role="dialog" aria-modal="true" aria-labelledby="arise-title">
       <div className="sv-arise-backdrop" onClick={()=>setRevealedShadow(null)}/>
-      <div className="sv-arise-cinematic">
+      <div className="sv-arise-cinematic legion-arise-cinematic">
         <button className="sv-arise-close" onClick={()=>setRevealedShadow(null)} aria-label="Close extraction result"><X size={19}/></button>
         <div className="sv-arise-lightning" aria-hidden="true"><i/><i/><i/><i/><i/><i/></div>
         <div className="sv-arise-reveal-icon"><Ghost size={48}/></div>
-        <p className="sv-eyebrow">EXTRACTION CONFIRMED // SHADOW BOUND</p><h2 id="arise-title">ARISE.</h2>
-        <div className="sv-arise-new-card"><span>NEW SHADOW SOLDIER</span><b>{revealedShadow.name}</b><small>{revealedShadow.chapter}</small><i><Check size={13}/> SAVED TO YOUR ARMY</i></div>
+        <p className="legion-kicker">EXTRACTION CONFIRMED // LEGION MEMBER BOUND</p><h2 id="arise-title">ARISE.</h2>
+        <div className="sv-arise-new-card"><span>NEW SHADOW SOLDIER</span><b>{revealedShadow.name}</b><small>{revealedShadow.chapter}</small><i><Check size={13}/> SAVED TO YOUR LEGION</i></div>
         <p className="sv-arise-bonus">DAILY QUEST XP BONUS NOW +{Math.min(15,extractedCount)}%</p>
         <button className="sv-btn sv-btn--primary" onClick={()=>setRevealedShadow(null)}>RETURN TO COMMAND <ArrowUpRight size={15}/></button>
       </div>

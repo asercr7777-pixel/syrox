@@ -163,3 +163,30 @@
  .sv-shadow-panel { padding:16px; }
  .sv-training-page .sv-workout-clock { min-height:125px; padding:16px; }
 }
+
+
+.sv-shadow-progression {
+  display:grid; grid-template-columns:minmax(0,1fr) minmax(120px,.72fr) auto; align-items:center; gap:20px;
+  padding:17px 22px; border-top:1px solid rgba(184,196,220,.1);
+  background:linear-gradient(90deg,rgba(126,86,255,.065),rgba(5,7,12,.84) 62%);
+}
+.sv-shadow-progression-copy span,.sv-shadow-rank-meta>span {
+  display:block; color:#858fa4; font:800 9px/1.4 ui-monospace,monospace; letter-spacing:.15em;
+}
+.sv-shadow-progression-copy b { display:block; margin:6px 0; color:#eeeafa; font-size:12px; }
+.sv-shadow-progression-copy small { color:#939bb0; font-size:10px; }
+.sv-shadow-progression-track { height:6px; overflow:hidden; border-radius:99px; background:rgba(255,255,255,.07); }
+.sv-shadow-progression-track span { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,#6d45d9,#b8a1ff 72%,#f04452); box-shadow:0 0 15px rgba(165,139,255,.32); transition:width .35s ease; }
+.sv-shadow-rank-meta { min-width:110px; text-align:right; }
+.sv-shadow-rank-meta b { display:block; margin:5px 0; font-size:12px; }
+.sv-shadow-rank-meta>span:last-child { color:#e1d9ff; letter-spacing:0; font-size:10px; }
+@media(max-width:800px) {
+ .sv-shadow-progression { grid-template-columns:minmax(0,1fr) auto; gap:14px; padding:16px; }
+ .sv-shadow-progression-track { grid-column:1/-1; grid-row:2; }
+ .sv-shadow-rank-meta { grid-column:2; grid-row:1; }
+}
+@media(max-width:420px) {
+ .sv-shadow-progression { grid-template-columns:1fr; }
+ .sv-shadow-progression-track,.sv-shadow-rank-meta { grid-column:1; grid-row:auto; }
+ .sv-shadow-rank-meta { text-align:left; }
+}

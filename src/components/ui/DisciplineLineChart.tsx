@@ -25,7 +25,7 @@ export function DisciplineLineChart({ data, height = 310, showToday = true, anim
       x: pad.left + i * step,
       y: pad.top + innerH - (Math.max(0, Math.min(100, d.score)) / 100) * innerH,
     }));
-  }, [visibleData, innerW, innerH]);
+  }, [visibleData, innerW, innerH, pad.left, pad.top]);
 
   const metrics = useMemo(() => {
     const todayIndex = visibleData.findIndex(p => p.isToday);

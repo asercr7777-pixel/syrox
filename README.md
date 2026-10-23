@@ -42,7 +42,7 @@ npm run build
 
 ## Supabase configuration
 
-Create a local `.env` file with the public project URL and anon/publishable key:
+Copy `.env.example` to `.env`, then replace the placeholders with your public project URL and anon/publishable key:
 
 ```dotenv
 VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co

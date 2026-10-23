@@ -51,6 +51,8 @@ VITE_SUPABASE_ANON_KEY=YOUR_PUBLIC_ANON_KEY
 
 Only use the public anon/publishable key in client-side configuration. Never put a service-role key or other server secret in a `VITE_*` variable or commit it to the repository.
 
+In the Supabase Dashboard, open **Authentication → Password Security** and enable leaked-password protection. The connected project currently reports this setting as disabled; it is an Auth configuration setting, not a SQL migration.
+
 Database migrations are stored in `supabase/migrations/`. Review and apply migrations deliberately to the intended Supabase project; adding a migration file to Git does not apply it to a live database.
 
 **Migration history warning:** The connected production database has applied migration versions whose original SQL files are not all present in this repository. Do not use this repository as a fresh-database bootstrap or run a blanket migration push until the missing applied migration files are recovered and reconciled. Stale unapplied community/story-reset migration files have been removed to avoid accidentally replaying obsolete changes.

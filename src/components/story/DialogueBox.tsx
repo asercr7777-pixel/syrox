@@ -89,7 +89,7 @@ export function DialogueBox({ line, onComplete, onSkip, autoPlay = true }: Dialo
       stopNarration();
       duckMusic(false);
     };
-  }, [line]);
+  }, [autoPlay, voiceOn, line.text, line.voice, line.emotion, line.sfx]);
 
   const handleSkipTyping = useCallback(() => {
     if (isTyping) {

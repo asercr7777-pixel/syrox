@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useMemo, useState } from 'react';
 import { ArrowUpRight, Check, Crown, Ghost, LockKeyhole, Orbit, Shield, Sparkles, Swords, X, Zap, Crosshair, Skull, Users, ChevronRight } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { ALL_CHAPTERS } from '../data/story';
@@ -91,7 +91,7 @@ export function ShadowArmy() {
         <div className="legion-field-lines" aria-hidden="true"/>
         <div className="legion-field-label"><span>FRONTLINE</span><span>MONARCH COMMAND</span><span>REAR GUARD</span></div>
         {extracted.length ? <div className="legion-formation">
-          {extracted.map((unit,index)=><article className="legion-soldier" key={unit.id} style={{'--unit-index':index} as CSSProperties}>
+          {extracted.map((unit,index)=><article className="legion-soldier" key={unit.id} style={{animationDelay: `${index * 70}ms`}}>
             <div className="legion-soldier-aura"><div className="legion-soldier-figure"><span/><i/><b/></div><span className="legion-soldier-level">SHADOW {String(index+1).padStart(2,'0')}</span></div>
             <div className="legion-soldier-info"><b>{unit.name}</b><small>{unit.chapter}</small><span><i/> BOUND TO MONARCH</span></div>
           </article>)}

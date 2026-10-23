@@ -7,6 +7,9 @@ import './index.css';
 import './mobile.css';
 import './stryven-premium.css';
 import './scroll-fix.css';
+import './theme.css';
+import './stryven-shell.css';
+import './stryven-pages.css';
 import './stryven-overdrive.css';
 
 function safeSessionGet(key: string) {

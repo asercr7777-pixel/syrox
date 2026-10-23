@@ -1,4 +1,5 @@
 import { useId, useMemo, useState } from 'react';
+import { todayStr } from '../../store/defaults';
 
 interface DataPoint { date: string; score: number; isToday: boolean; }
 interface DisciplineLineChartProps { data: DataPoint[]; height?: number; showToday?: boolean; animate?: boolean; }
@@ -191,12 +192,13 @@ function Metric({ icon, label, value }: { icon: string; label: string; value: st
 
 export function buildDisciplineData(history: { date: string; disciplineScore: number }[], days = 365): DataPoint[] {
   const today = new Date();
-  const todayStr = today.toISOString().slice(0, 10);
+  const currentDate = todayStr();
   const byDate = new Map(history.map(h => [h.date, h.disciplineScore]));
+  const formatLocalDate = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   return Array.from({ length: days }, (_, n) => {
-    const d = new Date(today);
-    d.setDate(d.getDate() - (days - 1 - n));
-    const date = d.toISOString().slice(0, 10);
-    return { date, score: Math.max(0, Math.min(100, byDate.get(date) ?? 0)), isToday: date === todayStr };
+    const date = new Date(today);
+    date.setDate(date.getDate() - (days - 1 - n));
+    const dateKey = formatLocalDate(date);
+    return { date: dateKey, score: Math.max(0, Math.min(100, byDate.get(dateKey) ?? 0)), isToday: dateKey === currentDate };
   });
 }

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- The Vite entrypoint intentionally renders Root without exporting it. */
 import { StrictMode, useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';

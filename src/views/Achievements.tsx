@@ -1,12 +1,13 @@
 import { useMemo } from 'react';
 import { Award, LockKeyhole, ShieldCheck, Zap, Flame, Dumbbell, Target } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import type { AppState, DayRecord } from '../store/types';
 
 const TRACKED = [
-  {id:'first_steps',name:'First Steps',description:'Earn at least 100 XP.',icon:Zap,goal:(s:any)=>s.xp>=100,progress:(s:any)=>Math.min(100,s.xp/100*100),detail:(s:any)=>`${Math.min(s.xp,100)} / 100 XP`},
+  {id:'first_steps',name:'First Steps',description:'Earn at least 100 XP.',icon:Zap,goal:(s:AppState)=>s.xp>=100,progress:(s:AppState)=>Math.min(100,s.xp/100*100),detail:(s:AppState)=>`${Math.min(s.xp,100)} / 100 XP`},
   {id:'consistent_7',name:'Unbroken Will',description:'Reach a 7-day streak.',icon:Flame,goal:(s:any)=>s.bestStreak>=7,progress:(s:any)=>Math.min(100,s.bestStreak/7*100),detail:(s:any)=>`${Math.min(s.bestStreak,7)} / 7 days`},
   {id:'training_10',name:'Training Protocol',description:'Log 10 workout sessions.',icon:Dumbbell,goal:(s:any)=>s.workoutSessions.length>=10,progress:(s:any)=>Math.min(100,s.workoutSessions.length/10*100),detail:(s:any)=>`${Math.min(s.workoutSessions.length,10)} / 10 sessions`},
-  {id:'missions_25',name:'Objective Specialist',description:'Complete 25 missions in saved daily history.',icon:Target,goal:(s:any)=>s.history.reduce((n:number,d:any)=>n+Object.values(d.coreCompleted).filter(Boolean).length+Object.values(d.customCompleted).filter(Boolean).length,0)>=25,progress:(s:any)=>Math.min(100,s.history.reduce((n:number,d:any)=>n+Object.values(d.coreCompleted).filter(Boolean).length+Object.values(d.customCompleted).filter(Boolean).length,0)/25*100),detail:(s:any)=>`${Math.min(25,s.history.reduce((n:number,d:any)=>n+Object.values(d.coreCompleted).filter(Boolean).length+Object.values(d.customCompleted).filter(Boolean).length,0))} / 25 missions`},
+  {id:'missions_25',name:'Objective Specialist',description:'Complete 25 missions in saved daily history.',icon:Target,goal:(s:any)=>s.history.reduce((n:number,d:DayRecord)=>n+Object.values(d.coreCompleted).filter(Boolean).length+Object.values(d.customCompleted).filter(Boolean).length,0)>=25,progress:(s:any)=>Math.min(100,s.history.reduce((n:number,d:any)=>n+Object.values(d.coreCompleted).filter(Boolean).length+Object.values(d.customCompleted).filter(Boolean).length,0)/25*100),detail:(s:any)=>`${Math.min(25,s.history.reduce((n:number,d:any)=>n+Object.values(d.coreCompleted).filter(Boolean).length+Object.values(d.customCompleted).filter(Boolean).length,0))} / 25 missions`},
   {id:'xp_1000',name:'Awakening',description:'Accumulate 1,000 XP.',icon:Award,goal:(s:any)=>s.xp>=1000,progress:(s:any)=>Math.min(100,s.xp/1000*100),detail:(s:any)=>`${Math.min(s.xp,1000)} / 1,000 XP`},
 ];
 

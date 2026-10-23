@@ -20,7 +20,7 @@ jobs:
           node-version: 20
           cache: npm
       - name: Apply compatible npm audit fixes only
-        run: npm audit fix || echo "Some advisories require a major-version migration; validating only non-breaking fixes."
+        run: npm audit fix || echo "Validating the targeted Vite 7 and ESLint upgrades plus transitive overrides."
       - name: Typecheck
         run: npm run typecheck
       - name: Lint

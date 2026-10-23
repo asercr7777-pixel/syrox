@@ -26,13 +26,7 @@ export function InstallButton({ isInstallable, isInstalled, onInstall, children 
     return !(dismissedAt && Date.now() - parseInt(dismissedAt, 10) < DISMISS_COOLDOWN_MS);
   }, [isInstalled, sessionDismissed]);
 
-  useEffect(() => {
-    if (!shouldShowPrompt()) return;
-    if (isInstallable || (isIOS && !isInstalled)) {
-      const timer = window.setTimeout(() => setShowModal(true), 2500);
-      return () => window.clearTimeout(timer);
-    }
-  }, [isInstallable, isIOS, isInstalled, shouldShowPrompt]);
+  // Installation is user-initiated only. Never block the dashboard on page load.
 
   const handleDismiss = useCallback(() => {
     setShowModal(false);
@@ -70,7 +64,10 @@ export function InstallButton({ isInstallable, isInstalled, onInstall, children 
       {children && (
         <button
           type="button"
-          onClick={() => void handleInstall()}
+          onClick={() => {
+            if (isInstalled || installing) return;
+            setShowModal(true);
+          }}
           disabled={isInstalled || installing}
           aria-label="Install STRYVEN"
           className="group inline-flex items-center gap-2 rounded-full border border-ember-400/30 bg-ink-950/80 px-4 py-2 text-xs font-bold text-ink-100 shadow-lg shadow-black/20 backdrop-blur-xl transition-all duration-200 hover:-translate-y-0.5 hover:border-ember-400/60 hover:bg-ember-500/10 hover:shadow-ember-500/10 disabled:cursor-not-allowed disabled:opacity-60"

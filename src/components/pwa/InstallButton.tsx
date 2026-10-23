@@ -31,30 +31,37 @@ export function InstallButton({ isInstallable, isInstalled, onInstall, children 
   const handleDismiss = useCallback(() => {
     setShowModal(false);
     setSessionDismissed(true);
-    localStorage.setItem(DISMISS_KEY, Date.now().toString());
+    try { localStorage.setItem(DISMISS_KEY, Date.now().toString()); } catch { /* storage may be blocked */ }
   }, []);
 
   const handleInstall = async () => {
-    if (installing) return;
+    if (installing || isInstalled) return;
+    // Close the blocking overlay before handing control to the browser prompt.
+    setShowModal(false);
     setInstalling(true);
-    const success = await onInstall();
-    setInstalling(false);
-
-    if (success) {
-      setShowSuccess(true);
-      setShowModal(false);
-      localStorage.removeItem(DISMISS_KEY);
-      window.setTimeout(() => setShowSuccess(false), 4000);
-    } else {
-      setShowModal(false);
-      setShowInstructions(true);
+    try {
+      const success = await Promise.race<boolean>([
+        onInstall(),
+        new Promise<boolean>((resolve) => window.setTimeout(() => resolve(false), 30000)),
+      ]);
+      if (success) {
+        setShowSuccess(true);
+        try { localStorage.removeItem(DISMISS_KEY); } catch { /* storage may be blocked */ }
+        window.setTimeout(() => setShowSuccess(false), 4000);
+      } else if (!isInstalled) {
+        setShowInstructions(true);
+      }
+    } catch {
+      if (!isInstalled) setShowInstructions(true);
+    } finally {
+      setInstalling(false);
     }
   };
 
   const closeInstructions = useCallback(() => {
     setShowInstructions(false);
     setSessionDismissed(true);
-    localStorage.setItem(DISMISS_KEY, Date.now().toString());
+    try { localStorage.setItem(DISMISS_KEY, Date.now().toString()); } catch { /* storage may be blocked */ }
   }, []);
 
   const showIOSInstructions = isIOS && !isInstalled && !isInstallable;

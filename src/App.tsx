@@ -33,6 +33,8 @@ import './stryven-final.css';
 import './stryven-unified-system.css';
 import './stryven-dominion.css';
 import './stryven-command-center.css';
+import './stryven-rebirth.css';
+import './stryven-legion.css';
 
 const Dashboard=lazy(()=>import('./views/Dashboard').then(m=>({default:m.Dashboard})));
 const WorkoutWithAIPlan=lazy(()=>import('./components/WorkoutWithAIPlan').then(m=>({default:m.WorkoutWithAIPlan})));

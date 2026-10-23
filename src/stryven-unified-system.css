@@ -1,0 +1,230 @@
+/* STRYVEN — Unified Visual System
+ * Additive compatibility layer: preserves existing component behavior while
+ * standardizing the global palette, shell, navigation, surfaces, and responsive states.
+ * Keep feature-specific component styles in their existing files until each is audited.
+ */
+:root {
+  --sv-bg: #050607;
+  --sv-bg-2: #090b0e;
+  --sv-surface: #0c0f12;
+  --sv-surface-2: #101418;
+  --sv-surface-3: #151a20;
+  --sv-line: rgba(224, 232, 240, .085);
+  --sv-line-strong: rgba(224, 232, 240, .16);
+  --sv-text: #f1f3f5;
+  --sv-text-2: #b4bbc3;
+  --sv-muted: #818b95;
+  --sv-dim: #5c6670;
+  --sv-red: #e0444b;
+  --sv-red-2: #ff5b60;
+  --sv-red-soft: rgba(224, 68, 75, .12);
+  --sv-blue: #e0444b;
+  --sv-blue-2: #a92531;
+  --sv-violet: #a18bff;
+  --sv-gold: #d9b56d;
+  --sv-good: #73d6a0;
+  --sv-radius: 14px;
+  --sv-radius-sm: 9px;
+  --sv-shadow: 0 24px 72px rgba(0, 0, 0, .44);
+  --sv-shadow-soft: 0 12px 34px rgba(0, 0, 0, .28);
+  --sv-ease: cubic-bezier(.2, .75, .25, 1);
+  color-scheme: dark;
+}
+
+html, body, #root {
+  min-height: 100%;
+  background-color: var(--sv-bg);
+}
+
+body {
+  color: var(--sv-text);
+  background:
+    radial-gradient(ellipse at 78% -12%, rgba(224, 68, 75, .09), transparent 38rem),
+    radial-gradient(ellipse at 0% 78%, rgba(145, 31, 42, .055), transparent 34rem),
+    linear-gradient(180deg, #050607 0%, #080a0d 52%, #050607 100%);
+}
+
+body::before {
+  opacity: .18;
+  background-image:
+    linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+body::after { opacity: .012; }
+
+.stryven-app-shell {
+  min-height: 100vh;
+  background: transparent;
+}
+
+.stryven-main {
+  min-width: 0;
+  min-height: 100vh;
+  padding-bottom: max(28px, env(safe-area-inset-bottom));
+}
+
+.stryven-page-frame {
+  width: min(100%, 1680px);
+  margin-inline: auto;
+  padding: clamp(16px, 2.2vw, 34px);
+}
+
+.stryven-page {
+  min-width: 0;
+  width: 100%;
+  color: var(--sv-text);
+}
+
+.stryven-system-rail {
+  background: rgba(7, 9, 11, .94) !important;
+  border-right: 1px solid var(--sv-line) !important;
+  box-shadow: 10px 0 42px rgba(0,0,0,.16);
+  backdrop-filter: blur(22px);
+}
+
+.stryven-rail-brand,
+.stryven-brand { color: var(--sv-text); }
+
+.stryven-brand span {
+  letter-spacing: .18em;
+  font-weight: 900;
+}
+
+.stryven-rail-status {
+  color: #8a959f;
+}
+
+.stryven-rail-status i {
+  background: var(--sv-red) !important;
+  box-shadow: 0 0 12px rgba(224,68,75,.48) !important;
+}
+
+.stryven-rail-item {
+  border: 1px solid transparent !important;
+  border-radius: 9px !important;
+  transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+}
+
+.stryven-rail-item:hover {
+  background: rgba(255,255,255,.035) !important;
+  border-color: var(--sv-line) !important;
+}
+
+.stryven-rail-item.is-active {
+  background: linear-gradient(100deg, rgba(224,68,75,.14), rgba(224,68,75,.035)) !important;
+  border-color: rgba(224,68,75,.23) !important;
+  box-shadow: inset 2px 0 0 var(--sv-red);
+}
+
+.stryven-rail-item.is-active .stryven-rail-icon,
+.stryven-rail-item.is-active .stryven-rail-label {
+  color: #fff !important;
+}
+
+.stryven-rail-item.is-active .stryven-rail-index {
+  color: var(--sv-red-2) !important;
+}
+
+.stryven-rail-signout:hover {
+  color: #ff777b !important;
+  background: var(--sv-red-soft) !important;
+}
+
+.stryven-mobile-header {
+  background: rgba(5,7,9,.9) !important;
+  border-bottom: 1px solid var(--sv-line) !important;
+  backdrop-filter: blur(20px);
+}
+
+.stryven-mobile-sheet-inner {
+  background: #0b0e11 !important;
+  border: 1px solid var(--sv-line) !important;
+}
+
+.stryven-sheet-item {
+  border-radius: 9px !important;
+}
+
+.stryven-sheet-item.is-active {
+  background: var(--sv-red-soft) !important;
+  border-color: rgba(224,68,75,.28) !important;
+}
+
+.stryven-sheet-item.is-active svg { color: var(--sv-red-2) !important; }
+
+.stryven-bottomnav {
+  background: rgba(6,8,10,.94) !important;
+  border-top: 1px solid var(--sv-line) !important;
+  backdrop-filter: blur(20px);
+}
+
+.stryven-bottomnav-item.is-active {
+  color: #fff !important;
+}
+
+.stryven-bottomnav-item.is-active svg {
+  color: var(--sv-red-2) !important;
+  filter: drop-shadow(0 0 8px rgba(224,68,75,.24));
+}
+
+.stryven-page-loader,
+.stryven-auth-loader {
+  color: var(--sv-text-2);
+}
+
+.stryven-page-loader svg,
+.stryven-auth-loader svg {
+  color: var(--sv-red-2);
+}
+
+.stryven-install {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--sv-line);
+  border-radius: 12px;
+  background: linear-gradient(110deg, rgba(224,68,75,.07), rgba(255,255,255,.015));
+}
+
+.stryven-page :is(.card, .card-premium, .glass, .glass-soft) {
+  border-color: var(--sv-line);
+}
+
+.stryven-page :is(input, textarea, select) {
+  max-width: 100%;
+}
+
+.stryven-page button,
+.stryven-mobile-sheet button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.stryven-page :is(button, a, input, textarea, select):focus-visible,
+.stryven-system-rail button:focus-visible,
+.stryven-bottomnav button:focus-visible {
+  outline: 2px solid rgba(255,91,96,.9);
+  outline-offset: 3px;
+}
+
+@media (min-width: 1100px) {
+  .stryven-page-frame { padding: 28px clamp(24px, 3vw, 46px); }
+}
+
+@media (max-width: 760px) {
+  .stryven-page-frame { padding: 14px 12px calc(92px + env(safe-area-inset-bottom)); }
+  .stryven-main { padding-bottom: 0; }
+  .stryven-install { margin-top: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stryven-page *,
+  .stryven-system-rail *,
+  .stryven-bottomnav *,
+  .stryven-mobile-sheet * {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

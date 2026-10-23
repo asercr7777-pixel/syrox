@@ -8,7 +8,6 @@ import { triggerConfetti } from '../components/ui/Confetti';
 import { playSound } from '../lib/sound';
 import { Swords, Lock, Check, Zap, Trophy, Dumbbell, X, ChevronRight, Skull, Target, Crown, ShieldAlert, Gauge, RotateCcw } from 'lucide-react';
 import '../stryven-dungeons.css';
-import '../dungeons-performance.css';
 
 const DUNGEON_IMAGES: Record<string, string> = {
   'Awakening Gate': '/awakening-gate.webp.jpg','Whispering Hollow': '/whispering-hollow.webp.jpg','Stone Trial': '/stone-trial.webp.jpg','Frost Cavern': '/frost-cavern.webp.jpg','Storm Spire': '/storm-spire.webp.jpg','Crimson Sanctum': '/crimson-sanctum.webp.jpg','Inferno Keep': '/inferno-keep.webp.jpg','Thunder Vault': '/thunder-vault.webp.jpg','Dark Abyss': '/dark-abyss.webp.jpg','Shadow Labyrinth': '/shadow-labyrinth.webp.jpg',"Hunter's Gauntlet": '/hunters-gauntlet.webp.jpg',"Monarch's Throne": '/monarchs-throne.webp.jpg',"Slayer's Coliseum": '/slayers-coliseum.webp.jpg','Nightmare Sanctum': '/nightmare-sanctum.webp.jpg','Doom Crucible': '/doom-crucible.webp.jpg',"Executioner's Block": '/executioners-block.webp.jpg','Mythic Sanctuary': '/mythic-sanctuary.webp.jpg','Hall of the Immortal': '/hall-of-the-immortal.webp.jpg',"Shadow King's Court": '/shadow-kings-court.webp.jpg','System Overlord Citadel': '/system-overlord-citadel.webp.jpg',

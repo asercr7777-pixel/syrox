@@ -20,7 +20,7 @@ jobs:
           node-version: 20
           cache: npm
       - name: Apply compatible npm audit fixes only
-        run: npm audit fix || echo "Validating Tailwind v4 migration and resolving the remaining dependency advisories."
+        run: npm audit fix || echo "Validating Tailwind v4 with explicit styles for legacy custom classes."
       - name: Typecheck
         run: npm run typecheck
       - name: Lint

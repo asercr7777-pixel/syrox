@@ -27,3 +27,77 @@ body:after{content:"";position:fixed;z-index:0;pointer-events:none;inset:0;opaci
 @media(max-width:900px){.stryven-system-rail{display:none!important}.stryven-main,.stryven-system-rail.is-collapsed~.stryven-main,.stryven-app-shell:has(.stryven-system-rail.is-collapsed) .stryven-main{margin-left:0!important;width:100%!important}.stryven-main:before,.stryven-app-shell:has(.stryven-system-rail.is-collapsed) .stryven-main:before{left:0;width:100%}.sv-system-topbar{top:58px!important;min-height:58px!important;padding:9px 15px!important}.stryven-page-frame{padding:17px 15px 94px!important}.sv-system-clock{font-size:8px!important}.sv-system-clock span:first-child{display:none}.sv-system-topbar__right{gap:8px}.sv-system-user{padding-left:8px}.sv-system-user small{display:none}}
 @media(max-width:540px){.sv-system-topbar{gap:8px}.sv-system-topbar__signal strong{font-size:8px!important;letter-spacing:.09em!important}.sv-system-topbar__signal small{font-size:7px!important}.sv-system-clock{gap:4px;font-size:7px!important}.sv-system-clock i{display:none}.sv-system-user__icon{width:28px;height:28px}.sv-system-user b{max-width:78px;font-size:8px!important}.sv-system-notifications,.sv-system-settings-link{width:30px!important;height:30px!important}.stryven-page-frame{padding-inline:12px!important}.stryven-page h1{font-size:clamp(26px,7vw,42px)!important}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+
+/* ---------- RESPONSIVE NAV + PAGE LAYOUT RECOVERY ---------- */
+/* Desktop navigation is a single horizontal command bar above the app. */
+.stryven-desktop-nav{position:fixed!important;inset:0 0 auto 0!important;z-index:120!important;display:flex!important;align-items:center!important;gap:clamp(12px,1.7vw,28px)!important;height:78px!important;padding:0 clamp(16px,2.2vw,34px)!important;border:0!important;border-bottom:1px solid #9a6bff30!important;background:linear-gradient(100deg,#090a12f7,#10101bf5 55%,#090a12f7)!important;box-shadow:0 12px 38px #0004!important;backdrop-filter:blur(24px) saturate(140%)!important}
+.stryven-desktop-brand{display:flex!important;align-items:center!important;gap:13px!important;flex:0 0 auto!important;min-width:185px!important}
+.stryven-desktop-brand .stryven-brand{gap:8px!important}
+.stryven-desktop-brand .stryven-brand span{font-size:19px!important;letter-spacing:.16em!important}
+.stryven-desktop-edition{padding-left:12px;border-left:1px solid #ffffff18;color:#65718c;font:800 8px/1.5 ui-monospace,monospace;letter-spacing:.13em;white-space:nowrap}
+.stryven-desktop-links{display:flex!important;align-items:center!important;justify-content:center!important;gap:4px!important;flex:1 1 auto!important;min-width:0!important;height:100%!important}
+.stryven-desktop-link{position:relative!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;min-width:0!important;height:46px!important;padding:0 clamp(8px,.9vw,14px)!important;border:1px solid transparent!important;border-radius:10px!important;background:transparent!important;color:#8b96af!important;font-size:clamp(9px,.75vw,11px)!important;font-weight:750!important;white-space:nowrap!important;cursor:pointer!important;transition:background .22s,border-color .22s,color .22s,transform .22s!important}
+.stryven-desktop-link:after{content:"";position:absolute;bottom:-16px;left:20%;right:20%;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--od-violet),var(--od-cyan));transform:scaleX(0);transition:transform .25s var(--od-ease);box-shadow:0 0 12px #5cecff55}
+.stryven-desktop-link:hover{color:#fff!important;background:#ffffff07!important;border-color:#ffffff10!important;transform:translateY(-1px)}
+.stryven-desktop-link.is-active{color:#fff!important;background:linear-gradient(135deg,#9a6bff20,#5cecff09)!important;border-color:#9a6bff3c!important;box-shadow:inset 0 1px #ffffff0b,0 5px 18px #0002!important}
+.stryven-desktop-link.is-active:after{transform:scaleX(1)}
+.stryven-desktop-link svg{flex:none;color:#a7b3ce;transition:color .2s,filter .2s}
+.stryven-desktop-link.is-active svg{color:var(--od-cyan)!important;filter:drop-shadow(0 0 7px #5cecff45)}
+.stryven-desktop-link-index{color:#57637d;font:800 8px/1 ui-monospace,monospace}
+.stryven-desktop-end{display:flex!important;align-items:center!important;gap:12px!important;flex:0 0 auto!important}
+.stryven-desktop-online{display:flex;align-items:center;gap:7px;color:#8bf0be;font:800 8px/1.4 ui-monospace,monospace;letter-spacing:.12em}
+.stryven-desktop-online i{width:6px;height:6px;border-radius:50%;background:var(--od-green);box-shadow:0 0 10px #76f5bd8c;animation:od-pulse 2s ease-in-out infinite}
+.stryven-desktop-signout{display:grid!important;place-items:center!important;width:36px!important;height:36px!important;border:1px solid #ffffff18!important;border-radius:10px!important;background:#ffffff05!important;color:#8f9bb6!important;cursor:pointer!important}
+.stryven-desktop-signout:hover{color:#ff8ca2!important;border-color:#ff496c50!important;background:#ff496c0c!important}
+.stryven-system-rail{display:none!important}
+.stryven-main,.stryven-system-rail.is-collapsed~.stryven-main,.stryven-app-shell:has(.stryven-system-rail.is-collapsed) .stryven-main{margin:0!important;width:100%!important;min-width:0!important;padding:78px 0 0!important}
+.stryven-main:before,.stryven-app-shell:has(.stryven-system-rail.is-collapsed) .stryven-main:before{display:none!important}
+.sv-system-topbar{position:relative!important;top:auto!important;z-index:5!important;min-width:0!important}
+.stryven-page-frame{width:100%!important;max-width:1700px!important;margin:0 auto!important;padding:clamp(20px,2.3vw,36px) clamp(16px,3vw,48px) 80px!important}
+.stryven-page{position:relative!important;isolation:isolate!important;min-width:0!important;max-width:100%!important;min-height:0!important;overflow:visible!important;animation:od-page-fade .28s ease-out!important;transform:none!important;filter:none!important}
+@keyframes od-page-fade{from{opacity:.45}to{opacity:1}}
+.stryven-page>*{min-width:0;max-width:100%}
+.stryven-page .grid,.stryven-page [class~="grid"]{min-width:0}
+.stryven-page .grid>*{min-width:0;max-width:100%}
+.stryven-page img,.stryven-page video,.stryven-page canvas{max-width:100%}
+.stryven-page [role="dialog"]{z-index:10000}
+.stryven-mobile-header,.stryven-bottomnav,.stryven-mobile-sheet{display:none!important}
+@media(max-width:1250px) and (min-width:901px){
+ .stryven-desktop-nav{gap:10px!important;padding-inline:14px!important}
+ .stryven-desktop-brand{min-width:150px!important}
+ .stryven-desktop-edition{display:none}
+ .stryven-desktop-link{gap:5px!important;padding-inline:8px!important;font-size:9px!important}
+ .stryven-desktop-link-index{display:none}
+ .stryven-desktop-end{gap:7px!important}
+}
+@media(max-width:1000px) and (min-width:901px){
+ .stryven-desktop-link{padding-inline:7px!important}
+ .stryven-desktop-link span:last-child{font-size:8px!important}
+ .stryven-desktop-brand .stryven-brand span{font-size:16px!important}
+ .stryven-desktop-online{display:none}
+}
+@media(max-width:900px){
+ .stryven-desktop-nav{display:none!important}
+ .stryven-system-rail{display:none!important}
+ .stryven-mobile-header{display:flex!important;position:fixed!important;top:0!important;left:0!important;right:0!important;z-index:120!important;height:60px!important;padding:0 16px!important}
+ .stryven-main,.stryven-system-rail.is-collapsed~.stryven-main,.stryven-app-shell:has(.stryven-system-rail.is-collapsed) .stryven-main{margin:0!important;width:100%!important;padding:60px 0 0!important}
+ .sv-system-topbar{position:relative!important;top:auto!important;min-height:58px!important;padding:9px 15px!important}
+ .stryven-page-frame{padding:18px 15px calc(104px + env(safe-area-inset-bottom))!important}
+ .stryven-bottomnav{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:2px!important;position:fixed!important;z-index:130!important;left:10px!important;right:10px!important;bottom:calc(8px + env(safe-area-inset-bottom))!important;height:68px!important;padding:5px!important;border:1px solid #9a6bff3a!important;border-radius:17px!important;background:#0b0d17f5!important;box-shadow:0 12px 45px #0008, inset 0 1px #ffffff0a!important}
+ .stryven-bottomnav-item{min-width:0!important;gap:4px!important;padding:3px 1px!important;border:1px solid transparent!important;border-radius:11px!important;font-size:clamp(8px,2vw,10px)!important;letter-spacing:0!important;white-space:nowrap!important}
+ .stryven-bottomnav-item svg{width:18px;height:18px}
+ .stryven-bottomnav-item.is-active{border-color:#9a6bff36!important;background:linear-gradient(180deg,#9a6bff1d,#5cecff07)!important;box-shadow:inset 0 2px var(--od-violet)!important}
+ .stryven-bottomnav-item .stryven-nav-index{display:none!important}
+ .stryven-mobile-sheet{display:block!important;z-index:140!important}
+ .stryven-mobile-sheet-inner{max-height:calc(100dvh - 105px - env(safe-area-inset-bottom))!important;overflow-y:auto!important;overscroll-behavior:contain!important;border-radius:20px 20px 14px 14px!important}
+}
+@media(max-width:540px){
+ .stryven-page-frame{padding-inline:12px!important}
+ .sv-system-topbar{flex-wrap:wrap!important}
+ .sv-system-topbar__right{min-width:0}
+ .sv-system-clock{font-size:7px!important}
+ .stryven-bottomnav{left:7px!important;right:7px!important;height:64px!important}
+ .stryven-bottomnav-item{font-size:8px!important}
+}
+@media(prefers-reduced-motion:reduce){.stryven-page{animation:none!important}}

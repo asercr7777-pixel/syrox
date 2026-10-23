@@ -12,7 +12,7 @@ STRYVEN is a dark, RPG-inspired self-improvement Progressive Web App. It turns u
 - **Shadow Army** — story-boss victories, current equipment, inventory, and rank progression.
 - **Hunter Profile** and **Settings** — saved identity, loadout, appearance, account, and app preferences.
 
-The interface is responsive and includes PWA installation support. The application uses Supabase for authentication and cloud persistence when configured; local app state remains available for development without Supabase credentials.
+The interface is responsive and includes PWA installation support. Supabase credentials are required for authentication and cloud persistence; the placeholder client prevents a missing environment variable from crashing module initialization, but it is not a substitute for a configured project.
 
 ## Tech stack
 

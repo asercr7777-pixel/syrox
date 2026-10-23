@@ -58,7 +58,7 @@ function AppContent(){
   if(loading)return <div className="stryven-auth-loader" role="status" aria-label="Loading session"><Loader2 className="animate-spin" size={38}/></div>;
   if(isReset)return <><Background/><Suspense fallback={<PageLoader/>}><ResetPassword/></Suspense></>;
   if(!user)return <><Background/><ToastContainer/><Suspense fallback={<PageLoader/>}><Auth/></Suspense></>;
-  return <div className="stryven-app-shell" data-theme={state.theme}><Background/><Navigation current={view} onNavigate={handleNavigate}/><SystemStatusBar onNavigate={handleNavigate}/><ToastContainer/><Confetti/><main className={`stryven-main stryven-view-${view}`}><div className="stryven-page-frame"><Suspense fallback={<PageLoader/>}>
+  return <div className="stryven-app-shell" data-theme={state.theme}><Background/><Navigation current={view} onNavigate={handleNavigate}/><ToastContainer/><Confetti/><main className={`stryven-main stryven-view-${view}`}><SystemStatusBar onNavigate={handleNavigate}/><div className="stryven-page-frame"><Suspense fallback={<PageLoader/>}>
     {view==='dashboard'&&<section className="stryven-page"><Dashboard onNavigate={handleNavigate}/>{!isInstalled&&<div className="stryven-install"><InstallButton isInstallable={isInstallable} isInstalled={isInstalled} onInstall={promptInstall}>Install STRYVEN</InstallButton></div>}</section>}
     {view==='missions'&&<section className="stryven-page"><Missions/></section>}
     {view==='workout'&&<section className="stryven-page"><WorkoutWithAIPlan/></section>}

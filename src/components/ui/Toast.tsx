@@ -8,13 +8,14 @@ export function ToastContainer() {
   const [items, setItems] = useState<ToastItem[]>([]);
   const timeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
   useEffect(() => {
+    const timeouts = timeoutsRef.current;
     const listener = (t: ToastItem) => {
       setItems((prev) => [...prev, t].slice(-4));
-      const timeoutId = setTimeout(() => { setItems((prev) => prev.filter((i) => i.id !== t.id)); timeoutsRef.current.delete(timeoutId); }, 4000);
-      timeoutsRef.current.add(timeoutId);
+      const timeoutId = setTimeout(() => { setItems((prev) => prev.filter((i) => i.id !== t.id)); timeouts.delete(timeoutId); }, 4000);
+      timeouts.add(timeoutId);
     };
     listeners.push(listener);
-    return () => { listeners = listeners.filter((l) => l !== listener); timeoutsRef.current.forEach((id) => clearTimeout(id)); timeoutsRef.current.clear(); };
+    return () => { listeners = listeners.filter((l) => l !== listener); timeouts.forEach((id) => clearTimeout(id)); timeouts.clear(); };
   }, []);
 
   return <div className="fixed top-3 right-3 sm:top-4 sm:right-4 z-[100] flex flex-col gap-2 w-[min(22rem,calc(100vw-1.5rem))] pointer-events-none">

@@ -1,5 +1,5 @@
 import { useId, useMemo, useState } from 'react';
-import { todayStr } from '../../store/defaults';
+import { todayStr, localDateString } from '../../store/defaults';
 
 interface DataPoint { date: string; score: number; isToday: boolean; }
 interface DisciplineLineChartProps { data: DataPoint[]; height?: number; showToday?: boolean; animate?: boolean; }
@@ -194,11 +194,10 @@ export function buildDisciplineData(history: { date: string; disciplineScore: nu
   const today = new Date();
   const currentDate = todayStr();
   const byDate = new Map(history.map(h => [h.date, h.disciplineScore]));
-  const formatLocalDate = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   return Array.from({ length: days }, (_, n) => {
     const date = new Date(today);
     date.setDate(date.getDate() - (days - 1 - n));
-    const dateKey = formatLocalDate(date);
+    const dateKey = localDateString(date);
     return { date: dateKey, score: Math.max(0, Math.min(100, byDate.get(dateKey) ?? 0)), isToday: dateKey === currentDate };
   });
 }

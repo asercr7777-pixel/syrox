@@ -1,3 +1,5 @@
+import type { AppState, DayRecord, WorkoutSessionRecord } from '../store/types';
+
 export interface CoreTask {
   id: string;
   label: string;
@@ -73,7 +75,7 @@ export interface DailyChallenge {
   description: string;
   xp: number;
   coins: number;
-  check: (state: any) => boolean;
+  check: (state: AppState) => boolean;
 }
 
 export const DAILY_CHALLENGES: DailyChallenge[] = [
@@ -91,21 +93,21 @@ export interface WeeklyMission {
   target: number;
   xp: number;
   coins: number;
-  progress: (state: any) => number;
+  progress: (state: AppState) => number;
 }
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-function recentHistory(state: any) {
+function recentHistory(state: AppState): DayRecord[] {
   const cutoff = Date.now() - WEEK_MS;
-  return (state.history ?? []).filter((day: any) => {
+  return (state.history ?? []).filter((day) => {
     const stamp = new Date(`${day.date}T00:00:00`).getTime();
     return Number.isFinite(stamp) && stamp >= cutoff;
   });
 }
-function recentTrainingSessions(state: any) {
+function recentTrainingSessions(state: AppState): WorkoutSessionRecord[] {
   const cutoff = Date.now() - WEEK_MS;
-  return (state.workoutSessions ?? []).filter((session: any) => session.completedAt >= cutoff && session.completedAt <= Date.now());
+  return (state.workoutSessions ?? []).filter((session) => session.completedAt >= cutoff && session.completedAt <= Date.now());
 }
-function recentMissionCount(state: any) {
+function recentMissionCount(state: AppState) {
   return recentHistory(state).reduce((sum: number, day: any) =>
     sum + Object.values(day.coreCompleted ?? {}).filter(Boolean).length + Object.values(day.customCompleted ?? {}).filter(Boolean).length, 0);
 }

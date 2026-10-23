@@ -1,0 +1,10 @@
+/* STRYVEN theme picker previews — decorative swatches only. */
+.theme-preview-forge { background: radial-gradient(circle at 72% 20%, rgba(255,184,108,.6), transparent 35%), linear-gradient(135deg, #30343a, #090b0e 70%); }
+.theme-preview-void { background: radial-gradient(circle at 50% 35%, rgba(124,58,237,.48), transparent 38%), linear-gradient(135deg, #171126, #030409 72%); }
+.theme-preview-nexus { background: radial-gradient(circle at 70% 25%, rgba(34,211,238,.5), transparent 35%), linear-gradient(135deg, #0b2431, #03070d 72%); }
+.theme-preview-shogun { background: radial-gradient(circle at 70% 25%, rgba(239,68,68,.48), transparent 34%), linear-gradient(135deg, #351010, #090607 72%); }
+.theme-preview-titan { background: radial-gradient(circle at 50% 25%, rgba(245,158,11,.5), transparent 36%), linear-gradient(135deg, #30240c, #090806 72%); }
+.theme-preview-rogue { background: radial-gradient(circle at 70% 25%, rgba(74,222,128,.32), transparent 36%), linear-gradient(135deg, #18251c, #060908 72%); }
+.theme-preview-eclipse { background: radial-gradient(circle at 50% 25%, rgba(168,85,247,.5), transparent 36%), linear-gradient(135deg, #21102e, #050409 72%); }
+.theme-preview-overdrive { background: radial-gradient(circle at 70% 25%, rgba(244,63,94,.52), transparent 36%), linear-gradient(135deg, #34101c, #070609 72%); }
+.theme-preview-noise { background-image: linear-gradient(135deg, rgba(255,255,255,.055), transparent 35%, rgba(0,0,0,.25)); pointer-events: none; }

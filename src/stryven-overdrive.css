@@ -182,3 +182,192 @@ body:after{content:"";position:fixed;z-index:0;pointer-events:none;inset:0;opaci
 @media(max-width:1050px){.sv-command-hero{grid-template-columns:minmax(0,1fr) minmax(240px,.72fr);gap:18px;padding:22px}.sv-dashboard-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sv-dashboard-attributes{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:760px){.sv-command{gap:13px}.sv-command-hero{grid-template-columns:minmax(0,1fr);padding:19px;gap:20px}.sv-command-hero__progress{padding:17px}.sv-dashboard-grid{grid-template-columns:minmax(0,1fr)}.sv-dashboard-stat{padding:14px}.sv-dashboard-attributes{grid-template-columns:repeat(2,minmax(0,1fr))}.sv-section.sv-surface{padding:16px}.sv-hero-copy{font-size:12px}}
 @media(max-width:440px){.sv-dashboard-stat-grid{grid-template-columns:minmax(0,1fr)}.sv-hero-identity{align-items:flex-start;gap:12px}.sv-hero-actions{width:100%}.sv-hero-actions .sv-btn{flex:1;padding-inline:9px;font-size:9px}.sv-dashboard-mission{gap:7px;padding:8px}.sv-dashboard-mission>strong{font-size:8px}.sv-dashboard-mission-icon{width:28px;height:28px}.sv-dashboard-attributes{grid-template-columns:repeat(2,minmax(0,1fr))}.sv-section-head{gap:8px}.sv-section-head>button{font-size:7px;padding-inline:6px}}
+
+
+/* ---------- SHADOW ARMY: COMPLETE LEGION VISUAL SYSTEM ---------- */
+.sv-shadow-command{gap:24px!important;color:#e9e9f4}
+.legion-topline{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 2px;color:#9aa0bb;font:800 9px/1.5 ui-monospace,monospace;letter-spacing:.12em}
+.legion-topline>div:first-child{display:flex;align-items:center;flex-wrap:wrap;gap:16px}
+.legion-live{display:inline-flex;align-items:center;gap:8px;color:#a1f6d1}
+.legion-live i,.legion-visual-label i,.legion-field-footer i,.legion-contract-details span i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#a1f6d1;box-shadow:0 0 12px #79f5bc99}
+.legion-coordinate{color:#747c9b;font-size:8px}
+.legion-player-rank{display:flex;align-items:center;gap:9px;padding:9px 12px;border:1px solid #a56dff36;border-radius:10px;background:#a56dff0b;color:#c8b0ff;white-space:nowrap}
+.legion-player-rank b{padding-left:9px;border-left:1px solid #ffffff1b;color:#e6e7f5}
+.legion-war-hero{position:relative;isolation:isolate;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(280px,.95fr);align-items:center;gap:16px;min-height:370px;overflow:hidden;padding:clamp(24px,4vw,54px);border:1px solid #a56dff4a;border-radius:22px;background:radial-gradient(ellipse at 75% 42%,#7729bb35,transparent 38%),radial-gradient(ellipse at 95% 10%,#e4316517,transparent 45%),linear-gradient(120deg,#0b0c17,#12101f 55%,#090b13);box-shadow:0 24px 70px #0005,inset 0 1px #ffffff12}
+.legion-war-hero:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(115deg,transparent 20%,#c18cff0a 50%,transparent 75%);background-size:220% 100%;animation:legion-sweep 12s linear infinite}
+@keyframes legion-sweep{to{background-position:-220% 0}}
+.legion-hero-grid{position:absolute;inset:0;z-index:-1;opacity:.17;pointer-events:none;background-image:linear-gradient(#a56dff1c 1px,transparent 1px),linear-gradient(90deg,#a56dff1c 1px,transparent 1px);background-size:32px 32px;mask-image:linear-gradient(90deg,#000,transparent)}
+.legion-hero-copy{position:relative;z-index:2;min-width:0}
+.legion-kicker{display:flex;align-items:center;gap:8px;margin:0;color:#c39bff;font:900 9px/1.6 ui-monospace,monospace;letter-spacing:.14em}
+.legion-war-hero h1{margin:19px 0 14px;font-size:clamp(45px,6.8vw,86px);font-weight:1000;line-height:.78;letter-spacing:-.075em;color:#f2efff;text-shadow:0 0 32px #a56dff19}
+.legion-war-hero h1 em{font-style:normal;color:#b58aff;text-shadow:0 0 32px #9e54ff55}
+.legion-intro{max-width:460px;margin:0;color:#a7abc3;font-size:12px;line-height:1.9}
+.legion-hero-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.legion-hero-actions span{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #a56dff33;border-radius:9px;background:#a56dff0d;color:#d8d1f0;font:800 8px/1.4 ui-monospace,monospace;letter-spacing:.05em}
+.legion-monarch-visual{position:relative;display:grid;place-items:center;min-width:0;min-height:275px;overflow:hidden}
+.legion-ring{position:absolute;aspect-ratio:1;width:clamp(170px,23vw,270px);border:1px solid #b27aff42;border-radius:50%;box-shadow:0 0 38px #9a4dff0d,inset 0 0 30px #9a4dff0a}
+.legion-ring-one{animation:legion-rotate 24s linear infinite}
+.legion-ring-two{width:76%;border-style:dashed;border-color:#ff4b7d40;animation:legion-rotate 35s linear infinite reverse}
+.legion-ring-three{width:56%;border-color:#a56dff6b;box-shadow:0 0 55px #9c52ff25,inset 0 0 55px #9c52ff12}
+@keyframes legion-rotate{to{transform:rotate(360deg)}}
+.legion-monarch-silhouette{position:relative;width:116px;height:190px;filter:drop-shadow(0 0 28px #a253ff45)}
+.legion-monarch-silhouette:before{content:"";position:absolute;top:14px;left:35px;width:48px;height:52px;border-radius:45% 45% 36% 36%;background:linear-gradient(130deg,#29243e,#090a14 75%);border:1px solid #c4a0ff30}
+.legion-monarch-silhouette:after{content:"";position:absolute;top:60px;left:12px;width:94px;height:124px;clip-path:polygon(24% 0,76% 0,100% 100%,50% 82%,0 100%);background:linear-gradient(110deg,#322346,#11101c 45%,#080910 70%,#4a1b63);border:1px solid #b77aff40}
+.legion-monarch-silhouette span{position:absolute;z-index:2;top:39px;left:43px;width:12px;height:3px;background:#d9b3ff;box-shadow:14px 0 #d9b3ff,0 0 12px #bf72ff,14px 0 12px #bf72ff}
+.legion-monarch-silhouette i,.legion-monarch-silhouette b{position:absolute;z-index:2;top:83px;width:1px;height:65px;background:#c68cff60;transform:rotate(12deg)}
+.legion-monarch-silhouette i{left:31px}.legion-monarch-silhouette b{right:31px;transform:rotate(-12deg)}
+.legion-visual-label{position:absolute;bottom:1px;display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid #a56dff28;border-radius:20px;background:#090a13d9;color:#c9b5f4;font:850 8px/1.5 ui-monospace,monospace;letter-spacing:.1em}
+.legion-hero-footer{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-between;gap:12px;padding:12px 20px;border-top:1px solid #ffffff0c;background:#0708115c;color:#707794;font:800 7px/1.5 ui-monospace,monospace;letter-spacing:.12em}
+.legion-command-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.legion-command-stats article{display:flex;flex-direction:column;gap:9px;min-width:0;padding:19px;border:1px solid #ffffff12;border-radius:14px;background:linear-gradient(145deg,#131321,#0a0b13);box-shadow:0 12px 28px #0002}
+.legion-command-stats article small{color:#8586a4;font:850 8px/1.5 ui-monospace,monospace;letter-spacing:.1em}
+.legion-command-stats article strong{font-size:clamp(22px,3vw,32px);font-weight:950;line-height:1;letter-spacing:-.04em;color:#f0eaff;overflow-wrap:anywhere}
+.legion-command-stats article strong i{font-style:normal;font-size:12px;color:#797c9a}
+.legion-command-stats article span{color:#8286a3;font-size:9px;line-height:1.6}
+.legion-command-stats .legion-stat-red{color:#ff759f}.legion-command-stats .legion-stat-ready{color:#9cf5c6}
+.legion-battlefield,.legion-panel,.legion-contracts{min-width:0;padding:clamp(18px,2.5vw,28px);border:1px solid #ffffff12;border-radius:17px;background:linear-gradient(145deg,#11121f,#090a12);box-shadow:0 15px 40px #0002}
+.legion-section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;min-width:0;margin-bottom:20px}
+.legion-section-head>div:first-child{min-width:0}
+.legion-section-head h2{margin:7px 0;font-size:clamp(20px,2.6vw,28px);font-weight:950;line-height:1.1;letter-spacing:-.04em;color:#f1edff}
+.legion-section-head p:not(.legion-kicker){margin:0;color:#8589a6;font-size:10px;line-height:1.7}
+.legion-head-coordinates,.legion-contract-count{flex:none;padding:8px 10px;border:1px solid #a56dff25;border-radius:8px;color:#b7a0e9;font:850 8px/1.5 ui-monospace,monospace;letter-spacing:.06em}
+.legion-field{position:relative;isolation:isolate;overflow:hidden;min-height:210px;padding:22px;border:1px solid #9b6aff25;border-radius:14px;background:radial-gradient(ellipse at center,#7b3caa12,transparent 62%),#090a12}
+.legion-field-lines{position:absolute;inset:0;z-index:-1;opacity:.2;background-image:linear-gradient(#a56dff18 1px,transparent 1px),linear-gradient(90deg,#a56dff18 1px,transparent 1px);background-size:27px 27px;mask-image:radial-gradient(ellipse at center,#000,transparent 80%)}
+.legion-field-label,.legion-field-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#666d8a;font:800 7px/1.5 ui-monospace,monospace;letter-spacing:.1em}
+.legion-formation{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin:22px 0}
+.legion-soldier{min-width:0;overflow:hidden;border:1px solid #a56dff2a;border-radius:12px;background:linear-gradient(180deg,#211831b8,#0c0d16);animation:legion-rise .45s both}
+@keyframes legion-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.legion-soldier-aura{position:relative;display:grid;place-items:center;height:110px;overflow:hidden;background:radial-gradient(ellipse at 50% 80%,#9b49e930,transparent 65%)}
+.legion-soldier-aura:before{content:"";position:absolute;width:82px;height:82px;border:1px solid #b36cff45;border-radius:50%;box-shadow:0 0 25px #9d45ff22}
+.legion-soldier-figure{position:relative;width:40px;height:74px;filter:drop-shadow(0 0 12px #a64cff60)}
+.legion-soldier-figure:before{content:"";position:absolute;top:5px;left:12px;width:17px;height:19px;border-radius:45% 45% 35% 35%;background:#1d1830;border:1px solid #ba8bff55}
+.legion-soldier-figure:after{content:"";position:absolute;top:22px;left:3px;width:35px;height:50px;clip-path:polygon(22% 0,78% 0,100% 100%,50% 80%,0 100%);background:linear-gradient(100deg,#342347,#090a12 70%);border:1px solid #ad77ff45}
+.legion-soldier-figure span{position:absolute;z-index:1;top:14px;left:15px;width:4px;height:2px;background:#d8b5ff;box-shadow:7px 0 #d8b5ff,0 0 7px #c88aff}
+.legion-soldier-level{position:absolute;right:8px;bottom:7px;color:#9d83cb;font:800 7px/1.4 ui-monospace,monospace}
+.legion-soldier-info{display:flex;flex-direction:column;gap:6px;padding:12px}
+.legion-soldier-info>b{font-size:11px;color:#eee8ff;overflow-wrap:anywhere}
+.legion-soldier-info>small{color:#87839e;font-size:8px;line-height:1.5}
+.legion-soldier-info>span{display:flex;align-items:center;gap:6px;color:#9de6c0;font:800 7px/1.5 ui-monospace,monospace;letter-spacing:.04em}
+.legion-soldier-info>span i{width:5px;height:5px;border-radius:50%;background:#8df1b9}
+.legion-empty-army{display:flex;flex-direction:column;align-items:center;gap:12px;padding:24px 0;text-align:center}
+.legion-empty-sigil{display:grid;place-items:center;width:66px;height:66px;border:1px solid #a56dff45;border-radius:50%;background:#9a52ff0e;color:#b993ff;box-shadow:0 0 40px #8d39ff12}
+.legion-empty-title{color:#d6c4ff;font:900 9px/1.6 ui-monospace,monospace;letter-spacing:.1em}
+.legion-empty-army p{max-width:420px;margin:0;color:#888da8;font-size:10px;line-height:1.8}
+.legion-empty-slots{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;width:100%;margin-top:8px}
+.legion-empty-slots>div{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 3px;border:1px dashed #a56dff24;border-radius:9px;color:#514c69}
+.legion-empty-slots span{font:750 6px/1.4 ui-monospace,monospace;letter-spacing:.04em}
+.legion-field-footer{margin-top:8px;padding-top:14px;border-top:1px solid #ffffff0d}
+.legion-field-footer span:first-child{display:flex;align-items:center;gap:7px;color:#a0e9c4}
+.legion-lower-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;min-width:0}
+.legion-gate-open,.legion-gate-closed{display:flex;align-items:center;gap:6px;flex:none;padding:8px 9px;border:1px solid #ffffff16;border-radius:8px;color:#8c91aa;font:850 7px/1.4 ui-monospace,monospace;white-space:nowrap}
+.legion-gate-open{color:#9bf0c2;border-color:#78f2b936;background:#70efb10b}.legion-gate-open i,.legion-gate-closed i{width:5px;height:5px;border-radius:50%;background:currentColor}
+.legion-ritual{display:flex;align-items:center;gap:17px;padding:16px;border:1px solid #ffffff10;border-radius:12px;background:#07081175}
+.legion-ritual-core{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;flex:none;width:120px;height:120px;border:1px solid #9b6aff2c;border-radius:50%;color:#827198}
+.legion-ritual-core.is-ready{color:#c5a1ff;border-color:#ba80ff70;box-shadow:0 0 35px #9a4dff1c}
+.legion-ritual-ring{position:absolute;inset:7px;border:1px dashed #9b6aff3b;border-radius:50%;animation:legion-rotate 22s linear infinite}
+.legion-ritual-symbol{display:grid;place-items:center}
+.legion-ritual-core>span{font:800 6px/1.4 ui-monospace,monospace;letter-spacing:.07em;text-align:center}
+.legion-ritual-copy{display:flex;flex-direction:column;gap:7px;min-width:0}
+.legion-ritual-copy>small{color:#a78bd7;font:850 7px/1.5 ui-monospace,monospace;letter-spacing:.1em}
+.legion-ritual-copy>b{color:#f0eaff;font-size:13px;overflow-wrap:anywhere}
+.legion-ritual-copy>p{margin:0;color:#9295af;font-size:9px;line-height:1.8}
+.legion-target-chapter{display:inline-flex;align-items:center;gap:6px;color:#c2a8f2;font-size:8px}
+.legion-arise-button{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:49px;margin-top:13px;padding:0 15px;border:1px solid #bd8cff60;border-radius:10px;background:linear-gradient(100deg,#6337a6,#3b245e 58%,#281a38);color:#fff;font:900 9px/1.5 ui-monospace,monospace;letter-spacing:.08em;box-shadow:0 8px 28px #8d3fff18;cursor:pointer;transition:filter .2s,transform .2s}
+.legion-arise-button:hover:not(:disabled){filter:brightness(1.2);transform:translateY(-1px)}
+.legion-arise-button>b{display:flex;align-items:center;gap:5px;color:#d9c3ff}
+.legion-arise-button:disabled{cursor:not-allowed;opacity:.4;filter:grayscale(.5)}
+.legion-fineprint{margin:10px 0 0;color:#6f748e;font-size:8px;line-height:1.8}
+.legion-loadout{display:flex;flex-direction:column;gap:7px}
+.legion-loadout article{display:flex;align-items:center;gap:11px;min-width:0;padding:12px;border:1px solid #ffffff10;border-radius:10px;background:#ffffff03}
+.legion-loadout article>span{display:grid;place-items:center;flex:none;width:34px;height:34px;border:1px solid #a56dff2b;border-radius:9px;background:#a56dff0d;color:#c5a2ff}
+.legion-loadout article>div{display:flex;flex-direction:column;gap:5px;flex:1;min-width:0}
+.legion-loadout article small{color:#8984a5;font:800 7px/1.5 ui-monospace,monospace;letter-spacing:.1em}
+.legion-loadout article b{color:#e6e2f6;font-size:10px;overflow-wrap:anywhere}
+.legion-loadout article>svg{flex:none;color:#686581}
+.legion-xp-progress{display:flex;flex-direction:column;gap:10px;margin-top:18px;padding:14px;border:1px solid #ffffff10;border-radius:10px;background:#080911}
+.legion-xp-progress>div:first-child{display:flex;justify-content:space-between;gap:10px;color:#8785a2;font:800 7px/1.5 ui-monospace,monospace}
+.legion-xp-progress>div:first-child b{color:#d7c1ff}
+.legion-xp-track,.legion-xp-track>span{display:block;height:6px;border-radius:10px}
+.legion-xp-track{overflow:hidden;background:#ffffff10}.legion-xp-track>span{background:linear-gradient(90deg,#803bca,#cb5eff,#ff568e);box-shadow:0 0 15px #a44dff42;transition:width .5s}
+.legion-xp-progress>small{color:#9990b5;font:800 7px/1.5 ui-monospace,monospace;letter-spacing:.04em}
+.legion-contracts{padding:clamp(18px,2.5vw,28px)}
+.legion-filters{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:15px}
+.legion-filters button{min-height:34px;padding:0 12px;border:1px solid #ffffff14;border-radius:8px;background:#ffffff04;color:#8e91aa;font:850 7px/1.4 ui-monospace,monospace;letter-spacing:.06em;cursor:pointer}
+.legion-filters button.is-active{border-color:#b486ff5c;background:#a56dff15;color:#e2d0ff;box-shadow:inset 0 -2px #a56dff}
+.legion-contract-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.legion-contract{display:flex;align-items:center;gap:10px;min-width:0;padding:12px;border:1px solid #ffffff10;border-radius:11px;background:#ffffff03}
+.legion-contract.is-recruited{border-color:#7df0bd2a;background:#72edb006}.legion-contract.is-ready{border-color:#b88bff38}
+.legion-contract-index{flex:none;color:#626783;font:850 8px/1.5 ui-monospace,monospace}
+.legion-contract-emblem{display:grid;place-items:center;flex:none;width:36px;height:36px;border:1px solid #ffffff13;border-radius:9px;background:#ffffff04;color:#817d9e}
+.legion-contract.is-recruited .legion-contract-emblem{color:#91e8bd;border-color:#83f0ba38;background:#83f0ba0b}.legion-contract.is-ready .legion-contract-emblem{color:#c7a0ff;border-color:#a56dff38}
+.legion-contract-details{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.legion-contract-details small{color:#8d83aa;font:850 6px/1.5 ui-monospace,monospace;letter-spacing:.06em}
+.legion-contract-details b{color:#e9e4f8;font-size:10px;line-height:1.5;overflow-wrap:anywhere}
+.legion-contract-details span{display:flex;align-items:center;gap:5px;color:#777c96;font-size:8px;line-height:1.5}
+.legion-contract-details span i{width:4px;height:4px}
+.legion-contract-status{flex:none;color:#85819f;font:850 6px/1.4 ui-monospace,monospace;letter-spacing:.04em}
+.legion-contract.is-recruited .legion-contract-status{color:#8ee8b8}.legion-contract.is-ready .legion-contract-status{color:#c3a2ff}
+.legion-no-contracts{padding:24px;border:1px dashed #ffffff1c;border-radius:10px;color:#8b8ca6;font:800 9px/1.8 ui-monospace,monospace;text-align:center}
+.legion-arise-overlay{z-index:200!important}
+.legion-arise-cinematic{border-color:#b980ff4d!important;background:radial-gradient(ellipse at 50% 15%,#843ad32c,transparent 55%),#0b0a14!important}
+@media(max-width:1000px){.legion-war-hero{grid-template-columns:minmax(0,1fr) minmax(210px,.8fr);padding:25px}.legion-command-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.legion-contract-list{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:720px){.sv-shadow-command{gap:15px!important}.legion-topline{align-items:flex-start}.legion-coordinate{display:none}.legion-war-hero{grid-template-columns:minmax(0,1fr);padding:23px 18px 48px}.legion-monarch-visual{min-height:215px}.legion-ring{width:205px}.legion-monarch-silhouette{transform:scale(.85)}.legion-war-hero h1{font-size:58px}.legion-hero-footer{padding-inline:12px;font-size:6px}.legion-command-stats{gap:8px}.legion-command-stats article{padding:13px}.legion-command-stats article small{font-size:7px}.legion-lower-grid{grid-template-columns:minmax(0,1fr)}.legion-empty-slots{grid-template-columns:repeat(4,minmax(0,1fr))}.legion-battlefield,.legion-panel,.legion-contracts{padding:16px}.legion-section-head{gap:8px}.legion-head-coordinates{font-size:6px;padding:7px}.legion-ritual{align-items:flex-start;padding:11px;gap:11px}.legion-ritual-core{width:88px;height:88px}.legion-ritual-symbol svg{width:30px}.legion-ritual-core>span{font-size:5px}.legion-contract{gap:7px;padding:9px}.legion-contract-index{display:none}.legion-contract-status{font-size:6px}}
+@media(prefers-reduced-motion:reduce){.legion-war-hero:before,.legion-ring-one,.legion-ring-two,.legion-ritual-ring,.legion-soldier{animation:none!important}}
+/* ---------- PAGE-SPECIFIC LAYOUT SAFETY ---------- */
+.sv-analytics-metrics,.sv-achievement-grid,.sv-settings__grid,.sv-settings-fields,.sv-settings-list,.sv-theme-grid{min-width:0;max-width:100%}
+.sv-achievement-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.sv-achievement-card{display:flex;flex-direction:column;align-items:flex-start;gap:12px;min-width:0;padding:22px;border:1px solid #ffffff13;border-radius:16px;background:linear-gradient(145deg,#121421,#0a0c14);box-shadow:0 14px 36px #0002}
+.sv-achievement-card.is-unlocked{border-color:#b18aff4a;background:radial-gradient(ellipse at top left,#a56dff14,transparent 65%),linear-gradient(145deg,#151323,#0a0c14)}
+.sv-achievement-emblem{display:grid;place-items:center;width:54px;height:54px;border:1px solid #a56dff2e;border-radius:14px;background:#a56dff0d;color:#a7aabe}
+.sv-achievement-card.is-unlocked .sv-achievement-emblem{color:#d3b6ff;border-color:#bd8cff70;box-shadow:0 0 25px #a56dff12}
+.sv-achievement-card h2{margin:0;color:#eeeaf9;font-size:17px;line-height:1.3;letter-spacing:-.03em}
+.sv-achievement-card p{margin:0;color:#9298b0;font-size:10px;line-height:1.8;min-height:36px}
+.sv-achievement-card .sv-page-progress{width:100%;height:5px;overflow:hidden;border-radius:8px;background:#ffffff10}
+.sv-achievement-card .sv-page-progress span{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,#7748d2,#bc80ff,#5cecff);transition:width .35s}
+.sv-achievement-card>small{color:#8b91aa;font-size:8px;line-height:1.6}
+.sv-achievement-notice{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:16px 18px;border:1px solid #a56dff40;border-radius:13px;background:#9a6bff0c}
+.sv-achievement-notice>div{min-width:0}.sv-achievement-notice b{font-size:12px;color:#e7dcff}.sv-achievement-notice p{margin:5px 0 0;color:#9b9db7;font-size:10px;line-height:1.7}
+.sv-achievement-notice button{flex:none;border:1px solid #bb95ff55;border-radius:9px;background:#a56dff;color:#fff;cursor:pointer}
+.sv-earned-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.sv-earned-list>div{display:flex;align-items:center;gap:10px;min-width:0;padding:12px;border:1px solid #ffffff12;border-radius:10px;background:#ffffff03;color:#c2a4ff}
+.sv-earned-list b{flex:1;min-width:0;color:#dfe1f0;font-size:10px;text-transform:capitalize;overflow-wrap:anywhere}
+.sv-earned-list small{color:#7e88a2;font-size:8px;white-space:nowrap}
+.sv-analytics-metrics .sv-metric{min-width:0}
+.sv-chart-bars{min-width:0}
+.sv-settings{display:flex;flex-direction:column;gap:20px;min-width:0;color:#e8eaf5}
+.sv-settings__header{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:clamp(20px,3vw,34px);border:1px solid #9a6bff30;border-radius:18px;background:radial-gradient(ellipse at 85% 10%,#9a6bff1b,transparent 45%),linear-gradient(135deg,#121421,#090b13)}
+.sv-settings__header>div:first-child{min-width:0}.sv-settings__eyebrow{color:#b99aff;font:850 9px/1.5 ui-monospace,monospace;letter-spacing:.15em}
+.sv-settings__header h1{margin:8px 0;font-size:clamp(32px,5vw,48px);line-height:1;letter-spacing:-.06em}
+.sv-settings__header p{margin:0;color:#939bb4;font-size:11px;line-height:1.8}
+.sv-settings__rank{display:flex;align-items:center;gap:12px;padding:12px 15px;border:1px solid #ffffff13;border-radius:12px;background:#ffffff04}
+.sv-settings__rank>div{display:flex;flex-direction:column;gap:5px}.sv-settings__rank span{color:#7f8aa5;font:800 7px/1.5 ui-monospace,monospace;letter-spacing:.1em}.sv-settings__rank b{font-size:11px}
+.sv-settings__grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+.sv-settings-card{min-width:0;padding:clamp(16px,2vw,24px);border:1px solid #ffffff12;border-radius:16px;background:linear-gradient(145deg,#11131e,#0a0c14);box-shadow:0 14px 35px #0002}
+.sv-settings-card--wide{grid-column:1/-1}
+.sv-settings-card__head{display:flex;align-items:center;gap:12px;margin-bottom:19px}
+.sv-settings-icon{display:grid;place-items:center;flex:none;width:40px;height:40px;border:1px solid #a56dff2b;border-radius:11px;background:#a56dff0e;color:#c4a1ff}
+.sv-settings-card__head>div:last-child{display:flex;flex-direction:column;gap:4px}.sv-settings-card__head span{color:#9386b4;font:850 7px/1.5 ui-monospace,monospace;letter-spacing:.13em}.sv-settings-card__head h2{margin:0;color:#eeebf9;font-size:18px;letter-spacing:-.03em}
+.sv-settings-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}
+.sv-settings-fields>label,.sv-settings-fields>div{display:flex;flex-direction:column;gap:9px;min-width:0}
+.sv-settings-fields>label>span,.sv-settings-label{color:#aeb4c9;font-size:10px;font-weight:800}
+.sv-settings-input{width:100%;min-width:0;min-height:42px;padding:0 12px;border:1px solid #ffffff18;border-radius:9px;background:#080a12;color:#eff0fa;outline:none}
+.sv-settings-input:focus{border-color:#a56dff88;box-shadow:0 0 0 3px #a56dff14}
+.sv-avatar-grid{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:5px}
+.sv-avatar-grid button{aspect-ratio:1;min-width:0;border:1px solid #ffffff12;border-radius:8px;background:#ffffff04;font-size:18px;cursor:pointer}
+.sv-avatar-grid button.is-selected{border-color:#b48aff;background:#9a6bff20;box-shadow:0 0 0 2px #9a6bff17}
+.sv-color-row{display:flex;flex-wrap:wrap;gap:9px}
+.sv-color-row button{width:25px;height:25px;border:2px solid #ffffff22;border-radius:50%;cursor:pointer}
+.sv-color-row button.is-selected{outline:2px solid #d6c0ff;outline-offset:3px}
+.sv-settings-list{display:flex;flex-direction:column;gap:7px;margin-bottom:17px}
+.sv-setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px;border:1px solid #ffffff10;border-radius:9px;background:#ffffff03}
+.sv-setting-row>div{display:flex;align-items:center;gap:8px;color:#aab2c8;font-size:10px}.sv-setting-row>div svg{color:#b99aff}
+.sv-setting-row strong{color:#e2def4;font-size:9px;text-align:right}
+.sv-theme-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.sv-theme-grid button{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0;padding:12px;border:1px solid #ffffff14;border-radius:10px;background:#ffffff03;color:#e5e7f5;text-align:left;cursor:pointer}
+.sv-theme-grid button:before{content:"";width:100%;height:24px;border-radius:6px;background:linear-gradient(110deg,#090a12,#9a6bff,#5cecff)}
+.sv-theme-grid button:nth-child(1):before{background:linear-gradient(110deg,#17100c,#f97316)}.sv-theme-grid button:nth-child(2):before{background:linear-gradient(110deg,#080710,#8b5cf6)}.sv-theme-grid button:nth-child(3):before{background:linear-gradient(110deg,#07141b,#06b6d4)}.sv-theme-grid button:nth-child(4):before{background:linear-gradient(110deg,#17080d,#f43f5e)}.sv-theme-grid button:nth-child(5):before{background:linear-gradient(110deg,#17120a,#eab308)}.sv-theme-grid button:nth-child(6):before{background:linear-gradient(110deg,#07140d,#84cc16)}.sv-theme-grid button:nth-child(7):before{background:linear-gradient(110deg,#100a20,#a855f7)}.sv-theme-grid button:nth-child(8):before{background:linear-gradient(110deg,#080c15,#22d3ee)}
+.sv-theme-grid button.is-selected{border-color:#b58bff;box-shadow:inset 0 0 0 1px #b58bff28;background:#a56dff0c}
+.sv-theme-grid button b{font-size:10px}.sv-theme-grid button small{color:#8c95ad;font-size:8px}
+.sv-settings-card button,.sv-settings-card input,.sv-settings-card select{max-width:100%}
+@media(max-width:900px){.sv-achievement-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sv-settings__grid{grid-template-columns:minmax(0,1fr)}.sv-settings-card--wide{grid-column:auto}.sv-settings-fields{grid-template-columns:minmax(0,1fr)}.sv-avatar-grid{grid-template-columns:repeat(10,minmax(0,1fr))}}
+@media(max-width:540px){.sv-achievement-grid,.sv-earned-list{grid-template-columns:minmax(0,1fr)}.sv-achievement-notice{align-items:flex-start;flex-direction:column}.sv-achievement-notice button{width:100%}.sv-settings__header{padding:19px}.sv-avatar-grid{grid-template-columns:repeat(5,minmax(0,1fr))}.legion-topline{font-size:7px}.legion-player-rank{padding:7px;font-size:7px}.legion-command-stats article span{font-size:8px}.legion-section-head h2{font-size:20px}}

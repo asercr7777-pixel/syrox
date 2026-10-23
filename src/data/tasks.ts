@@ -108,15 +108,15 @@ function recentTrainingSessions(state: AppState): WorkoutSessionRecord[] {
   return (state.workoutSessions ?? []).filter((session) => session.completedAt >= cutoff && session.completedAt <= Date.now());
 }
 function recentMissionCount(state: AppState) {
-  return recentHistory(state).reduce((sum: number, day: any) =>
+  return recentHistory(state).reduce((sum: number, day: DayRecord) =>
     sum + Object.values(day.coreCompleted ?? {}).filter(Boolean).length + Object.values(day.customCompleted ?? {}).filter(Boolean).length, 0);
 }
 export const WEEKLY_MISSIONS: WeeklyMission[] = [
   { id: 'weekly_training_3', label: 'Training Protocol', description: 'Log three training sessions in the last seven days.', target: 3, xp: 250, coins: 150, progress: (state) => recentTrainingSessions(state).length },
   { id: 'weekly_missions_20', label: 'Objective Hunter', description: 'Confirm twenty missions across the last seven days.', target: 20, xp: 250, coins: 100, progress: (state) => recentMissionCount(state) },
-  { id: 'weekly_clear_3', label: 'System Clear', description: 'Complete all main missions on three recorded days.', target: 3, xp: 300, coins: 200, progress: (state) => recentHistory(state).filter((day: any) => day.allMainDone).length },
+  { id: 'weekly_clear_3', label: 'System Clear', description: 'Complete all main missions on three recorded days.', target: 3, xp: 300, coins: 200, progress: (state) => recentHistory(state).filter((day: DayRecord) => day.allMainDone).length },
   { id: 'weekly_streak_5', label: 'Unbroken Will', description: 'Reach a five-day current streak.', target: 5, xp: 200, coins: 100, progress: (state) => Math.max(0, state.streak ?? 0) },
-  { id: 'weekly_xp_1500', label: 'Power Surge', description: 'Earn 1,500 XP across the last seven days.', target: 1500, xp: 200, coins: 150, progress: (state) => recentHistory(state).reduce((sum: number, day: any) => sum + Math.max(0, day.xpGained ?? 0), 0) },
+  { id: 'weekly_xp_1500', label: 'Power Surge', description: 'Earn 1,500 XP across the last seven days.', target: 1500, xp: 200, coins: 150, progress: (state) => recentHistory(state).reduce((sum: number, day: DayRecord) => sum + Math.max(0, day.xpGained ?? 0), 0) },
 ];
 
 // The store currently converts the old "shards" reward type into Coins because

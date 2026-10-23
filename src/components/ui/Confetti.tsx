@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import type { CSSProperties } from 'react';
 
 interface ConfettiPiece {
   id: number;
@@ -97,12 +98,12 @@ export function Confetti() {
             background: p.color,
             borderRadius: p.borderRadius,
             willChange: 'transform, opacity',
-            ['--confetti-vx' as any]: `${p.vx * p.duration}px`,
-            ['--confetti-vy' as any]: `${(p.vy + 200) * p.duration}px`,
-            ['--confetti-rot' as any]: `${p.rotation}deg`,
+            '--confetti-vx': `${p.vx * p.duration}px`,
+            '--confetti-vy': `${(p.vy + 200) * p.duration}px`,
+            '--confetti-rot': `${p.rotation}deg`,
             animation: `confettiBurst ${p.duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`,
             animationFillMode: 'both',
-          }}
+          } as CSSProperties & Record<'--confetti-vx' | '--confetti-vy' | '--confetti-rot', string>}
         />
       ))}
     </div>

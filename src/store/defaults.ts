@@ -1,11 +1,10 @@
 import type { AppState } from './types';
-import { CORE_TASKS } from '../data/tasks';
-import { DEFAULT_EXERCISES } from '../data/tasks';
+import { CORE_TASKS, DEFAULT_EXERCISES } from '../data/tasks';
 import { RANKS } from '../data/ranks';
 
 export const STORAGE_KEY = 'discipline-system-v1';
 
-function localDateString(date: Date): string { const year = date.getFullYear(); const month = String(date.getMonth() + 1).padStart(2, '0'); const day = String(date.getDate()).padStart(2, '0'); return `${year}-${month}-${day}`; }
+export function localDateString(date: Date): string { const year = date.getFullYear(); const month = String(date.getMonth() + 1).padStart(2, '0'); const day = String(date.getDate()).padStart(2, '0'); return `${year}-${month}-${day}`; }
 export function todayStr(): string { return localDateString(new Date()); }
 export function dateStrOffset(days: number): string { const date = new Date(); date.setDate(date.getDate() - days); return localDateString(date); }
 export function nowWeekKey(): string { const d=new Date(); const year=d.getFullYear(); const start=new Date(year,0,1); const diff=(d.getTime()-start.getTime())/86400000; const week=Math.ceil((diff+start.getDay()+1)/7); return `${year}-W${week}`; }

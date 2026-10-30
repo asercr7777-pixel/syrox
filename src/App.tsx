@@ -23,7 +23,7 @@ const ResetPassword=lazy(()=>import('./views/ResetPassword').then(m=>({default:m
 const Missions=lazy(()=>import('./views/Missions').then(m=>({default:m.Missions})));
 const Analytics=lazy(()=>import('./views/Analytics').then(m=>({default:m.Analytics})));
 const Achievements=lazy(()=>import('./views/Achievements').then(m=>({default:m.Achievements})));
-const ShadowArmy=lazy(()=>import('./views/ShadowArmy').then(m=>({default:m.ShadowArmy})));
+const ShadowArmy=lazy(()=>import('./components/ShadowArmyExpansion').then(m=>({default:m.ShadowArmyExpansion})));
 const VALID_VIEWS=new Set<ViewId>(['dashboard','missions','workout','analytics','achievements','shadows','profile','settings']);
 function getViewFromUrl():ViewId{if(typeof window==='undefined')return'dashboard';const requested=new URLSearchParams(window.location.search).get('view');return requested&&VALID_VIEWS.has(requested as ViewId)?requested as ViewId:'dashboard'}
 function PageLoader(){return <div className="stryven-page-loader" role="status" aria-label="Loading page"><Loader2 className="animate-spin" size={30}/><span>Loading system module…</span></div>}
@@ -38,7 +38,7 @@ function AppContent(){
   if(loading)return <div className="stryven-auth-loader" role="status" aria-label="Loading session"><Loader2 className="animate-spin" size={38}/></div>;
   if(isReset)return <><Background/><Suspense fallback={<PageLoader/>}><ResetPassword/></Suspense></>;
   if(!user)return <><Background/><ToastContainer/><Suspense fallback={<PageLoader/>}><Auth/></Suspense></>;
-  return <div className="stryven-app-shell" data-theme={state.theme}><Background/><Navigation current={view} onNavigate={handleNavigate}/><ToastContainer/><Confetti/><main className={`stryven-main stryven-view-${view}`}><SystemStatusBar onNavigate={handleNavigate}/><div className="stryven-page-frame"><Suspense fallback={<PageLoader/>}>
+  return <div className="stryven-app-shell" data-theme={state.theme}><Background/><Navigation current={view} onNavigate={handleNavigate}/><ToastContainer/><Confetti/><main className={\`stryven-main stryven-view-\${view}\`}><SystemStatusBar onNavigate={handleNavigate}/><div className="stryven-page-frame"><Suspense fallback={<PageLoader/>}>
     {view==='dashboard'&&<section className="stryven-page"><Dashboard onNavigate={handleNavigate}/>{!isInstalled&&<div className="stryven-install"><InstallButton isInstallable={isInstallable} isInstalled={isInstalled} onInstall={promptInstall}>Install STRYVEN</InstallButton></div>}</section>}
     {view==='missions'&&<section className="stryven-page"><Missions/></section>}
     {view==='workout'&&<section className="stryven-page"><WorkoutWithAIPlan/></section>}

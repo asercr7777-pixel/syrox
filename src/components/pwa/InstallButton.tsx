@@ -1,5 +1,5 @@
 import { Download, X, CheckCircle2, Smartphone, Sparkles } from 'lucide-react';
-import { useState, useEffect, useCallback, type ReactNode } from 'react';
+import { useState, useCallback, type ReactNode } from 'react';
 
 const DISMISS_KEY = 'pwa-install-dismissed';
 const DISMISS_COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000;

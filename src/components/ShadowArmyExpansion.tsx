@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowUpRight, Check, ChevronRight, Ghost, LockKeyhole, Users, WandSparkles, X, Zap } from 'lucide-react';
+import { ArrowUpRight, Check, ChevronRight, Ghost, LockKeyhole, Users, Sparkles, X, Zap } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { supabase } from '../lib/supabase';
 import { useStore } from '../store/useStore';
@@ -144,7 +144,7 @@ function OriginalShadowCollection() {
   return <section className="sv-original-shadow-system" aria-labelledby="original-shadow-title">
     <header className="sv-original-shadow-hero">
       <div className="sv-original-shadow-hero__copy">
-        <span className="sv-eyebrow"><WandSparkles size={14}/> STRYVEN ORIGINAL UNITS / MONARCH ARCHIVE</span>
+        <span className="sv-eyebrow"><Sparkles size={14}/> STRYVEN ORIGINAL UNITS / MONARCH ARCHIVE</span>
         <h1 id="original-shadow-title">THE <em>ASCENDED</em> LEGION</h1>
         <p>Original shadows forged for STRYVEN. Recruit them through your hunter progression, deploy a four-unit formation and evolve their power with essence earned from confirmed story extractions.</p>
         <div className="sv-original-shadow-hero__meta"><span><Users size={15}/>{roster.length} / {ORIGINAL_SHADOWS.length} RECRUITED</span><span><Zap size={15}/>{deployedPower} FORMATION POWER</span></div>

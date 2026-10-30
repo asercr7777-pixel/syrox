@@ -11,7 +11,7 @@ const NAV_ITEMS:NavItem[]=[
  {id:'workout',label:'Training',shortLabel:'Training',icon:Dumbbell},
  {id:'analytics',label:'Progress & Analytics',shortLabel:'Progress',icon:Activity},
  {id:'achievements',label:'Achievements',shortLabel:'Awards',icon:Award},
- {id:'shadows',label:'Shadow Army',shortLabel:'Shadows',icon:Ghost},
+ {id:'shadows',label:'Story',shortLabel:'Story',icon:Ghost},
  {id:'profile',label:'Hunter Profile',shortLabel:'Profile',icon:UserRound},
  {id:'settings',label:'Settings',shortLabel:'Settings',icon:Settings},
 ];

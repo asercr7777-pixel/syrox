@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, Pencil, Plus, RotateCcw, Trash2, X, Play, Pause, Square, Clock, History, Trophy } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { useAuth } from '../lib/auth';
+import { supabase } from '../lib/supabase';
 import { ALL_CHAPTERS } from '../data/story';
 import { playSound } from '../lib/sound';
 
@@ -39,6 +41,9 @@ const labels: Record<Section, string> = { stretching: 'Stretching', main: 'Main 
 
 export function SixDayWorkout() {
   const { state, saveWorkoutSession, completeStoryMission } = useStore();
+  const { user } = useAuth();
+  const userId = user?.id;
+  const cloudRestoreStartedFor = useRef<string | null>(null);
   const [days, setDays] = useState<Day[]>(load);
   const [savedSession] = useState(loadActiveSession);
   const [active, setActive] = useState(savedSession.active);
@@ -53,6 +58,69 @@ export function SixDayWorkout() {
   const [restRemaining, setRestRemaining] = useState(0);
   const [restRunning, setRestRunning] = useState(false);
   const [restUntil, setRestUntil] = useState<number | null>(null);
+
+  // If the original browser-local six-day plan is unavailable, recover the
+  // newer cloud-saved six-day configuration into this original UI once.
+  // Existing local plans always win and are never overwritten.
+  useEffect(() => {
+    if (!userId || cloudRestoreStartedFor.current === userId) return;
+    cloudRestoreStartedFor.current = userId;
+    let cancelled = false;
+    async function restoreCloudPlan() {
+      try {
+        if (localStorage.getItem(KEY) !== null) return;
+        const [planResult, libraryResult] = await Promise.all([
+          supabase.from('workout_plans').select('days').eq('user_id', userId).maybeSingle(),
+          supabase.from('syrox_user_exercises').select('id,name,category').eq('user_id', userId),
+        ]);
+        if (planResult.error) throw planResult.error;
+        if (libraryResult.error) throw libraryResult.error;
+        let saved: unknown = planResult.data?.days;
+        if (typeof saved === 'string') {
+          try { saved = JSON.parse(saved); } catch { saved = []; }
+        }
+        if (!Array.isArray(saved)) return;
+        const library = new Map((libraryResult.data ?? []).map((row) => [row.id, row]));
+        const restored: Day[] = seedNames.map((fallback, index) => {
+          const raw = (saved as Record<string, unknown>[]).find((item) => Number(item.dayNumber) === index + 1)
+            ?? (saved as Record<string, unknown>[])[index];
+          if (!raw) return { id: `day-${index + 1}`, name: fallback, exercises: [] };
+          const entries = Array.isArray(raw.exercises) ? raw.exercises as Record<string, unknown>[] : [];
+          const exercises: Exercise[] = entries.flatMap((entry, exerciseIndex) => {
+            const exerciseId = typeof entry.exerciseId === 'string' ? entry.exerciseId : '';
+            const libraryExercise = exerciseId ? library.get(exerciseId) : undefined;
+            const name = (typeof entry.name === 'string' ? entry.name : libraryExercise?.name ?? '').trim();
+            if (!name) return [];
+            const sectionValue = String(entry.section ?? libraryExercise?.category ?? 'main').toLowerCase();
+            const section: Section = sectionValue === 'stretching' ? 'stretching' : sectionValue === 'plyometric' ? 'plyometric' : 'main';
+            const sets = Number(entry.sets);
+            return [{
+              id: typeof entry.id === 'string' ? entry.id : `cloud-${exerciseId || index + '-' + exerciseIndex}`,
+              name,
+              sets: Number.isFinite(sets) ? Math.max(1, Math.min(50, Math.floor(sets))) : 3,
+              reps: String(entry.repTarget ?? entry.reps ?? '8-12'),
+              section,
+              done: false,
+              completedSets: 0,
+              actualReps: '',
+            }];
+          });
+          return {
+            id: `day-${index + 1}`,
+            name: String(raw.name || fallback).slice(0, 80),
+            exercises,
+          };
+        });
+        if (!restored.some((day) => day.exercises.length > 0)) return;
+        localStorage.setItem(KEY, JSON.stringify(restored));
+        if (!cancelled) setDays(restored);
+      } catch (error) {
+        console.warn('[training] cloud six-day recovery skipped; saved data remains unchanged', error);
+      }
+    }
+    void restoreCloudPlan();
+    return () => { cancelled = true; };
+  }, [userId]);
 
   const current = days[active];
   const progress = useMemo(() => { const total = current.exercises.length; return total ? Math.round(current.exercises.filter(e => e.done).length / total * 100) : 0; }, [current]);

@@ -6,8 +6,10 @@ import type { StoryChapter, StoryMission } from '../data/story/types';
 import { isMusicEnabled, setMusicEnabled } from '../lib/audioEngine';
 import { toast } from '../components/ui/Toast';
 import { triggerConfetti } from '../components/ui/Confetti';
+import { CutscenePlayer } from '../components/story/CutscenePlayer';
+import { playSfx } from '../lib/audioEngine';
 
-type Screen = 'world' | 'chapter' | 'boss' | 'reward';
+type Screen = 'world' | 'intro' | 'chapter' | 'mission' | 'bossIntro' | 'boss' | 'bossVictory' | 'reward';
 const chapters = [...ALL_CHAPTERS].sort((a, b) => a.number - b.number).slice(0, 30);
 const MAP_W = 3200;
 const MAP_H = 520;
@@ -37,6 +39,8 @@ export default function StoryModeSimpleV2() {
   const [bossPhase, setBossPhase] = useState(0);
   const [music, setMusic] = useState(isMusicEnabled());
   const [reward, setReward] = useState<{ xp: number; title?: string; lore?: string } | null>(null);
+  const [activeMission, setActiveMission] = useState<StoryMission | null>(null);
+  const [missionPhase, setMissionPhase] = useState<'before' | 'after'>('before');
   const current = Math.min(state.storyChapter + 1, 30);
   const progressSnapshot = useMemo<StoryProgressSnapshot>(() => {
     const today = dateKey(Date.now());
@@ -49,14 +53,83 @@ export default function StoryModeSimpleV2() {
   }, [state]);
   const rows = useMemo(() => selected.missions.map(m => ({ m, p: progress(progressSnapshot, state, m), done: Boolean(state.storyCompletedMissions[m.id]) })), [selected, state, progressSnapshot]);
   const done = rows.filter(x => x.done).length;
-  const open = (c: StoryChapter) => { if (c.number > current) return; setSelected(c); setScreen('chapter'); };
-  const complete = (m: StoryMission) => { if (state.storyCompletedMissions[m.id]) return; const p = progress(progressSnapshot, state, m); if (p < m.target) { toast({ title: 'Mission not complete', message: `Complete: ${m.title}`, type: 'info', icon: '◈' }); return; } completeStoryMission(m.id, { xp: m.xpReward, coins: 0 }); toast({ title: 'Mission complete', message: `+${m.xpReward} XP`, type: 'success', icon: '✓' }); };
-  const hitBoss = () => { if (bossPhase < 2) { setBossPhase(v => v + 1); return; } const b = selected.boss; if (state.storyBossDefeated[b.id]) { setScreen('world'); return; } defeatStoryBoss(b.id); if (b.rewardTitle) unlockStoryAchievement(b.rewardTitle); if (b.rewardLore) unlockLore(b.rewardLore); completeStoryMission(`boss_${b.id}`, { xp: b.xpReward, coins: 0 }); setReward({ xp: b.xpReward, title: b.rewardTitle, lore: b.rewardLore }); triggerConfetti(30); setScreen('reward'); };
+  const open = (c: StoryChapter) => {
+    if (c.number > current) return;
+    setSelected(c);
+    let seen: string[] = [];
+    try { const raw = localStorage.getItem('stryven-story-intros-seen-v1'); const parsed: unknown = raw ? JSON.parse(raw) : []; seen = Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === 'string') : []; } catch { /* replay the intro if local storage is unavailable */ }
+    if (!seen.includes(c.id)) {
+      try { localStorage.setItem('stryven-story-intros-seen-v1', JSON.stringify([...seen, c.id])); } catch { /* the intro remains playable this visit */ }
+      setScreen('intro');
+    } else setScreen('chapter');
+  };
+  const startMission = (m: StoryMission) => {
+    if (state.storyCompletedMissions[m.id]) return;
+    const p = progress(progressSnapshot, state, m);
+    if (p < m.target) {
+      toast({ title: 'Mission not complete', message: `Complete: ${m.title}`, type: 'info', icon: '◈' });
+      return;
+    }
+    setActiveMission(m);
+    setMissionPhase('before');
+    setScreen('mission');
+  };
+  const advanceMissionCutscene = () => {
+    if (!activeMission) { setScreen('chapter'); return; }
+    if (missionPhase === 'before') {
+      if (!state.storyCompletedMissions[activeMission.id]) {
+        completeStoryMission(activeMission.id, { xp: activeMission.xpReward, coins: 0 });
+        toast({ title: 'Mission complete', message: `+${activeMission.xpReward} XP`, type: 'success', icon: '✓' });
+      }
+      setMissionPhase('after');
+      return;
+    }
+    setActiveMission(null);
+    setScreen('chapter');
+  };
+  const hitBoss = () => {
+    if (bossPhase < 2) {
+      playSfx('sword_clash');
+      setBossPhase(v => v + 1);
+      return;
+    }
+    const b = selected.boss;
+    if (state.storyBossDefeated[b.id]) { setScreen('world'); return; }
+    playSfx('impact');
+    defeatStoryBoss(b.id);
+    if (b.rewardTitle) unlockStoryAchievement(b.rewardTitle);
+    if (b.rewardLore) unlockLore(b.rewardLore);
+    completeStoryMission(`boss_${b.id}`, { xp: b.xpReward, coins: 0 });
+    setReward({ xp: b.xpReward, title: b.rewardTitle, lore: b.rewardLore });
+    triggerConfetti(30);
+    setScreen('bossVictory');
+  };
   const claim = () => { setReward(null); if (selected.number === current && selected.number < 30) advanceStoryChapter(); setScreen('world'); };
 
+  if (screen === 'intro') return <section className="space-y-3"><button type="button" onClick={() => setScreen('world')} className="flex items-center gap-2 text-xs font-bold text-white/45 hover:text-white"><ArrowLeft size={15}/> WORLD MAP</button><CutscenePlayer lines={selected.introCutscene} onComplete={() => setScreen('chapter')} bgGradient={selected.bgGradient} chapterEmoji={selected.emoji} chapterTitle={selected.title} shadowGuide shadowState="observing" /></section>;
+  if (screen === 'mission' && activeMission) return <section className="space-y-3"><div className="flex items-center justify-between gap-3"><span className="text-[9px] font-black uppercase tracking-[.25em] text-violet-300">{missionPhase === 'before' ? 'MISSION BRIEFING' : 'MISSION COMPLETE'}</span><span className="text-xs text-white/35">{activeMission.title}</span></div><CutscenePlayer lines={missionPhase === 'before' ? activeMission.cutsceneBefore : activeMission.cutsceneAfter} onComplete={advanceMissionCutscene} bgGradient={selected.bgGradient} chapterEmoji={selected.emoji} chapterTitle={activeMission.title} shadowGuide /></section>;
+  if (screen === 'bossIntro') return <section className="space-y-3"><button type="button" onClick={() => setScreen('chapter')} className="flex items-center gap-2 text-xs font-bold text-white/45 hover:text-white"><ArrowLeft size={15}/> CHAPTER</button><CutscenePlayer lines={selected.boss.dialogue} onComplete={() => { setBossPhase(0); setScreen('boss'); }} bgGradient="linear-gradient(135deg,#17070d,#09070d,#190b17)" chapterEmoji={selected.boss.emoji} chapterTitle={selected.boss.name} shadowGuide={false} /></section>;
+  if (screen === 'bossVictory' && reward) return <section className="space-y-3"><CutscenePlayer lines={selected.boss.defeatDialogue} onComplete={() => setScreen('reward')} bgGradient="linear-gradient(135deg,#171006,#08090d,#20110b)" chapterEmoji={selected.boss.emoji} chapterTitle="THE ENEMY HAS FALLEN" shadowGuide /></section>;
   if (screen === 'reward' && reward) return <section className="relative min-h-[78vh] overflow-hidden rounded-[2rem] border border-white/10 bg-[#050607] p-6 text-white"><div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,.11),transparent_44%)]" /><div className="relative mx-auto flex min-h-[68vh] max-w-xl flex-col items-center justify-center text-center"><div className="flex h-20 w-20 items-center justify-center rounded-full border border-amber-200/30 bg-amber-100/[.06] shadow-[0_0_55px_rgba(255,210,120,.14)]"><Trophy size={38} /></div><div className="mt-6 text-[10px] font-black uppercase tracking-[.45em] text-amber-100/55">TERRITORY CONQUERED</div><h1 className="mt-3 text-4xl font-black tracking-tight">{selected.title}</h1><div className="my-7 rounded-xl border border-white/10 bg-white/[.06] px-5 py-3 font-black"><Zap size={15} className="mr-2 inline" />+{reward.xp} XP</div>{reward.title && <div className="mb-6 rounded-xl border border-amber-200/15 bg-amber-200/[.04] px-5 py-3"><b>{reward.title}</b><span className="ml-2 text-xs text-white/40">Achievement unlocked</span></div>}{reward.lore && <p className="mb-6 max-w-md text-xs leading-5 text-white/35">{reward.lore}</p>}<button onClick={claim} className="rounded-xl bg-white px-7 py-3 font-black text-black shadow-[0_8px_30px_rgba(255,255,255,.12)]">Return to World <ChevronRight size={17} className="ml-1 inline" /></button></div></section>;
-  if (screen === 'boss') return <section className="min-h-[78vh] rounded-[2rem] border border-white/10 bg-[#050607] p-5 text-white"><button onClick={() => setScreen('chapter')} className="mb-6 flex items-center gap-2 text-xs font-bold text-white/45 transition hover:text-white"><ArrowLeft size={15} /> Chapter</button><div className="relative mx-auto max-w-2xl overflow-hidden rounded-[2rem] border border-white/10 bg-black/55 p-7 text-center shadow-2xl"><div className="relative flex justify-center"><div className="flex h-20 w-20 items-center justify-center rounded-full border border-white/15 bg-white/[.04] shadow-[0_0_45px_rgba(255,255,255,.08)]"><Skull size={42} /></div></div><div className="mt-5 text-[10px] font-black uppercase tracking-[.38em] text-white/35">BOSS CITADEL · PHASE {bossPhase + 1}/3</div><h1 className="mt-3 text-4xl font-black">{selected.boss.name}</h1><p className="mt-2 text-sm text-white/40">{['Hold your ground.', 'Break the pattern.', 'Finish the fight.'][bossPhase]}</p><div className="my-7 flex gap-2">{[0,1,2].map(i => <span key={i} className={`h-1.5 flex-1 rounded-full ${bossPhase >= i ? 'bg-white' : 'bg-white/10'}`} />)}</div><button onClick={hitBoss} className="w-full rounded-xl bg-white py-4 font-black text-black shadow-[0_8px_30px_rgba(255,255,255,.1)]">{bossPhase === 2 ? 'DEFEAT BOSS' : 'COMPLETE PHASE'} <ChevronRight size={17} className="ml-1 inline" /></button></div></section>;
-  if (screen === 'chapter') return <section className="min-h-[78vh] text-white"><div className="mb-4 flex items-center justify-between"><button onClick={() => setScreen('world')} className="flex items-center gap-2 text-xs font-bold text-white/45 transition hover:text-white"><ArrowLeft size={15} /> World Map</button><button onClick={() => { const n = !music; setMusic(n); setMusicEnabled(n); }} aria-label="Toggle music" className="rounded-xl border border-white/10 bg-white/[.04] p-2 transition hover:bg-white/[.09]">{music ? <Volume2 size={16} /> : <VolumeX size={16} />}</button></div><div className="mb-4 overflow-hidden rounded-[2rem] border border-white/10 bg-black/40 p-5 shadow-xl sm:p-6"><div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[.32em] text-amber-100/45"><span className="h-1.5 w-1.5 rounded-full bg-amber-200" /> {selected.region.name} · CHAPTER {String(selected.number).padStart(2, '0')}</div><div className="mt-3 flex items-end justify-between gap-4"><div><h1 className="text-3xl font-black tracking-tight sm:text-4xl">{selected.title}</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-white/45">{selected.description}</p></div><div className="text-right"><div className="text-3xl font-black">{Math.round(done / Math.max(1, rows.length) * 100)}%</div><div className="text-[8px] font-black uppercase tracking-[.2em] text-white/25">complete</div></div></div><div className="mt-5 h-1.5 overflow-hidden rounded-full bg-white/[.07]"><div className="h-full rounded-full bg-white transition-all duration-500" style={{ width: `${done / Math.max(1, rows.length) * 100}%` }} /></div></div><div className="rounded-[2rem] border border-white/10 bg-black/40 p-4 shadow-xl sm:p-6"><div className="mb-4 flex items-center justify-between"><div><div className="text-[9px] font-black uppercase tracking-[.3em] text-white/25">MISSION LOG</div><b className="mt-1 block text-lg">Objectives</b></div><span className="rounded-lg border border-white/10 bg-white/[.04] px-2.5 py-1 text-xs font-black text-white/50">{done}/{rows.length}</span></div><div className="space-y-2">{rows.map(({ m, p, done: d }) => <button key={m.id} onClick={() => complete(m)} className={`group flex w-full items-center gap-3 rounded-xl border p-3.5 text-left transition ${d ? 'border-white/10 bg-white/[.055] opacity-60' : 'border-white/10 bg-white/[.025] hover:border-white/20 hover:bg-white/[.05]'}`}><span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border ${d ? 'border-white/20 bg-white/10' : 'border-white/10 bg-black/20'}`}>{d ? <Check size={15} /> : <Target size={15} />}</span><span className="min-w-0 flex-1"><b className="block truncate">{m.title}</b><span className="mt-0.5 block text-[10px] text-white/25">{d ? 'Objective secured' : 'Tap to claim when complete'}</span></span><span className="text-xs font-black text-white/45">{d ? 'DONE' : `${p}/${m.target}`}</span></button>)}</div>{done === rows.length ? <button onClick={() => { setBossPhase(0); setScreen('boss'); }} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-white py-4 font-black text-black shadow-[0_8px_30px_rgba(255,255,255,.08)]"><Swords size={17} /> ENTER BOSS CITADEL</button> : <div className="mt-4 rounded-xl border border-white/5 bg-white/[.02] px-4 py-3 text-[10px] font-bold uppercase tracking-[.18em] text-white/25">Complete every objective to reveal the Boss Citadel.</div>}</div></section>;
+  if (screen === 'boss') return <section className="relative min-h-[78vh] overflow-hidden rounded-[2rem] border border-rose-300/15 bg-[#050607] p-4 text-white sm:p-6">
+    <div className="pointer-events-none absolute inset-0"><img src="/dungeon-boss-challenge-art.jpg" alt="" className="h-full w-full object-cover opacity-35" /><div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,5,9,.45),rgba(4,5,9,.93)),radial-gradient(ellipse_at_50%_30%,rgba(180,35,73,.2),transparent_65%)]" /></div>
+    <div className="relative mx-auto flex min-h-[70vh] max-w-4xl flex-col">
+      <button type="button" onClick={() => setScreen('chapter')} className="mb-5 flex items-center gap-2 text-xs font-bold text-white/45 transition hover:text-white"><ArrowLeft size={15}/> RETURN TO CHAPTER</button>
+      <div className="mb-4 text-center"><div className="text-[9px] font-black uppercase tracking-[.42em] text-rose-200/65">BOSS CITADEL // ENCOUNTER {String(selected.number).padStart(2,'0')}</div><h1 className="mt-3 text-3xl font-black tracking-tight sm:text-5xl">{selected.boss.name}</h1><p className="mt-2 text-xs uppercase tracking-[.2em] text-rose-100/40">{selected.boss.title}</p></div>
+      <div className="relative mx-auto my-2 grid w-full max-w-xl place-items-center overflow-hidden rounded-2xl border border-rose-200/15 bg-black/40 p-4 shadow-[0_25px_80px_rgba(0,0,0,.5)]">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(220,38,80,.2),transparent_65%)]" />
+        <div className="relative flex h-40 w-full items-center justify-center sm:h-56"><img src="/dungeon-boss-challenge-art.jpg" alt={selected.boss.name} className="h-full max-w-full object-contain drop-shadow-[0_0_32px_rgba(220,38,80,.35)]" /></div>
+        <div className="relative mt-3 w-full">
+          <div className="mb-2 flex items-center justify-between gap-3 text-[8px] font-black uppercase tracking-[.2em] text-rose-100/65"><span>ENEMY VITALITY</span><span>{Math.max(0,100 - bossPhase * 33)}% // {selected.boss.hp} HP</span></div>
+          <div className="h-2.5 overflow-hidden rounded-full border border-rose-100/15 bg-black/70"><div className="h-full rounded-full bg-gradient-to-r from-red-900 via-rose-500 to-orange-200 shadow-[0_0_18px_rgba(244,63,94,.6)] transition-all duration-700" style={{width:`${Math.max(0,100 - bossPhase * 33)}%`}} /></div>
+        </div>
+      </div>
+      <div className="mt-5 flex justify-center gap-2">{[0,1,2].map(i => <span key={i} className={`h-1.5 w-16 rounded-full ${bossPhase > i ? 'bg-rose-300 shadow-[0_0_12px_rgba(251,113,133,.7)]' : 'bg-white/10'}`} />)}</div>
+      <div className="mt-5 text-center"><p className="text-[9px] font-black uppercase tracking-[.3em] text-white/35">PHASE {bossPhase + 1} / 3</p><p className="mt-2 text-sm text-white/55">{['Break the enemy guard. Your completed objectives have brought you here.','The boss is weakening. Do not let the pressure break your focus.','One final strike. The path forward is earned, never given.'][bossPhase]}</p></div>
+      <button type="button" onClick={hitBoss} className="mx-auto mt-6 flex min-h-14 w-full max-w-md items-center justify-center gap-3 rounded-xl border border-rose-100/25 bg-gradient-to-r from-rose-950 via-rose-800 to-red-950 px-6 font-black tracking-[.16em] text-white shadow-[0_10px_35px_rgba(190,24,93,.2)] transition hover:brightness-125 active:scale-[.99]">{bossPhase === 2 ? 'FINAL STRIKE' : bossPhase === 1 ? 'BREAK THE DEFENSE' : 'STRIKE THE BOSS'} <Swords size={18}/></button>
+    </div>
+  </section>;
+  if (screen === 'chapter') return <section className="min-h-[78vh] text-white"><div className="mb-4 flex items-center justify-between"><button onClick={() => setScreen('world')} className="flex items-center gap-2 text-xs font-bold text-white/45 transition hover:text-white"><ArrowLeft size={15} /> World Map</button><button onClick={() => { const n = !music; setMusic(n); setMusicEnabled(n); }} aria-label="Toggle music" className="rounded-xl border border-white/10 bg-white/[.04] p-2 transition hover:bg-white/[.09]">{music ? <Volume2 size={16} /> : <VolumeX size={16} />}</button></div><div className="mb-4 overflow-hidden rounded-[2rem] border border-white/10 bg-black/40 p-5 shadow-xl sm:p-6"><div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[.32em] text-amber-100/45"><span className="h-1.5 w-1.5 rounded-full bg-amber-200" /> {selected.region.name} · CHAPTER {String(selected.number).padStart(2, '0')}</div><div className="mt-3 flex items-end justify-between gap-4"><div><h1 className="text-3xl font-black tracking-tight sm:text-4xl">{selected.title}</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-white/45">{selected.description}</p></div><div className="text-right"><div className="text-3xl font-black">{Math.round(done / Math.max(1, rows.length) * 100)}%</div><div className="text-[8px] font-black uppercase tracking-[.2em] text-white/25">complete</div></div></div><div className="mt-5 h-1.5 overflow-hidden rounded-full bg-white/[.07]"><div className="h-full rounded-full bg-white transition-all duration-500" style={{ width: `${done / Math.max(1, rows.length) * 100}%` }} /></div></div><div className="rounded-[2rem] border border-white/10 bg-black/40 p-4 shadow-xl sm:p-6"><div className="mb-4 flex items-center justify-between"><div><div className="text-[9px] font-black uppercase tracking-[.3em] text-white/25">MISSION LOG</div><b className="mt-1 block text-lg">Objectives</b></div><span className="rounded-lg border border-white/10 bg-white/[.04] px-2.5 py-1 text-xs font-black text-white/50">{done}/{rows.length}</span></div><div className="space-y-2">{rows.map(({ m, p, done: d }) => <button key={m.id} onClick={() => startMission(m)} className={`group flex w-full items-center gap-3 rounded-xl border p-3.5 text-left transition ${d ? 'border-white/10 bg-white/[.055] opacity-60' : 'border-white/10 bg-white/[.025] hover:border-white/20 hover:bg-white/[.05]'}`}><span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border ${d ? 'border-white/20 bg-white/10' : 'border-white/10 bg-black/20'}`}>{d ? <Check size={15} /> : <Target size={15} />}</span><span className="min-w-0 flex-1"><b className="block truncate">{m.title}</b><span className="mt-0.5 block text-[10px] text-white/25">{d ? 'Objective secured' : 'Tap to claim when complete'}</span></span><span className="text-xs font-black text-white/45">{d ? 'DONE' : `${p}/${m.target}`}</span></button>)}</div>{done === rows.length ? <button onClick={() => { setBossPhase(0); setScreen('bossIntro'); }} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-white py-4 font-black text-black shadow-[0_8px_30px_rgba(255,255,255,.08)]"><Swords size={17} /> ENTER BOSS CITADEL</button> : <div className="mt-4 rounded-xl border border-white/5 bg-white/[.02] px-4 py-3 text-[10px] font-bold uppercase tracking-[.18em] text-white/25">Complete every objective to reveal the Boss Citadel.</div>}</div></section>;
   return <WorldMap current={current} completed={state.storyChapter} level={state.level} open={open} />;
 }
 

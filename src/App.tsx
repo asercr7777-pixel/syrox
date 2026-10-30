@@ -23,7 +23,7 @@ const ResetPassword=lazy(()=>import('./views/ResetPassword').then(m=>({default:m
 const Missions=lazy(()=>import('./views/Missions').then(m=>({default:m.Missions})));
 const Analytics=lazy(()=>import('./views/Analytics').then(m=>({default:m.Analytics})));
 const Achievements=lazy(()=>import('./views/Achievements').then(m=>({default:m.Achievements})));
-const ShadowArmy=lazy(()=>import('./components/ShadowArmyExpansion').then(m=>({default:m.ShadowArmyExpansion})));
+const StoryExperience=lazy(()=>import('./components/StoryExperience').then(m=>({default:m.StoryExperience})));
 const VALID_VIEWS=new Set<ViewId>(['dashboard','missions','workout','analytics','achievements','shadows','profile','settings']);
 function getViewFromUrl():ViewId{if(typeof window==='undefined')return'dashboard';const requested=new URLSearchParams(window.location.search).get('view');return requested&&VALID_VIEWS.has(requested as ViewId)?requested as ViewId:'dashboard'}
 function PageLoader(){return <div className="stryven-page-loader" role="status" aria-label="Loading page"><Loader2 className="animate-spin" size={30}/><span>Loading system module…</span></div>}
@@ -44,7 +44,7 @@ function AppContent(){
     {view==='workout'&&<section className="stryven-page"><WorkoutWithAIPlan/></section>}
     {view==='analytics'&&<section className="stryven-page"><Analytics/></section>}
     {view==='achievements'&&<section className="stryven-page"><Achievements/></section>}
-    {view==='shadows'&&<section className="stryven-page"><ShadowArmy/></section>}
+    {view==='shadows'&&<section className="stryven-page"><StoryExperience/></section>}
     {view==='profile'&&<section className="stryven-page"><Profile/></section>}
     {view==='settings'&&<section className="stryven-page stryven-settings"><Settings/></section>}
   </Suspense></div></main></div>

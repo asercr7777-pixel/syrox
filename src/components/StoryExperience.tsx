@@ -63,8 +63,9 @@ export function StoryExperience() {
             <button type="button" className={tab === 'world' ? 'is-active' : ''} onClick={() => setTab('world')}><Map size={16} /> WORLD MAP <span>01</span></button>
             <button type="button" className={tab === 'legion' ? 'is-active' : ''} onClick={() => setTab('legion')}><Swords size={16} /> SHADOW LEGION <span>02</span></button>
           </nav>
-          <div className="sv-story-world__content" key={tab}>
-            {tab === 'world' ? <StoryModeSimpleV2 /> : <ShadowArmyExpansion />}
+          <div className="sv-story-world__content">
+            <div hidden={tab !== 'world'} aria-hidden={tab !== 'world'}><StoryModeSimpleV2 /></div>
+            <div hidden={tab !== 'legion'} aria-hidden={tab !== 'legion'}><ShadowArmyExpansion /></div>
           </div>
         </motion.section>
       )}

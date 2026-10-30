@@ -6,12 +6,13 @@ import { AURAS, TITLES, WEAPONS } from '../data/collections';
 import { getRankByXp, getNextRank } from '../data/ranks';
 
 type RosterFilter = 'all' | 'extracted' | 'ready' | 'locked';
+const EMPTY_EXTRACTED_BOSS_IDS: string[] = [];
 
 export function ShadowArmy() {
   const { state, extractShadow } = useStore();
   const [filter, setFilter] = useState<RosterFilter>('all');
   const [revealedShadow, setRevealedShadow] = useState<{id:string;name:string;chapter:string}|null>(null);
-  const extractedIds = state.shadowExtractedBossIds ?? [];
+  const extractedIds = state.shadowExtractedBossIds ?? EMPTY_EXTRACTED_BOSS_IDS;
   const rank = getRankByXp(state.xp);
   const nextRank = getNextRank(state.xp);
   const canExtract = state.level >= 10 || state.streak >= 30;

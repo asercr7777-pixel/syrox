@@ -3,11 +3,10 @@ import { ArrowLeft, Check, ChevronRight, Lock, Map, Skull, Swords, Target, Troph
 import { useStore } from '../store/useStore';
 import { ALL_CHAPTERS } from '../data/story';
 import type { StoryChapter, StoryMission } from '../data/story/types';
-import { isMusicEnabled, setMusicEnabled } from '../lib/audioEngine';
+import { isMusicEnabled, setMusicEnabled, playSfx } from '../lib/audioEngine';
 import { toast } from '../components/ui/Toast';
 import { triggerConfetti } from '../components/ui/Confetti';
 import { CutscenePlayer } from '../components/story/CutscenePlayer';
-import { playSfx } from '../lib/audioEngine';
 
 type Screen = 'world' | 'intro' | 'chapter' | 'mission' | 'bossIntro' | 'boss' | 'bossVictory' | 'reward';
 const chapters = [...ALL_CHAPTERS].sort((a, b) => a.number - b.number).slice(0, 30);

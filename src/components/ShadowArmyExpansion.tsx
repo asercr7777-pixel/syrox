@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ArrowUpRight, Check, ChevronRight, Ghost, LockKeyhole, Users, Sparkles, X, Zap } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { supabase } from '../lib/supabase';
@@ -22,6 +22,7 @@ const ORIGINAL_SHADOWS: ShadowDefinition[] = [
 ];
 const SHADOW_IDS = new Set(ORIGINAL_SHADOWS.map((unit) => unit.id));
 const MAX_DEPLOYED = 4;
+const EMPTY_EXTRACTED_IDS: string[] = [];
 function unitLevel(unit: SavedShadow): number { return 1 + Math.floor(Math.max(0, unit.xp) / 100); }
 function unitPower(unit: ShadowDefinition, saved?: SavedShadow): number { return unit.power + Math.max(0, unitLevel(saved ?? { id: unit.id, xp: 0, recruitedAt: '' }) - 1) * 3; }
 

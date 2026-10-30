@@ -60,14 +60,13 @@ function OriginalShadowCollection() {
     async function loadArmy() {
       setLoading(true);
       try {
-        const { data, error } = await supabase.from('user_state').select('state').eq('user_id', userId).maybeSingle();
+        const { data, error } = await supabase.from('shadow_army_state').select('roster,formation,essence_spent').eq('user_id', userId).maybeSingle();
         if (error) throw error;
-        const cloud = (data?.state ?? {}) as Record<string, unknown>;
-        const savedRoster = Array.isArray(cloud.shadowArmyRoster) ? cloud.shadowArmyRoster : [];
+        const savedRoster = Array.isArray(data?.roster) ? data.roster : [];
         const safeRoster = savedRoster.map((item) => item as SavedShadow).filter((item) => item && SHADOW_IDS.has(item.id) && Number.isFinite(Number(item.xp)) && typeof item.recruitedAt === 'string');
-        const savedFormation = Array.isArray(cloud.shadowArmyFormation) ? cloud.shadowArmyFormation : [];
+        const savedFormation = Array.isArray(data?.formation) ? data.formation : [];
         const safeFormation = savedFormation.filter((id): id is string => typeof id === 'string' && safeRoster.some((unit) => unit.id === id)).slice(0, MAX_DEPLOYED);
-        const spent = Math.max(0, Math.floor(Number(cloud.shadowArmyEssenceSpent) || 0));
+        const spent = Math.max(0, Math.floor(Number(data?.essence_spent) || 0));
         if (!cancelled) {
           setRoster(safeRoster);
           setFormation(safeFormation);
@@ -196,7 +195,7 @@ function OriginalShadowCollection() {
             <div className="sv-original-shadow-card__body">
               <div><small>{unit.role} / {unit.element}</small><h3>{unit.name}</h3><p>{unit.epithet}</p></div>
               <div className="sv-original-shadow-card__ability"><span>SIGNATURE ABILITY</span><b>{unit.ability}</b></div>
-              {recruited ? <><div className="sv-original-shadow-level"><span>UNIT LEVEL {level}</span><b>{saved!.xp % 100} / 100 XP</b></div><div className="sv-original-shadow-progress"><i style={{ width: (saved!.xp % 100) + '%' }}/></div><div className="sv-original-shadow-card__actions"><button type="button" onClick={() => void toggleDeployment(unit.id)} disabled={saving}>{deployed ? 'RECALL' : 'DEPLOY'}</button><button type="button" onClick={() => void train(unit.id)} disabled={saving || essenceAvailable < 100}>TRAIN · 100 ESSENCE</button></div></> : <div className="sv-original-shadow-card__actions"><button type="button" disabled={!unlocked || saving} onClick={() => void recruit(unit)}>{unlocked ? 'RECRUIT SHADOW' : 'REQUIREMENT: LVL ' + unit.minLevel + (unit.minExtracted ? ' + ' + unit.minExtracted + ' EXTRACTION' : '')}</button></div>}
+              {recruited ? <><div className="sv-original-shadow-level"><span>UNIT LEVEL {level}</span><b>{saved!.xp % 100} / 100 XP</b></div><div className="sv-original-shadow-progress"><i style={{ width: (saved!.xp % 100) + '%' }}/></div><div className="sv-original-shadow-card__actions"><button type="button" onClick={() => void toggleDeployment(unit.id)} disabled={saving}>{deployed ? 'RECALL' : 'DEPLOY'}</button><button type="button" onClick={() => void train(unit.id)} disabled={saving || essenceAvailable < 100}>TRAIN · 100 ESSENCE</button></div></> : <div className="sv-original-shadow-card__actions"><button type="button" disabled={!unlocked || saving || loading} onClick={() => void recruit(unit)}>{unlocked ? 'RECRUIT SHADOW' : 'REQUIREMENT: LVL ' + unit.minLevel + (unit.minExtracted ? ' + ' + unit.minExtracted + ' EXTRACTION' : '')}</button></div>}
               <button type="button" className="sv-original-shadow-details" onClick={() => setSelected(unit)}>VIEW UNIT FILE <ArrowUpRight size={13}/></button>
             </div>
           </article>;
@@ -216,7 +215,7 @@ function OriginalShadowCollection() {
         <div className="sv-original-shadow-modal__stats">
           {[{ label: 'POWER', value: selected.power }, { label: 'DEFENSE', value: selected.defense }, { label: 'SPEED', value: selected.speed }].map((stat) => <div key={stat.label}><span>{stat.label}</span><b>{stat.value}</b><i><em style={{ width: stat.value + '%' }}/></i></div>)}
         </div>
-        <button type="button" className="sv-original-shadow-modal__action" onClick={() => { const recruited = recruitedIds.has(selected.id); setSelected(null); if (!recruited) void recruit(selected); else void toggleDeployment(selected.id); }} disabled={saving}>{recruitedIds.has(selected.id) ? (formation.includes(selected.id) ? 'RECALL FROM FORMATION' : 'DEPLOY TO FORMATION') : 'RECRUIT SHADOW'} <ChevronRight size={15}/></button>
+        <button type="button" className="sv-original-shadow-modal__action" onClick={() => { const recruited = recruitedIds.has(selected.id); setSelected(null); if (!recruited) void recruit(selected); else void toggleDeployment(selected.id); }} disabled={saving || (!recruitedIds.has(selected.id) && (state.level < selected.minLevel || extractedCount < selected.minExtracted))}>{recruitedIds.has(selected.id) ? (formation.includes(selected.id) ? 'RECALL FROM FORMATION' : 'DEPLOY TO FORMATION') : 'RECRUIT SHADOW'} <ChevronRight size={15}/></button>
       </div>
     </div>}
   </section>;

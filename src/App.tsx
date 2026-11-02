@@ -7,7 +7,6 @@ import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { AuthProvider, useAuth } from './lib/auth';
 import { useStore } from './store/useStore';
 import { syncSoundFlag } from './lib/sound';
-import { ensureStoryReset } from './lib/story/storyReset';
 import { usePWA } from './hooks/usePWA';
 import { InstallButton } from './components/pwa/InstallButton';
 import { Loader2 } from 'lucide-react';
@@ -23,15 +22,14 @@ const ResetPassword=lazy(()=>import('./views/ResetPassword').then(m=>({default:m
 const Missions=lazy(()=>import('./views/Missions').then(m=>({default:m.Missions})));
 const Analytics=lazy(()=>import('./views/Analytics').then(m=>({default:m.Analytics})));
 const Achievements=lazy(()=>import('./views/Achievements').then(m=>({default:m.Achievements})));
-const StoryExperience=lazy(()=>import('./components/StoryExperience').then(m=>({default:m.StoryExperience})));
-const VALID_VIEWS=new Set<ViewId>(['dashboard','missions','workout','analytics','achievements','shadows','profile','settings']);
+const VALID_VIEWS=new Set<ViewId>(['dashboard','missions','workout','analytics','achievements','profile','settings']);
 function getViewFromUrl():ViewId{if(typeof window==='undefined')return'dashboard';const requested=new URLSearchParams(window.location.search).get('view');return requested&&VALID_VIEWS.has(requested as ViewId)?requested as ViewId:'dashboard'}
 function PageLoader(){return <div className="stryven-page-loader" role="status" aria-label="Loading page"><Loader2 className="animate-spin" size={30}/><span>Loading system module…</span></div>}
 function AppContent(){
   const {user,loading}=useAuth(); const {state,loadFromCloud,setUserId}=useStore(); const [view,setView]=useState<ViewId>(getViewFromUrl); const {isInstalled,isInstallable,promptInstall}=usePWA(); const isReset=typeof window!=='undefined'&&new URLSearchParams(window.location.search).get('reset')==='1';
   useEffect(()=>{syncSoundFlag(state.soundEnabled)},[state.soundEnabled]);
   const userId=user?.id??null;
-  useEffect(()=>{if(!userId){setUserId(null);return}void Promise.allSettled([ensureStoryReset(userId),loadFromCloud(userId)])},[userId,setUserId,loadFromCloud]);
+  useEffect(()=>{if(!userId){setUserId(null);return}void loadFromCloud(userId)},[userId,setUserId,loadFromCloud]);
   useEffect(()=>{const onPopState=()=>setView(getViewFromUrl());window.addEventListener('popstate',onPopState);return()=>window.removeEventListener('popstate',onPopState)},[]);
   useEffect(()=>{document.documentElement.setAttribute('data-theme',state.theme);document.body.setAttribute('data-theme',state.theme);return()=>{document.documentElement.removeAttribute('data-theme');document.body.removeAttribute('data-theme')}},[state.theme]);
   const handleNavigate=(target:ViewId)=>{setView(target);const url=new URL(window.location.href);url.searchParams.set('view',target);window.history.pushState({},'',url);window.scrollTo({top:0,behavior:'auto'})};
@@ -44,7 +42,6 @@ function AppContent(){
     {view==='workout'&&<section className="stryven-page"><WorkoutWithAIPlan/></section>}
     {view==='analytics'&&<section className="stryven-page"><Analytics/></section>}
     {view==='achievements'&&<section className="stryven-page"><Achievements/></section>}
-    {view==='shadows'&&<section className="stryven-page"><StoryExperience/></section>}
     {view==='profile'&&<section className="stryven-page"><Profile/></section>}
     {view==='settings'&&<section className="stryven-page stryven-settings"><Settings/></section>}
   </Suspense></div></main></div>

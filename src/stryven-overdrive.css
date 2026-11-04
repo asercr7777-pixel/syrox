@@ -371,3 +371,24 @@ body:after{content:"";position:fixed;z-index:0;pointer-events:none;inset:0;opaci
 .sv-settings-card button,.sv-settings-card input,.sv-settings-card select{max-width:100%}
 @media(max-width:900px){.sv-achievement-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sv-settings__grid{grid-template-columns:minmax(0,1fr)}.sv-settings-card--wide{grid-column:auto}.sv-settings-fields{grid-template-columns:minmax(0,1fr)}.sv-avatar-grid{grid-template-columns:repeat(10,minmax(0,1fr))}}
 @media(max-width:540px){.sv-achievement-grid,.sv-earned-list{grid-template-columns:minmax(0,1fr)}.sv-achievement-notice{align-items:flex-start;flex-direction:column}.sv-achievement-notice button{width:100%}.sv-settings__header{padding:19px}.sv-avatar-grid{grid-template-columns:repeat(5,minmax(0,1fr))}.legion-topline{font-size:7px}.legion-player-rank{padding:7px;font-size:7px}.legion-command-stats article span{font-size:8px}.legion-section-head h2{font-size:20px}}
+
+/* Dashboard XP trend and rebuilt mission controls */
+.sv-progress-chart{display:flex;flex-direction:column;gap:10px;min-width:0;padding:16px;border:1px solid #ffffff10;border-radius:13px;background:linear-gradient(145deg,#0b0d16,#090a11)}
+.sv-progress-chart__summary{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.sv-progress-chart__summary strong{color:#e8ddff;font-size:22px;letter-spacing:-.04em}
+.sv-progress-chart__summary span,.sv-progress-chart__labels{color:#858ba5;font:800 7px/1.5 ui-monospace,monospace;letter-spacing:.08em}
+.sv-progress-chart__plot{display:grid;grid-template-columns:35px minmax(0,1fr);gap:8px;align-items:stretch;min-width:0}
+.sv-progress-chart__axis{display:flex;flex-direction:column;justify-content:space-between;padding:2px 0;color:#70778f;font:700 7px/1.4 ui-monospace,monospace;text-align:right}
+.sv-progress-chart__plot svg{display:block;width:100%;height:180px;overflow:visible;color:#9298b0}
+.sv-progress-chart__labels{display:flex;justify-content:space-between;margin-left:43px}
+.sv-mission-edit-overlay{position:fixed;inset:0;z-index:150;display:grid;place-items:center;padding:18px;background:#03040bd9;backdrop-filter:blur(10px)}
+.sv-mission-edit-modal{display:flex;flex-direction:column;gap:15px;width:min(100%,420px);padding:22px;border:1px solid #a78bfa55;border-radius:16px;background:#10111c;box-shadow:0 24px 80px #0009}
+.sv-mission-edit-modal>div{display:flex;justify-content:space-between;align-items:center}.sv-mission-edit-modal>div button{border:0;background:transparent;color:#aeb4c9;cursor:pointer}
+.sv-mission-edit-modal label{display:flex;flex-direction:column;gap:7px;color:#aeb4c9;font-size:11px;font-weight:700}
+.sv-mission-edit-modal input{width:100%;min-height:42px;padding:0 12px;border:1px solid #ffffff1c;border-radius:9px;background:#080a12;color:#fff}
+.sv-mission-edit-modal>button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:42px;border:1px solid #a78bfa66;border-radius:9px;background:#7c3aed;color:#fff;font-weight:800;cursor:pointer}
+.sv-mission-row .sv-mission-edit,.sv-mission-row .sv-mission-delete{display:grid;place-items:center;flex:none;width:30px;height:30px;border:1px solid #ffffff18;border-radius:8px;background:#ffffff05;color:#aab1c7;cursor:pointer}
+.sv-mission-row .sv-mission-delete{color:#fca5a5}
+.sv-mission-xp-goal{display:flex;flex-direction:column;gap:8px;margin-top:18px;padding:14px;border:1px solid #a78bfa2b;border-radius:10px;background:#a78bfa08}
+.sv-mission-xp-goal>div:first-child{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#9d9bb8;font:800 8px/1.5 ui-monospace,monospace;letter-spacing:.08em}
+.sv-mission-xp-goal b{color:#d8c7ff}

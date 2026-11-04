@@ -13,6 +13,7 @@ type Day = { id: string; name: string; exercises: Exercise[] };
 export type WorkoutHistoryEntry = { id: string; dayId: string; dayName: string; startedAt: number; completedAt: number; durationSeconds: number; completedExercises?: number; totalExercises?: number; exerciseResults?: { id: string; name: string; sets: number; reps: string; completedSets: number; actualReps: string; done: boolean }[] };
 
 const KEY = 'stryven-six-day-workout-v1';
+const PLAN_OWNER_KEY = 'stryven-six-day-workout-owner-v1';
 const DATE_KEY = 'stryven-six-day-workout-date-v1';
 const ACTIVE_SESSION_KEY = 'stryven-active-workout-session-v1';
 const STORY_WORKOUT_KEY = 'stryven-story-workout-events-v1';
@@ -69,6 +70,20 @@ export function SixDayWorkout() {
     if (cloudRestoreStartedFor.current === userId) return;
     setCloudPlanReady(false);
     cloudRestoreStartedFor.current = userId;
+    const localPlan = localStorage.getItem(KEY);
+    const localPlanOwner = localStorage.getItem(PLAN_OWNER_KEY);
+    // Adopt an older unscoped plan once for the first signed-in account. If
+    // another account used this browser, never upload its local plan to this user.
+    if (localPlanOwner === userId) { setCloudPlanReady(true); return; }
+    if (!localPlanOwner && localPlan !== null) {
+      localStorage.setItem(PLAN_OWNER_KEY, userId);
+      setCloudPlanReady(true);
+      return;
+    }
+    if (localPlanOwner && localPlanOwner !== userId) {
+      localStorage.removeItem(KEY);
+      setDays(initial());
+    }
     let cancelled = false;
     async function restoreCloudPlan() {
       try {
@@ -121,7 +136,10 @@ export function SixDayWorkout() {
       } catch (error) {
         console.warn('[training] cloud six-day recovery skipped; saved data remains unchanged', error);
       } finally {
-        if (!cancelled) setCloudPlanReady(true);
+        if (!cancelled) {
+          localStorage.setItem(PLAN_OWNER_KEY, userId);
+          setCloudPlanReady(true);
+        }
       }
     }
     void restoreCloudPlan();

@@ -28,7 +28,6 @@ export function usePWA() {
       setIsInstallable(false);
       setInstallPromptEvent(null);
     };
-    const onControllerChange = () => window.location.reload();
 
     window.addEventListener('beforeinstallprompt', onBeforeInstall);
     window.addEventListener('appinstalled', onAppInstalled);
@@ -36,7 +35,6 @@ export function usePWA() {
     let cancelled = false;
     const register = () => {
       if (cancelled || !('serviceWorker' in navigator)) return;
-      navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
       navigator.serviceWorker.register('/sw.js').then((reg) => {
         const activateWaiting = () => {
           if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -63,7 +61,6 @@ export function usePWA() {
       cancelled = true;
       window.removeEventListener('beforeinstallprompt', onBeforeInstall);
       window.removeEventListener('appinstalled', onAppInstalled);
-      navigator.serviceWorker?.removeEventListener('controllerchange', onControllerChange);
       if (idleId !== undefined && (window as Window & { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback) {
         (window as Window & { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(idleId);
       }

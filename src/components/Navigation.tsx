@@ -1,16 +1,15 @@
-import { LayoutDashboard, Dumbbell, UserRound, Settings, LogOut, Target, Activity, Award } from 'lucide-react';
+import { LayoutDashboard, Dumbbell, UserRound, Settings, LogOut, Target, Activity } from 'lucide-react';
 import { useState } from 'react';
 import { playSound } from '../lib/sound';
 import { useAuth } from '../lib/auth';
 
-export type ViewId='dashboard'|'missions'|'workout'|'analytics'|'achievements'|'profile'|'settings';
+export type ViewId='dashboard'|'missions'|'workout'|'analytics'|'profile'|'settings';
 interface NavItem{id:ViewId;label:string;shortLabel:string;icon:typeof LayoutDashboard}
 const NAV_ITEMS:NavItem[]=[
  {id:'dashboard',label:'Dashboard',shortLabel:'Home',icon:LayoutDashboard},
  {id:'missions',label:'Missions',shortLabel:'Missions',icon:Target},
  {id:'workout',label:'Training',shortLabel:'Training',icon:Dumbbell},
  {id:'analytics',label:'Progress & Analytics',shortLabel:'Progress',icon:Activity},
- {id:'achievements',label:'Achievements',shortLabel:'Awards',icon:Award},
  {id:'profile',label:'Hunter Profile',shortLabel:'Profile',icon:UserRound},
  {id:'settings',label:'Settings',shortLabel:'Settings',icon:Settings},
 ];

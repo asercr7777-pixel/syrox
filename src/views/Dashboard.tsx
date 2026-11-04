@@ -3,8 +3,7 @@ import { useStore } from '../store/useStore';
 import { getRankByXp, getNextRank } from '../data/ranks';
 import { UserAvatar } from '../components/ui/UserAvatar';
 import { XpBar } from '../components/ui/XpBar';
-import { ALL_CHAPTERS } from '../data/story';
-import { ArrowUpRight, Award, CheckCircle2, Circle, Clock3, Dumbbell, Flame, Ghost, Target, Zap } from 'lucide-react';
+import { ArrowUpRight, CheckCircle2, Circle, Clock3, Dumbbell, Flame, Target, Zap } from 'lucide-react';
 import type { ViewId } from '../components/Navigation';
 
 interface DashboardProps { onNavigate: (v: ViewId) => void; }
@@ -25,10 +24,12 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const core = state.mainTasks.filter(task => task.enabled);
   const missions = [...core.map(task => ({ id: task.id, label: task.label, icon: task.emoji, xp: task.points, done: Boolean(state.coreCompleted[task.id]), custom: false })), ...state.customTasks.map(task => ({ id: task.id, label: task.label, icon: '✦', xp: task.points, done: Boolean(state.customCompleted[task.id]), custom: true }))];
   const completedToday = missions.filter(mission => mission.done).length;
-  const recentHistory = [...state.history].sort((a,b) => a.date.localeCompare(b.date)).slice(-7);
+  const recentHistory = [...state.history].sort((a,b) => a.date.localeCompare(b.date)).slice(-14);
+  const chartMax = Math.max(100, ...recentHistory.map(day => day.xpGained));
+  const chartPoints = recentHistory.map((day,index) => ({ ...day, x: recentHistory.length < 2 ? 50 : 24 + index * (552 / (recentHistory.length - 1)), y: 150 - (day.xpGained / chartMax) * 118 }));
+  const chartLine = chartPoints.map(point => `${point.x},${point.y}`).join(' ');
   const totalCompleted = state.history.reduce((sum,day) => sum + Object.values(day.coreCompleted).filter(Boolean).length + Object.values(day.customCompleted).filter(Boolean).length, 0);
   const lastSession = [...state.workoutSessions].sort((a,b) => b.completedAt-a.completedAt)[0];
-  const shadows = ALL_CHAPTERS.filter(chapter => Boolean(state.storyBossDefeated[chapter.boss.id])).length;
   const disciplineAverage = state.history.length ? Math.round(state.history.reduce((sum,day)=>sum+day.disciplineScore,0)/state.history.length) : null;
   const nextRankProgress = nextRank ? Math.max(0,Math.min(100,((state.xp-rank.xpRequired)/Math.max(1,nextRank.xpRequired-rank.xpRequired))*100)) : 100;
   const formatDuration = (seconds:number) => `${Math.floor(seconds/3600)}h ${Math.floor(seconds%3600/60)}m`;
@@ -84,7 +85,20 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
     <section className="sv-section sv-surface">
       <div className="sv-section-head"><div><span className="sv-eyebrow">03 // PROGRESS INTELLIGENCE</span><h2>Recent Progress</h2><p>XP earned on dates available in your saved history.</p></div><button onClick={()=>onNavigate('analytics')}>ANALYTICS <ArrowUpRight size={13}/></button></div>
-      {recentHistory.length ? <div className="sv-chart-bars">{recentHistory.map(day=><div className="sv-chart-column" key={day.date} title={`${day.date}: ${day.xpGained} XP`}><strong>{day.xpGained}</strong><span><i style={{height:`${Math.max(3,day.xpGained/Math.max(1,...recentHistory.map(item=>item.xpGained))*100)}%`}}/></span><small>{day.date.slice(5)}</small></div>)}</div> : <div className="sv-empty-record">YOUR PROGRESS CHART WILL APPEAR AFTER YOUR FIRST SAVED DAY.</div>}
+      {recentHistory.length ? <div className="sv-progress-chart">
+        <div className="sv-progress-chart__summary"><strong>{recentHistory.reduce((sum,day)=>sum+day.xpGained,0).toLocaleString()} XP</strong><span>RECORDED IN THE LAST {recentHistory.length} ACTIVE DAYS</span></div>
+        <div className="sv-progress-chart__plot">
+          <div className="sv-progress-chart__axis"><span>{chartMax.toLocaleString()}</span><span>{Math.round(chartMax/2).toLocaleString()}</span><span>0</span></div>
+          <svg viewBox="0 0 600 180" role="img" aria-label="Daily XP earned trend chart" preserveAspectRatio="none">
+            <defs><linearGradient id="svProgressFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#a78bfa" stopOpacity=".34"/><stop offset="100%" stopColor="#a78bfa" stopOpacity="0"/></linearGradient></defs>
+            {[32,91,150].map(y=><line key={y} x1="24" y1={y} x2="576" y2={y} stroke="currentColor" strokeOpacity=".12" strokeDasharray="4 6"/>)}
+            {chartPoints.length>1&&<polygon points={`24,150 ${chartLine} 576,150`} fill="url(#svProgressFill)"/>}
+            {chartPoints.length>1&&<polyline points={chartLine} fill="none" stroke="#a78bfa" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>}
+            {chartPoints.map(point=><circle key={point.date} cx={point.x} cy={point.y} r="4" fill="#0c0d15" stroke="#c4b5fd" strokeWidth="2"><title>{point.date}: {point.xpGained} XP</title></circle>)}
+          </svg>
+        </div>
+        <div className="sv-progress-chart__labels"><span>{recentHistory[0].date}</span><span>{recentHistory[recentHistory.length-1].date}</span></div>
+      </div> : <div className="sv-empty-record">YOUR PROGRESS CHART WILL APPEAR AFTER YOUR FIRST SAVED DAY.</div>}
     </section>
 
     <div className="sv-dashboard-grid">
@@ -101,17 +115,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           <Attribute label="CONSISTENCY" value={`${state.streak}-day streak`} detail="Current streak"/>
         </div>
       </section>
-      <section className="sv-section sv-surface">
-        <div className="sv-section-head"><div><span className="sv-eyebrow">05 // SHADOW COMMAND</span><h2>Shadow Army</h2><p>Confirmed story-boss victories only.</p></div><Ghost size={19}/></div>
-        <div className="sv-shadow-preview"><div className="sv-shadow-mark"><Ghost size={28}/></div><div><b>{shadows} bound shadow{shadows===1?'':'s'}</b><span>{shadows?'Victory records detected in your story data.':'No confirmed shadow victories recorded yet.'}</span></div></div>
-        <button className="sv-btn sv-btn--ghost sv-dashboard-full-button" onClick={()=>onNavigate('shadows')}>OPEN SHADOW ARMY <ArrowUpRight size={15}/></button>
-      </section>
+
     </div>
 
-    <section className="sv-section sv-surface">
-      <div className="sv-section-head"><div><span className="sv-eyebrow">06 // HONORS</span><h2>Recent Achievements</h2><p>Your saved achievement records.</p></div><button onClick={()=>onNavigate('achievements')}>VIEW ALL <ArrowUpRight size={13}/></button></div>
-      {state.achievements.length ? <div className="sv-earned-list">{[...state.achievements].sort((a,b)=>b.unlockedAt-a.unlockedAt).slice(0,3).map(item=><div key={item.id}><Award size={17}/><b>{item.id.replace(/[_-]/g,' ')}</b><small>{new Date(item.unlockedAt).toLocaleDateString()}</small></div>)}</div> : <div className="sv-empty-record">NO ACHIEVEMENTS RECORDED YET. COMPLETE OBJECTIVES TO BUILD YOUR LEGACY.</div>}
-    </section>
+
 
     <div className="sv-today-strip"><span>TODAY // SYSTEM STATUS</span><b>{completedToday}/{missions.length} OBJECTIVES CONFIRMED</b><i/><b>{state.dailyXp.toLocaleString()} XP EARNED</b><i/><b>{state.workoutsCompletedToday>0?'TRAINING RECORDED':'TRAINING PENDING'}</b></div>
   </div>;

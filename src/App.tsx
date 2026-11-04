@@ -21,8 +21,8 @@ const Auth=lazy(()=>import('./views/Auth').then(m=>({default:m.Auth})));
 const ResetPassword=lazy(()=>import('./views/ResetPassword').then(m=>({default:m.ResetPassword})));
 const Missions=lazy(()=>import('./views/Missions').then(m=>({default:m.Missions})));
 const Analytics=lazy(()=>import('./views/Analytics').then(m=>({default:m.Analytics})));
-const Achievements=lazy(()=>import('./views/Achievements').then(m=>({default:m.Achievements})));
-const VALID_VIEWS=new Set<ViewId>(['dashboard','missions','workout','analytics','achievements','profile','settings']);
+
+const VALID_VIEWS=new Set<ViewId>(['dashboard','missions','workout','analytics','profile','settings']);
 function getViewFromUrl():ViewId{if(typeof window==='undefined')return'dashboard';const requested=new URLSearchParams(window.location.search).get('view');return requested&&VALID_VIEWS.has(requested as ViewId)?requested as ViewId:'dashboard'}
 function PageLoader(){return <div className="stryven-page-loader" role="status" aria-label="Loading page"><Loader2 className="animate-spin" size={30}/><span>Loading system module…</span></div>}
 function AppContent(){
@@ -41,7 +41,6 @@ function AppContent(){
     {view==='missions'&&<section className="stryven-page"><Missions/></section>}
     {view==='workout'&&<section className="stryven-page"><WorkoutWithAIPlan/></section>}
     {view==='analytics'&&<section className="stryven-page"><Analytics/></section>}
-    {view==='achievements'&&<section className="stryven-page"><Achievements/></section>}
     {view==='profile'&&<section className="stryven-page"><Profile/></section>}
     {view==='settings'&&<section className="stryven-page stryven-settings"><Settings/></section>}
   </Suspense></div></main></div>

@@ -431,3 +431,29 @@ body:after{content:"";position:fixed;z-index:0;pointer-events:none;inset:0;opaci
 .sv-session-row button{flex:none}
 .sv-settings-card--danger{border-color:#f8717120}
 @media(max-width:720px){.sv-bg-types{grid-template-columns:repeat(2,minmax(0,1fr))}.sv-upload-grid{grid-template-columns:minmax(0,1fr)}.sv-preset-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sv-controls{grid-template-columns:minmax(0,1fr)}.sv-upload-box{align-items:flex-start;flex-direction:column}.sv-upload-actions{width:100%}.sv-upload-actions .sv-secondary{flex:1}.sv-session-row{align-items:flex-start;flex-direction:column}.sv-session-row button{width:100%}}
+
+/* Missions page layout: two clear mission classes */
+.sv-missions-rebuild{gap:18px}
+.sv-mission-overview{padding:clamp(17px,2.4vw,25px)}
+.sv-mission-class{padding:clamp(17px,2.4vw,25px)}
+.sv-mission-class--essential{border-color:#a78bfa32}
+.sv-mission-class--extra{border-color:#60a5fa2b}
+.sv-mission-list{display:flex;flex-direction:column;gap:8px;min-width:0;margin-top:16px}
+.sv-mission-row{display:flex;align-items:center;gap:12px;min-width:0;padding:12px;border:1px solid #ffffff12;border-radius:11px;background:#ffffff03;transition:border-color .18s,background .18s}
+.sv-mission-row.is-complete{border-color:#6ee7b72b;background:#6ee7b708}
+.sv-mission-row>button:first-child{display:grid;place-items:center;flex:none;width:30px;height:30px;border:1px solid #ffffff20;border-radius:8px;background:#ffffff05;color:#a78bfa;cursor:pointer}
+.sv-mission-row>button:first-child:disabled{color:#6ee7b7;cursor:default}
+.sv-mission-icon{display:grid;place-items:center;flex:none;width:34px;height:34px;border:1px solid #a78bfa24;border-radius:9px;background:#a78bfa0c;color:#d3b7ff;font-size:17px}
+.sv-mission-copy{display:flex;flex:1;flex-direction:column;gap:4px;min-width:0}
+.sv-mission-copy>b{color:#e8e8f4;font-size:11px;line-height:1.5;overflow-wrap:anywhere}
+.sv-mission-copy>small{color:#8189a2;font:800 7px/1.5 ui-monospace,monospace;letter-spacing:.06em}
+.sv-mission-row>strong{flex:none;color:#c7b5f6;font:850 9px/1.4 ui-monospace,monospace;white-space:nowrap}
+.sv-add-mission{display:grid;grid-template-columns:minmax(0,1fr) 90px auto;align-items:end;gap:10px;margin-top:16px;padding-top:15px;border-top:1px solid #ffffff10}
+.sv-add-mission>label{display:flex;flex-direction:column;gap:7px;min-width:0}
+.sv-add-mission>label>span{color:#aab1c7;font:850 7px/1.5 ui-monospace,monospace;letter-spacing:.08em}
+.sv-add-mission input{width:100%;min-width:0;min-height:40px;padding:0 11px;border:1px solid #ffffff1c;border-radius:8px;background:#080a12;color:#eef0fb;outline:none}
+.sv-add-mission input:focus{border-color:#a78bfa88}
+.sv-add-mission>button{display:flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:0 13px;border:1px solid #a78bfa60;border-radius:9px;background:#7c3aed;color:#fff;font-size:9px;font-weight:850;white-space:nowrap;cursor:pointer}
+.sv-add-mission>button:hover{filter:brightness(1.12)}
+@media(max-width:650px){.sv-mission-row{gap:8px;padding:9px}.sv-mission-row>strong{font-size:8px}.sv-mission-row .sv-mission-edit,.sv-mission-row .sv-mission-delete{width:27px;height:27px}.sv-add-mission{grid-template-columns:minmax(0,1fr) 76px}.sv-add-mission>button{grid-column:1/-1;width:100%}}
+@media(max-width:430px){.sv-mission-row{flex-wrap:wrap}.sv-mission-copy{min-width:calc(100% - 100px)}.sv-mission-row>strong{margin-left:42px}.sv-mission-row .sv-mission-edit{margin-left:auto}}

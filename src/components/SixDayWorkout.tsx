@@ -44,6 +44,8 @@ export function SixDayWorkout() {
   const { user } = useAuth();
   const userId = user?.id;
   const cloudRestoreStartedFor = useRef<string | null>(null);
+  const cloudHistoryLoadedFor = useRef<string | null>(null);
+  const [cloudPlanReady, setCloudPlanReady] = useState(false);
   const [days, setDays] = useState<Day[]>(load);
   const [savedSession] = useState(loadActiveSession);
   const [active, setActive] = useState(savedSession.active);
@@ -63,7 +65,9 @@ export function SixDayWorkout() {
   // newer cloud-saved six-day configuration into this original UI once.
   // Existing local plans always win and are never overwritten.
   useEffect(() => {
-    if (!userId || cloudRestoreStartedFor.current === userId) return;
+    if (!userId) { setCloudPlanReady(true); return; }
+    if (cloudRestoreStartedFor.current === userId) return;
+    setCloudPlanReady(false);
     cloudRestoreStartedFor.current = userId;
     let cancelled = false;
     async function restoreCloudPlan() {
@@ -116,9 +120,85 @@ export function SixDayWorkout() {
         if (!cancelled) setDays(restored);
       } catch (error) {
         console.warn('[training] cloud six-day recovery skipped; saved data remains unchanged', error);
+      } finally {
+        if (!cancelled) setCloudPlanReady(true);
       }
     }
     void restoreCloudPlan();
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  // Keep the six-day plan in Supabase as well as local storage. Local data is
+  // preserved first; the cloud copy is updated only after restore has finished.
+  useEffect(() => {
+    if (!userId || !cloudPlanReady) return;
+    const timeout = window.setTimeout(() => {
+      const cloudDays = days.map((day, index) => ({
+        dayNumber: index + 1,
+        name: day.name,
+        exercises: day.exercises.map(exercise => ({
+          id: exercise.id,
+          name: exercise.name,
+          sets: exercise.sets,
+          reps: exercise.reps,
+          section: exercise.section,
+          image: exercise.image ?? null,
+        })),
+      }));
+      void supabase.from('workout_plans')
+        .upsert({ user_id: userId, days: cloudDays, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
+        .then(({ error }) => {
+          if (error) console.error('[training] six-day plan cloud sync failed:', error);
+        });
+    }, 900);
+    return () => window.clearTimeout(timeout);
+  }, [days, userId, cloudPlanReady]);
+
+  // Restore full workout history on a new device from the metadata saved with
+  // each workout session. Local entries remain available if the cloud is offline.
+  useEffect(() => {
+    if (!userId || cloudHistoryLoadedFor.current === userId) return;
+    cloudHistoryLoadedFor.current = userId;
+    let cancelled = false;
+    async function restoreHistory() {
+      const { data, error } = await supabase.from('workout_sessions')
+        .select('id,started_at,ended_at,completed_at,duration_seconds,exercises_completed,metadata')
+        .eq('user_id', userId)
+        .eq('workout_type', 'custom')
+        .order('completed_at', { ascending: false })
+        .limit(100);
+      if (error) {
+        console.warn('[training] cloud workout history restore failed:', error);
+        return;
+      }
+      if (cancelled || !Array.isArray(data)) return;
+      const restored: WorkoutHistoryEntry[] = data.flatMap(row => {
+        const metadata = row.metadata && typeof row.metadata === 'object' ? row.metadata as Record<string, unknown> : {};
+        if (typeof metadata.dayName !== 'string' || typeof metadata.dayId !== 'string') return [];
+        const startedAtValue = typeof row.started_at === 'string' ? new Date(row.started_at).getTime() : Number(metadata.startedAt);
+        const completedAtValue = typeof row.ended_at === 'string' ? new Date(row.ended_at).getTime() : new Date(row.completed_at).getTime();
+        const durationSeconds = Number(row.duration_seconds) || 0;
+        const exerciseResults = Array.isArray(metadata.exerciseResults) ? metadata.exerciseResults as WorkoutHistoryEntry['exerciseResults'] : [];
+        return [{
+          id: typeof metadata.localId === 'string' ? metadata.localId : row.id,
+          dayId: metadata.dayId,
+          dayName: metadata.dayName,
+          startedAt: Number.isFinite(startedAtValue) ? startedAtValue : completedAtValue - durationSeconds * 1000,
+          completedAt: Number.isFinite(completedAtValue) ? completedAtValue : Date.now(),
+          durationSeconds,
+          completedExercises: Number(row.exercises_completed) || 0,
+          totalExercises: Number(metadata.totalExercises) || exerciseResults.length,
+          exerciseResults,
+        }];
+      });
+      if (!restored.length) return;
+      const merged = new Map<string, WorkoutHistoryEntry>();
+      [...loadHistory(), ...restored].forEach(entry => merged.set(entry.id, entry));
+      const next = [...merged.values()].sort((a,b) => b.completedAt - a.completedAt).slice(0,100);
+      localStorage.setItem(WORKOUT_HISTORY_KEY, JSON.stringify(next));
+      setHistory(next);
+    }
+    void restoreHistory();
     return () => { cancelled = true; };
   }, [userId]);
 
@@ -240,7 +320,7 @@ export function SixDayWorkout() {
     const nextHistory = [entry, ...loadHistory()].slice(0, 100);
     localStorage.setItem(WORKOUT_HISTORY_KEY, JSON.stringify(nextHistory));
     setHistory(nextHistory);
-    saveWorkoutSession('custom', elapsed);
+    saveWorkoutSession('custom', elapsed, { localId: entry.id, dayId: entry.dayId, dayName: entry.dayName, startedAt: entry.startedAt, completedAt: entry.completedAt, totalExercises: entry.totalExercises, exerciseResults: entry.exerciseResults });
     syncStoryAfterWorkout(elapsed);
     playSound('workoutComplete');
     window.dispatchEvent(new Event('stryven-workout-history-updated'));

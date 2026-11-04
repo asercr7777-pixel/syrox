@@ -1,1 +1,1 @@
-export const DAILY_XP_CAP = 1000;
+export const DAILY_XP_CAP = 10000;

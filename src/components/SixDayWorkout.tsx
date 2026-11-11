@@ -3,9 +3,10 @@ import { createPortal } from 'react-dom';
 import { Check, Pencil, Plus, RotateCcw, Trash2, X, Play, Pause, Square, Clock, History, Trophy } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useAuth } from '../lib/auth';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { ALL_CHAPTERS } from '../data/story';
 import { playSound } from '../lib/sound';
+import { toast } from './ui/Toast';
 
 type Section = 'stretching' | 'main' | 'plyometric';
 type Exercise = { id: string; name: string; sets: number; reps: string; section: Section; done: boolean; image?: string; completedSets?: number; actualReps?: string };
@@ -66,7 +67,7 @@ export function SixDayWorkout() {
   // newer cloud-saved six-day configuration into this original UI once.
   // Existing local plans always win and are never overwritten.
   useEffect(() => {
-    if (!userId) { setCloudPlanReady(true); return; }
+    if (!userId || !isSupabaseConfigured()) { setCloudPlanReady(true); return; }
     if (cloudRestoreStartedFor.current === userId) return;
     setCloudPlanReady(false);
     cloudRestoreStartedFor.current = userId;
@@ -136,8 +137,10 @@ export function SixDayWorkout() {
       } catch (error) {
         console.warn('[training] cloud six-day recovery skipped; saved data remains unchanged', error);
       } finally {
-        if (!cancelled) {
+        if (!cancelled && userId) {
           localStorage.setItem(PLAN_OWNER_KEY, userId);
+          setCloudPlanReady(true);
+        } else if (!cancelled) {
           setCloudPlanReady(true);
         }
       }
@@ -149,7 +152,7 @@ export function SixDayWorkout() {
   // Keep the six-day plan in Supabase as well as local storage. Local data is
   // preserved first; the cloud copy is updated only after restore has finished.
   useEffect(() => {
-    if (!userId || !cloudPlanReady) return;
+    if (!userId || !cloudPlanReady || !isSupabaseConfigured()) return;
     const timeout = window.setTimeout(() => {
       const cloudDays = days.map((day, index) => ({
         dayNumber: index + 1,
@@ -175,7 +178,7 @@ export function SixDayWorkout() {
   // Restore full workout history on a new device from the metadata saved with
   // each workout session. Local entries remain available if the cloud is offline.
   useEffect(() => {
-    if (!userId || cloudHistoryLoadedFor.current === userId) return;
+    if (!userId || !isSupabaseConfigured() || cloudHistoryLoadedFor.current === userId) return;
     cloudHistoryLoadedFor.current = userId;
     let cancelled = false;
     async function restoreHistory() {
@@ -205,7 +208,7 @@ export function SixDayWorkout() {
           completedAt: Number.isFinite(completedAtValue) ? completedAtValue : Date.now(),
           durationSeconds,
           completedExercises: Number(row.exercises_completed) || 0,
-          totalExercises: Number(metadata.totalExercises) || exerciseResults.length,
+          totalExercises: Number(metadata.totalExercises) || (exerciseResults?.length ?? 0),
           exerciseResults,
         }];
       });
@@ -294,7 +297,7 @@ export function SixDayWorkout() {
   const handleExerciseImage = async (file?: File) => {
     if (!file || !file.type.startsWith('image/') || !exerciseDraft) return;
     if (file.size > 10 * 1024 * 1024) {
-      window.alert('Image is too large. Please choose an image under 10 MB.');
+      toast({ title: 'Image too large', message: 'Please choose an image under 10 MB.', type: 'error' });
       return;
     }
     try {
@@ -302,7 +305,7 @@ export function SixDayWorkout() {
       setExerciseDraft({ ...exerciseDraft, image });
     } catch (error) {
       console.error('[exercise image] failed to process image:', error);
-      window.alert('Could not load this image. Please choose a JPG, PNG, or WebP image.');
+      toast({ title: 'Image processing failed', message: 'Could not load this image. Please choose a JPG, PNG, or WebP image.', type: 'error' });
     }
   };
 

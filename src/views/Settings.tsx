@@ -6,7 +6,11 @@ import { BACKGROUNDS, AURAS } from '../data/collections';
 import type { SiteTheme } from '../store/types';
 import { getRankByXp } from '../data/ranks';
 import { RankBadge } from '../components/ui/RankBadge';
-import { Upload, Trash2, Volume2, VolumeX, Palette, User as UserIcon, Image as ImageIcon, Video, Sparkles, LogOut, Moon, Shield, Eye, Cloud, RotateCcw, Bell } from 'lucide-react';
+import {
+  Upload, Trash2, Volume2, VolumeX, Palette, User as UserIcon,
+  Image as ImageIcon, Video, Sparkles, LogOut, Shield,
+  Cloud, RotateCcw, Bell, Check, Sliders
+} from 'lucide-react';
 import { toast } from '../components/ui/Toast';
 import { playSound } from '../lib/sound';
 import { uploadBackground } from '../lib/backgroundUpload';
@@ -19,20 +23,23 @@ const SITE_COLORS = ['#050505','#0b1220','#111827','#1e1033','#190b0b','#092019'
 const ALLOWED_IMAGE_TYPES = ['image/jpeg','image/png','image/webp','image/gif'];
 const ALLOWED_VIDEO_TYPES = ['video/mp4','video/webm','video/ogg'];
 type BgType = 'default' | 'image' | 'video' | 'animated';
-const THEMES: { id: SiteTheme; label: string; detail: string }[] = [
-  { id: 'forge', label: 'Forge', detail: 'Ember / graphite' },
-  { id: 'void', label: 'Void', detail: 'Violet / abyss' },
-  { id: 'nexus', label: 'Nexus', detail: 'Cyan / deep space' },
-  { id: 'shogun', label: 'Shogun', detail: 'Crimson / black' },
-  { id: 'titan', label: 'Titan', detail: 'Gold / stone' },
-  { id: 'rogue', label: 'Rogue', detail: 'Lime / forest' },
-  { id: 'eclipse', label: 'Eclipse', detail: 'Purple / night' },
-  { id: 'overdrive', label: 'Overdrive', detail: 'Electric / steel' },
+type SettingsTab = 'identity' | 'appearance' | 'preferences' | 'account';
+
+const THEMES: { id: SiteTheme; label: string; detail: string; color: string }[] = [
+  { id: 'forge', label: 'Forge', detail: 'Ember / graphite', color: '#ff7a18' },
+  { id: 'void', label: 'Void', detail: 'Violet / abyss', color: '#8b5cf6' },
+  { id: 'nexus', label: 'Nexus', detail: 'Cyan / deep space', color: '#06b6d4' },
+  { id: 'shogun', label: 'Shogun', detail: 'Crimson / black', color: '#f43f5e' },
+  { id: 'titan', label: 'Titan', detail: 'Gold / stone', color: '#eab308' },
+  { id: 'rogue', label: 'Rogue', detail: 'Lime / forest', color: '#84cc16' },
+  { id: 'eclipse', label: 'Eclipse', detail: 'Purple / night', color: '#a855f7' },
+  { id: 'overdrive', label: 'Overdrive', detail: 'Electric / steel', color: '#3b82f6' },
 ];
 
 export function Settings() {
   const { state, cloudLoaded, updateProfile, setCustomBackground, setBackgroundVideo, setBackgroundType, setBackgroundBlur, setBackgroundDarken, setBackgroundBrightness, setSelectedBackground, toggleSound, updateNotifications, resetAll, saveToCloud, syncLeaderboard } = useStore();
   const { signOut, user } = useAuth();
+  const [activeTab, setActiveTab] = useState<SettingsTab>('identity');
   const [resetOpen, setResetOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -121,7 +128,6 @@ export function Settings() {
   };
 
   const handleResetProgress = () => {
-    // Unmount the confirmation overlay before resetting the external store.
     setResetOpen(false);
     window.requestAnimationFrame(() => {
       resetAll();
@@ -157,6 +163,7 @@ export function Settings() {
       toast({ title: 'Could not sign out', message: error instanceof Error ? error.message : 'Please try again.', type: 'error' });
     } finally { setSigningOut(false); }
   };
+
   const sendPasswordReset = async () => {
     if (!user?.email) { toast({ title: 'Email unavailable', message: 'This account has no email address available for recovery.', type: 'error' }); return; }
     setSendingReset(true);
@@ -170,82 +177,519 @@ export function Settings() {
   };
 
   return (
-    <div className="sv-settings">
-      <header className="sv-settings__header">
-        <div><span className="sv-settings__eyebrow">SYSTEM CONTROL</span><h1>Settings</h1><p>Configure your hunter, visual identity, background and audio.</p></div>
-        <div className="sv-settings__rank"><RankBadge rank={rank} size="sm" auraColor={aura?.color} /><div><span>CURRENT RANK</span><b style={{ color: rank.color }}>{rank.name}</b></div></div>
+    <div className="sv-settings space-y-6 max-w-5xl mx-auto">
+      {/* Top Header */}
+      <header className="flex flex-wrap items-center justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-purple-950/40 via-ink-900/60 to-ink-950/80 border border-purple-500/20 backdrop-blur-xl">
+        <div>
+          <span className="text-xs font-mono font-bold tracking-widest text-purple-400 uppercase">SYSTEM CONFIGURATION // SETTINGS</span>
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-1">System Control</h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">Configure your Hunter identity, visual atmosphere, preferences and cloud sync.</p>
+        </div>
+        <div className="flex items-center gap-3 bg-black/40 px-4 py-2.5 rounded-xl border border-white/10">
+          <RankBadge rank={rank} size="sm" auraColor={aura?.color} />
+          <div>
+            <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider block">CURRENT RANK</span>
+            <b style={{ color: rank.color }} className="text-sm font-bold">{rank.name}</b>
+          </div>
+        </div>
       </header>
 
-      <div className="sv-settings__grid">
-        <section className="sv-settings-card sv-settings-card--wide">
-          <div className="sv-settings-card__head"><div className="sv-settings-icon"><UserIcon size={18} /></div><div><span>PROFILE</span><h2>Hunter Identity</h2></div></div>
-          <div className="sv-settings-fields">
-            <label><span>Username</span><input className="sv-settings-input" value={state.username} maxLength={20} onChange={(e) => updateProfile({ username: e.target.value })} /></label>
-            <div><span className="sv-settings-label">Avatar</span><div className="sv-avatar-grid">{AVATARS.map((avatar) => <button key={avatar} aria-label={`Avatar ${avatar}`} className={state.avatar === avatar ? 'is-selected' : ''} onClick={() => { updateProfile({ avatar }); playSound('click'); }}>{avatar}</button>)}</div></div>
-            <div><span className="sv-settings-label">Name Color</span><div className="sv-color-row">{NAME_COLORS.map((color) => <button key={color} aria-label={`Name color ${color}`} className={state.nameColor === color ? 'is-selected' : ''} style={{ background: color }} onClick={() => updateProfile({ nameColor: color })} />)}</div></div>
-            <div><span className="sv-settings-label">Banner Color</span><div className="sv-color-row">{BANNER_COLORS.map((color) => <button key={color} aria-label={`Banner color ${color}`} className={state.bannerColor === color ? 'is-selected' : ''} style={{ background: color }} onClick={() => updateProfile({ bannerColor: color })} />)}</div></div>
-          </div>
-        </section>
-
-        <section className="sv-settings-card">
-          <div className="sv-settings-card__head"><div className="sv-settings-icon"><Palette size={18} /></div><div><span>APPEARANCE</span><h2>Interface</h2></div></div>
-          <div className="sv-settings-list">
-            <div className="sv-setting-row"><div><Moon size={16} /><span>Active theme</span></div><strong>{THEMES.find(theme => theme.id === state.theme)?.label || state.theme}</strong></div>
-            <div className="sv-setting-row"><div><Eye size={16} /><span>Current Rank</span></div><strong style={{ color: rank.color }}>{rank.name}</strong></div>
-          </div>
-          <div className="sv-theme-grid" aria-label="Choose interface theme">{THEMES.map(theme => <button type="button" key={theme.id} className={state.theme === theme.id ? 'is-selected' : ''} onClick={() => chooseTheme(theme.id)} aria-pressed={state.theme === theme.id}><span className={`sv-theme-swatch sv-theme-swatch--${theme.id}`}/><b>{theme.label}</b><small>{theme.detail}</small>{state.theme === theme.id && <i>ACTIVE</i>}</button>)}</div>
-          <div className="sv-settings-block">
-            <span className="sv-settings-label">Custom Site Color</span>
-            <div className="sv-color-row sv-site-color-row">
-              {SITE_COLORS.map(color => <button type="button" key={color} aria-label={`Set site background ${color}`} title={color} className={customSiteColor.toLowerCase() === color.toLowerCase() ? 'is-selected' : ''} style={{ background: color }} onClick={() => chooseSiteColor(color)} />)}
-              <label className="sv-custom-color-picker" title="Choose any site color">
-                <input type="color" aria-label="Choose custom site color" value={customSiteColor || '#080808'} onChange={event => chooseSiteColor(event.target.value)} />
-                <span style={{ background: customSiteColor || 'conic-gradient(#ff7a18,#8b5cf6,#22d3ee,#84cc16,#ff7a18)' }} />
-              </label>
-              {customSiteColor && <button type="button" className="sv-clear-color" onClick={() => chooseTheme(state.theme)}>Reset to theme</button>}
-            </div>
-            <small className="sv-settings-help">A custom background color replaces the theme atmosphere. Choose a theme or reset to restore its full visual effects.</small>
-          </div>
-        </section>
-
-        <section className="sv-settings-card sv-settings-card--wide">
-          <div className="sv-settings-card__head"><div className="sv-settings-icon"><ImageIcon size={18} /></div><div><span>VISUAL SYSTEM</span><h2>Background</h2></div></div>
-          <div className="sv-settings-block"><span className="sv-settings-label">Background Type</span><div className="sv-bg-types">{([{ id: 'default', label: 'Default', icon: Moon }, { id: 'image', label: 'Image', icon: ImageIcon }, { id: 'video', label: 'Video', icon: Video }, { id: 'animated', label: 'Animated', icon: Sparkles }] as { id: BgType; label: string; icon: typeof Moon }[]).map((option) => { const Icon = option.icon; return <button key={option.id} className={state.backgroundType === option.id ? 'is-selected' : ''} onClick={() => setBackgroundType(option.id)}><Icon size={17} /><span>{option.label}</span></button>; })}</div></div>
-          <div className="sv-upload-grid">
-            <div className="sv-upload-box"><div><span>IMAGE</span><b>Custom Image</b><small>JPG, PNG, WebP or GIF · 10MB</small></div><div className="sv-upload-actions"><button className="sv-secondary" disabled={uploading} onClick={() => imageRef.current?.click()}><Upload size={15} />{uploading ? 'Uploading' : 'Choose'}</button>{state.customBackground && <button className="sv-icon-danger" onClick={() => { setCustomBackground(null); setBackgroundType('default'); }} aria-label="Remove image"><Trash2 size={15} /></button>}</div><input ref={imageRef} hidden type="file" accept="image/*" onChange={(e) => handleUpload(e, 'image')} /></div>
-            <div className="sv-upload-box"><div><span>VIDEO</span><b>Custom Video</b><small>MP4, WebM or OGG · 50MB</small></div><div className="sv-upload-actions"><button className="sv-secondary" disabled={uploading} onClick={() => videoRef.current?.click()}><Upload size={15} />{uploading ? 'Uploading' : 'Choose'}</button>{state.backgroundVideo && <button className="sv-icon-danger" onClick={() => { setBackgroundVideo(null); setBackgroundType('default'); }} aria-label="Remove video"><Trash2 size={15} /></button>}</div><input ref={videoRef} hidden type="file" accept="video/*" onChange={(e) => handleUpload(e, 'video')} /></div>
-          </div>
-          <div className="sv-settings-block"><span className="sv-settings-label">Animated Presets</span><div className="sv-preset-grid">{BACKGROUNDS.map((bg) => { const selected = state.selectedBackgroundId === bg.id; return <button key={bg.id} className={selected ? 'is-selected' : ''} onClick={() => selectPreset(bg.id)} style={{ background: bg.css }}><span>{bg.name}</span>{selected && <b>✓</b>}</button>; })}</div></div>
-          <div className="sv-controls"><div><span>Brightness <b>{state.backgroundBrightness}%</b></span><input aria-label="Background brightness" type="range" min={20} max={150} value={state.backgroundBrightness} onChange={(e) => setBackgroundBrightness(Number(e.target.value))} /></div><div><span>Blur <b>{state.backgroundBlur}px</b></span><input aria-label="Background blur" type="range" min={0} max={20} value={state.backgroundBlur} onChange={(e) => setBackgroundBlur(Number(e.target.value))} /></div><div><span>Dark Overlay <b>{state.backgroundDarken}%</b></span><input aria-label="Background overlay" type="range" min={0} max={90} value={state.backgroundDarken} onChange={(e) => setBackgroundDarken(Number(e.target.value))} /></div></div>
-        </section>
-
-        <section className="sv-settings-card">
-          <div className="sv-settings-card__head"><div className="sv-settings-icon"><Bell size={18} /></div><div><span>PREFERENCES</span><h2>Notifications</h2></div></div>
-          <div className="sv-notification-list">
-            {([{ id: 'workout', label: 'Workout reminders' }, { id: 'water', label: 'Water reminders' }, { id: 'sleep', label: 'Sleep reminders' }, { id: 'reading', label: 'Reading reminders' }, { id: 'prayer', label: 'Prayer reminders' }, { id: 'tasks', label: 'Mission reminders' }] as const).map(item => <button type="button" key={item.id} className="sv-toggle-row" onClick={() => updateNotifications({ [item.id]: !state.notifications[item.id] })}><span>{item.label}</span><b className={state.notifications[item.id] ? 'on' : ''}>{state.notifications[item.id] ? 'ON' : 'OFF'}</b></button>)}
-          </div>
-          <small className="sv-settings-help">These preferences are saved with your account. They control reminder preferences; they do not send push notifications by themselves.</small>
-        </section>
-
-        <section className="sv-settings-card">
-          <div className="sv-settings-card__head"><div className="sv-settings-icon"><Volume2 size={18} /></div><div><span>AUDIO</span><h2>Sound</h2></div></div>
-          <button className="sv-toggle-row" onClick={toggleSound}><span>{state.soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />} Sound Effects</span><b className={state.soundEnabled ? 'on' : ''}>{state.soundEnabled ? 'ON' : 'OFF'}</b></button>
-        </section>
-
-        <section className="sv-settings-card">
-          <div className="sv-settings-card__head"><div className="sv-settings-icon"><Shield size={18} /></div><div><span>DATA</span><h2>Cloud & Storage</h2></div></div>
-          <div className="sv-action-grid"><button type="button" className="sv-secondary" onClick={syncCloudNow} disabled={syncingCloud || !user || !cloudLoaded}><Cloud size={15} /> {syncingCloud ? 'Saving cloud data…' : !cloudLoaded ? 'Loading account data…' : 'Sync Cloud Data'}</button><button type="button" className="sv-danger" onClick={() => setResetOpen(true)}><RotateCcw size={15} /> Reset Data</button></div>
-        </section>
-
-        <section className="sv-settings-card sv-settings-card--wide sv-settings-card--danger">
-          <div className="sv-settings-card__head"><div className="sv-settings-icon"><LogOut size={18} /></div><div><span>SESSION</span><h2>Account Session</h2></div></div>
-          <div className="sv-session-row"><div><b>Signed-in account</b><span>{user?.email || 'Account email unavailable'}</span></div><button className="sv-secondary" disabled={sendingReset || !user?.email} onClick={sendPasswordReset}><Shield size={15} />{sendingReset ? 'Sending…' : 'Reset Password'}</button></div>
-          <div className="sv-session-row"><div><b>Sign out of STRYVEN</b><span>Your cloud progress remains saved.</span></div><button type="button" className="sv-danger" disabled={signingOut || !user} onClick={() => setLogoutOpen(true)}><LogOut size={15} /> {signingOut ? 'Signing out…' : 'Sign Out'}</button></div>
-        </section>
+      {/* Tab Navigation */}
+      <div className="flex flex-wrap gap-2 p-1.5 rounded-xl bg-black/40 border border-white/10">
+        {[
+          { id: 'identity', label: 'Hunter Identity', icon: UserIcon },
+          { id: 'appearance', label: 'Interface & Atmosphere', icon: Palette },
+          { id: 'preferences', label: 'Audio & Alerts', icon: Bell },
+          { id: 'account', label: 'Account & Data', icon: Shield },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => { setActiveTab(tab.id as SettingsTab); playSound('click'); }}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${
+                isActive
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-900/30 border border-purple-400/30'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <Icon size={15} />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
 
-      <ConfirmModal open={resetOpen} onClose={() => setResetOpen(false)} onConfirm={handleResetProgress} title="Reset Progress State" message="This resets your XP, missions, rank progression, inventory, story progress and profile preferences. Your account and saved training records in the workout database are not deleted." confirmLabel="Reset Progress" danger />
-      <ConfirmModal open={logoutOpen} onClose={() => { if (!signingOut) setLogoutOpen(false); }} onConfirm={() => { void signOutNow(); }} title="Sign Out" message="You will be signed out of this device. Your saved cloud progress will remain in your account." confirmLabel={signingOut ? 'Signing out…' : 'Sign Out'} closeOnConfirm={false} />
+      {/* TAB 1: HUNTER IDENTITY */}
+      {activeTab === 'identity' && (
+        <section className="space-y-5 animate-fade-in">
+          <div className="p-6 rounded-2xl bg-ink-900/60 border border-white/10 space-y-6">
+            <div className="flex items-center gap-3 pb-4 border-b border-white/10">
+              <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20"><UserIcon size={20} /></div>
+              <div>
+                <h2 className="text-lg font-bold text-white">Hunter Codename & Identity</h2>
+                <p className="text-xs text-slate-400">Personalize your hunter display name, insignia avatar, and UI accent colors.</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-mono font-bold tracking-wider text-slate-300 block">HUNTER CODENAME</label>
+              <input
+                className="w-full max-w-md px-4 py-2.5 rounded-xl bg-black/60 border border-white/15 text-white font-medium focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none text-sm"
+                value={state.username}
+                maxLength={20}
+                placeholder="Hunter name"
+                onChange={(e) => updateProfile({ username: e.target.value })}
+              />
+              <span className="text-[11px] text-slate-500 block">Max 20 characters. Visible on your Hunter profile and leaderboard.</span>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-xs font-mono font-bold tracking-wider text-slate-300 block">HUNTER AVATAR EMBLEM</label>
+              <div className="grid grid-cols-5 sm:grid-cols-10 gap-2.5 max-w-2xl">
+                {AVATARS.map((avatar) => (
+                  <button
+                    key={avatar}
+                    type="button"
+                    aria-label={`Avatar ${avatar}`}
+                    onClick={() => { updateProfile({ avatar }); playSound('click'); }}
+                    className={`h-11 rounded-xl text-xl flex items-center justify-center transition-all ${
+                      state.avatar === avatar
+                        ? 'bg-purple-600/30 border-2 border-purple-400 scale-105 shadow-md shadow-purple-900/50'
+                        : 'bg-black/40 border border-white/10 hover:border-white/30 hover:bg-white/5'
+                    }`}
+                  >
+                    {avatar}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+              <div className="space-y-3">
+                <label className="text-xs font-mono font-bold tracking-wider text-slate-300 block">NAME HIGHLIGHT COLOR</label>
+                <div className="flex flex-wrap gap-2.5">
+                  {NAME_COLORS.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      aria-label={`Name color ${color}`}
+                      onClick={() => updateProfile({ nameColor: color })}
+                      style={{ background: color }}
+                      className={`w-8 h-8 rounded-full border-2 transition-transform ${
+                        state.nameColor === color ? 'border-white scale-110 shadow-lg' : 'border-transparent hover:scale-105'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-xs font-mono font-bold tracking-wider text-slate-300 block">BANNER THEME COLOR</label>
+                <div className="flex flex-wrap gap-2.5">
+                  {BANNER_COLORS.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      aria-label={`Banner color ${color}`}
+                      onClick={() => updateProfile({ bannerColor: color })}
+                      style={{ background: color }}
+                      className={`w-8 h-8 rounded-full border-2 transition-transform ${
+                        state.bannerColor === color ? 'border-white scale-110 shadow-lg' : 'border-transparent hover:scale-105'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* TAB 2: INTERFACE & ATMOSPHERE */}
+      {activeTab === 'appearance' && (
+        <section className="space-y-5 animate-fade-in">
+          {/* Theme selection */}
+          <div className="p-6 rounded-2xl bg-ink-900/60 border border-white/10 space-y-5">
+            <div className="flex items-center gap-3 pb-4 border-b border-white/10">
+              <div className="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"><Palette size={20} /></div>
+              <div>
+                <h2 className="text-lg font-bold text-white">Hunter Interface Theme</h2>
+                <p className="text-xs text-slate-400">Select the visual aesthetic for your Hunter System console.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {THEMES.map((theme) => {
+                const isSelected = state.theme === theme.id;
+                return (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    onClick={() => chooseTheme(theme.id)}
+                    className={`p-3.5 rounded-xl text-left border transition-all relative overflow-hidden ${
+                      isSelected
+                        ? 'bg-purple-950/40 border-purple-500 shadow-lg shadow-purple-900/30'
+                        : 'bg-black/40 border-white/10 hover:border-white/25 hover:bg-white/5'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="w-3.5 h-3.5 rounded-full" style={{ background: theme.color }} />
+                      {isSelected && <span className="text-[10px] font-mono font-bold text-purple-400">ACTIVE</span>}
+                    </div>
+                    <b className="text-sm font-bold text-white block">{theme.label}</b>
+                    <small className="text-[11px] text-slate-400 block mt-0.5">{theme.detail}</small>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Custom site color */}
+            <div className="pt-3 border-t border-white/10 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono font-bold text-slate-300">CUSTOM BACKDROP COLOR</span>
+                {customSiteColor && (
+                  <button type="button" onClick={() => chooseTheme(state.theme)} className="text-xs text-cyan-400 hover:underline">
+                    Reset to theme default
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-2.5">
+                {SITE_COLORS.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => chooseSiteColor(color)}
+                    style={{ background: color }}
+                    className={`w-7 h-7 rounded-lg border-2 transition-transform ${
+                      customSiteColor.toLowerCase() === color.toLowerCase() ? 'border-cyan-400 scale-110 shadow-md' : 'border-white/20'
+                    }`}
+                  />
+                ))}
+                <label className="flex items-center gap-2 cursor-pointer px-3 py-1.5 rounded-lg bg-black/60 border border-white/15 text-xs text-slate-300 hover:border-white/30">
+                  <input type="color" value={customSiteColor || '#080808'} onChange={(e) => chooseSiteColor(e.target.value)} className="w-5 h-5 rounded cursor-pointer bg-transparent border-0" />
+                  <span>Picker</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Background system */}
+          <div className="p-6 rounded-2xl bg-ink-900/60 border border-white/10 space-y-6">
+            <div className="flex items-center gap-3 pb-4 border-b border-white/10">
+              <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20"><ImageIcon size={20} /></div>
+              <div>
+                <h2 className="text-lg font-bold text-white">Visual Background Engine</h2>
+                <p className="text-xs text-slate-400">Configure animated presets, custom images, or video atmosphere.</p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {([
+                { id: 'default', label: 'Default', icon: Sparkles },
+                { id: 'image', label: 'Custom Image', icon: ImageIcon },
+                { id: 'video', label: 'Custom Video', icon: Video },
+                { id: 'animated', label: 'Animated Presets', icon: Sliders },
+              ] as { id: BgType; label: string; icon: typeof Sparkles }[]).map((opt) => {
+                const Icon = opt.icon;
+                const isSelected = state.backgroundType === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setBackgroundType(opt.id)}
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all ${
+                      isSelected
+                        ? 'bg-purple-600/25 border-purple-500 text-white shadow-md'
+                        : 'bg-black/40 border-white/10 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Icon size={14} />
+                    <span>{opt.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Custom media upload boxes */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-4 rounded-xl bg-black/40 border border-white/10 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold text-slate-300">CUSTOM IMAGE BACKGROUND</span>
+                  {state.customBackground && (
+                    <button type="button" onClick={() => { setCustomBackground(null); setBackgroundType('default'); }} className="text-xs text-red-400 hover:underline flex items-center gap-1">
+                      <Trash2 size={13} /> Remove
+                    </button>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-400">JPG, PNG, WebP or GIF up to 10MB.</p>
+                <button
+                  type="button"
+                  disabled={uploading}
+                  onClick={() => imageRef.current?.click()}
+                  className="w-full py-2 px-3 rounded-lg bg-white/5 border border-white/15 hover:bg-white/10 text-xs font-bold text-slate-200 flex items-center justify-center gap-2 transition"
+                >
+                  <Upload size={14} />
+                  <span>{uploading ? 'Uploading…' : state.customBackground ? 'Replace Image' : 'Select Image File'}</span>
+                </button>
+                <input ref={imageRef} hidden type="file" accept="image/*" onChange={(e) => handleUpload(e, 'image')} />
+              </div>
+
+              <div className="p-4 rounded-xl bg-black/40 border border-white/10 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold text-slate-300">CUSTOM VIDEO BACKGROUND</span>
+                  {state.backgroundVideo && (
+                    <button type="button" onClick={() => { setBackgroundVideo(null); setBackgroundType('default'); }} className="text-xs text-red-400 hover:underline flex items-center gap-1">
+                      <Trash2 size={13} /> Remove
+                    </button>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-400">MP4, WebM or OGG up to 50MB.</p>
+                <button
+                  type="button"
+                  disabled={uploading}
+                  onClick={() => videoRef.current?.click()}
+                  className="w-full py-2 px-3 rounded-lg bg-white/5 border border-white/15 hover:bg-white/10 text-xs font-bold text-slate-200 flex items-center justify-center gap-2 transition"
+                >
+                  <Upload size={14} />
+                  <span>{uploading ? 'Uploading…' : state.backgroundVideo ? 'Replace Video' : 'Select Video File'}</span>
+                </button>
+                <input ref={videoRef} hidden type="file" accept="video/*" onChange={(e) => handleUpload(e, 'video')} />
+              </div>
+            </div>
+
+            {/* Presets */}
+            <div className="space-y-3">
+              <span className="text-xs font-mono font-bold text-slate-300 block">SYSTEM ANIMATED PRESETS</span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {BACKGROUNDS.map((bg) => {
+                  const isSelected = state.selectedBackgroundId === bg.id;
+                  return (
+                    <button
+                      key={bg.id}
+                      type="button"
+                      onClick={() => selectPreset(bg.id)}
+                      style={{ background: bg.css }}
+                      className={`h-16 rounded-xl p-2.5 border text-left flex flex-col justify-end transition-all relative overflow-hidden ${
+                        isSelected ? 'border-cyan-400 ring-2 ring-cyan-400/50 scale-[1.02]' : 'border-white/15 hover:border-white/30'
+                      }`}
+                    >
+                      <span className="text-xs font-bold text-white drop-shadow-md">{bg.name}</span>
+                      {isSelected && <span className="absolute top-2 right-2 text-cyan-300 text-xs font-bold"><Check size={14} /></span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Sliders */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+              <div className="p-3 rounded-xl bg-black/40 border border-white/10 space-y-1.5">
+                <div className="flex justify-between text-xs text-slate-300"><span>Brightness</span><b>{state.backgroundBrightness}%</b></div>
+                <input type="range" min={20} max={150} value={state.backgroundBrightness} onChange={(e) => setBackgroundBrightness(Number(e.target.value))} className="w-full accent-purple-500" />
+              </div>
+              <div className="p-3 rounded-xl bg-black/40 border border-white/10 space-y-1.5">
+                <div className="flex justify-between text-xs text-slate-300"><span>Blur Effect</span><b>{state.backgroundBlur}px</b></div>
+                <input type="range" min={0} max={20} value={state.backgroundBlur} onChange={(e) => setBackgroundBlur(Number(e.target.value))} className="w-full accent-purple-500" />
+              </div>
+              <div className="p-3 rounded-xl bg-black/40 border border-white/10 space-y-1.5">
+                <div className="flex justify-between text-xs text-slate-300"><span>Dark Overlay</span><b>{state.backgroundDarken}%</b></div>
+                <input type="range" min={0} max={90} value={state.backgroundDarken} onChange={(e) => setBackgroundDarken(Number(e.target.value))} className="w-full accent-purple-500" />
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* TAB 3: PREFERENCES & SOUND */}
+      {activeTab === 'preferences' && (
+        <section className="space-y-5 animate-fade-in">
+          {/* Audio toggle */}
+          <div className="p-6 rounded-2xl bg-ink-900/60 border border-white/10 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                  {state.soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-white">System Audio & SFX</h2>
+                  <p className="text-xs text-slate-400">Play acoustic confirmation chimes when completing missions, leveling up, and timer milestones.</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={toggleSound}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  state.soundEnabled
+                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40 border border-purple-400'
+                    : 'bg-white/5 text-slate-400 border border-white/10'
+                }`}
+              >
+                {state.soundEnabled ? 'ENABLED' : 'MUTED'}
+              </button>
+            </div>
+          </div>
+
+          {/* Reminder notifications */}
+          <div className="p-6 rounded-2xl bg-ink-900/60 border border-white/10 space-y-4">
+            <div className="flex items-center gap-3 pb-3 border-b border-white/10">
+              <div className="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"><Bell size={20} /></div>
+              <div>
+                <h2 className="text-base font-bold text-white">Hunter Routine Preferences</h2>
+                <p className="text-xs text-slate-400">Enable or disable alerts for your daily protocols.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {([
+                { id: 'workout', label: 'Workout Protocol Reminders' },
+                { id: 'tasks', label: 'Daily Mission Reminders' },
+                { id: 'water', label: 'Hydration Reminders' },
+                { id: 'reading', label: 'Reading Protocol Reminders' },
+                { id: 'sleep', label: 'Rest & Sleep Cycle' },
+                { id: 'prayer', label: 'Spiritual Discipline / Prayer' },
+              ] as const).map((item) => {
+                const isEnabled = state.notifications[item.id];
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => updateNotifications({ [item.id]: !isEnabled })}
+                    className={`flex items-center justify-between p-3.5 rounded-xl border text-left transition-all ${
+                      isEnabled ? 'bg-purple-950/20 border-purple-500/40' : 'bg-black/40 border-white/10 hover:border-white/20'
+                    }`}
+                  >
+                    <span className="text-xs font-medium text-slate-200">{item.label}</span>
+                    <span className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-md ${
+                      isEnabled ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' : 'bg-white/5 text-slate-500'
+                    }`}>
+                      {isEnabled ? 'ON' : 'OFF'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[11px] text-slate-500">Preferences are synced with your Hunter profile and preserved in cloud storage.</p>
+          </div>
+        </section>
+      )}
+
+      {/* TAB 4: ACCOUNT & CLOUD STORAGE */}
+      {activeTab === 'account' && (
+        <section className="space-y-5 animate-fade-in">
+          {/* Cloud sync status */}
+          <div className="p-6 rounded-2xl bg-ink-900/60 border border-white/10 space-y-5">
+            <div className="flex items-center gap-3 pb-4 border-b border-white/10">
+              <div className="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"><Cloud size={20} /></div>
+              <div>
+                <h2 className="text-base font-bold text-white">Cloud Data & Synchronisation</h2>
+                <p className="text-xs text-slate-400">Save your Hunter progression, workout records, and inventory to your Supabase account.</p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-black/40 border border-white/10">
+              <div>
+                <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider block">CLOUD CONNECTION</span>
+                <b className="text-sm text-white font-bold">{user ? `Signed in as ${user.email}` : 'Local Offline Hunter Mode'}</b>
+              </div>
+              <button
+                type="button"
+                onClick={syncCloudNow}
+                disabled={syncingCloud || !user || !cloudLoaded}
+                className="px-4 py-2.5 rounded-xl bg-cyan-600/20 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-600/30 text-xs font-bold flex items-center gap-2 transition disabled:opacity-50"
+              >
+                <Cloud size={15} />
+                <span>{syncingCloud ? 'Syncing to Cloud…' : !cloudLoaded ? 'Loading Cloud Data…' : 'Sync Cloud Data Now'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Account session */}
+          <div className="p-6 rounded-2xl bg-ink-900/60 border border-white/10 space-y-4">
+            <div className="flex items-center gap-3 pb-3 border-b border-white/10">
+              <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"><Shield size={20} /></div>
+              <div>
+                <h2 className="text-base font-bold text-white">Hunter Security & Credentials</h2>
+                <p className="text-xs text-slate-400">Manage your credentials, password recovery, or sign out safely.</p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-black/40 border border-white/10">
+              <div>
+                <b className="text-xs font-bold text-white block">Password Reset</b>
+                <span className="text-[11px] text-slate-400">Sends a recovery verification link to your registered account email.</span>
+              </div>
+              <button
+                type="button"
+                disabled={sendingReset || !user?.email}
+                onClick={sendPasswordReset}
+                className="px-4 py-2 rounded-xl bg-white/5 border border-white/15 text-xs font-bold text-slate-300 hover:bg-white/10 transition disabled:opacity-50"
+              >
+                {sendingReset ? 'Sending…' : 'Request Password Reset'}
+              </button>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-red-950/20 border border-red-500/20">
+              <div>
+                <b className="text-xs font-bold text-red-300 block">Sign Out of Session</b>
+                <span className="text-[11px] text-red-400/80">Your cloud progress remains securely stored in your Supabase account.</span>
+              </div>
+              <button
+                type="button"
+                disabled={signingOut}
+                onClick={() => setLogoutOpen(true)}
+                className="px-4 py-2 rounded-xl bg-red-600/20 border border-red-500/40 text-xs font-bold text-red-300 hover:bg-red-600/30 transition flex items-center gap-1.5"
+              >
+                <LogOut size={14} />
+                <span>{signingOut ? 'Signing out…' : 'Sign Out'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Reset progress */}
+          <div className="p-6 rounded-2xl bg-red-950/15 border border-red-500/25 space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20"><RotateCcw size={20} /></div>
+              <div>
+                <h2 className="text-base font-bold text-red-200">Reset System Progress</h2>
+                <p className="text-xs text-red-300/80">Clear XP, mission history, and inventory to start fresh as Level 1. Workout database records are preserved.</p>
+              </div>
+            </div>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setResetOpen(true)}
+                className="px-4 py-2 rounded-xl bg-red-600/20 border border-red-500/40 text-xs font-bold text-red-300 hover:bg-red-600/30 transition flex items-center gap-1.5"
+              >
+                <RotateCcw size={14} />
+                <span>Reset Progress State</span>
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Confirmation Modals */}
+      <ConfirmModal
+        open={resetOpen}
+        onClose={() => setResetOpen(false)}
+        onConfirm={handleResetProgress}
+        title="Reset Progress State"
+        message="This resets your XP, missions, rank progression, inventory, story progress and profile preferences. Your account and saved training records in the workout database are not deleted."
+        confirmLabel="Reset Progress"
+        danger
+      />
+      <ConfirmModal
+        open={logoutOpen}
+        onClose={() => { if (!signingOut) setLogoutOpen(false); }}
+        onConfirm={() => { void signOutNow(); }}
+        title="Sign Out"
+        message="You will be signed out of this device. Your saved cloud progress will remain in your account."
+        confirmLabel={signingOut ? 'Signing out…' : 'Sign Out'}
+        closeOnConfirm={false}
+      />
     </div>
   );
 }

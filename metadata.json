@@ -1,0 +1,6 @@
+{
+  "name": "STRYVEN — Personal Operating System",
+  "description": "Turn daily actions into measurable progression. Execute missions, train, earn XP, rise through ranks, and build your Hunter identity.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Activity, CalendarDays, Clock3, Dumbbell, Flame, Target, Trophy, Zap, BookOpen, ChevronRight, Swords } from 'lucide-react';
+import { Activity, CalendarDays, Clock3, Dumbbell, Flame, Target, Trophy, Zap, BookOpen } from 'lucide-react';
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Line, LineChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis

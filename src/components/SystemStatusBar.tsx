@@ -12,11 +12,11 @@ export function SystemStatusBar({ onNavigate }: SystemStatusBarProps) {
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
   }, []);
-  const date = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Africa/Cairo', weekday: 'short', month: 'short', day: '2-digit',
+  const date = new Intl.DateTimeFormat(undefined, {
+    weekday: 'short', month: 'short', day: '2-digit',
   }).format(now).toUpperCase();
-  const time = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Africa/Cairo', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZoneName: 'short',
+  const time = new Intl.DateTimeFormat(undefined, {
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
   }).format(now).toUpperCase();
   const notificationsEnabled = Object.values(state.notifications).some(Boolean);
 

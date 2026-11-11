@@ -54,7 +54,7 @@ export function Missions() {
     </section>
 
     <section className="sv-section sv-surface sv-mission-class sv-mission-class--essential">
-      <div className="sv-section-head"><div><p className="sv-eyebrow">01 // PRIORITY PROTOCOL</p><h2>Essential Missions</h2><p>Your core commitments. Complete these first.</p></div><span>{essentialDone}/{essential.length}</span></div>
+      <div className="sv-section-head"><div><p className="sv-eyebrow">01 // CORE PROTOCOL</p><h2>Basic Tasks</h2><p>Your essential daily commitments. Complete these first.</p></div><span>{essentialDone}/{essential.length}</span></div>
       <div className="sv-mission-list">
         {essential.map(task => { const complete=Boolean(state.coreCompleted[task.id]); return <article className={`sv-mission-row ${complete?'is-complete':''}`} key={task.id}>
           <button disabled={complete} aria-label={complete?'Mission completed':'Confirm mission complete'} onClick={()=>toggleCoreTask(task.id)}>{complete?<CheckCircle2 size={21}/>:<Circle size={21}/>}</button>
@@ -63,31 +63,31 @@ export function Missions() {
           <button className="sv-mission-edit" aria-label="Edit mission" onClick={()=>setEditing({id:task.id,kind:'essential',label:task.label,points:String(task.points)})}><Pencil size={14}/></button>
           <button className="sv-mission-delete" aria-label="Delete mission" onClick={()=>deleteMainTask(task.id)}><Trash2 size={14}/></button>
         </article>; })}
-        {!essential.length && <div className="sv-empty-record">NO ESSENTIAL MISSIONS. ADD YOUR FIRST COMMITMENT BELOW.</div>}
+        {!essential.length && <div className="sv-empty-record">NO BASIC TASKS. ADD YOUR FIRST CORE COMMITMENT BELOW.</div>}
       </div>
       <form className="sv-add-mission" onSubmit={addEssential}>
-        <label><span>NEW ESSENTIAL MISSION</span><input value={essentialLabel} onChange={e=>setEssentialLabel(e.target.value)} maxLength={90} placeholder="Add a core commitment…" required/></label>
+        <label><span>NEW BASIC TASK</span><input value={essentialLabel} onChange={e=>setEssentialLabel(e.target.value)} maxLength={90} placeholder="Add a core basic task…" required/></label>
         <label className="sv-xp-input"><span>XP</span><input type="number" min="0" max="200" value={essentialXp} onChange={e=>setEssentialXp(e.target.value)}/></label>
-        <button type="submit"><Plus size={16}/> Add essential</button>
+        <button type="submit"><Plus size={16}/> Add basic task</button>
       </form>
     </section>
 
     <section className="sv-section sv-surface sv-mission-class sv-mission-class--extra">
-      <div className="sv-section-head"><div><p className="sv-eyebrow">02 // OPTIONAL PROTOCOL</p><h2>Non-Essential Missions</h2><p>Bonus actions that help you grow beyond the essentials.</p></div><span>{extraDone}/{extra.length}</span></div>
+      <div className="sv-section-head"><div><p className="sv-eyebrow">02 // BONUS PROTOCOL</p><h2>Non-Basic Tasks</h2><p>Extra challenges and custom objectives beyond the basics.</p></div><span>{extraDone}/{extra.length}</span></div>
       <div className="sv-mission-list">
         {extra.map(task => { const complete=Boolean(state.customCompleted[task.id]); return <article className={`sv-mission-row ${complete?'is-complete':''}`} key={task.id}>
           <button disabled={complete} aria-label={complete?'Mission completed':'Confirm mission complete'} onClick={()=>toggleCustomTask(task.id)}>{complete?<CheckCircle2 size={21}/>:<Circle size={21}/>}</button>
-          <span className="sv-mission-icon">✦</span><div className="sv-mission-copy"><b>{task.label}</b><small>OPTIONAL / PERSONAL MISSION</small></div>
+          <span className="sv-mission-icon">✦</span><div className="sv-mission-copy"><b>{task.label}</b><small>NON-BASIC / PERSONAL MISSION</small></div>
           <strong>+{task.points} XP</strong>
           <button className="sv-mission-edit" aria-label="Edit mission" onClick={()=>setEditing({id:task.id,kind:'extra',label:task.label,points:String(task.points)})}><Pencil size={14}/></button>
           <button className="sv-mission-delete" aria-label="Delete mission" onClick={()=>deleteCustomTask(task.id)}><Trash2 size={14}/></button>
         </article>; })}
-        {!extra.length && <div className="sv-empty-record">NO OPTIONAL MISSIONS ADDED YET.</div>}
+        {!extra.length && <div className="sv-empty-record">NO NON-BASIC TASKS ADDED YET.</div>}
       </div>
       <form className="sv-add-mission" onSubmit={addExtra}>
-        <label><span>NEW OPTIONAL MISSION</span><input value={extraLabel} onChange={e=>setExtraLabel(e.target.value)} maxLength={90} placeholder="Add an extra challenge…" required/></label>
+        <label><span>NEW NON-BASIC TASK</span><input value={extraLabel} onChange={e=>setExtraLabel(e.target.value)} maxLength={90} placeholder="Add a non-basic task…" required/></label>
         <label className="sv-xp-input"><span>XP</span><input type="number" min="0" max="200" value={extraXp} onChange={e=>setExtraXp(e.target.value)}/></label>
-        <button type="submit"><Plus size={16}/> Add optional</button>
+        <button type="submit"><Plus size={16}/> Add non-basic task</button>
       </form>
     </section>
 

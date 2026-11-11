@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
-import { supabase } from './supabase';
+import { supabase, isSupabaseConfigured } from './supabase';
 
 interface AuthContextValue {
   user: User | null;
@@ -32,6 +32,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
     let authEventSeen = false;
 
+    if (!isSupabaseConfigured()) {
+      try {
+        const saved = localStorage.getItem('stryven-offline-user');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          const offlineUser = {
+            id: parsed.id || 'offline-hunter',
+            app_metadata: {},
+            user_metadata: { username: parsed.username || 'Hunter' },
+            aud: 'authenticated',
+            created_at: new Date().toISOString(),
+            email: parsed.email || 'hunter@system.com',
+            role: 'authenticated',
+          } as unknown as User;
+          setSession({
+            access_token: 'offline-token',
+            token_type: 'bearer',
+            expires_in: 3600,
+            refresh_token: 'offline-refresh',
+            user: offlineUser,
+          } as Session);
+        }
+      } catch {
+        setSession(null);
+      }
+      setLoading(false);
+      return;
+    }
+
     const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
       authEventSeen = true;
       if (!mounted) return;
@@ -59,11 +88,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    if (!isSupabaseConfigured()) {
+      const username = email.split('@')[0] || 'Hunter';
+      const offlineUser = {
+        id: 'offline-hunter',
+        app_metadata: {},
+        user_metadata: { username },
+        aud: 'authenticated',
+        created_at: new Date().toISOString(),
+        email,
+        role: 'authenticated',
+      } as unknown as User;
+      localStorage.setItem('stryven-offline-user', JSON.stringify({ id: offlineUser.id, email, username }));
+      setSession({
+        access_token: 'offline-token',
+        token_type: 'bearer',
+        expires_in: 3600,
+        refresh_token: 'offline-refresh',
+        user: offlineUser,
+      } as Session);
+      return { error: null };
+    }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error: error ? authErrorMessage(error.message, 'login') : null };
   };
 
   const signUp = async (email: string, password: string, username: string) => {
+    if (!isSupabaseConfigured()) {
+      const resolvedName = username || email.split('@')[0] || 'Hunter';
+      const offlineUser = {
+        id: 'offline-hunter',
+        app_metadata: {},
+        user_metadata: { username: resolvedName },
+        aud: 'authenticated',
+        created_at: new Date().toISOString(),
+        email,
+        role: 'authenticated',
+      } as unknown as User;
+      localStorage.setItem('stryven-offline-user', JSON.stringify({ id: offlineUser.id, email, username: resolvedName }));
+      setSession({
+        access_token: 'offline-token',
+        token_type: 'bearer',
+        expires_in: 3600,
+        refresh_token: 'offline-refresh',
+        user: offlineUser,
+      } as Session);
+      return { error: null, needsEmailConfirmation: false };
+    }
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -91,6 +162,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
+    if (!isSupabaseConfigured()) {
+      return signIn('hunter@system.com', 'offline');
+    }
     const origin = window.location.origin;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -103,8 +177,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    localStorage.removeItem('stryven-offline-user');
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } else {
+      setSession(null);
+    }
   };
 
   return (

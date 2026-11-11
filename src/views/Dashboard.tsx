@@ -56,6 +56,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         <XpBar xp={state.xp}/>
         <small>{nextRank ? `${Math.max(0,nextRank.xpRequired-state.xp).toLocaleString()} XP UNTIL ${nextRank.name.toUpperCase()}` : 'MAXIMUM RANK'}</small>
         <div className="sv-dashboard-rankline"><span>Rank progress</span><b>{Math.round(nextRankProgress)}%</b></div><div className="sv-page-progress"><span style={{width:`${nextRankProgress}%`}}/></div>
+        <div className="sv-dashboard-rankline" style={{marginTop:'0.75rem'}}><span>Daily XP Cap</span><b>{state.dailyXp.toLocaleString()} / 10,000 XP</b></div><div className="sv-page-progress"><span style={{width:`${Math.min(100, (state.dailyXp / 10000) * 100)}%`}}/></div>
       </div>
     </section>
 
@@ -120,7 +121,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
 
 
-    <div className="sv-today-strip"><span>TODAY // SYSTEM STATUS</span><b>{completedToday}/{missions.length} OBJECTIVES CONFIRMED</b><i/><b>{state.dailyXp.toLocaleString()} XP EARNED</b><i/><b>{state.workoutsCompletedToday>0?'TRAINING RECORDED':'TRAINING PENDING'}</b></div>
+    <div className="sv-today-strip"><span>TODAY // SYSTEM STATUS</span><b>{completedToday}/{missions.length} OBJECTIVES CONFIRMED</b><i/><b>{state.dailyXp.toLocaleString()} / 10,000 XP (DAILY CAP)</b><i/><b>{state.workoutsCompletedToday>0?'TRAINING RECORDED':'TRAINING PENDING'}</b></div>
   </div>;
 }
 

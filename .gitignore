@@ -32,3 +32,6 @@ vite.config.*.timestamp-*.mjs
 .env
 .env.*
 !.env.example
+.aistudio
+.playwright-cli
+bun.lock

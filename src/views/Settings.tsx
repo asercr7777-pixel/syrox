@@ -120,6 +120,15 @@ export function Settings() {
     setBackgroundVideo(null);
   };
 
+  const handleResetProgress = () => {
+    // Unmount the confirmation overlay before resetting the external store.
+    setResetOpen(false);
+    window.requestAnimationFrame(() => {
+      resetAll();
+      toast({ title: 'Progress state reset', message: 'Your STRYVEN progression state has been reset.', type: 'success' });
+    });
+  };
+
   const syncCloudNow = async () => {
     if (!user?.id) { toast({ title: 'No active account', message: 'Sign in before syncing cloud data.', type: 'error' }); return; }
     if (!state || !('xp' in state)) { toast({ title: 'Progress unavailable', message: 'Wait for your account data to finish loading, then try again.', type: 'error' }); return; }
@@ -235,7 +244,7 @@ export function Settings() {
         </section>
       </div>
 
-      <ConfirmModal open={resetOpen} onClose={() => setResetOpen(false)} onConfirm={() => { resetAll(); setResetOpen(false); toast({ title: 'Progress state reset', message: 'Your STRYVEN progression state has been reset.', type: 'success' }); }} title="Reset Progress State" message="This resets your XP, missions, rank progression, inventory, story progress and profile preferences. Your account and saved training records in the workout database are not deleted." confirmLabel="Reset Progress" danger />
+      <ConfirmModal open={resetOpen} onClose={() => setResetOpen(false)} onConfirm={handleResetProgress} title="Reset Progress State" message="This resets your XP, missions, rank progression, inventory, story progress and profile preferences. Your account and saved training records in the workout database are not deleted." confirmLabel="Reset Progress" danger />
       <ConfirmModal open={logoutOpen} onClose={() => { if (!signingOut) setLogoutOpen(false); }} onConfirm={() => { void signOutNow(); }} title="Sign Out" message="You will be signed out of this device. Your saved cloud progress will remain in your account." confirmLabel={signingOut ? 'Signing out…' : 'Sign Out'} closeOnConfirm={false} />
     </div>
   );

@@ -31,7 +31,7 @@ export function SystemStatusBar({ onNavigate }: SystemStatusBarProps) {
       <button className="sv-system-notifications" onClick={() => onNavigate('settings')} aria-label="Open notification preferences" title={notificationsEnabled ? 'Notification preferences are enabled' : 'Notification preferences are disabled'}>
         <Bell size={17}/><span className={notificationsEnabled ? 'is-enabled' : ''}/>
       </button>
-      <button className="sv-system-settings-link" onClick={() => onNavigate('profile')} aria-label="Open hunter profile"><ChevronRight size={16}/></button>
+      <button className="sv-system-settings-link" onClick={() => onNavigate('settings')} aria-label="Open settings" title="Open settings"><ChevronRight size={16}/></button>
     </div>
   </header>;
 }

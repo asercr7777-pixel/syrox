@@ -77,15 +77,16 @@ interface ConfirmModalProps {
   message: string;
   confirmLabel?: string;
   danger?: boolean;
+  closeOnConfirm?: boolean;
 }
 
-export function ConfirmModal({ open, onClose, onConfirm, title, message, confirmLabel = 'Confirm', danger }: ConfirmModalProps) {
+export function ConfirmModal({ open, onClose, onConfirm, title, message, confirmLabel = 'Confirm', danger, closeOnConfirm = true }: ConfirmModalProps) {
   return (
     <Modal open={open} onClose={onClose} title={title} size="sm">
       <p className="text-ink-200 mb-5">{message}</p>
       <div className="flex gap-2 justify-end flex-wrap">
         <button onClick={onClose} className="btn-ghost">Cancel</button>
-        <button onClick={() => { onConfirm(); onClose(); }} className={danger ? 'btn-danger' : 'btn-primary'}>{confirmLabel}</button>
+        <button onClick={() => { onConfirm(); if (closeOnConfirm) onClose(); }} className={danger ? 'btn-danger' : 'btn-primary'}>{confirmLabel}</button>
       </div>
     </Modal>
   );

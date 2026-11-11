@@ -31,13 +31,14 @@ const THEMES: { id: SiteTheme; label: string; detail: string }[] = [
 ];
 
 export function Settings() {
-  const { state, updateProfile, setCustomBackground, setBackgroundVideo, setBackgroundType, setBackgroundBlur, setBackgroundDarken, setBackgroundBrightness, setSelectedBackground, toggleSound, updateNotifications, resetAll, syncLeaderboard } = useStore();
+  const { state, updateProfile, setCustomBackground, setBackgroundVideo, setBackgroundType, setBackgroundBlur, setBackgroundDarken, setBackgroundBrightness, setSelectedBackground, toggleSound, updateNotifications, resetAll, saveToCloud, syncLeaderboard } = useStore();
   const { signOut, user } = useAuth();
   const [resetOpen, setResetOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [sendingReset, setSendingReset] = useState(false);
   const [syncingCloud, setSyncingCloud] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [customSiteColor, setCustomSiteColor] = useState(() => localStorage.getItem('stryven-custom-bg-color') || '');
   const imageRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
@@ -121,11 +122,17 @@ export function Settings() {
 
   const syncCloudNow = async () => {
     if (!user?.id) { toast({ title: 'No active account', message: 'Sign in before syncing cloud data.', type: 'error' }); return; }
+    if (!state || !('xp' in state)) { toast({ title: 'Progress unavailable', message: 'Wait for your account data to finish loading, then try again.', type: 'error' }); return; }
     setSyncingCloud(true);
     try {
-      const synced = await syncLeaderboard();
-      if (!synced) throw new Error('Cloud sync could not be completed. Check your connection and try again.');
-      toast({ title: 'Cloud sync complete', message: 'Your leaderboard profile was updated. Your progress is saved separately to your cloud account.', type: 'success' });
+      const saved = await saveToCloud(user.id);
+      if (!saved) throw new Error('Cloud storage did not confirm the save. Check your connection and account permissions.');
+      const leaderboardSaved = await syncLeaderboard();
+      toast({
+        title: 'Cloud data saved',
+        message: leaderboardSaved ? 'Your STRYVEN progress and leaderboard profile are synced.' : 'Your STRYVEN progress is saved. Leaderboard sync was unavailable.',
+        type: 'success'
+      });
     } catch (error) {
       toast({ title: 'Cloud sync failed', message: error instanceof Error ? error.message : 'Please try again.', type: 'error' });
     } finally { setSyncingCloud(false); }
@@ -133,12 +140,13 @@ export function Settings() {
 
   const signOutNow = async () => {
     playSound('click');
+    setSigningOut(true);
     try {
       await signOut();
-      toast({ title: 'Signed out', message: 'Your cloud progress remains saved to your account.', type: 'success' });
+      setLogoutOpen(false);
     } catch (error) {
       toast({ title: 'Could not sign out', message: error instanceof Error ? error.message : 'Please try again.', type: 'error' });
-    }
+    } finally { setSigningOut(false); }
   };
   const sendPasswordReset = async () => {
     if (!user?.email) { toast({ title: 'Email unavailable', message: 'This account has no email address available for recovery.', type: 'error' }); return; }
@@ -217,18 +225,18 @@ export function Settings() {
 
         <section className="sv-settings-card">
           <div className="sv-settings-card__head"><div className="sv-settings-icon"><Shield size={18} /></div><div><span>DATA</span><h2>Cloud & Storage</h2></div></div>
-          <div className="sv-action-grid"><button type="button" className="sv-secondary" onClick={syncCloudNow} disabled={syncingCloud || !user}><Cloud size={15} /> {syncingCloud ? 'Syncing…' : 'Sync Leaderboard'}</button><button type="button" className="sv-danger" onClick={() => setResetOpen(true)}><RotateCcw size={15} /> Reset Data</button></div>
+          <div className="sv-action-grid"><button type="button" className="sv-secondary" onClick={syncCloudNow} disabled={syncingCloud || !user || !state}><Cloud size={15} /> {syncingCloud ? 'Saving cloud data…' : 'Sync Cloud Data'}</button><button type="button" className="sv-danger" onClick={() => setResetOpen(true)}><RotateCcw size={15} /> Reset Data</button></div>
         </section>
 
         <section className="sv-settings-card sv-settings-card--wide sv-settings-card--danger">
           <div className="sv-settings-card__head"><div className="sv-settings-icon"><LogOut size={18} /></div><div><span>SESSION</span><h2>Account Session</h2></div></div>
           <div className="sv-session-row"><div><b>Signed-in account</b><span>{user?.email || 'Account email unavailable'}</span></div><button className="sv-secondary" disabled={sendingReset || !user?.email} onClick={sendPasswordReset}><Shield size={15} />{sendingReset ? 'Sending…' : 'Reset Password'}</button></div>
-          <div className="sv-session-row"><div><b>Sign out of STRYVEN</b><span>Your cloud progress remains saved.</span></div><button className="sv-danger" onClick={() => setLogoutOpen(true)}><LogOut size={15} /> Sign Out</button></div>
+          <div className="sv-session-row"><div><b>Sign out of STRYVEN</b><span>Your cloud progress remains saved.</span></div><button type="button" className="sv-danger" disabled={signingOut || !user} onClick={() => setLogoutOpen(true)}><LogOut size={15} /> {signingOut ? 'Signing out…' : 'Sign Out'}</button></div>
         </section>
       </div>
 
       <ConfirmModal open={resetOpen} onClose={() => setResetOpen(false)} onConfirm={() => { resetAll(); setResetOpen(false); toast({ title: 'Progress state reset', message: 'Your STRYVEN progression state has been reset.', type: 'success' }); }} title="Reset Progress State" message="This resets your XP, missions, rank progression, inventory, story progress and profile preferences. Your account and saved training records in the workout database are not deleted." confirmLabel="Reset Progress" danger />
-      <ConfirmModal open={logoutOpen} onClose={() => setLogoutOpen(false)} onConfirm={signOutNow} title="Sign Out" message="Your progress is saved to the cloud." confirmLabel="Sign Out" />
+      <ConfirmModal open={logoutOpen} onClose={() => { if (!signingOut) setLogoutOpen(false); }} onConfirm={() => { void signOutNow(); }} title="Sign Out" message="You will be signed out of this device. Your saved cloud progress will remain in your account." confirmLabel={signingOut ? 'Signing out…' : 'Sign Out'} />
     </div>
   );
 }

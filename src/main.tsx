@@ -11,6 +11,8 @@ import './theme.css';
 import './stryven-shell.css';
 import './stryven-pages.css';
 import './stryven-overdrive.css';
+import './theme-identities.css';
+import './stryven-settings.css';
 import './stryven-enhancements.css';
 
 function safeSessionGet(key: string) {

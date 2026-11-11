@@ -6,7 +6,7 @@ import { BACKGROUNDS, AURAS } from '../data/collections';
 import type { SiteTheme } from '../store/types';
 import { getRankByXp } from '../data/ranks';
 import { RankBadge } from '../components/ui/RankBadge';
-import { Upload, Trash2, Volume2, VolumeX, Palette, User as UserIcon, Image as ImageIcon, Video, Sparkles, LogOut, Moon, Shield, Eye, Cloud, RotateCcw } from 'lucide-react';
+import { Upload, Trash2, Volume2, VolumeX, Palette, User as UserIcon, Image as ImageIcon, Video, Sparkles, LogOut, Moon, Shield, Eye, Cloud, RotateCcw, Bell } from 'lucide-react';
 import { toast } from '../components/ui/Toast';
 import { playSound } from '../lib/sound';
 import { uploadBackground } from '../lib/backgroundUpload';
@@ -15,6 +15,7 @@ import { supabase } from '../lib/supabase';
 const AVATARS = ['🐺','😈','👑','🔥','⚡','🌑','🗡️','🛡️','⚔️','🐉','👻','🦅','🦁','🐍','🦊','🐲','💀','🤴','🥷','🧙'];
 const NAME_COLORS = ['#fbbf24','#ff7a18','#a855f7','#06b6d4','#10b981','#f43f5e','#3b82f6','#ec4899'];
 const BANNER_COLORS = ['#1e1b4b','#7f1d1d','#0c4a6e','#14532d','#78350f','#4c1d95','#0f172a','#831843'];
+const SITE_COLORS = ['#050505','#0b1220','#111827','#1e1033','#190b0b','#092019','#1a1407','#101010'];
 const ALLOWED_IMAGE_TYPES = ['image/jpeg','image/png','image/webp','image/gif'];
 const ALLOWED_VIDEO_TYPES = ['video/mp4','video/webm','video/ogg'];
 type BgType = 'default' | 'image' | 'video' | 'animated';
@@ -30,12 +31,13 @@ const THEMES: { id: SiteTheme; label: string; detail: string }[] = [
 ];
 
 export function Settings() {
-  const { state, updateProfile, setCustomBackground, setBackgroundVideo, setBackgroundType, setBackgroundBlur, setBackgroundDarken, setBackgroundBrightness, setSelectedBackground, toggleSound, resetAll, syncLeaderboard } = useStore();
+  const { state, updateProfile, setCustomBackground, setBackgroundVideo, setBackgroundType, setBackgroundBlur, setBackgroundDarken, setBackgroundBrightness, setSelectedBackground, toggleSound, updateNotifications, resetAll, syncLeaderboard } = useStore();
   const { signOut, user } = useAuth();
   const [resetOpen, setResetOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [sendingReset, setSendingReset] = useState(false);
+  const [customSiteColor, setCustomSiteColor] = useState(() => localStorage.getItem('stryven-custom-bg-color') || '');
   const imageRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
   const mounted = useRef(true);
@@ -43,6 +45,29 @@ export function Settings() {
   const aura = state.equipped.aura ? AURAS.find((a) => a.id === state.equipped.aura) : null;
 
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  useEffect(() => {
+    const onBackgroundChange = () => setCustomSiteColor(localStorage.getItem('stryven-custom-bg-color') || '');
+    window.addEventListener('stryven-background-change', onBackgroundChange);
+    window.addEventListener('storage', onBackgroundChange);
+    return () => {
+      window.removeEventListener('stryven-background-change', onBackgroundChange);
+      window.removeEventListener('storage', onBackgroundChange);
+    };
+  }, []);
+
+  const chooseTheme = (theme: SiteTheme) => {
+    updateProfile({ theme });
+    localStorage.removeItem('stryven-custom-bg-color');
+    setCustomSiteColor('');
+    window.dispatchEvent(new Event('stryven-background-change'));
+    playSound('click');
+  };
+
+  const chooseSiteColor = (color: string) => {
+    localStorage.setItem('stryven-custom-bg-color', color);
+    setCustomSiteColor(color);
+    window.dispatchEvent(new Event('stryven-background-change'));
+  };
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>, kind: 'image' | 'video') => {
     const file = event.target.files?.[0];
@@ -130,7 +155,19 @@ export function Settings() {
             <div className="sv-setting-row"><div><Moon size={16} /><span>Active theme</span></div><strong>{THEMES.find(theme => theme.id === state.theme)?.label || state.theme}</strong></div>
             <div className="sv-setting-row"><div><Eye size={16} /><span>Current Rank</span></div><strong style={{ color: rank.color }}>{rank.name}</strong></div>
           </div>
-          <div className="sv-theme-grid" aria-label="Choose interface theme">{THEMES.map(theme => <button type="button" key={theme.id} className={state.theme === theme.id ? 'is-selected' : ''} onClick={() => { updateProfile({ theme: theme.id }); playSound('click'); }} aria-pressed={state.theme === theme.id}><span className={`sv-theme-swatch sv-theme-swatch--${theme.id}`}/><b>{theme.label}</b><small>{theme.detail}</small>{state.theme === theme.id && <i>ACTIVE</i>}</button>)}</div>
+          <div className="sv-theme-grid" aria-label="Choose interface theme">{THEMES.map(theme => <button type="button" key={theme.id} className={state.theme === theme.id ? 'is-selected' : ''} onClick={() => chooseTheme(theme.id)} aria-pressed={state.theme === theme.id}><span className={`sv-theme-swatch sv-theme-swatch--${theme.id}`}/><b>{theme.label}</b><small>{theme.detail}</small>{state.theme === theme.id && <i>ACTIVE</i>}</button>)}</div>
+          <div className="sv-settings-block">
+            <span className="sv-settings-label">Custom Site Color</span>
+            <div className="sv-color-row sv-site-color-row">
+              {SITE_COLORS.map(color => <button type="button" key={color} aria-label={`Set site background ${color}`} title={color} className={customSiteColor.toLowerCase() === color.toLowerCase() ? 'is-selected' : ''} style={{ background: color }} onClick={() => chooseSiteColor(color)} />)}
+              <label className="sv-custom-color-picker" title="Choose any site color">
+                <input type="color" aria-label="Choose custom site color" value={customSiteColor || '#080808'} onChange={event => chooseSiteColor(event.target.value)} />
+                <span style={{ background: customSiteColor || 'conic-gradient(#ff7a18,#8b5cf6,#22d3ee,#84cc16,#ff7a18)' }} />
+              </label>
+              {customSiteColor && <button type="button" className="sv-clear-color" onClick={() => chooseTheme(state.theme)}>Reset to theme</button>}
+            </div>
+            <small className="sv-settings-help">A custom background color replaces the theme atmosphere. Choose a theme or reset to restore its full visual effects.</small>
+          </div>
         </section>
 
         <section className="sv-settings-card sv-settings-card--wide">
@@ -142,6 +179,14 @@ export function Settings() {
           </div>
           <div className="sv-settings-block"><span className="sv-settings-label">Animated Presets</span><div className="sv-preset-grid">{BACKGROUNDS.map((bg) => { const selected = state.selectedBackgroundId === bg.id; return <button key={bg.id} className={selected ? 'is-selected' : ''} onClick={() => selectPreset(bg.id)} style={{ background: bg.css }}><span>{bg.name}</span>{selected && <b>✓</b>}</button>; })}</div></div>
           <div className="sv-controls"><div><span>Brightness <b>{state.backgroundBrightness}%</b></span><input aria-label="Background brightness" type="range" min={20} max={150} value={state.backgroundBrightness} onChange={(e) => setBackgroundBrightness(Number(e.target.value))} /></div><div><span>Blur <b>{state.backgroundBlur}px</b></span><input aria-label="Background blur" type="range" min={0} max={20} value={state.backgroundBlur} onChange={(e) => setBackgroundBlur(Number(e.target.value))} /></div><div><span>Dark Overlay <b>{state.backgroundDarken}%</b></span><input aria-label="Background overlay" type="range" min={0} max={90} value={state.backgroundDarken} onChange={(e) => setBackgroundDarken(Number(e.target.value))} /></div></div>
+        </section>
+
+        <section className="sv-settings-card">
+          <div className="sv-settings-card__head"><div className="sv-settings-icon"><Bell size={18} /></div><div><span>PREFERENCES</span><h2>Notifications</h2></div></div>
+          <div className="sv-notification-list">
+            {([{ id: 'workout', label: 'Workout reminders' }, { id: 'water', label: 'Water reminders' }, { id: 'sleep', label: 'Sleep reminders' }, { id: 'reading', label: 'Reading reminders' }, { id: 'prayer', label: 'Prayer reminders' }, { id: 'tasks', label: 'Mission reminders' }] as const).map(item => <button type="button" key={item.id} className="sv-toggle-row" onClick={() => updateNotifications({ [item.id]: !state.notifications[item.id] })}><span>{item.label}</span><b className={state.notifications[item.id] ? 'on' : ''}>{state.notifications[item.id] ? 'ON' : 'OFF'}</b></button>)}
+          </div>
+          <small className="sv-settings-help">These preferences are saved with your account. They control reminder preferences; they do not send push notifications by themselves.</small>
         </section>
 
         <section className="sv-settings-card">

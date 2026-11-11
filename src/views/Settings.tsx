@@ -31,7 +31,7 @@ const THEMES: { id: SiteTheme; label: string; detail: string }[] = [
 ];
 
 export function Settings() {
-  const { state, updateProfile, setCustomBackground, setBackgroundVideo, setBackgroundType, setBackgroundBlur, setBackgroundDarken, setBackgroundBrightness, setSelectedBackground, toggleSound, updateNotifications, resetAll, saveToCloud, syncLeaderboard } = useStore();
+  const { state, cloudLoaded, updateProfile, setCustomBackground, setBackgroundVideo, setBackgroundType, setBackgroundBlur, setBackgroundDarken, setBackgroundBrightness, setSelectedBackground, toggleSound, updateNotifications, resetAll, saveToCloud, syncLeaderboard } = useStore();
   const { signOut, user } = useAuth();
   const [resetOpen, setResetOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
@@ -225,7 +225,7 @@ export function Settings() {
 
         <section className="sv-settings-card">
           <div className="sv-settings-card__head"><div className="sv-settings-icon"><Shield size={18} /></div><div><span>DATA</span><h2>Cloud & Storage</h2></div></div>
-          <div className="sv-action-grid"><button type="button" className="sv-secondary" onClick={syncCloudNow} disabled={syncingCloud || !user || !state}><Cloud size={15} /> {syncingCloud ? 'Saving cloud data…' : 'Sync Cloud Data'}</button><button type="button" className="sv-danger" onClick={() => setResetOpen(true)}><RotateCcw size={15} /> Reset Data</button></div>
+          <div className="sv-action-grid"><button type="button" className="sv-secondary" onClick={syncCloudNow} disabled={syncingCloud || !user || !cloudLoaded}><Cloud size={15} /> {syncingCloud ? 'Saving cloud data…' : !cloudLoaded ? 'Loading account data…' : 'Sync Cloud Data'}</button><button type="button" className="sv-danger" onClick={() => setResetOpen(true)}><RotateCcw size={15} /> Reset Data</button></div>
         </section>
 
         <section className="sv-settings-card sv-settings-card--wide sv-settings-card--danger">
@@ -236,7 +236,7 @@ export function Settings() {
       </div>
 
       <ConfirmModal open={resetOpen} onClose={() => setResetOpen(false)} onConfirm={() => { resetAll(); setResetOpen(false); toast({ title: 'Progress state reset', message: 'Your STRYVEN progression state has been reset.', type: 'success' }); }} title="Reset Progress State" message="This resets your XP, missions, rank progression, inventory, story progress and profile preferences. Your account and saved training records in the workout database are not deleted." confirmLabel="Reset Progress" danger />
-      <ConfirmModal open={logoutOpen} onClose={() => { if (!signingOut) setLogoutOpen(false); }} onConfirm={() => { void signOutNow(); }} title="Sign Out" message="You will be signed out of this device. Your saved cloud progress will remain in your account." confirmLabel={signingOut ? 'Signing out…' : 'Sign Out'} />
+      <ConfirmModal open={logoutOpen} onClose={() => { if (!signingOut) setLogoutOpen(false); }} onConfirm={() => { void signOutNow(); }} title="Sign Out" message="You will be signed out of this device. Your saved cloud progress will remain in your account." confirmLabel={signingOut ? 'Signing out…' : 'Sign Out'} closeOnConfirm={false} />
     </div>
   );
 }

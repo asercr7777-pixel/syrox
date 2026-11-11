@@ -37,6 +37,7 @@ export function Settings() {
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [sendingReset, setSendingReset] = useState(false);
+  const [syncingCloud, setSyncingCloud] = useState(false);
   const [customSiteColor, setCustomSiteColor] = useState(() => localStorage.getItem('stryven-custom-bg-color') || '');
   const imageRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
@@ -118,7 +119,27 @@ export function Settings() {
     setBackgroundVideo(null);
   };
 
-  const signOutNow = async () => { playSound('click'); await signOut(); };
+  const syncCloudNow = async () => {
+    if (!user?.id) { toast({ title: 'No active account', message: 'Sign in before syncing cloud data.', type: 'error' }); return; }
+    setSyncingCloud(true);
+    try {
+      const synced = await syncLeaderboard();
+      if (!synced) throw new Error('Cloud sync could not be completed. Check your connection and try again.');
+      toast({ title: 'Cloud sync complete', message: 'Your leaderboard profile was updated. Your progress is saved separately to your cloud account.', type: 'success' });
+    } catch (error) {
+      toast({ title: 'Cloud sync failed', message: error instanceof Error ? error.message : 'Please try again.', type: 'error' });
+    } finally { setSyncingCloud(false); }
+  };
+
+  const signOutNow = async () => {
+    playSound('click');
+    try {
+      await signOut();
+      toast({ title: 'Signed out', message: 'Your cloud progress remains saved to your account.', type: 'success' });
+    } catch (error) {
+      toast({ title: 'Could not sign out', message: error instanceof Error ? error.message : 'Please try again.', type: 'error' });
+    }
+  };
   const sendPasswordReset = async () => {
     if (!user?.email) { toast({ title: 'Email unavailable', message: 'This account has no email address available for recovery.', type: 'error' }); return; }
     setSendingReset(true);
@@ -196,7 +217,7 @@ export function Settings() {
 
         <section className="sv-settings-card">
           <div className="sv-settings-card__head"><div className="sv-settings-icon"><Shield size={18} /></div><div><span>DATA</span><h2>Cloud & Storage</h2></div></div>
-          <div className="sv-action-grid"><button className="sv-secondary" onClick={() => syncLeaderboard()}><Cloud size={15} /> Sync Leaderboard</button><button className="sv-danger" onClick={() => setResetOpen(true)}><RotateCcw size={15} /> Reset Data</button></div>
+          <div className="sv-action-grid"><button type="button" className="sv-secondary" onClick={syncCloudNow} disabled={syncingCloud || !user}><Cloud size={15} /> {syncingCloud ? 'Syncing…' : 'Sync Leaderboard'}</button><button type="button" className="sv-danger" onClick={() => setResetOpen(true)}><RotateCcw size={15} /> Reset Data</button></div>
         </section>
 
         <section className="sv-settings-card sv-settings-card--wide sv-settings-card--danger">

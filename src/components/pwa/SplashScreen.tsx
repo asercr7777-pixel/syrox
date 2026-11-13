@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Shield } from 'lucide-react';
 
 export function SplashScreen({ onComplete }: { onComplete: () => void }) {
   const [progress, setProgress] = useState(0);
@@ -6,39 +7,68 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
 
   useEffect(() => {
     const start = performance.now();
-    const duration = 360;
+    const duration = 320;
     let raf = 0;
+    let doneTimer: number | undefined;
     const tick = (now: number) => {
       const value = Math.min(100, ((now - start) / duration) * 100);
       setProgress(value);
-      if (value < 100) raf = requestAnimationFrame(tick);
-      else {
+      if (value < 100) {
+        raf = requestAnimationFrame(tick);
+      } else {
         setExiting(true);
-        window.setTimeout(onComplete, 90);
+        doneTimer = window.setTimeout(onComplete, 80);
       }
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      if (doneTimer !== undefined) window.clearTimeout(doneTimer);
+    };
   }, [onComplete]);
 
   if (exiting) return null;
 
   return (
-    <div className="stryven-splash fixed inset-0 z-[9999] flex flex-col items-center justify-center">
-      <div className="stryven-splash-glow" />
-      <div className="relative mb-7">
-        <div className="stryven-splash-pulse absolute -inset-7 rounded-full" />
-        <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl" style={{ background:'linear-gradient(135deg,#1a1e2e,#0a0c14)', border:'1px solid rgba(255,122,24,.2)', boxShadow:'0 0 40px rgba(255,122,24,.15)' }}>
-          <svg width="48" height="48" viewBox="0 0 512 512" fill="none" aria-hidden="true">
-            <defs><linearGradient id="splashFlame" x1="50%" y1="0%" x2="50%" y2="100%"><stop offset="0%" stopColor="#ffd9b3"/><stop offset="40%" stopColor="#ff7a18"/><stop offset="100%" stopColor="#c44600"/></linearGradient></defs>
-            <g transform="translate(256 280)"><path d="M0 -120 C-35 -80 -55 -40 -55 0 C-55 50 -30 90 0 110 C30 90 55 50 55 0 C55 -40 35 -80 0 -120 Z" fill="url(#splashFlame)"/><path d="M0 -80 C-20 -50 -32 -20 -32 10 C-32 45 -15 75 0 90 C15 75 32 45 32 10 C32 -20 20 -50 0 -80 Z" fill="#ff9a3c" opacity=".7"/><path d="M0 -40 C-10 -20 -16 -5 -16 12 C-16 35 -8 55 0 65 C8 55 16 35 16 12 C16 -5 10 -20 0 -40 Z" fill="#ffd9b3" opacity=".5"/></g>
-          </svg>
+    <div
+      onClick={onComplete}
+      className="stryven-splash fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#070a12] cursor-pointer select-none"
+    >
+      <div
+        className="pointer-events-none absolute inset-0 opacity-60"
+        style={{
+          background:
+            'radial-gradient(circle at 50% 42%, rgba(167,139,250,0.18), transparent 45%), radial-gradient(circle at 50% 60%, rgba(92,236,255,0.08), transparent 55%)',
+        }}
+      />
+      <div className="relative mb-6">
+        <div
+          className="relative flex h-20 w-20 items-center justify-center rounded-2xl border border-[#a78bfa]/35"
+          style={{
+            background: 'linear-gradient(135deg, #141a2e, #070a12)',
+            boxShadow: '0 0 42px rgba(167,139,250,0.22)',
+          }}
+        >
+          <Shield size={36} className="text-[#a78bfa]" />
         </div>
       </div>
-      <h1 className="font-display mb-2 text-2xl font-bold tracking-[.15em] text-[#e6eaf5]">DISCIPLINE</h1>
-      <p className="mb-9 text-xs uppercase tracking-widest text-slate-500">Rise</p>
-      <div className="h-0.5 w-44 overflow-hidden rounded-full bg-white/5"><div className="h-full rounded-full" style={{ width:`${progress}%`, background:'linear-gradient(90deg,#ff9a3c,#ff7a18)', boxShadow:'0 0 8px rgba(255,122,24,.5)' }} /></div>
-      <p className="mt-3 text-[10px] tracking-wide text-slate-600">Loading your journey...</p>
+      <h1 className="font-display mb-1.5 text-2xl font-black tracking-[0.22em] text-[#eef2ff]">STRYVEN</h1>
+      <p className="mb-8 font-mono text-[10px] font-bold uppercase tracking-[0.26em] text-[#5cecff]">
+        HUNTER OPERATING SYSTEM
+      </p>
+      <div className="h-1 w-48 overflow-hidden rounded-full bg-white/10">
+        <div
+          className="h-full rounded-full"
+          style={{
+            width: `${progress}%`,
+            background: 'linear-gradient(90deg, #a78bfa, #5cecff)',
+            boxShadow: '0 0 10px rgba(92,236,255,0.55)',
+          }}
+        />
+      </div>
+      <p className="mt-3 font-mono text-[10px] tracking-widest text-[#64748b] uppercase">
+        Synchronizing system core…
+      </p>
     </div>
   );
 }

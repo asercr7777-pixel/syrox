@@ -1,13 +1,13 @@
 :root {
-  --stryven-bg: #05070d;
-  --stryven-surface: rgba(12, 16, 27, 0.78);
-  --stryven-surface-strong: rgba(16, 21, 34, 0.94);
-  --stryven-border: rgba(148, 163, 184, 0.12);
-  --stryven-border-hot: rgba(255, 122, 24, 0.34);
-  --stryven-text: #f4f7ff;
+  --stryven-bg: #070a12;
+  --stryven-surface: rgba(11, 14, 24, 0.84);
+  --stryven-surface-strong: rgba(18, 23, 37, 0.94);
+  --stryven-border: rgba(165, 182, 239, 0.14);
+  --stryven-border-hot: rgba(167, 139, 250, 0.38);
+  --stryven-text: #f3f5ff;
   --stryven-muted: #8c96aa;
-  --stryven-accent: #ff7a18;
-  --stryven-accent-2: #a855f7;
+  --stryven-accent: #a78bfa;
+  --stryven-accent-2: #5cecff;
 }
 
 html {
@@ -16,9 +16,9 @@ html {
 
 body {
   background:
-    radial-gradient(900px 500px at 8% -10%, rgba(168, 85, 247, 0.13), transparent 62%),
-    radial-gradient(800px 500px at 92% 4%, rgba(255, 122, 24, 0.11), transparent 62%),
-    linear-gradient(180deg, #05070d 0%, #080b13 48%, #05070d 100%);
+    radial-gradient(900px 500px at 8% -10%, rgba(167, 139, 250, 0.14), transparent 62%),
+    radial-gradient(800px 500px at 92% 4%, rgba(92, 236, 255, 0.09), transparent 62%),
+    linear-gradient(180deg, #070a12 0%, #0b0e18 48%, #070a12 100%);
 }
 
 body::before {
@@ -44,23 +44,27 @@ body::before {
 .glass,
 .glass-soft {
   border-color: var(--stryven-border);
-  background: linear-gradient(145deg, rgba(18, 23, 37, 0.88), rgba(8, 11, 19, 0.78));
+  background: linear-gradient(145deg, rgba(18, 23, 37, 0.92), rgba(11, 14, 24, 0.94));
   box-shadow: 0 18px 55px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255,255,255,.045);
+}
+
+.glass,
+.glass-soft {
   backdrop-filter: blur(18px);
 }
 
 .card:hover,
 .card-premium:hover {
-  border-color: rgba(255,255,255,.12);
-  box-shadow: 0 22px 65px rgba(0, 0, 0, .34), 0 0 0 1px rgba(255,122,24,.035) inset;
+  border-color: rgba(167, 139, 250, .22);
+  box-shadow: 0 22px 65px rgba(0, 0, 0, .34), 0 0 0 1px rgba(167,139,250,.05) inset;
 }
 
 .btn-primary {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(255, 174, 112, .28);
-  background: linear-gradient(135deg, #ff9b43, #ff6b12 58%, #d94f00);
-  box-shadow: 0 10px 28px rgba(255, 105, 20, .18), inset 0 1px 0 rgba(255,255,255,.2);
+  border: 1px solid rgba(193, 161, 255, .38);
+  background: linear-gradient(120deg, #7544d8, #4b3db0 62%, #265c91);
+  box-shadow: 0 8px 25px rgba(110, 66, 197, .24), inset 0 1px 0 rgba(255,255,255,.16);
 }
 
 .btn-primary::after {
@@ -75,18 +79,18 @@ body::before {
 .btn-primary:hover::after { transform: translateX(110%); }
 
 .btn-ghost {
-  border-color: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.09);
   background: rgba(255,255,255,.045);
 }
 
 .btn-ghost:hover {
-  border-color: rgba(255,255,255,.15);
-  background: rgba(255,255,255,.075);
+  border-color: rgba(167, 139, 250, .25);
+  background: rgba(167, 139, 250, .09);
 }
 
 .input {
-  background: rgba(3, 6, 12, .72);
-  border-color: rgba(255,255,255,.1);
+  background: rgba(7, 10, 18, .85);
+  border-color: rgba(165, 182, 239, .18);
   box-shadow: inset 0 1px 8px rgba(0,0,0,.18);
 }
 
@@ -96,24 +100,16 @@ body::before {
 }
 
 .theme-accent {
-  text-shadow: 0 0 22px rgba(255,122,24,.18);
+  text-shadow: 0 0 22px rgba(92,236,255,.18);
 }
 
 .theme-accent-bg {
-  background: linear-gradient(145deg, rgba(255,122,24,.14), rgba(168,85,247,.055));
+  background: linear-gradient(145deg, rgba(167,139,250,.14), rgba(92,236,255,.065));
 }
 
 .theme-accent-border {
   border-color: var(--stryven-border-hot) !important;
-  box-shadow: 0 0 0 1px rgba(255,122,24,.05), 0 12px 35px rgba(255,122,24,.08);
-}
-
-/* Premium navigation surfaces */
-nav,
-header {
-  border-color: rgba(255,255,255,.075) !important;
-  background: rgba(5, 7, 13, .72) !important;
-  backdrop-filter: blur(22px) saturate(135%);
+  box-shadow: 0 0 0 1px rgba(167,139,250,.08), 0 12px 35px rgba(92,236,255,.08);
 }
 
 /* Keep animations polished but cheap to render. */

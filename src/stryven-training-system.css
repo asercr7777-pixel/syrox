@@ -1,142 +1,139 @@
-/* STRYVEN — Training System V3 */
+/* STRYVEN — Training Command (Dark RPG Hunter System) */
 .stryven-training-system{
-  --st-line:rgba(104,145,205,.16);
-  --st-line-strong:rgba(92,157,255,.34);
-  --st-surface:rgba(6,10,17,.9);
-  --st-muted:#65758c;
-  --st-blue:#63b9ff;
-  --st-violet:#8b72ff;
+  --st-line:rgba(165,182,239,.16);
+  --st-line-strong:rgba(167,139,250,.48);
+  --st-surface:rgba(11,14,24,.94);
+  --st-muted:#8591ac;
+  --st-blue:#5cecff;
+  --st-violet:#a78bfa;
 }
 .stryven-training-system>div{position:relative}
 .stryven-training-system .section-title{
-  font-size:clamp(28px,4vw,46px)!important;
-  letter-spacing:.06em!important;
-  text-transform:uppercase!important;
-  text-shadow:0 0 28px rgba(85,150,255,.16);
+  font-size:clamp(28px,4vw,44px)!important;
+  letter-spacing:-.04em!important;
+  text-shadow:0 0 28px rgba(167,139,250,.18);
 }
 .stryven-training-system .card,
 .stryven-training-system .card-premium{
   border:1px solid var(--st-line)!important;
-  border-radius:3px!important;
-  background:linear-gradient(145deg,rgba(10,15,25,.94),rgba(4,7,13,.97))!important;
-  box-shadow:0 18px 55px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.025)!important;
+  border-radius:16px!important;
+  background:linear-gradient(145deg,rgba(18,23,37,.96),rgba(11,14,24,.98))!important;
+  box-shadow:0 18px 50px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.04)!important;
+  backdrop-filter:none!important;
 }
 .stryven-training-system .card:hover,
 .stryven-training-system .card-premium:hover{
-  border-color:rgba(92,157,255,.27)!important;
+  border-color:rgba(167,139,250,.32)!important;
+  transform:none!important;
 }
 .stryven-training-system .theme-accent,
 .stryven-training-system .theme-accent *{
   color:var(--st-blue)!important;
 }
 .stryven-training-system .theme-accent-bg{
-  background:linear-gradient(145deg,rgba(64,126,224,.1),rgba(117,83,255,.045))!important;
+  background:linear-gradient(145deg,rgba(167,139,250,.14),rgba(92,236,255,.06))!important;
 }
 .stryven-training-system .theme-accent-border{
   border-color:var(--st-line-strong)!important;
-  box-shadow:0 0 30px rgba(69,132,235,.07),inset 0 0 25px rgba(69,132,235,.025)!important;
+  box-shadow:0 0 28px rgba(167,139,250,.12),inset 0 0 24px rgba(92,236,255,.04)!important;
 }
-.stryven-training-system .grid.grid-cols-2.sm\\:grid-cols-3.lg\\:grid-cols-6{
-  gap:7px!important;
+.stryven-training-system .grid.grid-cols-2.sm\:grid-cols-3.lg\:grid-cols-6{
+  gap:9px!important;
 }
-.stryven-training-system .grid.grid-cols-2.sm\\:grid-cols-3.lg\\:grid-cols-6 button{
-  min-height:82px;
+.stryven-training-system .grid.grid-cols-2.sm\:grid-cols-3.lg\:grid-cols-6 button{
+  min-height:84px;
   position:relative;
   overflow:hidden;
-  border-radius:3px!important;
-  background:rgba(255,255,255,.018)!important;
+  border-radius:12px!important;
+  background:rgba(255,255,255,.024)!important;
 }
-.stryven-training-system .grid.grid-cols-2.sm\\:grid-cols-3.lg\\:grid-cols-6 button:after{
+.stryven-training-system .grid.grid-cols-2.sm\:grid-cols-3.lg\:grid-cols-6 button:after{
   content:"";
   position:absolute;
   left:0;right:0;bottom:0;height:2px;
-  background:linear-gradient(90deg,var(--st-blue),var(--st-violet));
+  background:linear-gradient(90deg,var(--st-violet),var(--st-blue));
   opacity:.18;
 }
-.stryven-training-system .grid.grid-cols-2.sm\\:grid-cols-3.lg\\:grid-cols-6 button.theme-accent-border:after{
-  opacity:.9;
-  box-shadow:0 0 14px rgba(99,185,255,.45);
+.stryven-training-system .grid.grid-cols-2.sm\:grid-cols-3.lg\:grid-cols-6 button.theme-accent-border:after{
+  opacity:.95;
+  box-shadow:0 0 14px rgba(92,236,255,.45);
 }
 .stryven-training-system .font-display{
-  letter-spacing:.035em;
+  letter-spacing:-.01em;
 }
 .stryven-training-system .font-mono{
   font-variant-numeric:tabular-nums;
-  letter-spacing:.09em;
-  text-shadow:0 0 30px rgba(89,171,255,.16);
+  letter-spacing:.08em;
+  text-shadow:0 0 30px rgba(92,236,255,.16);
 }
 .stryven-training-system .h-2.bg-ink-950{
-  height:5px!important;
-  border:1px solid rgba(255,255,255,.04);
+  height:6px!important;
+  border:1px solid rgba(255,255,255,.05);
 }
 .stryven-training-system .h-2.bg-ink-950>div{
-  background:linear-gradient(90deg,#3d8dff,#7d5cff)!important;
-  box-shadow:0 0 18px rgba(72,135,255,.38);
+  background:linear-gradient(90deg,#9a6bff,#5cecff)!important;
+  box-shadow:0 0 16px rgba(92,236,255,.35);
 }
 .stryven-training-system .btn-primary{
-  border-radius:2px!important;
-  background:linear-gradient(135deg,#3e79eb,#654ddd)!important;
-  border-color:rgba(137,178,255,.35)!important;
-  box-shadow:0 8px 28px rgba(40,83,180,.2)!important;
-  text-transform:uppercase;
-  letter-spacing:.1em;
-  font-size:10px;
+  border-radius:10px!important;
+  background:linear-gradient(120deg,#7544d8,#4b3db0 62%,#265c91)!important;
+  border-color:rgba(193,161,255,.42)!important;
+  box-shadow:0 8px 25px rgba(110,66,197,.25)!important;
+  font-size:12px;
 }
 .stryven-training-system .btn-ghost{
-  border-radius:2px!important;
-  border-color:rgba(103,139,185,.16)!important;
-  background:rgba(255,255,255,.018)!important;
-  text-transform:uppercase;
-  letter-spacing:.08em;
-  font-size:10px;
+  border-radius:10px!important;
+  border-color:rgba(165,182,239,.18)!important;
+  background:rgba(255,255,255,.035)!important;
+  font-size:12px;
 }
 .stryven-training-system input,
 .stryven-training-system select{
-  border-radius:2px!important;
-  background:#040810!important;
-  border-color:rgba(104,142,191,.16)!important;
+  border-radius:10px!important;
+  background:#070a12!important;
+  border-color:rgba(165,182,239,.2)!important;
 }
 .stryven-training-system input:focus,
 .stryven-training-system select:focus{
-  border-color:rgba(88,165,255,.55)!important;
-  box-shadow:0 0 0 3px rgba(76,143,239,.08)!important;
+  border-color:rgba(167,139,250,.65)!important;
+  box-shadow:0 0 0 3px rgba(167,139,250,.14)!important;
 }
 .stryven-training-system .rounded-xl{
-  border-radius:3px!important;
+  border-radius:12px!important;
 }
-.stryven-training-system .border-white\\/10,
-.stryven-training-system .border-white\\/5{
-  border-color:rgba(104,139,183,.11)!important;
+.stryven-training-system .border-white\/10,
+.stryven-training-system .border-white\/5{
+  border-color:rgba(165,182,239,.14)!important;
 }
-.stryven-training-system .bg-ink-950\\/30{
-  background:rgba(255,255,255,.014)!important;
+.stryven-training-system .bg-ink-950\/30{
+  background:rgba(255,255,255,.018)!important;
 }
 .stryven-training-system .text-ink-400{
   color:var(--st-muted)!important;
 }
 .stryven-training-system .text-ink-300{
-  color:#78889f!important;
+  color:#9ca8c2!important;
 }
 .stryven-training-system .text-ink-200{
-  color:#dce8f7!important;
+  color:#e2e8f8!important;
 }
-.stryven-training-system .border-emerald-500\\/30{
-  border-color:rgba(52,211,153,.24)!important;
+.stryven-training-system .border-emerald-500\/30{
+  border-color:rgba(118,245,189,.32)!important;
 }
-.stryven-training-system .bg-emerald-500\\/10{
-  background:rgba(52,211,153,.055)!important;
+.stryven-training-system .bg-emerald-500\/10{
+  background:rgba(118,245,189,.07)!important;
 }
 .stryven-training-system .card-premium:nth-of-type(3){
   background:
-    radial-gradient(circle at 50% 0%,rgba(61,139,255,.09),transparent 45%),
-    linear-gradient(145deg,rgba(10,15,25,.97),rgba(4,7,13,.98))!important;
+    radial-gradient(circle at 50% 0%,rgba(167,139,250,.12),transparent 48%),
+    linear-gradient(145deg,rgba(18,23,37,.96),rgba(11,14,24,.98))!important;
 }
 .stryven-training-system .card-premium:nth-of-type(3) .font-mono{
-  font-size:clamp(46px,9vw,86px)!important;
-  line-height:1!important;
+  font-size:clamp(42px,8vw,72px)!important;
+  line-height:1.05!important;
 }
 .stryven-training-system .fixed.inset-0{
-  background:rgba(1,3,7,.82)!important;
+  background:rgba(3,5,12,.82)!important;
   backdrop-filter:blur(12px);
 }
 .stryven-training-system .fixed.inset-0>.card{
@@ -145,20 +142,20 @@
   scrollbar-width:thin;
 }
 @media(max-width:760px){
-  .stryven-training-system .grid.grid-cols-2.sm\\:grid-cols-3.lg\\:grid-cols-6{
+  .stryven-training-system .grid.grid-cols-2.sm\:grid-cols-3.lg\:grid-cols-6{
     grid-template-columns:repeat(3,minmax(0,1fr))!important;
   }
-  .stryven-training-system .grid.grid-cols-2.sm\\:grid-cols-3.lg\\:grid-cols-6 button{
-    min-height:72px;
+  .stryven-training-system .grid.grid-cols-2.sm\:grid-cols-3.lg\:grid-cols-6 button{
+    min-height:74px;
     padding:10px!important;
   }
 }
 @media(max-width:430px){
-  .stryven-training-system .grid.grid-cols-2.sm\\:grid-cols-3.lg\\:grid-cols-6{
+  .stryven-training-system .grid.grid-cols-2.sm\:grid-cols-3.lg\:grid-cols-6{
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
   }
   .stryven-training-system .card,
-  .stryven-training-system .card-premium{padding:15px!important}
+  .stryven-training-system .card-premium{padding:14px!important}
 }
 @media(prefers-reduced-motion:reduce){
   .stryven-training-system *{scroll-behavior:auto!important;transition:none!important}

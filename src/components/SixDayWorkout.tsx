@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, Pencil, Plus, RotateCcw, Trash2, X, Play, Pause, Square, Clock, History, Trophy } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Pencil, Plus, RotateCcw, Trash2, X, Play, Pause, Square, Clock, History, Trophy } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useAuth } from '../lib/auth';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { ALL_CHAPTERS } from '../data/story';
 import { playSound } from '../lib/sound';
+import { formatTimerClock, sanitizeDayIndex } from '../lib/progression';
 import { toast } from './ui/Toast';
 
 type Section = 'stretching' | 'main' | 'plyometric';
@@ -35,7 +36,7 @@ function load(): Day[] {
   return initial();
 }
 function loadHistory(): WorkoutHistoryEntry[] { try { const raw = localStorage.getItem(WORKOUT_HISTORY_KEY); const value = raw ? JSON.parse(raw) : []; return Array.isArray(value) ? value : []; } catch { return []; } }
-function loadActiveSession(): { active: number; elapsed: number; startedAt: number | null } { try { const raw = localStorage.getItem(ACTIVE_SESSION_KEY); if (!raw) return { active: 0, elapsed: 0, startedAt: null }; const value = JSON.parse(raw); return { active: Number.isInteger(value.active) && value.active >= 0 && value.active < 6 ? value.active : 0, elapsed: Number.isFinite(value.elapsed) ? Math.max(0, Math.floor(value.elapsed)) : 0, startedAt: Number.isFinite(value.startedAt) ? value.startedAt : null }; } catch { return { active: 0, elapsed: 0, startedAt: null }; } }
+function loadActiveSession(): { active: number; elapsed: number; startedAt: number | null } { try { const raw = localStorage.getItem(ACTIVE_SESSION_KEY); if (!raw) return { active: 0, elapsed: 0, startedAt: null }; const value = JSON.parse(raw); return { active: sanitizeDayIndex(value.active, 6), elapsed: Number.isFinite(value.elapsed) ? Math.max(0, Math.floor(value.elapsed)) : 0, startedAt: Number.isFinite(value.startedAt) ? value.startedAt : null }; } catch { return { active: 0, elapsed: 0, startedAt: null }; } }
 function todayKey() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function dayKey(timestamp: number) { const d = new Date(timestamp); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function loadStoryWorkoutEvents(): Record<string, number> { try { const raw = localStorage.getItem(STORY_WORKOUT_KEY); const value = raw ? JSON.parse(raw) : {}; return value && typeof value === 'object' ? value : {}; } catch { return {}; } }
@@ -55,6 +56,7 @@ export function SixDayWorkout() {
   const [dayName, setDayName] = useState('');
   const [exerciseDraft, setExerciseDraft] = useState<{ id?: string; name: string; sets: number; reps: string; section: Section; image?: string } | null>(null);
   const [history, setHistory] = useState<WorkoutHistoryEntry[]>(loadHistory);
+  const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const [elapsed, setElapsed] = useState(savedSession.elapsed);
   const [startedAt, setStartedAt] = useState<number | null>(savedSession.startedAt);
@@ -331,24 +333,34 @@ export function SixDayWorkout() {
   useEffect(() => { if (!running || startedAt === null) return; const tick = () => setElapsed(Math.max(0, Math.floor((Date.now() - startedAt) / 1000))); tick(); const id = window.setInterval(tick, 1000); return () => window.clearInterval(id); }, [running, startedAt]);
   useEffect(() => { if (!restRunning || restUntil === null) return; const tick = () => { const remaining = Math.max(0, Math.ceil((restUntil - Date.now()) / 1000)); setRestRemaining(remaining); if (remaining === 0) { setRestRunning(false); setRestUntil(null); playSound('task'); } }; tick(); const id = window.setInterval(tick, 1000); return () => window.clearInterval(id); }, [restRunning, restUntil]);
 
+  useEffect(() => {
+    if (!exerciseDraft) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setExerciseDraft(null);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [exerciseDraft]);
+
   const startTimer = () => { if (running) return; const now = Date.now(); setStartedAt(now - elapsed * 1000); setRunning(true); playSound('click'); };
   const pauseTimer = () => { setRunning(false); playSound('click'); };
   const resetTimer = () => { setRunning(false); setElapsed(0); setStartedAt(null); };
   const finishTimer = () => {
-    if (startedAt === null || elapsed <= 0) return;
+    if (startedAt === null) return;
+    const durationSeconds = Math.max(1, elapsed);
     const completedAt = Date.now();
-    const entry: WorkoutHistoryEntry = { id: `${completedAt}-${Math.random()}`, dayId: current.id, dayName: current.name, startedAt, completedAt, durationSeconds: elapsed, completedExercises: current.exercises.filter(exercise => exercise.done).length, totalExercises: current.exercises.length, exerciseResults: current.exercises.map(exercise => ({ id: exercise.id, name: exercise.name, sets: exercise.sets, reps: exercise.reps, completedSets: exercise.completedSets ?? 0, actualReps: exercise.actualReps ?? '', done: exercise.done })) };
+    const entry: WorkoutHistoryEntry = { id: `${completedAt}-${Math.random()}`, dayId: current.id, dayName: current.name, startedAt, completedAt, durationSeconds, completedExercises: current.exercises.filter(exercise => exercise.done).length, totalExercises: current.exercises.length, exerciseResults: current.exercises.map(exercise => ({ id: exercise.id, name: exercise.name, sets: exercise.sets, reps: exercise.reps, completedSets: exercise.completedSets ?? 0, actualReps: exercise.actualReps ?? '', done: exercise.done })) };
     const nextHistory = [entry, ...loadHistory()].slice(0, 100);
     localStorage.setItem(WORKOUT_HISTORY_KEY, JSON.stringify(nextHistory));
     setHistory(nextHistory);
-    saveWorkoutSession('custom', elapsed, { localId: entry.id, dayId: entry.dayId, dayName: entry.dayName, startedAt: entry.startedAt, completedAt: entry.completedAt, totalExercises: entry.totalExercises, exerciseResults: entry.exerciseResults });
-    syncStoryAfterWorkout(elapsed);
+    saveWorkoutSession('custom', durationSeconds, { localId: entry.id, dayId: entry.dayId, dayName: entry.dayName, startedAt: entry.startedAt, completedAt: entry.completedAt, totalExercises: entry.totalExercises, exerciseResults: entry.exerciseResults });
+    syncStoryAfterWorkout(durationSeconds);
     playSound('workoutComplete');
+    toast({ title: 'Training session saved', message: `${current.name} (${formatDuration(durationSeconds)}) recorded.`, type: 'success' });
     window.dispatchEvent(new Event('stryven-workout-history-updated'));
     resetTimer();
     stopRest();
   };
-  const formatTimer = (seconds: number) => `${String(Math.floor(seconds / 3600)).padStart(2,'0')}:${String(Math.floor(seconds / 60) % 60).padStart(2,'0')}:${String(seconds % 60).padStart(2,'0')}`;
   const formatDate = (timestamp: number) => new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }).format(timestamp);
   const formatDuration = (seconds: number) => `${Math.floor(seconds / 60)}m ${String(seconds % 60).padStart(2,'0')}s`;
 
@@ -402,7 +414,7 @@ export function SixDayWorkout() {
 
     <div className="card-premium p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>{editingDay ? <div className="flex gap-2"><input autoFocus value={dayName} onChange={e => setDayName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveDayName()} className="input" placeholder="Day name" /><button type="button" onClick={saveDayName} className="btn-primary">Save</button><button type="button" onClick={() => setEditingDay(false)} className="btn-ghost"><X size={16}/></button></div> : <div><div className="flex items-center gap-2"><h2 className="font-display text-2xl font-bold">{current.name}</h2><button type="button" className="btn-ghost p-2" onClick={() => { setDayName(current.name); setEditingDay(true); }} disabled={running}><Pencil size={15}/></button></div><p className="text-sm text-ink-400">Day {active + 1} • {progress}% complete</p></div>}</div>
+        <div>{editingDay ? <div className="flex gap-2"><input autoFocus value={dayName} onChange={e => setDayName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveDayName()} className="input" placeholder="Day name" /><button type="button" onClick={saveDayName} className="btn-primary">Save</button><button type="button" onClick={() => setEditingDay(false)} className="btn-ghost" aria-label="Cancel renaming day"><X size={16}/></button></div> : <div><div className="flex items-center gap-2"><h2 className="font-display text-2xl font-bold">{current.name}</h2><button type="button" className="btn-ghost p-2" aria-label="Edit day name" onClick={() => { setDayName(current.name); setEditingDay(true); }} disabled={running}><Pencil size={15}/></button></div><p className="text-sm text-ink-400">Day {active + 1} • {progress}% complete</p></div>}</div>
         <button type="button" onClick={() => setExerciseDraft({ name: '', sets: 3, reps: '8-12', section: 'main' })} className="btn-primary" disabled={running}><Plus size={17}/> Add Exercise</button>
       </div>
       <div className="relative isolate z-[1] h-2 bg-ink-950 rounded-full overflow-hidden mt-5"><div className="relative z-[2] h-full bg-gradient-to-r from-ember-500 to-gold-500 transition-all" style={{ width: `${progress}%` }}/></div>
@@ -410,22 +422,58 @@ export function SixDayWorkout() {
 
     <div className="card-premium p-5 sm:p-6 border border-white/10">
       <div className="flex items-center gap-2 mb-3"><Clock size={18} className="theme-accent"/><h2 className="font-display text-lg font-bold">Workout Timer</h2><span className="ml-auto text-xs text-ink-400">{todayHistory.length} session{todayHistory.length === 1 ? '' : 's'} today</span></div>
-      <div className="text-center py-2"><div className="font-mono text-4xl sm:text-5xl font-bold tracking-wider tabular-nums">{formatTimer(elapsed)}</div><p className="text-xs text-ink-400 mt-2">Session will be saved under <span className="font-semibold text-ink-200">{current.name}</span></p></div>
-      <div className="flex flex-wrap justify-center gap-2 mt-4">{!running ? <button type="button" className="btn-primary" onClick={startTimer}><Play size={16}/> {elapsed > 0 ? 'Resume' : 'Start Session'}</button> : <button type="button" className="btn-ghost" onClick={pauseTimer}><Pause size={16}/> Pause</button>}<button type="button" className="btn-ghost" onClick={resetTimer} disabled={elapsed === 0}><RotateCcw size={16}/> Reset</button><button type="button" className="btn-primary" onClick={finishTimer} disabled={startedAt === null || elapsed === 0}><Square size={15}/> Finish & Save</button></div>
+      <div className="text-center py-2"><div className="font-mono text-4xl sm:text-5xl font-bold tracking-wider tabular-nums">{formatTimerClock(elapsed)}</div><p className="text-xs text-ink-400 mt-2">Session will be saved under <span className="font-semibold text-ink-200">{current.name}</span></p></div>
+      <div className="flex flex-wrap justify-center gap-2 mt-4">{!running ? <button type="button" className="btn-primary" onClick={startTimer}><Play size={16}/> {elapsed > 0 ? 'Resume' : 'Start Session'}</button> : <button type="button" className="btn-ghost" onClick={pauseTimer}><Pause size={16}/> Pause</button>}<button type="button" className="btn-ghost" onClick={resetTimer} disabled={elapsed === 0 && startedAt === null}><RotateCcw size={16}/> Reset</button><button type="button" className="btn-primary" onClick={finishTimer} disabled={startedAt === null}><Square size={15}/> Finish & Save</button></div>
     </div>
 
     <div className="card-premium p-4 sm:p-5 border border-white/10">
-      <div className="flex flex-wrap items-center gap-3"><div className="flex items-center gap-2"><Clock size={17} className="theme-accent"/><h2 className="font-display font-bold">Rest Timer</h2></div><strong className="ml-auto font-mono text-2xl tabular-nums">{formatTimer(restRemaining)}</strong></div>
+      <div className="flex flex-wrap items-center gap-3"><div className="flex items-center gap-2"><Clock size={17} className="theme-accent"/><h2 className="font-display font-bold">Rest Timer</h2></div><strong className="ml-auto font-mono text-2xl tabular-nums">{formatTimerClock(restRemaining)}</strong></div>
       <div className="flex flex-wrap gap-2 mt-3">{[30,60,90,120].map(seconds=><button key={seconds} type="button" className={`btn-ghost px-3 py-2 text-xs ${restDuration===seconds?'theme-accent-border theme-accent-bg':''}`} onClick={()=>setRestDuration(seconds)} disabled={restRunning}>{seconds}s</button>)}<button type="button" className="btn-primary ml-auto" onClick={restRunning?stopRest:startRest}>{restRunning?'Stop Rest':'Start Rest'}</button></div>
     </div>
 
-    {(['stretching','main','plyometric'] as Section[]).map(section => { const items = current.exercises.filter(e => e.section === section); return <div key={section} className="card p-4 sm:p-5"><div className="flex items-center justify-between mb-3"><h3 className="font-display font-bold uppercase tracking-wider theme-accent">{labels[section]}</h3><span className="text-xs text-ink-400">{items.filter(e => e.done).length}/{items.length}</span></div>{items.length === 0 ? <p className="text-sm text-ink-400 py-3">No exercises yet.</p> : <div className="space-y-2">{items.map(ex => <div key={ex.id} className={`flex flex-wrap items-center gap-3 rounded-xl border p-3 transition-all ${ex.done ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-white/5 bg-ink-950/30'}`}><button type="button" onClick={() => toggle(ex.id)} className={`w-7 h-7 shrink-0 rounded-md border-2 flex items-center justify-center transition-all ${ex.done ? 'bg-emerald-500 border-emerald-500' : 'border-ink-500 hover:border-white/50'}`} aria-label={ex.done ? 'Mark incomplete' : 'Mark complete'}>{ex.done && <Check size={15}/>}</button><div className="flex-1 min-w-0 flex items-center gap-3">
+    {(['stretching','main','plyometric'] as Section[]).map(section => { const items = current.exercises.filter(e => e.section === section); return <div key={section} className="card p-4 sm:p-5"><div className="flex items-center justify-between mb-3"><h3 className="font-display font-bold uppercase tracking-wider theme-accent">{labels[section]}</h3><span className="text-xs text-ink-400">{items.filter(e => e.done).length}/{items.length}</span></div>{items.length === 0 ? <p className="text-sm text-ink-400 py-3">No exercises yet.</p> : <div className="space-y-2">{items.map(ex => <div key={ex.id} className={`flex flex-wrap items-center gap-2.5 sm:gap-3 rounded-xl border p-3 transition-all ${ex.done ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-white/5 bg-ink-950/30'}`}><button type="button" onClick={() => toggle(ex.id)} className={`w-7 h-7 shrink-0 rounded-md border-2 flex items-center justify-center transition-all ${ex.done ? 'bg-emerald-500 border-emerald-500' : 'border-ink-500 hover:border-white/50'}`} aria-label={ex.done ? `Mark ${ex.name} incomplete` : `Mark ${ex.name} complete`}>{ex.done && <Check size={15}/>}</button><div className="flex-1 min-w-[160px] flex items-center gap-3">
   {ex.image && <img src={ex.image} alt="" className="w-12 h-12 rounded-lg object-cover border border-white/10 shrink-0" />}
-  <div className="min-w-0"><p className={`font-medium ${ex.done ? 'line-through text-ink-400' : ''}`}>{ex.name}</p><p className="text-xs text-ink-400">{ex.sets} sets × {ex.reps} · {ex.completedSets ?? 0}/{ex.sets} sets logged</p></div><input type="number" min="0" max="9999" inputMode="numeric" aria-label={`Actual reps for ${ex.name}`} className="input !w-[82px] !px-2 !py-2 text-xs" placeholder="Actual reps" value={ex.actualReps ?? ''} onChange={e=>updateActualReps(ex.id,e.target.value)} disabled={startedAt===null}/></div><button type="button" className="btn-ghost px-2 py-2 text-xs" onClick={()=>{logSet(ex.id); if((ex.completedSets ?? 0)+1>=ex.sets) startRest();}} disabled={startedAt===null || (ex.completedSets ?? 0)>=ex.sets} title="Log one completed set">+ Set</button><button type="button" className="btn-ghost p-2" onClick={() => setExerciseDraft({ id: ex.id, name: ex.name, sets: ex.sets, reps: ex.reps, section: ex.section, image: ex.image })} disabled={running}><Pencil size={14}/></button><button type="button" className="btn-ghost p-2 text-danger-400" onClick={() => remove(ex.id)} disabled={running}><Trash2 size={14}/></button></div>)}</div>}</div>; })}
+  <div className="min-w-0 flex-1"><p className={`font-medium truncate ${ex.done ? 'line-through text-ink-400' : ''}`}>{ex.name}</p><p className="text-xs text-ink-400">{ex.sets} sets × {ex.reps} · {ex.completedSets ?? 0}/{ex.sets} sets logged</p></div></div><div className="flex items-center gap-1.5 ml-auto"><input type="number" min="0" max="9999" inputMode="numeric" aria-label={`Actual reps for ${ex.name}`} className="input !w-[88px] !px-2.5 !py-2 text-xs" placeholder="Reps" value={ex.actualReps ?? ''} onChange={e=>updateActualReps(ex.id,e.target.value)} disabled={startedAt===null}/><button type="button" className="btn-ghost px-2.5 py-2 text-xs" onClick={()=>{logSet(ex.id); if((ex.completedSets ?? 0)+1>=ex.sets) startRest();}} disabled={startedAt===null || (ex.completedSets ?? 0)>=ex.sets} title="Log one completed set">+ Set</button><button type="button" className="btn-ghost p-2" aria-label={`Edit ${ex.name}`} onClick={() => setExerciseDraft({ id: ex.id, name: ex.name, sets: ex.sets, reps: ex.reps, section: ex.section, image: ex.image })} disabled={running}><Pencil size={14}/></button><button type="button" className="btn-ghost p-2 text-danger-400" aria-label={`Delete ${ex.name}`} onClick={() => remove(ex.id)} disabled={running}><Trash2 size={14}/></button></div></div>)}</div>}</div>; })}
 
     <div className="card-premium p-5 sm:p-6">
       <div className="flex items-center gap-2 mb-4"><History size={18} className="theme-accent"/><div><h2 className="font-display text-lg font-bold">Workout History</h2><p className="text-xs text-ink-400">Duration, time and training day are preserved for every saved session.</p></div></div>
-      {history.length === 0 ? <div className="py-7 text-center text-sm text-ink-400">No completed sessions yet. Start the timer and finish your first workout.</div> : <div className="space-y-2">{history.slice(0, 8).map(entry => <div key={entry.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-white/5 bg-ink-950/30 p-3"><div className="w-9 h-9 rounded-lg card flex items-center justify-center"><Clock size={16} className="theme-accent"/></div><div className="flex-1 min-w-[140px]"><p className="font-semibold">{entry.dayName}</p><p className="text-xs text-ink-400">{formatDate(entry.completedAt)}</p>{typeof entry.completedExercises === 'number' && <p className="text-xs text-ink-400">{entry.completedExercises}/{entry.totalExercises ?? entry.completedExercises} exercises confirmed · {entry.exerciseResults?.reduce((sum,exercise)=>sum+exercise.completedSets,0) ?? 0} sets logged</p>}</div><div className="text-sm font-mono font-semibold">{formatDuration(entry.durationSeconds)}</div></div>)}</div>}
+      {history.length === 0 ? <div className="py-7 text-center text-sm text-ink-400">No completed sessions yet. Start the timer and finish your first workout.</div> : <div className="space-y-2">{history.slice(0, 8).map(entry => {
+        const hasDetails = Array.isArray(entry.exerciseResults) && entry.exerciseResults.length > 0;
+        const expanded = expandedHistoryId === entry.id;
+        return <div key={entry.id} className="rounded-xl border border-white/5 bg-ink-950/30 p-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="w-9 h-9 rounded-lg card flex items-center justify-center"><Clock size={16} className="theme-accent"/></div>
+            <div className="flex-1 min-w-[140px]">
+              <p className="font-semibold">{entry.dayName}</p>
+              <p className="text-xs text-ink-400">{formatDate(entry.completedAt)}</p>
+              {typeof entry.completedExercises === 'number' && <p className="text-xs text-ink-400">{entry.completedExercises}/{entry.totalExercises ?? entry.completedExercises} exercises confirmed · {entry.exerciseResults?.reduce((sum,exercise)=>sum+exercise.completedSets,0) ?? 0} sets logged</p>}
+            </div>
+            <div className="text-sm font-mono font-semibold">{formatDuration(entry.durationSeconds)}</div>
+            {hasDetails && (
+              <button
+                type="button"
+                className="btn-ghost px-2.5 py-1.5 text-xs"
+                aria-expanded={expanded}
+                aria-label={expanded ? `Hide details for ${entry.dayName}` : `Show details for ${entry.dayName}`}
+                onClick={() => setExpandedHistoryId(expanded ? null : entry.id)}
+              >
+                {expanded ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}
+                <span>Details</span>
+              </button>
+            )}
+          </div>
+          {expanded && hasDetails && (
+            <div className="mt-3 pt-3 border-t border-white/10 space-y-1.5">
+              {entry.exerciseResults!.map((ex) => (
+                <div key={ex.id} className="flex flex-wrap items-center justify-between gap-2 text-xs text-ink-300 px-2 py-1 rounded bg-white/[0.02]">
+                  <span className="font-medium text-ink-100">{ex.done ? '✓ ' : ''}{ex.name}</span>
+                  <span className="font-mono text-ink-400">{ex.completedSets}/{ex.sets} sets · target {ex.reps}{ex.actualReps ? ` · actual ${ex.actualReps}` : ''}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>;
+      })}</div>}
     </div>
 
     {exerciseModal}

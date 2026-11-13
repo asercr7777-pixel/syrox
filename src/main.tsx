@@ -14,6 +14,7 @@ import './stryven-overdrive.css';
 import './theme-identities.css';
 import './stryven-settings.css';
 import './stryven-enhancements.css';
+import './stryven-training-system.css';
 
 function safeSessionGet(key: string) {
   try { return window.sessionStorage.getItem(key); } catch { return null; }
@@ -24,7 +25,12 @@ function safeSessionSet(key: string, value: string) {
 }
 
 function Root() {
-  const [showSplash, setShowSplash] = useState(() => safeSessionGet('splash-seen') !== 'true');
+  const [showSplash, setShowSplash] = useState(() => {
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('autostart') === '1') {
+      return false;
+    }
+    return safeSessionGet('splash-seen') !== 'true';
+  });
 
   useEffect(() => {
     if (safeSessionGet('splash-seen')) setShowSplash(false);

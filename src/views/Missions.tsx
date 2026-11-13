@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { CheckCircle2, Circle, Plus, Target, Zap, Trash2, Pencil, Save, X } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { capTaskXp } from '../lib/progression';
 
 export function Missions() {
   const { state, toggleCoreTask, toggleCustomTask, addCustomTask, updateCustomTask, deleteCustomTask, addMainTask, updateMainTask, deleteMainTask } = useStore();
@@ -9,6 +10,15 @@ export function Missions() {
   const [extraLabel, setExtraLabel] = useState('');
   const [extraXp, setExtraXp] = useState('50');
   const [editing, setEditing] = useState<{id:string; kind:'essential'|'extra'; label:string; points:string}|null>(null);
+
+  useEffect(() => {
+    if (!editing) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setEditing(null);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [editing]);
 
   const essential = [...state.mainTasks].filter(task => task.enabled).sort((a,b)=>a.order-b.order);
   const extra = state.customTasks;
@@ -22,20 +32,20 @@ export function Missions() {
     event.preventDefault();
     const clean = essentialLabel.trim();
     if (!clean) return;
-    addMainTask({ label: clean, emoji: '◆', points: Math.min(200, Math.max(0, Number(essentialXp) || 0)), category: 'work' });
+    addMainTask({ label: clean, emoji: '◆', points: capTaskXp(Number(essentialXp)), category: 'work' });
     setEssentialLabel('');
   }
   function addExtra(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const clean = extraLabel.trim();
     if (!clean) return;
-    addCustomTask(clean, '✦', Math.min(200, Math.max(0, Number(extraXp) || 0)));
+    addCustomTask(clean, '✦', capTaskXp(Number(extraXp)));
     setExtraLabel('');
   }
   function saveEdit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!editing || !editing.label.trim()) return;
-    const patch = { label: editing.label.trim(), points: Math.min(200, Math.max(0, Number(editing.points) || 0)) };
+    const patch = { label: editing.label.trim(), points: capTaskXp(Number(editing.points)) };
     if (editing.kind === 'essential') updateMainTask(editing.id, patch);
     else updateCustomTask(editing.id, patch);
     setEditing(null);
@@ -57,11 +67,13 @@ export function Missions() {
       <div className="sv-section-head"><div><p className="sv-eyebrow">01 // CORE PROTOCOL</p><h2>Basic Tasks</h2><p>Your essential daily commitments. Complete these first.</p></div><span>{essentialDone}/{essential.length}</span></div>
       <div className="sv-mission-list">
         {essential.map(task => { const complete=Boolean(state.coreCompleted[task.id]); return <article className={`sv-mission-row ${complete?'is-complete':''}`} key={task.id}>
-          <button disabled={complete} aria-label={complete?'Mission completed':'Confirm mission complete'} onClick={()=>toggleCoreTask(task.id)}>{complete?<CheckCircle2 size={21}/>:<Circle size={21}/>}</button>
-          <span className="sv-mission-icon">{task.emoji}</span><div className="sv-mission-copy"><b>{task.label}</b><small>{task.description || task.category.toUpperCase()}</small></div>
+          <button type="button" disabled={complete} aria-label={complete?'Mission completed':'Confirm mission complete'} onClick={()=>toggleCoreTask(task.id)}>{complete?<CheckCircle2 size={21}/>:<Circle size={21}/>}</button>
+          <span className="sv-mission-icon">{task.emoji}</span>
+          <div className="sv-mission-copy"><b>{task.label}</b><small>{task.description || task.category.toUpperCase()}</small></div>
+          {complete && <span className="sv-claimed-badge">CLAIMED</span>}
           <strong>+{task.points} XP</strong>
-          <button className="sv-mission-edit" aria-label="Edit mission" onClick={()=>setEditing({id:task.id,kind:'essential',label:task.label,points:String(task.points)})}><Pencil size={14}/></button>
-          <button className="sv-mission-delete" aria-label="Delete mission" onClick={()=>deleteMainTask(task.id)}><Trash2 size={14}/></button>
+          <button type="button" className="sv-mission-edit" aria-label={`Edit ${task.label}`} onClick={()=>setEditing({id:task.id,kind:'essential',label:task.label,points:String(task.points)})}><Pencil size={14}/></button>
+          <button type="button" className="sv-mission-delete" aria-label={`Delete ${task.label}`} onClick={()=>deleteMainTask(task.id)}><Trash2 size={14}/></button>
         </article>; })}
         {!essential.length && <div className="sv-empty-record">NO BASIC TASKS. ADD YOUR FIRST CORE COMMITMENT BELOW.</div>}
       </div>
@@ -76,11 +88,13 @@ export function Missions() {
       <div className="sv-section-head"><div><p className="sv-eyebrow">02 // BONUS PROTOCOL</p><h2>Non-Basic Tasks</h2><p>Extra challenges and custom objectives beyond the basics.</p></div><span>{extraDone}/{extra.length}</span></div>
       <div className="sv-mission-list">
         {extra.map(task => { const complete=Boolean(state.customCompleted[task.id]); return <article className={`sv-mission-row ${complete?'is-complete':''}`} key={task.id}>
-          <button disabled={complete} aria-label={complete?'Mission completed':'Confirm mission complete'} onClick={()=>toggleCustomTask(task.id)}>{complete?<CheckCircle2 size={21}/>:<Circle size={21}/>}</button>
-          <span className="sv-mission-icon">✦</span><div className="sv-mission-copy"><b>{task.label}</b><small>NON-BASIC / PERSONAL MISSION</small></div>
+          <button type="button" disabled={complete} aria-label={complete?'Mission completed':'Confirm mission complete'} onClick={()=>toggleCustomTask(task.id)}>{complete?<CheckCircle2 size={21}/>:<Circle size={21}/>}</button>
+          <span className="sv-mission-icon">✦</span>
+          <div className="sv-mission-copy"><b>{task.label}</b><small>NON-BASIC / PERSONAL MISSION</small></div>
+          {complete && <span className="sv-claimed-badge">CLAIMED</span>}
           <strong>+{task.points} XP</strong>
-          <button className="sv-mission-edit" aria-label="Edit mission" onClick={()=>setEditing({id:task.id,kind:'extra',label:task.label,points:String(task.points)})}><Pencil size={14}/></button>
-          <button className="sv-mission-delete" aria-label="Delete mission" onClick={()=>deleteCustomTask(task.id)}><Trash2 size={14}/></button>
+          <button type="button" className="sv-mission-edit" aria-label={`Edit ${task.label}`} onClick={()=>setEditing({id:task.id,kind:'extra',label:task.label,points:String(task.points)})}><Pencil size={14}/></button>
+          <button type="button" className="sv-mission-delete" aria-label={`Delete ${task.label}`} onClick={()=>deleteCustomTask(task.id)}><Trash2 size={14}/></button>
         </article>; })}
         {!extra.length && <div className="sv-empty-record">NO NON-BASIC TASKS ADDED YET.</div>}
       </div>
@@ -91,10 +105,10 @@ export function Missions() {
       </form>
     </section>
 
-    {editing && <div className="sv-mission-edit-overlay" role="dialog" aria-modal="true" aria-label="Edit mission">
-      <form className="sv-mission-edit-modal" onSubmit={saveEdit}>
+    {editing && <div className="sv-mission-edit-overlay" role="dialog" aria-modal="true" aria-label="Edit mission" onClick={() => setEditing(null)}>
+      <form className="sv-mission-edit-modal" onSubmit={saveEdit} onClick={e => e.stopPropagation()}>
         <div><span className="sv-eyebrow">MISSION CONFIGURATION</span><button type="button" onClick={()=>setEditing(null)} aria-label="Close"><X size={18}/></button></div>
-        <label>Mission name<input value={editing.label} onChange={e=>setEditing({...editing,label:e.target.value})} maxLength={90} required/></label>
+        <label>Mission name<input autoFocus value={editing.label} onChange={e=>setEditing({...editing,label:e.target.value})} maxLength={90} required/></label>
         <label>XP reward<input type="number" min="0" max="200" value={editing.points} onChange={e=>setEditing({...editing,points:e.target.value})}/></label>
         <button type="submit"><Save size={15}/> Save changes</button>
       </form>

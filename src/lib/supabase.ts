@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
+import { cleanSupabaseUrl } from './progression';
 
-const rawUrl = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim();
+const rawUrl = cleanSupabaseUrl(import.meta.env.VITE_SUPABASE_URL as string | undefined);
 const rawKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim();
 
 const isConfigured = Boolean(

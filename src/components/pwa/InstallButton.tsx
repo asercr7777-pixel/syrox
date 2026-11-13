@@ -1,8 +1,7 @@
-import { Download, X, CheckCircle2, Smartphone, Sparkles } from 'lucide-react';
+import { Download, X, CheckCircle2, Smartphone, Shield, Zap, Layers } from 'lucide-react';
 import { useState, useCallback, type ReactNode } from 'react';
 
 const DISMISS_KEY = 'pwa-install-dismissed';
-const DISMISS_COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000;
 
 interface InstallButtonProps {
   isInstallable: boolean;
@@ -16,27 +15,20 @@ export function InstallButton({ isInstallable, isInstalled, onInstall, children 
   const [showInstructions, setShowInstructions] = useState(false);
   const [installing, setInstalling] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [sessionDismissed, setSessionDismissed] = useState(false);
 
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window);
-
-  const shouldShowPrompt = useCallback(() => {
-    if (isInstalled || sessionDismissed) return false;
-    const dismissedAt = localStorage.getItem(DISMISS_KEY);
-    return !(dismissedAt && Date.now() - parseInt(dismissedAt, 10) < DISMISS_COOLDOWN_MS);
-  }, [isInstalled, sessionDismissed]);
-
-  // Installation is user-initiated only. Never block the dashboard on page load.
+  const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window);
 
   const handleDismiss = useCallback(() => {
     setShowModal(false);
-    setSessionDismissed(true);
-    try { localStorage.setItem(DISMISS_KEY, Date.now().toString()); } catch { /* storage may be blocked */ }
+    try {
+      localStorage.setItem(DISMISS_KEY, Date.now().toString());
+    } catch {
+      /* storage may be blocked */
+    }
   }, []);
 
   const handleInstall = async () => {
     if (installing || isInstalled) return;
-    // Close the blocking overlay before handing control to the browser prompt.
     setShowModal(false);
     setInstalling(true);
     try {
@@ -46,7 +38,11 @@ export function InstallButton({ isInstallable, isInstalled, onInstall, children 
       ]);
       if (success) {
         setShowSuccess(true);
-        try { localStorage.removeItem(DISMISS_KEY); } catch { /* storage may be blocked */ }
+        try {
+          localStorage.removeItem(DISMISS_KEY);
+        } catch {
+          /* storage may be blocked */
+        }
         window.setTimeout(() => setShowSuccess(false), 4000);
       } else if (!isInstalled) {
         setShowInstructions(true);
@@ -60,86 +56,149 @@ export function InstallButton({ isInstallable, isInstalled, onInstall, children 
 
   const closeInstructions = useCallback(() => {
     setShowInstructions(false);
-    setSessionDismissed(true);
-    try { localStorage.setItem(DISMISS_KEY, Date.now().toString()); } catch { /* storage may be blocked */ }
   }, []);
 
-  const showIOSInstructions = isIOS && !isInstalled && !isInstallable;
+  const openInstallDialog = () => {
+    if (isInstalled || installing) return;
+    if (isIOS && !isInstallable) {
+      setShowInstructions(true);
+      return;
+    }
+    setShowModal(true);
+  };
 
   return (
     <>
       {children && (
         <button
           type="button"
-          onClick={() => {
-            if (isInstalled || installing) return;
-            setShowModal(true);
-          }}
+          onClick={openInstallDialog}
           disabled={isInstalled || installing}
           aria-label="Install STRYVEN"
-          className="group inline-flex items-center gap-2 rounded-full border border-ember-400/30 bg-ink-950/80 px-4 py-2 text-xs font-bold text-ink-100 shadow-lg shadow-black/20 backdrop-blur-xl transition-all duration-200 hover:-translate-y-0.5 hover:border-ember-400/60 hover:bg-ember-500/10 hover:shadow-ember-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+          className="group inline-flex items-center gap-2.5 rounded-xl border border-[#a78bfa]/35 bg-[#0b0e18]/90 px-4 py-2.5 text-xs font-bold tracking-wider uppercase text-[#eef2ff] shadow-lg shadow-black/30 backdrop-blur-xl transition-all duration-200 hover:-translate-y-0.5 hover:border-[#5cecff]/60 hover:bg-[#121725] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ember-500/15 text-ember-400 transition-transform duration-200 group-hover:scale-110">
-            <Download size={15} />
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#a78bfa]/30 bg-[#a78bfa]/15 text-[#5cecff] transition-transform duration-200 group-hover:scale-105">
+            <Download size={14} />
           </span>
           <span>{isInstalled ? 'Installed' : installing ? 'Installing…' : children}</span>
         </button>
       )}
 
-      {showModal && !isInstalled && shouldShowPrompt() && (
-        <div className="pwa-install-overlay pwa-fade-in fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-3 sm:p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleDismiss} />
-          <div className="pwa-install-modal pwa-modal-in relative card-premium w-full max-w-sm max-h-[calc(100dvh-1.5rem)] overflow-y-auto p-4 sm:p-6">
-            <button onClick={handleDismiss} className="absolute right-3 top-3 rounded-lg p-1.5 text-slate-400 hover:bg-white/5 hover:text-slate-200" aria-label="Close">
+      {showModal && !isInstalled && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Install STRYVEN App"
+          className="pwa-install-overlay fixed inset-0 z-[10000] flex items-center justify-center overflow-y-auto p-3 sm:p-4"
+        >
+          <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={handleDismiss} />
+          <div className="relative w-full max-w-sm rounded-2xl border border-[#a78bfa]/35 bg-gradient-to-b from-[#121725] to-[#0b0e18] p-5 sm:p-6 shadow-2xl">
+            <button
+              type="button"
+              onClick={handleDismiss}
+              className="absolute right-3 top-3 rounded-lg p-1.5 text-slate-400 hover:bg-white/5 hover:text-white"
+              aria-label="Close"
+            >
               <X size={18} />
             </button>
-            <div className="mb-4 pr-5 text-center sm:mb-5">
-              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl sm:mb-4 sm:h-16 sm:w-16" style={{ background: 'linear-gradient(135deg,rgba(255,122,24,.2),rgba(232,93,0,.05))' }}>
-                <Sparkles size={26} className="text-ember-400" />
+            <div className="mb-5 pr-5 text-center">
+              <div className="mx-auto mb-3.5 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#a78bfa]/35 bg-[#a78bfa]/15">
+                <Shield size={26} className="text-[#a78bfa]" />
               </div>
-              <h3 className="mb-1 font-display text-lg font-bold">Install STRYVEN</h3>
-              <p className="text-sm leading-5 text-slate-400">Add STRYVEN to your device for quick access and offline support.</p>
+              <span className="block font-mono text-[10px] font-bold tracking-widest text-[#5cecff] uppercase">
+                PWA INSTALLATION
+              </span>
+              <h3 className="mt-1 font-display text-lg font-bold text-white">Install STRYVEN</h3>
+              <p className="mt-1 text-xs leading-5 text-slate-400">
+                Add STRYVEN to your device for dedicated full-screen access and offline resilience.
+              </p>
             </div>
-            <div className="mb-4 space-y-2 sm:mb-5">
-              {['Instant home-screen access', 'Works offline', 'Full-screen experience'].map((item, index) => (
-                <div key={item} className="flex items-center gap-3 rounded-lg bg-white/5 px-3 py-2">
-                  <span>{['⚡', '📱', '🎮'][index]}</span>
-                  <span className="text-xs text-slate-300">{item}</span>
-                </div>
-              ))}
+            <div className="mb-5 space-y-2">
+              {[
+                { icon: Zap, label: 'Instant launch from home screen or desktop' },
+                { icon: Layers, label: 'Works cleanly with cached offline shell' },
+                { icon: Smartphone, label: 'Dedicated distraction-free window' },
+              ].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={item.label}
+                    className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#070a12]/70 px-3 py-2.5"
+                  >
+                    <Icon size={15} className="shrink-0 text-[#5cecff]" />
+                    <span className="text-xs text-slate-200">{item.label}</span>
+                  </div>
+                );
+              })}
             </div>
-            <div className="flex gap-2">
-              <button onClick={handleDismiss} className="flex-1 rounded-xl bg-white/5 py-3 text-sm font-semibold text-slate-300">Not Now</button>
-              <button onClick={() => void handleInstall()} disabled={installing} className="flex-1 rounded-xl bg-gradient-to-r from-ember-500 to-orange-600 py-3 text-sm font-semibold text-white disabled:opacity-60">
-                {installing ? 'Installing…' : 'Install'}
+            <div className="flex gap-2.5">
+              <button
+                type="button"
+                onClick={handleDismiss}
+                className="flex-1 rounded-xl border border-white/10 bg-white/5 py-2.5 text-xs font-bold text-slate-300 hover:bg-white/10"
+              >
+                Not Now
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleInstall()}
+                disabled={installing}
+                className="flex-1 rounded-xl border border-[#a78bfa]/50 bg-gradient-to-r from-[#7544d8] to-[#3b5bdb] py-2.5 text-xs font-bold text-white shadow-lg shadow-[#7544d8]/25 hover:brightness-110 disabled:opacity-60"
+              >
+                {installing ? 'Installing…' : isInstallable ? 'Install App' : 'How to Install'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {(showIOSInstructions || showInstructions) && !isInstalled && (
-        <div className="pwa-install-overlay pwa-fade-in fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-3 sm:p-4">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={closeInstructions} />
-          <div className="pwa-install-modal pwa-modal-in relative card-premium w-full max-w-sm max-h-[calc(100dvh-1.5rem)] overflow-y-auto p-5 sm:p-6">
-            <button onClick={closeInstructions} className="absolute right-3 top-3 p-1.5 text-slate-400" aria-label="Close"><X size={18} /></button>
+      {showInstructions && !isInstalled && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Manual install instructions"
+          className="pwa-install-overlay fixed inset-0 z-[10000] flex items-center justify-center overflow-y-auto p-3 sm:p-4"
+        >
+          <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={closeInstructions} />
+          <div className="relative w-full max-w-sm rounded-2xl border border-[#5cecff]/30 bg-gradient-to-b from-[#121725] to-[#0b0e18] p-5 sm:p-6 shadow-2xl">
+            <button
+              type="button"
+              onClick={closeInstructions}
+              className="absolute right-3 top-3 rounded-lg p-1.5 text-slate-400 hover:bg-white/5 hover:text-white"
+              aria-label="Close"
+            >
+              <X size={18} />
+            </button>
             <div className="mb-4 flex items-center gap-3 pr-5">
-              <Smartphone size={20} />
-              <div><h3 className="font-display text-sm font-bold">Install STRYVEN</h3><p className="text-xs text-slate-400">Add to your home screen</p></div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#5cecff]/30 bg-[#5cecff]/10 text-[#5cecff]">
+                <Smartphone size={20} />
+              </div>
+              <div>
+                <h3 className="font-display text-sm font-bold text-white">Install STRYVEN</h3>
+                <p className="text-xs text-slate-400">Browser home-screen installation</p>
+              </div>
             </div>
-            <p className="text-sm leading-5 text-slate-300">
-              {isIOS ? 'Tap Share in Safari, then choose “Add to Home Screen”.' : 'Your browser did not expose the automatic install prompt. Use the browser menu or address-bar install icon to add STRYVEN to your device.'}
+            <p className="text-xs leading-6 text-slate-300">
+              {isIOS
+                ? 'Tap the Share icon in Safari, then choose “Add to Home Screen” to install STRYVEN.'
+                : 'Your browser did not expose an automatic install prompt in this view. Open the browser menu (⋮ or address-bar install icon) and select “Install STRYVEN” or “Add to Home Screen”.'}
             </p>
-            <button onClick={closeInstructions} className="btn-ghost mt-5 w-full">Got it</button>
+            <button
+              type="button"
+              onClick={closeInstructions}
+              className="mt-5 w-full rounded-xl border border-[#a78bfa]/40 bg-[#a78bfa]/15 py-2.5 text-xs font-bold text-[#eef2ff] hover:bg-[#a78bfa]/25"
+            >
+              Got it
+            </button>
           </div>
         </div>
       )}
 
       {showSuccess && (
-        <div className="pwa-success pwa-fade-in fixed left-1/2 top-3 z-[100] w-[min(22rem,calc(100vw-1.5rem))] -translate-x-1/2">
-          <div className="flex items-center gap-2.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 backdrop-blur-xl">
+        <div className="pwa-success fixed left-1/2 top-4 z-[100001] w-[min(22rem,calc(100vw-1.5rem))] -translate-x-1/2">
+          <div className="flex items-center gap-2.5 rounded-xl border border-emerald-400/40 bg-[#0b0e18]/95 px-4 py-3 shadow-2xl backdrop-blur-xl">
             <CheckCircle2 size={18} className="shrink-0 text-emerald-400" />
-            <span className="truncate text-sm font-semibold text-emerald-300">STRYVEN installed successfully!</span>
+            <span className="truncate text-xs font-bold text-emerald-300">STRYVEN installed successfully!</span>
           </div>
         </div>
       )}

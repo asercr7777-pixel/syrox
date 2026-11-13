@@ -23,11 +23,11 @@ export function SystemStatusBar({ onNavigate }: SystemStatusBarProps) {
   return <header className="sv-system-topbar" aria-label="System status">
     <div className="sv-system-topbar__signal">
       <span className="sv-online-dot" />
-      <div><strong>ONLINE CORE <i>//</i> SYS.01</strong><small>COMMAND LINK ESTABLISHED</small></div>
+      <div className="flex flex-col gap-0.5 leading-tight"><strong>ONLINE CORE <i>//</i> SYS.01</strong><small>COMMAND LINK ESTABLISHED</small></div>
     </div>
     <div className="sv-system-topbar__right">
       <div className="sv-system-clock"><CalendarClock size={15}/><span>{date}</span><i>|</i><b>{time}</b></div>
-      <div className="sv-system-user"><span className="sv-system-user__icon"><UserRound size={15}/></span><span><small>HUNTER</small><b>{state.username || 'PLAYER_01'}</b></span></div>
+      <div className="sv-system-user"><span className="sv-system-user__icon"><UserRound size={15}/></span><span className="flex flex-col gap-0.5 leading-tight"><small>HUNTER</small><b>{state.username || 'PLAYER_01'}</b></span></div>
       <button className="sv-system-notifications" onClick={() => onNavigate('settings')} aria-label="Open notification preferences" title={notificationsEnabled ? 'Notification preferences are enabled' : 'Notification preferences are disabled'}>
         <Bell size={17}/><span className={notificationsEnabled ? 'is-enabled' : ''}/>
       </button>

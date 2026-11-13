@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../store/useStore';
 import { getRankByXp, getNextRank } from '../data/ranks';
+import { AURAS, TITLES, WEAPONS } from '../data/collections';
 import { UserAvatar } from '../components/ui/UserAvatar';
 import { XpBar } from '../components/ui/XpBar';
-import { ArrowUpRight, CheckCircle2, Circle, Clock3, Dumbbell, Flame, Target, Zap } from 'lucide-react';
+import { ArrowUpRight, Award, CheckCircle2, Circle, Clock3, Dumbbell, Flame, Shield, Sparkles, Target, Zap } from 'lucide-react';
 import type { ViewId } from '../components/Navigation';
 
 interface DashboardProps { onNavigate: (v: ViewId) => void; }
@@ -26,12 +27,15 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const completedToday = missions.filter(mission => mission.done).length;
   const recentHistory = [...state.history].sort((a,b) => a.date.localeCompare(b.date)).slice(-14);
   const chartMax = Math.max(100, ...recentHistory.map(day => day.xpGained));
-  const chartPoints = recentHistory.map((day,index) => ({ ...day, x: recentHistory.length < 2 ? 50 : 24 + index * (552 / (recentHistory.length - 1)), y: 150 - (day.xpGained / chartMax) * 118 }));
+  const chartPoints = recentHistory.map((day,index) => ({ ...day, x: recentHistory.length < 2 ? 300 : 24 + index * (552 / (recentHistory.length - 1)), y: 150 - (day.xpGained / chartMax) * 118 }));
   const chartLine = chartPoints.map(point => `${point.x},${point.y}`).join(' ');
   const totalCompleted = state.history.reduce((sum,day) => sum + Object.values(day.coreCompleted).filter(Boolean).length + Object.values(day.customCompleted).filter(Boolean).length, 0);
   const lastSession = [...state.workoutSessions].sort((a,b) => b.completedAt-a.completedAt)[0];
   const disciplineAverage = state.history.length ? Math.round(state.history.reduce((sum,day)=>sum+day.disciplineScore,0)/state.history.length) : null;
   const nextRankProgress = nextRank ? Math.max(0,Math.min(100,((state.xp-rank.xpRequired)/Math.max(1,nextRank.xpRequired-rank.xpRequired))*100)) : 100;
+  const equippedTitle = TITLES.find(item => item.id === state.equipped.title);
+  const equippedAura = AURAS.find(item => item.id === state.equipped.aura);
+  const equippedWeapon = WEAPONS.find(item => item.id === state.equipped.weapon);
   const formatDuration = (seconds:number) => `${Math.floor(seconds/3600)}h ${Math.floor(seconds%3600/60)}m`;
   const formatSessionDate = (timestamp:number) => new Intl.DateTimeFormat(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(timestamp);
 
@@ -117,6 +121,41 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         </div>
       </section>
 
+      <section className="sv-section sv-surface sv-loadout-command">
+        <div className="sv-section-head">
+          <div>
+            <span className="sv-eyebrow">05 // RANK &amp; LOADOUT STATUS</span>
+            <h2>Hunter Loadout</h2>
+            <p>Active rank seal, equipped items, and recorded milestones.</p>
+          </div>
+          <button onClick={()=>onNavigate('settings')}>SETTINGS <ArrowUpRight size={13}/></button>
+        </div>
+
+        <div className="sv-loadout-status-list">
+          <div className="sv-loadout-status-item">
+            <span><Sparkles size={14}/> TITLE</span>
+            <b>{equippedTitle?.name || 'None equipped'}</b>
+          </div>
+          <div className="sv-loadout-status-item">
+            <span><Zap size={14}/> AURA</span>
+            <b>{equippedAura?.name || 'None equipped'}</b>
+          </div>
+          <div className="sv-loadout-status-item">
+            <span><Target size={14}/> WEAPON</span>
+            <b>{equippedWeapon?.name || 'None equipped'}</b>
+          </div>
+          <div className="sv-loadout-status-item">
+            <span><Shield size={14}/> STREAK SHIELD</span>
+            <b>{state.streakShield ? 'Active protection' : 'Standard streak'}</b>
+          </div>
+        </div>
+
+        <div className="sv-training-facts">
+          <div><small>INVENTORY</small><b>{state.inventory.length} items</b></div>
+          <div><small>ACHIEVEMENTS</small><b><Award size={12} style={{display:'inline',marginRight:4,color:'#f4c95d'}}/>{state.achievements.length}</b></div>
+          <div><small>NEXT RANK</small><b>{nextRank ? `${Math.round(nextRankProgress)}%` : 'MAX'}</b></div>
+        </div>
+      </section>
     </div>
 
 

@@ -27,14 +27,15 @@ export function Analytics() {
   const nextRank = getNextRank(state.xp);
   const today = todayKey();
   const historyByDate = useMemo(()=>new Map(state.history.map(day=>[day.date,day])),[state.history]);
+  const workoutSessions = state.workoutSessions;
   const sessionsByDate = useMemo(()=>{
-    const grouped = new Map<string,typeof state.workoutSessions>();
-    state.workoutSessions.forEach(session=>{
+    const grouped = new Map<string,typeof workoutSessions>();
+    workoutSessions.forEach(session=>{
       const key = dateKey(new Date(session.completedAt));
       grouped.set(key,[...(grouped.get(key)??[]),session]);
     });
     return grouped;
-  },[state.workoutSessions]);
+  },[workoutSessions]);
   const chartData = useMemo(()=>{
     const rows = [];
     for(let offset=range-1;offset>=0;offset--){
@@ -83,7 +84,7 @@ export function Analytics() {
     ...completedCore.map(task=>({key:`core-${task.id}`,time:0,icon:task.emoji,label:task.label,detail:'Core mission completed'})),
     ...completedCustom.map(task=>({key:`custom-${task.id}`,time:0,icon:task.emoji,label:task.label,detail:'Custom mission completed'})),
     ...selectedSessions.map(session=>({key:session.id,time:session.completedAt,icon:'🏋️',label:`${session.type.toUpperCase()} training`,detail:`${formatDuration(session.durationSeconds)} recorded`})),
-    ...(selectedRecord?.dungeonCleared || (isToday&&state.dungeonClearedToday) ? [{key:'dungeon',time:0,icon:'⚔️',label:'Dungeon cleared',detail:'Daily dungeon completion'}] : []),
+    ...(selectedRecord?.dungeonCleared || (isToday&&state.dungeonClearedToday) ? [{key:'milestone',time:0,icon:'⚔️',label:'Milestone bonus cleared',detail:'Saved daily milestone record'}] : []),
     ...(selectedRecord?.allMainDone ? [{key:'all-main',time:0,icon:'🏆',label:'All main missions completed',detail:'Every enabled core mission is done'}] : [])
   ].sort((a,b)=>a.time-b.time);
   const changeRange = (value:string) => setRange(Number(value) as RangeDays);
@@ -141,14 +142,14 @@ export function Analytics() {
     <section className="sv-section">
       <div className="sv-section-head"><div><p className="sv-eyebrow">PERFORMANCE TIMELINE</p><h2>Daily activity charts</h2><p>Each chart uses saved records for the selected period.</p></div><div className="sv-range-control" aria-label="Chart date range">{([7,14,30] as RangeDays[]).map(days=><button key={days} className={range===days?'active':''} onClick={()=>changeRange(String(days))}>{days}D</button>)}</div></div>
       <div className="sv-chart-grid">
-        <div className="sv-chart-card"><h3><Zap size={14} style={{display:'inline',color:'#65e7f2'}}/> XP earned</h3><p>Daily XP earned during the selected period</p><div className="sv-chart-wrap"><ResponsiveContainer width="100%" height="100%"><AreaChart data={chartData}><defs><linearGradient id="xpFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#9a6bff" stopOpacity={.38}/><stop offset="100%" stopColor="#9a6bff" stopOpacity={0}/></linearGradient></defs><CartesianGrid stroke="#ffffff10" vertical={false}/><XAxis dataKey="label" tick={{fill:'#77849e',fontSize:9}} axisLine={false} tickLine={false}/><YAxis width={34} tick={{fill:'#77849e',fontSize:9}} axisLine={false} tickLine={false} domain={[0,maxXp]}/><Tooltip {...chartTooltip}/><Area type="monotone" dataKey="xp" name="XP" stroke="#a98aff" strokeWidth={2.5} fill="url(#xpFill)"/></AreaChart></ResponsiveContainer></div></div>
-        <div className="sv-chart-card"><h3><Target size={14} style={{display:'inline',color:'#65e7f2'}}/> Missions completed</h3><p>Completed core and custom tasks per day</p><div className="sv-chart-wrap"><ResponsiveContainer width="100%" height="100%"><BarChart data={chartData}><CartesianGrid stroke="#ffffff10" vertical={false}/><XAxis dataKey="label" tick={{fill:'#77849e',fontSize:9}} axisLine={false} tickLine={false}/><YAxis width={28} allowDecimals={false} tick={{fill:'#77849e',fontSize:9}} axisLine={false} tickLine={false} domain={[0,maxTasks]}/><Tooltip {...chartTooltip}/><Bar dataKey="tasks" name="Tasks" fill="#5cecff" radius={[5,5,0,0]}/></BarChart></ResponsiveContainer></div></div>
-        <div className="sv-chart-card"><h3><Dumbbell size={14} style={{display:'inline',color:'#65e7f2'}}/> Training sessions</h3><p>Recorded workouts per day</p><div className="sv-chart-wrap"><ResponsiveContainer width="100%" height="100%"><BarChart data={chartData}><CartesianGrid stroke="#ffffff10" vertical={false}/><XAxis dataKey="label" tick={{fill:'#77849e',fontSize:9}} axisLine={false} tickLine={false}/><YAxis width={28} allowDecimals={false} tick={{fill:'#77849e',fontSize:9}} axisLine={false} tickLine={false} domain={[0,maxWorkouts]}/><Tooltip {...chartTooltip}/><Bar dataKey="workouts" name="Workouts" fill="#ff9a62" radius={[5,5,0,0]}/></BarChart></ResponsiveContainer></div></div>
-        <div className="sv-chart-card"><h3><Clock3 size={14} style={{display:'inline',color:'#65e7f2'}}/> Training duration</h3><p>Minutes trained per day (from timed sessions)</p><div className="sv-chart-wrap"><ResponsiveContainer width="100%" height="100%"><LineChart data={chartData}><CartesianGrid stroke="#ffffff10" vertical={false}/><XAxis dataKey="label" tick={{fill:'#77849e',fontSize:9}} axisLine={false} tickLine={false}/><YAxis width={28} tick={{fill:'#77849e',fontSize:9}} axisLine={false} tickLine={false} domain={[0,maxMinutes]}/><Tooltip {...chartTooltip} formatter={(value)=>[`${value} min`,'Duration']}/><Line type="monotone" dataKey="minutes" name="Minutes" stroke="#76f5bd" strokeWidth={2.5} dot={{r:3,fill:'#76f5bd'}} activeDot={{r:5}}/></LineChart></ResponsiveContainer></div></div>
+        <div className="sv-chart-card"><h3><Zap size={14} style={{display:'inline',color:'#5cecff'}}/> XP earned</h3><p>Daily XP earned during the selected period</p><div className="sv-chart-wrap"><ResponsiveContainer width="100%" height="100%" minWidth={0}><AreaChart data={chartData}><defs><linearGradient id="xpFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#a78bfa" stopOpacity={.38}/><stop offset="100%" stopColor="#a78bfa" stopOpacity={0}/></linearGradient></defs><CartesianGrid stroke="#ffffff10" vertical={false}/><XAxis dataKey="label" tick={{fill:'#77849e',fontSize:9}} axisLine={false} tickLine={false}/><YAxis width={34} tick={{fill:'#77849e',fontSize:9}} axisLine={false} tickLine={false} domain={[0,maxXp]}/><Tooltip {...chartTooltip}/><Area type="monotone" dataKey="xp" name="XP" stroke="#a78bfa" strokeWidth={2.5} fill="url(#xpFill)"/></AreaChart></ResponsiveContainer></div></div>
+        <div className="sv-chart-card"><h3><Target size={14} style={{display:'inline',color:'#5cecff'}}/> Missions completed</h3><p>Completed core and custom tasks per day</p><div className="sv-chart-wrap"><ResponsiveContainer width="100%" height="100%" minWidth={0}><BarChart data={chartData}><CartesianGrid stroke="#ffffff10" vertical={false}/><XAxis dataKey="label" tick={{fill:'#77849e',fontSize:9}} axisLine={false} tickLine={false}/><YAxis width={28} allowDecimals={false} tick={{fill:'#77849e',fontSize:9}} axisLine={false} tickLine={false} domain={[0,maxTasks]}/><Tooltip {...chartTooltip}/><Bar dataKey="tasks" name="Tasks" fill="#5cecff" radius={[5,5,0,0]}/></BarChart></ResponsiveContainer></div></div>
+        <div className="sv-chart-card"><h3><Dumbbell size={14} style={{display:'inline',color:'#ff496c'}}/> Training sessions</h3><p>Recorded workouts per day</p><div className="sv-chart-wrap"><ResponsiveContainer width="100%" height="100%" minWidth={0}><BarChart data={chartData}><CartesianGrid stroke="#ffffff10" vertical={false}/><XAxis dataKey="label" tick={{fill:'#77849e',fontSize:9}} axisLine={false} tickLine={false}/><YAxis width={28} allowDecimals={false} tick={{fill:'#77849e',fontSize:9}} axisLine={false} tickLine={false} domain={[0,maxWorkouts]}/><Tooltip {...chartTooltip}/><Bar dataKey="workouts" name="Workouts" fill="#ff496c" radius={[5,5,0,0]}/></BarChart></ResponsiveContainer></div></div>
+        <div className="sv-chart-card"><h3><Clock3 size={14} style={{display:'inline',color:'#76f5bd'}}/> Training duration</h3><p>Minutes trained per day (from timed sessions)</p><div className="sv-chart-wrap"><ResponsiveContainer width="100%" height="100%" minWidth={0}><LineChart data={chartData}><CartesianGrid stroke="#ffffff10" vertical={false}/><XAxis dataKey="label" tick={{fill:'#77849e',fontSize:9}} axisLine={false} tickLine={false}/><YAxis width={28} tick={{fill:'#77849e',fontSize:9}} axisLine={false} tickLine={false} domain={[0,maxMinutes]}/><Tooltip {...chartTooltip} formatter={(value)=>[`${value} min`,'Duration']}/><Line type="monotone" dataKey="minutes" name="Minutes" stroke="#76f5bd" strokeWidth={2.5} dot={{r:3,fill:'#76f5bd'}} activeDot={{r:5}}/></LineChart></ResponsiveContainer></div></div>
       </div>
     </section>
     <section className="sv-section">
-      <div className="sv-section-head"><div><p className="sv-eyebrow"><CalendarDays size={13}/> DAILY LOG</p><h2>Explore any day</h2><p>Choose a date to inspect the activity saved for it.</p></div><input className="sv-date-input" type="date" value={selectedDate} max={today} onChange={event=>setSelectedDate(event.target.value)}/></div>
+      <div className="sv-section-head"><div><p className="sv-eyebrow"><CalendarDays size={13}/> DAILY LOG</p><h2>Explore any day</h2><p>Choose a date to inspect the activity saved for it.</p></div><input className="sv-date-input" aria-label="Select date to inspect" type="date" value={selectedDate} max={today} onChange={event=>setSelectedDate(event.target.value || today)}/></div>
       <div className="sv-day-layout">
         <div>
           <h3 style={{margin:'0 0 12px',fontSize:14,color:'#e8edff'}}>{prettyDate(selectedDate)}</h3>
@@ -158,12 +159,12 @@ export function Analytics() {
             <div className="sv-day-stat"><small>WORKOUTS</small><b>{selectedWorkoutCount}</b></div>
             <div className="sv-day-stat"><small>TRAINING TIME</small><b>{formatDuration(selectedDuration)}</b></div>
             <div className="sv-day-stat"><small>DISCIPLINE</small><b>{selectedRecord?.disciplineScore??(isToday?selectedTasks:0)}{selectedRecord?'%':isToday?' tasks':''}</b></div>
-            <div className="sv-day-stat"><small>DUNGEON</small><b>{selectedRecord?.dungeonCleared||(isToday&&state.dungeonClearedToday)?'Cleared':'—'}</b></div>
+            <div className="sv-day-stat"><small>MILESTONE</small><b>{selectedRecord?.dungeonCleared||(isToday&&state.dungeonClearedToday)?'Cleared':'Standard'}</b></div>
           </div>
           <div className="sv-chart-card"><h3>Completed missions</h3><p>Task names are matched against your current task list.</p>{completedCore.length+completedCustom.length ? <div className="sv-event-list">{[...completedCore,...completedCustom].map(task=><div className="sv-event" key={task.id}><span className="sv-event-icon">{task.emoji}</span><div><b>{task.label}</b><small>Mission completed</small></div></div>)}</div>:<div className="sv-empty">No completed missions recorded for this date.</div>}</div>
         </div>
         <div>
-          <div className="sv-section-head" style={{marginBottom:12}}><div><h3 style={{margin:0,fontSize:14,color:'#e8edff'}}>Day events</h3><p>Every event shown here comes from a saved record.</p></div><BookOpen size={18} color="#68e5f1"/></div>
+          <div className="sv-section-head" style={{marginBottom:12}}><div><h3 style={{margin:0,fontSize:14,color:'#e8edff'}}>Day events</h3><p>Every event shown here comes from a saved record.</p></div><BookOpen size={18} color="#5cecff"/></div>
           {eventItems.length ? <div className="sv-event-list">{eventItems.map(item=><div className="sv-event" key={item.key}><span className="sv-event-icon">{item.icon}</span><div style={{minWidth:0,flex:1}}><b>{item.label}</b><small>{item.detail}</small></div>{item.time>0&&<small>{new Date(item.time).toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})}</small>}</div>)}</div>:<div className="sv-empty">No events saved for this day yet.</div>}
           {selectedNote&&<div className="sv-note"><b>Daily note</b><br/>{selectedNote}</div>}
           {!selectedNote&&<div className="sv-note">No daily note was saved for this date.</div>}
@@ -171,7 +172,7 @@ export function Analytics() {
       </div>
     </section>
     <section className="sv-section">
-      <div className="sv-section-head"><div><p className="sv-eyebrow"><Trophy size={13}/> SYSTEM OVERVIEW</p><h2>Long-term progress</h2><p>Rank and consistency summary.</p></div><Flame size={20} color="#ff9a62"/></div>
+      <div className="sv-section-head"><div><p className="sv-eyebrow"><Trophy size={13}/> SYSTEM OVERVIEW</p><h2>Long-term progress</h2><p>Rank and consistency summary.</p></div><Flame size={20} color="#f4c95d"/></div>
       <div style={{display:'flex',justifyContent:'space-between',gap:12,marginBottom:9,fontSize:11,color:'#aab7d2'}}><span>{rank.name}</span><span>{state.xp.toLocaleString()} total XP</span></div>
       {nextRank?<><div className="sv-rank-progress"><span style={{width:`${Math.max(0,Math.min(100,(state.xp-rank.xpRequired)/(nextRank.xpRequired-rank.xpRequired)*100))}%`}}/></div><div style={{display:'flex',justifyContent:'space-between',gap:12,marginTop:8,fontSize:10,color:'#7f8ba4'}}><span>{rank.xpRequired.toLocaleString()} XP</span><span>Next: {nextRank.name} · {nextRank.xpRequired.toLocaleString()} XP</span></div></>:<p>Highest rank reached.</p>}
       <div className="sv-summary"><div><small>BEST STREAK</small><b>{state.bestStreak} days</b></div><div><small>BEST XP DAY</small><b>{bestDay.xp.toLocaleString()} XP · {bestDay.label}</b></div><div><small>AVERAGE XP / DAY</small><b>{avgXp.toLocaleString()} XP</b></div></div>

@@ -12,6 +12,8 @@ export interface AchievementState { id: string; unlockedAt: number; }
 export interface ChatMessage { id: string; role: 'user' | 'ai'; text: string; at: number; }
 export interface Friend { id: string; name: string; level: number; rankId: RankId; streak: number; xp: number; auraColor: string; }
 export interface NotificationSettings { workout: boolean; water: boolean; sleep: boolean; reading: boolean; prayer: boolean; tasks: boolean; }
+export interface AccessibilitySettings { reducedMotion: boolean; highContrast: boolean; compactDensity: boolean; }
+export interface PrivacySettings { showOnLeaderboard: boolean; }
 export interface WorkoutSessionRecord { id: string; type: 'push' | 'pull' | 'legs' | 'cardio' | 'boxing' | 'custom'; durationSeconds: number; completedAt: number; }
 export type BackgroundType = 'default' | 'image' | 'video' | 'animated';
 export type SiteTheme = 'forge' | 'void' | 'nexus' | 'shogun' | 'titan' | 'rogue' | 'eclipse' | 'overdrive';
@@ -29,7 +31,8 @@ export interface AppState {
   inventory: InventoryItem[]; equipped: { aura: string | null; weapon: string | null; title: string | null; shield: string | null; frame: string | null; background: string | null; };
   backgroundType: BackgroundType; customBackground: string | null; backgroundVideo: string | null; backgroundBlur: number; backgroundDarken: number; backgroundBrightness: number; selectedBackgroundId: string | null;
   achievements: AchievementState[]; history: DayRecord[]; notes: Record<string, string>; chat: ChatMessage[]; friends: Friend[];
-  soundEnabled: boolean; notifications: NotificationSettings; seasonXp: number; seasonId: string; doubleXpUntil: number | null; easterEggsFound: string[]; createdAt: number;
+  soundEnabled: boolean; notifications: NotificationSettings; accessibility?: AccessibilitySettings; privacy?: PrivacySettings;
+  seasonXp: number; seasonId: string; doubleXpUntil: number | null; easterEggsFound: string[]; createdAt: number;
   storyChapter: number; storyMission: number; storyChoices: Record<string, string>; storyCompletedMissions: Record<string, boolean>; storyBossDefeated: Record<string, boolean>; shadowExtractedBossIds: string[]; storyNpcReputation: Record<string, number>; storyLoreUnlocked: string[]; storyAchievements: string[];
   activeBossId: string | null; bossHpRemaining: Record<string, number>; bossDefeated: Record<string, boolean>; chestInventory: Record<string, number>;
   petId: string | null; petLevel: number; petXp: number; battlePassTier: number; battlePassXp: number; battlePassPremium: boolean; battlePassClaimedFree: number[]; battlePassClaimedPremium: number[];

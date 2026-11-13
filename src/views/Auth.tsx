@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../lib/auth';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import { cleanSupabaseUrl } from '../lib/progression';
 import { toast } from '../components/ui/Toast';
-import { Eye, EyeOff, Mail, Lock, User as UserIcon, Shield, Sparkles, Loader2, WifiOff } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User as UserIcon, Shield, Sparkles, Loader2, WifiOff, X } from 'lucide-react';
 
 type Mode = 'login' | 'signup';
 
@@ -33,6 +34,7 @@ export function Auth() {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
+  const [googleEnabled, setGoogleEnabled] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
@@ -45,6 +47,39 @@ export function Auth() {
   const passwordsMatch = mode === 'login' || password === confirmPassword;
   const usernameValid = mode === 'login' || username.trim().length >= 3;
   const canSubmit = isValidEmail(email) && password.length >= 6 && passwordsMatch && usernameValid && !loading && !oauthLoading;
+
+  useEffect(() => {
+    if (!cloudReady) {
+      setGoogleEnabled(false);
+      return;
+    }
+    const baseUrl = cleanSupabaseUrl(import.meta.env.VITE_SUPABASE_URL as string | undefined);
+    const anonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim();
+    if (!baseUrl || !anonKey) return;
+
+    const controller = new AbortController();
+    fetch(`${baseUrl}/auth/v1/settings`, {
+      headers: { apikey: anonKey },
+      signal: controller.signal,
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { external?: { google?: boolean } } | null) => {
+        setGoogleEnabled(Boolean(data?.external?.google));
+      })
+      .catch(() => {
+        setGoogleEnabled(false);
+      });
+    return () => controller.abort();
+  }, [cloudReady]);
+
+  useEffect(() => {
+    if (!forgotOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setForgotOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [forgotOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +105,7 @@ export function Auth() {
             type: 'success',
           });
         } else {
-          toast({ title: 'Welcome to STRYVEN!', message: 'Account created successfully.', type: 'success' });
+          toast({ title: 'Welcome to STRYVEN', message: 'Account created successfully.', type: 'success' });
         }
       }
     } catch (error) {
@@ -85,7 +120,7 @@ export function Auth() {
   };
 
   const handleGoogle = async () => {
-    if (loading || oauthLoading) return;
+    if (loading || oauthLoading || !googleEnabled) return;
     setOauthLoading(true);
     setFormError(null);
     try {
@@ -129,45 +164,36 @@ export function Auth() {
   };
 
   return (
-    <div className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden p-3 sm:p-4 bg-[#070a12]">
-      <div
-        className="pointer-events-none absolute inset-0 opacity-75"
-        style={{
-          background:
-            'radial-gradient(ellipse at 25% 15%, rgba(167,139,250,0.16), transparent 45%), radial-gradient(ellipse at 80% 85%, rgba(92,236,255,0.12), transparent 45%)',
-        }}
-      />
-      <div className="relative w-full max-w-md py-4 sm:py-6">
-        <div className="mb-6 text-center sm:mb-7">
-          <div className="mb-3 inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-[#a78bfa]/40 bg-gradient-to-br from-[#a78bfa]/20 to-[#5cecff]/10 shadow-[0_0_32px_rgba(167,139,250,0.22)] sm:mb-4 sm:h-16 sm:w-16">
-            <Shield className="text-[#a78bfa]" size={30} />
+    <div className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden p-4 bg-ink-950 text-ink-100">
+      <div className="relative z-10 w-full max-w-md py-4">
+        <div className="mb-6 text-center">
+          <div className="mb-3.5 inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-ember-500/40 bg-ember-500/15 shadow-lg">
+            <Shield className="text-ember-400" size={28} />
           </div>
-          <span className="block font-mono text-[10px] font-bold tracking-[0.22em] text-[#5cecff] uppercase">
-            SYSTEM ACCESS // GATE 01
-          </span>
-          <h1 className="mt-1 font-display text-3xl font-black tracking-[0.14em] text-[#eef2ff]">STRYVEN</h1>
-          <p className="mt-1.5 text-xs text-slate-400 sm:text-sm">Arise, Hunter. Your awakening begins now.</p>
+          <span className="eyebrow-label block text-frost-400">Personal Hunter Operating System</span>
+          <h1 className="mt-1.5 font-display text-3xl font-bold tracking-[0.14em] text-ink-100">STRYVEN</h1>
+          <p className="mt-1.5 text-xs sm:text-sm text-ink-400">
+            Track daily execution, structured training, and long-term progression.
+          </p>
         </div>
 
-        <div className="rounded-2xl border border-[#a78bfa]/25 bg-gradient-to-b from-[#121725]/95 to-[#0b0e18]/98 p-5 sm:p-7 shadow-2xl backdrop-blur-xl">
+        <div className="sv-surface p-5 sm:p-7">
           {!cloudReady && (
-            <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-[#f4c95d]/30 bg-[#f4c95d]/10 px-3.5 py-2.5 text-xs text-[#fde68a]">
-              <WifiOff size={15} className="mt-0.5 shrink-0 text-[#f4c95d]" />
+            <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-gold-500/35 bg-gold-500/10 px-3.5 py-2.5 text-xs text-gold-400">
+              <WifiOff size={15} className="mt-0.5 shrink-0" />
               <span>Offline Local Mode active — progress is saved locally in this browser.</span>
             </div>
           )}
 
-          <div className="mb-5 flex gap-1.5 rounded-xl border border-white/10 bg-[#070a12]/80 p-1 sm:mb-6">
+          <div className="mb-5 grid grid-cols-2 gap-1.5 rounded-xl border border-white/10 bg-ink-950/90 p-1">
             <button
               type="button"
               onClick={() => {
                 setMode('login');
                 setFormError(null);
               }}
-              className={`flex-1 rounded-lg py-2.5 text-xs font-bold tracking-wider uppercase transition ${
-                mode === 'login'
-                  ? 'bg-gradient-to-r from-[#7544d8] to-[#3b5bdb] text-white shadow-md'
-                  : 'text-slate-400 hover:text-white'
+              className={`min-h-[44px] rounded-lg text-xs font-bold tracking-wider uppercase transition ${
+                mode === 'login' ? 'btn-primary !min-h-[40px]' : 'text-ink-400 hover:text-ink-100'
               }`}
             >
               Sign In
@@ -178,10 +204,8 @@ export function Auth() {
                 setMode('signup');
                 setFormError(null);
               }}
-              className={`flex-1 rounded-lg py-2.5 text-xs font-bold tracking-wider uppercase transition ${
-                mode === 'signup'
-                  ? 'bg-gradient-to-r from-[#7544d8] to-[#3b5bdb] text-white shadow-md'
-                  : 'text-slate-400 hover:text-white'
+              className={`min-h-[44px] rounded-lg text-xs font-bold tracking-wider uppercase transition ${
+                mode === 'signup' ? 'btn-primary !min-h-[40px]' : 'text-ink-400 hover:text-ink-100'
               }`}
             >
               Sign Up
@@ -190,20 +214,21 @@ export function Auth() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {formError && (
-              <div role="alert" className="rounded-xl border border-rose-500/35 bg-rose-500/10 px-3.5 py-2.5 text-xs text-rose-300">
+              <div role="alert" className="rounded-xl border border-danger-500/40 bg-danger-500/10 px-3.5 py-2.5 text-xs text-danger-400">
                 {formError}
               </div>
             )}
 
             {mode === 'signup' && (
               <div>
-                <label className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-300">
+                <label htmlFor="auth-username" className="eyebrow-label text-ink-300">
                   Hunter Codename
                 </label>
                 <div className="relative mt-1.5">
-                  <UserIcon size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <UserIcon size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-400" />
                   <input
-                    className="w-full rounded-xl border border-white/15 bg-[#070a12] py-2.5 pl-10 pr-3.5 text-sm text-white placeholder-slate-500 outline-none transition focus:border-[#a78bfa]"
+                    id="auth-username"
+                    className="input pl-10"
                     placeholder="ShadowHunter"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
@@ -212,20 +237,21 @@ export function Auth() {
                   />
                 </div>
                 {username.length > 0 && username.trim().length < 3 && (
-                  <p className="mt-1 text-xs text-rose-400">At least 3 characters</p>
+                  <p className="mt-1 text-xs text-danger-400">At least 3 characters</p>
                 )}
               </div>
             )}
 
             <div>
-              <label className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-300">Email</label>
+              <label htmlFor="auth-email" className="eyebrow-label text-ink-300">
+                Email
+              </label>
               <div className="relative mt-1.5">
-                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-400" />
                 <input
+                  id="auth-email"
                   type="email"
-                  className={`w-full rounded-xl border bg-[#070a12] py-2.5 pl-10 pr-3.5 text-sm text-white placeholder-slate-500 outline-none transition focus:border-[#a78bfa] ${
-                    !emailValid ? 'border-rose-500/60' : 'border-white/15'
-                  }`}
+                  className={`input pl-10 ${!emailValid ? '!border-danger-500/70' : ''}`}
                   placeholder="hunter@system.com"
                   value={email}
                   onChange={(e) => {
@@ -235,18 +261,19 @@ export function Auth() {
                   autoComplete="email"
                 />
               </div>
-              {!emailValid && <p className="mt-1 text-xs text-rose-400">Invalid email address</p>}
+              {!emailValid && <p className="mt-1 text-xs text-danger-400">Invalid email address</p>}
             </div>
 
             <div>
-              <label className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-300">
+              <label htmlFor="auth-password" className="eyebrow-label text-ink-300">
                 Password
               </label>
               <div className="relative mt-1.5">
-                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-400" />
                 <input
+                  id="auth-password"
                   type={showPw ? 'text' : 'password'}
-                  className="w-full rounded-xl border border-white/15 bg-[#070a12] py-2.5 pl-10 pr-10 text-sm text-white placeholder-slate-500 outline-none transition focus:border-[#a78bfa]"
+                  className="input pl-10 pr-11"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => {
@@ -259,7 +286,7 @@ export function Auth() {
                   type="button"
                   aria-label={showPw ? 'Hide password' : 'Show password'}
                   onClick={() => setShowPw(!showPw)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-400 hover:text-white"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-lg text-ink-400 hover:text-ink-100"
                 >
                   {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -284,36 +311,35 @@ export function Auth() {
 
             {mode === 'signup' && (
               <div>
-                <label className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-300">
+                <label htmlFor="auth-confirm-password" className="eyebrow-label text-ink-300">
                   Confirm Password
                 </label>
                 <div className="relative mt-1.5">
-                  <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-400" />
                   <input
+                    id="auth-confirm-password"
                     type={showPw ? 'text' : 'password'}
-                    className={`w-full rounded-xl border bg-[#070a12] py-2.5 pl-10 pr-3.5 text-sm text-white placeholder-slate-500 outline-none transition focus:border-[#a78bfa] ${
-                      !passwordsMatch ? 'border-rose-500/60' : 'border-white/15'
-                    }`}
+                    className={`input pl-10 ${!passwordsMatch ? '!border-danger-500/70' : ''}`}
                     placeholder="••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     autoComplete="new-password"
                   />
                 </div>
-                {!passwordsMatch && <p className="mt-1 text-xs text-rose-400">Passwords do not match</p>}
+                {!passwordsMatch && <p className="mt-1 text-xs text-danger-400">Passwords do not match</p>}
               </div>
             )}
 
             {mode === 'login' && (
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <label className="flex cursor-pointer items-center gap-2">
+                <label className="flex cursor-pointer items-center gap-2 min-h-[44px]">
                   <input
                     type="checkbox"
                     checked={remember}
                     onChange={(e) => setRemember(e.target.checked)}
-                    className="h-4 w-4 rounded border-white/20 bg-[#070a12] accent-[#a78bfa]"
+                    className="h-4 w-4 rounded border-white/20 bg-ink-950 accent-ember-500"
                   />
-                  <span className="text-xs text-slate-300">Remember me</span>
+                  <span className="text-xs text-ink-300">Remember session</span>
                 </label>
                 <button
                   type="button"
@@ -321,26 +347,22 @@ export function Auth() {
                     setForgotOpen(true);
                     setForgotSent(false);
                   }}
-                  className="text-xs font-semibold text-[#5cecff] hover:text-[#9ef4ff]"
+                  className="min-h-[44px] text-xs font-semibold text-frost-400 hover:underline"
                 >
                   Forgot password?
                 </button>
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={!canSubmit}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#a78bfa]/50 bg-gradient-to-r from-[#7544d8] via-[#5338b8] to-[#2e58a8] py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-[#7544d8]/25 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
-            >
+            <button type="submit" disabled={!canSubmit} className="btn-primary w-full uppercase tracking-wider text-xs font-bold">
               {loading ? <Loader2 size={17} className="animate-spin" /> : <Sparkles size={17} />}
-              <span>{mode === 'login' ? 'Enter STRYVEN' : 'Begin Awakening'}</span>
+              <span>{mode === 'login' ? 'Enter STRYVEN' : 'Create Account'}</span>
             </button>
           </form>
 
-          {cloudReady && (
+          {cloudReady && googleEnabled && (
             <>
-              <div className="my-4 flex items-center gap-3 text-[10px] font-mono uppercase tracking-widest text-slate-500">
+              <div className="my-4 flex items-center gap-3 font-mono text-[10px] uppercase tracking-widest text-ink-500">
                 <span className="h-px flex-1 bg-white/10" />
                 <span>OR</span>
                 <span className="h-px flex-1 bg-white/10" />
@@ -349,79 +371,79 @@ export function Auth() {
                 type="button"
                 onClick={() => void handleGoogle()}
                 disabled={loading || oauthLoading}
-                className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-white/15 bg-[#070a12]/90 py-2.5 text-xs font-bold text-slate-200 transition hover:border-[#5cecff]/45 hover:bg-white/5 disabled:opacity-50"
+                className="btn-ghost w-full text-xs"
               >
-                {oauthLoading ? <Loader2 size={15} className="animate-spin" /> : <Shield size={15} className="text-[#5cecff]" />}
+                {oauthLoading ? <Loader2 size={15} className="animate-spin" /> : <Shield size={15} className="text-frost-400" />}
                 <span>Continue with Google</span>
               </button>
             </>
           )}
 
-          <p className="mt-5 text-center text-xs text-slate-400">
-            {mode === 'login' ? 'New to STRYVEN? ' : 'Already awakened? '}
+          <p className="mt-5 text-center text-xs text-ink-400">
+            {mode === 'login' ? 'New to STRYVEN? ' : 'Already have an account? '}
             <button
               type="button"
               onClick={() => {
                 setMode(mode === 'login' ? 'signup' : 'login');
                 setFormError(null);
               }}
-              className="font-semibold text-[#a78bfa] hover:text-[#c4b5fd]"
+              className="font-semibold text-ember-400 hover:underline min-h-[44px] inline-flex items-center"
             >
               {mode === 'login' ? 'Create an account' : 'Sign in instead'}
             </button>
           </p>
         </div>
 
-        <p className="mt-4 px-2 text-center font-mono text-[10px] text-slate-500">
-          By continuing, you accept the System&apos;s terms of discipline.
+        <p className="mt-4 px-2 text-center font-mono text-[10px] text-ink-500">
+          Your activity, training logs, and settings stay bound to your account.
         </p>
       </div>
 
       {forgotOpen && (
-        <div role="dialog" aria-modal="true" aria-label="Reset password" className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
+        <div role="dialog" aria-modal="true" aria-label="Reset password" className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={() => setForgotOpen(false)} />
-          <div className="relative w-full max-w-sm rounded-2xl border border-[#a78bfa]/30 bg-gradient-to-b from-[#121725] to-[#0b0e18] p-5 shadow-2xl">
-            <span className="font-mono text-[10px] font-bold tracking-widest text-[#5cecff] uppercase">ACCOUNT RECOVERY</span>
-            <h3 className="mt-1 mb-2 font-display text-lg font-bold text-white">Reset Password</h3>
+          <div className="relative w-full max-w-sm sv-surface p-5 sm:p-6">
+            <button
+              type="button"
+              aria-label="Close reset dialog"
+              onClick={() => setForgotOpen(false)}
+              className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-xl text-ink-400 hover:bg-white/5 hover:text-ink-100"
+            >
+              <X size={18} />
+            </button>
+            <span className="eyebrow-label text-frost-400">Account Recovery</span>
+            <h3 className="mt-1 mb-2 font-display text-lg font-bold text-ink-100">Reset Password</h3>
             {forgotSent ? (
               <div className="space-y-4">
-                <p className="text-sm text-slate-300">
-                  A reset link has been sent to <strong className="text-white">{forgotEmail}</strong> if an account exists.
+                <p className="text-sm text-ink-300">
+                  A reset link has been sent to <strong className="text-ink-100">{forgotEmail}</strong> if an account exists.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setForgotOpen(false)}
-                  className="w-full rounded-xl border border-white/15 bg-white/5 py-2.5 text-xs font-bold text-white hover:bg-white/10"
-                >
+                <button type="button" onClick={() => setForgotOpen(false)} className="btn-ghost w-full">
                   Close
                 </button>
               </div>
             ) : (
               <form onSubmit={handleForgot} className="space-y-3.5">
-                <p className="text-xs leading-5 text-slate-400">
+                <p className="text-xs leading-5 text-ink-400">
                   {cloudReady
                     ? "Enter your email and we'll send you a password reset link."
                     : 'Password recovery links are unavailable in offline local mode.'}
                 </p>
                 <input
                   type="email"
-                  className="w-full rounded-xl border border-white/15 bg-[#070a12] px-3.5 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-[#a78bfa]"
+                  className="input"
                   placeholder="hunter@system.com"
                   value={forgotEmail}
                   onChange={(e) => setForgotEmail(e.target.value)}
                   autoFocus
                 />
                 <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setForgotOpen(false)}
-                    className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold text-slate-300 hover:bg-white/10"
-                  >
+                  <button type="button" onClick={() => setForgotOpen(false)} className="btn-ghost">
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="rounded-xl border border-[#a78bfa]/50 bg-gradient-to-r from-[#7544d8] to-[#3b5bdb] px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
+                    className="btn-primary"
                     disabled={!isValidEmail(forgotEmail) || forgotSending || !cloudReady}
                   >
                     {forgotSending ? 'Sending…' : 'Send Link'}

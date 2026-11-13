@@ -39,25 +39,25 @@ export function ToastContainer() {
   return (
     <div
       aria-live="polite"
-      className="fixed top-[68px] right-3 sm:top-[88px] sm:right-5 z-[100001] flex flex-col gap-2 w-[min(22rem,calc(100vw-1.5rem))] pointer-events-none"
+      className="fixed top-14 right-3 sm:top-16 sm:right-5 z-[100001] flex flex-col gap-2 w-[min(22rem,calc(100vw-1.5rem))] pointer-events-none"
     >
       {items.map((t) => (
         <div
           key={t.id}
-          className={`rounded-xl border backdrop-blur-xl bg-[#0b0e18]/95 p-3 sm:p-3.5 shadow-2xl flex items-start gap-2.5 sm:gap-3 animate-slide-up pointer-events-auto min-w-0 max-h-32 overflow-hidden ${
+          className={`rounded-xl border backdrop-blur-xl bg-ink-950/95 p-3.5 shadow-2xl flex items-start gap-3 animate-slide-up pointer-events-auto min-w-0 max-h-32 overflow-hidden ${
             t.type === 'reward'
-              ? 'border-[#f4c95d]/45'
+              ? 'border-gold-500/45'
               : t.type === 'error'
-                ? 'border-rose-500/45'
+                ? 'border-danger-500/45'
                 : t.type === 'success'
-                  ? 'border-emerald-400/40'
-                  : 'border-[#a78bfa]/40'
+                  ? 'border-emerald-400/45'
+                  : 'border-ember-400/40'
           }`}
         >
-          {t.icon && <span className="text-xl sm:text-2xl shrink-0">{t.icon}</span>}
+          {t.icon && <span className="text-xl shrink-0">{t.icon}</span>}
           <div className="flex-1 min-w-0 overflow-hidden">
-            <p className="font-semibold text-sm text-[#eef2ff] truncate">{t.title}</p>
-            {t.message && <p className="text-xs text-[#94a3b8] mt-0.5 leading-4 break-words line-clamp-3">{t.message}</p>}
+            <p className="font-semibold text-sm text-ink-100 truncate">{t.title}</p>
+            {t.message && <p className="text-xs text-ink-400 mt-0.5 leading-4 break-words line-clamp-3">{t.message}</p>}
           </div>
         </div>
       ))}

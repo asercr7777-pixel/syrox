@@ -38,27 +38,34 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
   }[size];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 animate-fade-in">
-      <div className="absolute inset-0 bg-black/75" onClick={onClose} />
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={title || 'Dialog'}
+      className="fixed inset-0 z-[1000] flex items-center justify-center p-3 sm:p-5 animate-fade-in"
+    >
+      <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={onClose} />
       <div
-        className={`relative w-full ${sizeClass} max-h-[calc(100vh-1.5rem)] sm:max-h-[88vh] overflow-y-auto overflow-x-hidden rounded-2xl bg-ink-950/95 border border-white/10 shadow-2xl p-4 sm:p-5 animate-slide-up`}
+        className={`relative w-full ${sizeClass} max-h-[calc(100dvh-1.5rem)] sm:max-h-[88dvh] overflow-y-auto overflow-x-hidden sv-surface p-4 sm:p-6 animate-slide-up`}
       >
         {title ? (
-          <div className="flex items-center justify-between gap-3 mb-3 sm:mb-4">
-            <h3 className="font-display text-lg font-bold min-w-0 truncate">{title}</h3>
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <h3 className="font-display text-lg font-bold text-ink-100 min-w-0 truncate">{title}</h3>
             <button
+              type="button"
               aria-label="Close modal"
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-white/10 transition flex-shrink-0"
+              className="h-11 w-11 rounded-xl flex items-center justify-center text-ink-300 hover:bg-white/10 hover:text-ink-100 transition shrink-0"
             >
               <X size={18} />
             </button>
           </div>
         ) : (
           <button
+            type="button"
             aria-label="Close modal"
             onClick={onClose}
-            className="absolute top-2.5 right-2.5 p-2 rounded-lg hover:bg-white/10 transition z-10"
+            className="absolute top-2.5 right-2.5 h-11 w-11 rounded-xl flex items-center justify-center text-ink-300 hover:bg-white/10 hover:text-ink-100 transition z-10"
           >
             <X size={18} />
           </button>
@@ -80,13 +87,33 @@ interface ConfirmModalProps {
   closeOnConfirm?: boolean;
 }
 
-export function ConfirmModal({ open, onClose, onConfirm, title, message, confirmLabel = 'Confirm', danger, closeOnConfirm = true }: ConfirmModalProps) {
+export function ConfirmModal({
+  open,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmLabel = 'Confirm',
+  danger,
+  closeOnConfirm = true,
+}: ConfirmModalProps) {
   return (
     <Modal open={open} onClose={onClose} title={title} size="sm">
-      <p className="text-ink-200 mb-5">{message}</p>
-      <div className="flex gap-2 justify-end flex-wrap">
-        <button onClick={onClose} className="btn-ghost">Cancel</button>
-        <button onClick={() => { onConfirm(); if (closeOnConfirm) onClose(); }} className={danger ? 'btn-danger' : 'btn-primary'}>{confirmLabel}</button>
+      <p className="text-sm text-ink-300 leading-relaxed mb-5">{message}</p>
+      <div className="flex gap-2.5 justify-end flex-wrap">
+        <button type="button" onClick={onClose} className="btn-ghost">
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            onConfirm();
+            if (closeOnConfirm) onClose();
+          }}
+          className={danger ? 'btn-danger' : 'btn-primary'}
+        >
+          {confirmLabel}
+        </button>
       </div>
     </Modal>
   );

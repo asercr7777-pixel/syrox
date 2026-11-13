@@ -1,7 +1,7 @@
-const CACHE_VERSION = 'v2.0.4';
-const STATIC_CACHE = `forged-static-${CACHE_VERSION}`;
-const RUNTIME_CACHE = `forged-runtime-${CACHE_VERSION}`;
-const IMAGE_CACHE = `forged-images-${CACHE_VERSION}`;
+const CACHE_VERSION = 'v2.1.0';
+const STATIC_CACHE = `stryven-static-${CACHE_VERSION}`;
+const RUNTIME_CACHE = `stryven-runtime-${CACHE_VERSION}`;
+const IMAGE_CACHE = `stryven-images-${CACHE_VERSION}`;
 
 const BASE_PATH = new URL('./', self.registration.scope).pathname;
 const withBase = (path) => `${BASE_PATH}${path.replace(/^\//, '')}`;
@@ -11,31 +11,44 @@ const PRECACHE_URLS = [
   withBase('index.html'),
   withBase('manifest.json'),
   withBase('icon.svg'),
-  withBase('icons/ChatGPT%20Image%20Aug%2023%2C%202026%2C%2012_50_30%20PM.png'),
+  withBase('icons/icon-192x192.png'),
+  withBase('icons/icon-512x512.png'),
+  withBase('icons/apple-touch-icon.png'),
   withBase('robots.txt'),
-  withBase('sitemap.xml')
+  withBase('sitemap.xml'),
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => cache.addAll(PRECACHE_URLS).catch((err) => {
-      console.warn('[SW] Some precache URLs failed:', err.message);
-    }))
+    caches.open(STATIC_CACHE).then((cache) =>
+      cache.addAll(PRECACHE_URLS).catch((err) => {
+        console.warn('[SW] Precache warning:', err?.message ?? err);
+      })
+    )
   );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(
-      keys.filter((key) => !key.endsWith(CACHE_VERSION)).map((key) => caches.delete(key))
-    ))
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys.filter((key) => !key.endsWith(CACHE_VERSION)).map((key) => caches.delete(key))
+      )
+    )
   );
   self.clients.claim();
 });
 
 self.addEventListener('message', (event) => {
-  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+  if (event.data?.type === 'CLEAR_CACHE') {
+    event.waitUntil(
+      caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+    );
+  }
 });
 
 function isNavigationRequest(request) {
@@ -56,10 +69,12 @@ function isImageRequest(request) {
 async function staleWhileRevalidate(request) {
   const cache = await caches.open(RUNTIME_CACHE);
   const cachedResponse = await cache.match(request);
-  const fetchPromise = fetch(request).then((networkResponse) => {
-    if (networkResponse?.ok) void cache.put(request, networkResponse.clone());
-    return networkResponse;
-  }).catch(() => cachedResponse);
+  const fetchPromise = fetch(request)
+    .then((networkResponse) => {
+      if (networkResponse?.ok) void cache.put(request, networkResponse.clone());
+      return networkResponse;
+    })
+    .catch(() => cachedResponse);
   return cachedResponse || fetchPromise;
 }
 

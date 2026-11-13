@@ -41,44 +41,32 @@ export function ResetPassword() {
   };
 
   return (
-    <div className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden p-4 bg-[#070a12]">
-      <div
-        className="pointer-events-none absolute inset-0 opacity-75"
-        style={{
-          background:
-            'radial-gradient(ellipse at 30% 20%, rgba(167,139,250,0.16), transparent 45%), radial-gradient(ellipse at 75% 80%, rgba(92,236,255,0.12), transparent 45%)',
-        }}
-      />
-      <div className="relative w-full max-w-md rounded-2xl border border-[#a78bfa]/30 bg-gradient-to-b from-[#121725]/95 to-[#0b0e18]/98 p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
+    <div className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden p-4 bg-ink-950 text-ink-100">
+      <div className="relative z-10 w-full max-w-md sv-surface p-6 sm:p-8">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#a78bfa]/35 bg-[#a78bfa]/15">
-            <ShieldCheck className="text-[#a78bfa]" size={28} />
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-ember-500/40 bg-ember-500/15">
+            <ShieldCheck className="text-ember-400" size={28} />
           </div>
-          <span className="font-mono text-[10px] font-bold tracking-[0.2em] text-[#5cecff] uppercase">
-            SECURITY PROTOCOL
-          </span>
-          <h1 className="mt-1 font-display text-2xl font-black text-white">Reset your password</h1>
-          <p className="mt-2 text-xs text-slate-400">Choose a new password for your STRYVEN account.</p>
+          <span className="eyebrow-label text-frost-400">Account Security</span>
+          <h1 className="mt-1 font-display text-2xl font-bold text-ink-100">Reset your password</h1>
+          <p className="mt-2 text-xs text-ink-400">Choose a new password for your STRYVEN account.</p>
         </div>
 
         {done ? (
-          <button
-            type="button"
-            onClick={enter}
-            className="w-full rounded-xl border border-[#a78bfa]/50 bg-gradient-to-r from-[#7544d8] to-[#3b5bdb] py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg"
-          >
+          <button type="button" onClick={enter} className="btn-primary w-full uppercase tracking-wider text-xs font-bold">
             Enter STRYVEN
           </button>
         ) : (
           <form onSubmit={submit} className="space-y-4">
             <div>
-              <label className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-300">
+              <label htmlFor="reset-password" className="eyebrow-label text-ink-300">
                 New password
               </label>
               <div className="relative mt-1.5">
-                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-400" />
                 <input
-                  className="w-full rounded-xl border border-white/15 bg-[#070a12] py-2.5 pl-10 pr-10 text-sm text-white placeholder-slate-500 outline-none focus:border-[#a78bfa]"
+                  id="reset-password"
+                  className="input pl-10 pr-11"
                   type={show ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -90,7 +78,7 @@ export function ResetPassword() {
                   type="button"
                   aria-label={show ? 'Hide password' : 'Show password'}
                   onClick={() => setShow(!show)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-400 hover:text-white"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-lg text-ink-400 hover:text-ink-100"
                 >
                   {show ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -98,11 +86,12 @@ export function ResetPassword() {
             </div>
 
             <div>
-              <label className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-300">
+              <label htmlFor="reset-confirm" className="eyebrow-label text-ink-300">
                 Confirm password
               </label>
               <input
-                className="mt-1.5 w-full rounded-xl border border-white/15 bg-[#070a12] px-3.5 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-[#a78bfa]"
+                id="reset-confirm"
+                className="input mt-1.5"
                 type={show ? 'text' : 'password'}
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
@@ -111,13 +100,9 @@ export function ResetPassword() {
               />
             </div>
 
-            {confirm && password !== confirm && <p className="text-xs text-rose-400">Passwords do not match.</p>}
+            {confirm && password !== confirm && <p className="text-xs text-danger-400">Passwords do not match.</p>}
 
-            <button
-              type="submit"
-              disabled={!valid || loading}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#a78bfa]/50 bg-gradient-to-r from-[#7544d8] to-[#3b5bdb] py-3 text-xs font-black uppercase tracking-wider text-white disabled:opacity-50"
-            >
+            <button type="submit" disabled={!valid || loading} className="btn-primary w-full uppercase tracking-wider text-xs font-bold">
               {loading ? <Loader2 size={18} className="animate-spin" /> : <ShieldCheck size={18} />}
               <span>Update password</span>
             </button>

@@ -79,11 +79,11 @@ export interface DailyChallenge {
 }
 
 export const DAILY_CHALLENGES: DailyChallenge[] = [
-  { id: 'all_main', label: 'Complete all main tasks', description: 'Finish every core task today.', xp: 150, coins: 120, check: (s) => s && s.coreCompleted && Object.values(s.coreCompleted).every(Boolean) },
-  { id: 'workout_done', label: 'Finish a workout', description: 'Complete any workout session.', xp: 120, coins: 100, check: (s) => s && s.workoutsCompletedToday > 0 },
-  { id: 'drink_water', label: 'Drink enough water', description: 'Complete the water task.', xp: 60, coins: 50, check: (s) => s && s.coreCompleted && s.coreCompleted.water },
-  { id: 'read_20', label: 'Read for 20 minutes', description: 'Complete the Quran reading task.', xp: 80, coins: 60, check: (s) => s && s.coreCompleted && s.coreCompleted.read_quran },
-  { id: 'dungeon_run', label: 'Clear a dungeon', description: 'Complete today\'s dungeon.', xp: 200, coins: 200, check: (s) => s && s.dungeonClearedToday },
+  { id: 'all_main', label: 'Complete All Main Quests', description: 'Finish every core commitment enabled today.', xp: 150, coins: 0, check: (s) => Boolean(s?.coreCompleted) && s.mainTasks.filter((t) => t.enabled).every((t) => Boolean(s.coreCompleted[t.id])) },
+  { id: 'workout_done', label: 'Complete a Training Session', description: 'Finish and save a timed session in Training.', xp: 120, coins: 0, check: (s) => Boolean(s) && s.workoutsCompletedToday > 0 },
+  { id: 'drink_water', label: 'Hydration Target', description: 'Complete the water intake commitment.', xp: 60, coins: 0, check: (s) => Boolean(s?.coreCompleted?.water) },
+  { id: 'read_20', label: 'Focused Reading', description: 'Complete your daily reading commitment.', xp: 80, coins: 0, check: (s) => Boolean(s?.coreCompleted?.read_quran) },
+  { id: 'three_quests', label: 'Triple Execution', description: 'Confirm at least 3 quests completed today.', xp: 100, coins: 0, check: (s) => Boolean(s) && (Object.values(s.coreCompleted ?? {}).filter(Boolean).length + Object.values(s.customCompleted ?? {}).filter(Boolean).length) >= 3 },
 ];
 
 export interface WeeklyMission {

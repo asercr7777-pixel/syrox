@@ -7,7 +7,12 @@ import {
   calculateDisciplineScoreFromTasks,
   sanitizeDayIndex,
   formatTimerClock,
+  evaluateRequirement,
+  countTodayCompletedQuests,
+  type ProgressionSnapshot,
 } from './progression.ts';
+import { SKILL_NODES } from '../data/skillTree.ts';
+import { BOSS_CHALLENGES } from '../data/challenges.ts';
 
 describe('cleanSupabaseUrl', () => {
   it('strips trailing slashes and accidental /rest/v1/ path', () => {
@@ -62,7 +67,7 @@ describe('calculateDisciplineScoreFromTasks', () => {
       custom,
       { x1: true },
     );
-    assert.equal(score, 50); // 2 of 4 enabled tasks
+    assert.equal(score, 50);
   });
 
   it('returns 0 when no tasks exist', () => {
@@ -82,5 +87,43 @@ describe('sanitizeDayIndex and formatTimerClock', () => {
     assert.equal(formatTimerClock(0), '00:00:00');
     assert.equal(formatTimerClock(3661), '01:01:01');
     assert.equal(formatTimerClock(-10), '00:00:00');
+  });
+});
+
+describe('evaluateRequirement for Skill Tree and Boss Challenges', () => {
+  const zeroSnap: ProgressionSnapshot = {
+    xp: 0,
+    streak: 0,
+    bestStreak: 0,
+    workouts: 0,
+    trainingMinutes: 0,
+    questsCompleted: 0,
+    fullClearDays: 0,
+  };
+
+  it('keeps all Skill Tree and Boss Challenge nodes locked when snapshot is zero', () => {
+    for (const node of SKILL_NODES) {
+      const res = evaluateRequirement(node.requirement, zeroSnap);
+      assert.equal(res.unlocked, false, `${node.id} should start locked`);
+    }
+    for (const boss of BOSS_CHALLENGES) {
+      const res = evaluateRequirement(boss.requirement, zeroSnap);
+      assert.equal(res.unlocked, false, `${boss.id} should start locked`);
+    }
+  });
+
+  it('unlocks Iron Vanguard boss challenge only when all three real requirements are met', () => {
+    const boss = BOSS_CHALLENGES.find((b) => b.id === 'boss_iron_vanguard')!;
+    const partial = evaluateRequirement(boss.requirement, { ...zeroSnap, workouts: 3, trainingMinutes: 60, xp: 900 });
+    assert.equal(partial.unlocked, false);
+    assert.ok(partial.pct > 80 && partial.pct < 100);
+
+    const complete = evaluateRequirement(boss.requirement, { ...zeroSnap, workouts: 3, trainingMinutes: 60, xp: 1000 });
+    assert.equal(complete.unlocked, true);
+    assert.equal(complete.pct, 100);
+  });
+
+  it('counts completed quests across core and custom maps', () => {
+    assert.equal(countTodayCompletedQuests({ a: true, b: false }, { c: true }), 2);
   });
 });

@@ -12,7 +12,7 @@ export function XpBar({ xp, showNumbers = true, compact = false }: XpBarProps) {
   return (
     <div className="w-full relative">
       {showNumbers && (
-        <div className={`flex items-center justify-between mb-1 ${compact ? 'text-xs' : 'text-sm'}`}>
+        <div className={`flex items-center justify-between mb-1.5 font-mono tracking-wide ${compact ? 'text-[11px]' : 'text-xs'}`}>
           <span className="font-semibold text-ink-200">Level {prog.level}</span>
           <span className="text-ink-300 tabular-nums">
             {prog.current.toLocaleString()} / {prog.needed.toLocaleString()} XP

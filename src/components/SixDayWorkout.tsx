@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, ChevronDown, ChevronUp, Pencil, Plus, RotateCcw, Trash2, X, Play, Pause, Square, Clock, History, Trophy } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Pencil, Plus, RotateCcw, Trash2, X, Play, Pause, Square, Clock, History, Dumbbell } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useAuth } from '../lib/auth';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
@@ -8,11 +8,23 @@ import { ALL_CHAPTERS } from '../data/story';
 import { playSound } from '../lib/sound';
 import { formatTimerClock, sanitizeDayIndex } from '../lib/progression';
 import { toast } from './ui/Toast';
+import { PageHeader } from './ui/PageHeader';
+import { EmptyState } from './ui/EmptyState';
 
 type Section = 'stretching' | 'main' | 'plyometric';
 type Exercise = { id: string; name: string; sets: number; reps: string; section: Section; done: boolean; image?: string; completedSets?: number; actualReps?: string };
 type Day = { id: string; name: string; exercises: Exercise[] };
-export type WorkoutHistoryEntry = { id: string; dayId: string; dayName: string; startedAt: number; completedAt: number; durationSeconds: number; completedExercises?: number; totalExercises?: number; exerciseResults?: { id: string; name: string; sets: number; reps: string; completedSets: number; actualReps: string; done: boolean }[] };
+export type WorkoutHistoryEntry = {
+  id: string;
+  dayId: string;
+  dayName: string;
+  startedAt: number;
+  completedAt: number;
+  durationSeconds: number;
+  completedExercises?: number;
+  totalExercises?: number;
+  exerciseResults?: { id: string; name: string; sets: number; reps: string; completedSets: number; actualReps: string; done: boolean }[];
+};
 
 const KEY = 'stryven-six-day-workout-v1';
 const PLAN_OWNER_KEY = 'stryven-six-day-workout-owner-v1';
@@ -20,8 +32,12 @@ const DATE_KEY = 'stryven-six-day-workout-date-v1';
 const ACTIVE_SESSION_KEY = 'stryven-active-workout-session-v1';
 const STORY_WORKOUT_KEY = 'stryven-story-workout-events-v1';
 export const WORKOUT_HISTORY_KEY = 'stryven-workout-history-v1';
-const seedNames = ['Day 1','Day 2','Day 3','Day 4','Day 5','Day 6'];
-function initial(): Day[] { return seedNames.map((name, i) => ({ id: `day-${i + 1}`, name, exercises: [] })); }
+const seedNames = ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6'];
+
+function initial(): Day[] {
+  return seedNames.map((name, i) => ({ id: `day-${i + 1}`, name, exercises: [] }));
+}
+
 function load(): Day[] {
   try {
     const raw = localStorage.getItem(KEY);
@@ -29,17 +45,63 @@ function load(): Day[] {
       const value = JSON.parse(raw);
       if (Array.isArray(value) && value.length === 6) {
         const placeholders = new Set(['Dynamic Stretching', 'Main Strength Exercise', 'Plyometric Drill']);
-        return value.map(day => ({ ...day, exercises: Array.isArray(day.exercises) ? day.exercises.filter((exercise: Exercise) => !placeholders.has(exercise.name)) : [] }));
+        return value.map((day) => ({
+          ...day,
+          exercises: Array.isArray(day.exercises) ? day.exercises.filter((exercise: Exercise) => !placeholders.has(exercise.name)) : [],
+        }));
       }
     }
-  } catch { return initial(); }
+  } catch {
+    return initial();
+  }
   return initial();
 }
-function loadHistory(): WorkoutHistoryEntry[] { try { const raw = localStorage.getItem(WORKOUT_HISTORY_KEY); const value = raw ? JSON.parse(raw) : []; return Array.isArray(value) ? value : []; } catch { return []; } }
-function loadActiveSession(): { active: number; elapsed: number; startedAt: number | null } { try { const raw = localStorage.getItem(ACTIVE_SESSION_KEY); if (!raw) return { active: 0, elapsed: 0, startedAt: null }; const value = JSON.parse(raw); return { active: sanitizeDayIndex(value.active, 6), elapsed: Number.isFinite(value.elapsed) ? Math.max(0, Math.floor(value.elapsed)) : 0, startedAt: Number.isFinite(value.startedAt) ? value.startedAt : null }; } catch { return { active: 0, elapsed: 0, startedAt: null }; } }
-function todayKey() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-function dayKey(timestamp: number) { const d = new Date(timestamp); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-function loadStoryWorkoutEvents(): Record<string, number> { try { const raw = localStorage.getItem(STORY_WORKOUT_KEY); const value = raw ? JSON.parse(raw) : {}; return value && typeof value === 'object' ? value : {}; } catch { return {}; } }
+
+function loadHistory(): WorkoutHistoryEntry[] {
+  try {
+    const raw = localStorage.getItem(WORKOUT_HISTORY_KEY);
+    const value = raw ? JSON.parse(raw) : [];
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+}
+
+function loadActiveSession(): { active: number; elapsed: number; startedAt: number | null } {
+  try {
+    const raw = localStorage.getItem(ACTIVE_SESSION_KEY);
+    if (!raw) return { active: 0, elapsed: 0, startedAt: null };
+    const value = JSON.parse(raw);
+    return {
+      active: sanitizeDayIndex(value.active, 6),
+      elapsed: Number.isFinite(value.elapsed) ? Math.max(0, Math.floor(value.elapsed)) : 0,
+      startedAt: Number.isFinite(value.startedAt) ? value.startedAt : null,
+    };
+  } catch {
+    return { active: 0, elapsed: 0, startedAt: null };
+  }
+}
+
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function dayKey(timestamp: number) {
+  const d = new Date(timestamp);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function loadStoryWorkoutEvents(): Record<string, number> {
+  try {
+    const raw = localStorage.getItem(STORY_WORKOUT_KEY);
+    const value = raw ? JSON.parse(raw) : {};
+    return value && typeof value === 'object' ? value : {};
+  } catch {
+    return {};
+  }
+}
+
 const labels: Record<Section, string> = { stretching: 'Stretching', main: 'Main Training', plyometric: 'Plyometric' };
 
 export function SixDayWorkout() {
@@ -65,19 +127,20 @@ export function SixDayWorkout() {
   const [restRunning, setRestRunning] = useState(false);
   const [restUntil, setRestUntil] = useState<number | null>(null);
 
-  // If the original browser-local six-day plan is unavailable, recover the
-  // newer cloud-saved six-day configuration into this original UI once.
-  // Existing local plans always win and are never overwritten.
   useEffect(() => {
-    if (!userId || !isSupabaseConfigured()) { setCloudPlanReady(true); return; }
+    if (!userId || !isSupabaseConfigured()) {
+      setCloudPlanReady(true);
+      return;
+    }
     if (cloudRestoreStartedFor.current === userId) return;
     setCloudPlanReady(false);
     cloudRestoreStartedFor.current = userId;
     const localPlan = localStorage.getItem(KEY);
     const localPlanOwner = localStorage.getItem(PLAN_OWNER_KEY);
-    // Adopt an older unscoped plan once for the first signed-in account. If
-    // another account used this browser, never upload its local plan to this user.
-    if (localPlanOwner === userId) { setCloudPlanReady(true); return; }
+    if (localPlanOwner === userId) {
+      setCloudPlanReady(true);
+      return;
+    }
     if (!localPlanOwner && localPlan !== null) {
       localStorage.setItem(PLAN_OWNER_KEY, userId);
       setCloudPlanReady(true);
@@ -99,15 +162,20 @@ export function SixDayWorkout() {
         if (libraryResult.error) throw libraryResult.error;
         let saved: unknown = planResult.data?.days;
         if (typeof saved === 'string') {
-          try { saved = JSON.parse(saved); } catch { saved = []; }
+          try {
+            saved = JSON.parse(saved);
+          } catch {
+            saved = [];
+          }
         }
         if (!Array.isArray(saved)) return;
         const library = new Map((libraryResult.data ?? []).map((row) => [row.id, row]));
         const restored: Day[] = seedNames.map((fallback, index) => {
-          const raw = (saved as Record<string, unknown>[]).find((item) => Number(item.dayNumber) === index + 1)
-            ?? (saved as Record<string, unknown>[])[index];
+          const raw =
+            (saved as Record<string, unknown>[]).find((item) => Number(item.dayNumber) === index + 1) ??
+            (saved as Record<string, unknown>[])[index];
           if (!raw) return { id: `day-${index + 1}`, name: fallback, exercises: [] };
-          const entries = Array.isArray(raw.exercises) ? raw.exercises as Record<string, unknown>[] : [];
+          const entries = Array.isArray(raw.exercises) ? (raw.exercises as Record<string, unknown>[]) : [];
           const exercises: Exercise[] = entries.flatMap((entry, exerciseIndex) => {
             const exerciseId = typeof entry.exerciseId === 'string' ? entry.exerciseId : '';
             const libraryExercise = exerciseId ? library.get(exerciseId) : undefined;
@@ -116,16 +184,18 @@ export function SixDayWorkout() {
             const sectionValue = String(entry.section ?? libraryExercise?.category ?? 'main').toLowerCase();
             const section: Section = sectionValue === 'stretching' ? 'stretching' : sectionValue === 'plyometric' ? 'plyometric' : 'main';
             const sets = Number(entry.sets);
-            return [{
-              id: typeof entry.id === 'string' ? entry.id : `cloud-${exerciseId || index + '-' + exerciseIndex}`,
-              name,
-              sets: Number.isFinite(sets) ? Math.max(1, Math.min(50, Math.floor(sets))) : 3,
-              reps: String(entry.repTarget ?? entry.reps ?? '8-12'),
-              section,
-              done: false,
-              completedSets: 0,
-              actualReps: '',
-            }];
+            return [
+              {
+                id: typeof entry.id === 'string' ? entry.id : `cloud-${exerciseId || index + '-' + exerciseIndex}`,
+                name,
+                sets: Number.isFinite(sets) ? Math.max(1, Math.min(50, Math.floor(sets))) : 3,
+                reps: String(entry.repTarget ?? entry.reps ?? '8-12'),
+                section,
+                done: false,
+                completedSets: 0,
+                actualReps: '',
+              },
+            ];
           });
           return {
             id: `day-${index + 1}`,
@@ -148,18 +218,18 @@ export function SixDayWorkout() {
       }
     }
     void restoreCloudPlan();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [userId]);
 
-  // Keep the six-day plan in Supabase as well as local storage. Local data is
-  // preserved first; the cloud copy is updated only after restore has finished.
   useEffect(() => {
     if (!userId || !cloudPlanReady || !isSupabaseConfigured()) return;
     const timeout = window.setTimeout(() => {
       const cloudDays = days.map((day, index) => ({
         dayNumber: index + 1,
         name: day.name,
-        exercises: day.exercises.map(exercise => ({
+        exercises: day.exercises.map((exercise) => ({
           id: exercise.id,
           name: exercise.name,
           sets: exercise.sets,
@@ -168,7 +238,8 @@ export function SixDayWorkout() {
           image: exercise.image ?? null,
         })),
       }));
-      void supabase.from('workout_plans')
+      void supabase
+        .from('workout_plans')
         .upsert({ user_id: userId, days: cloudDays, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
         .then(({ error }) => {
           if (error) console.error('[training] six-day plan cloud sync failed:', error);
@@ -177,14 +248,13 @@ export function SixDayWorkout() {
     return () => window.clearTimeout(timeout);
   }, [days, userId, cloudPlanReady]);
 
-  // Restore full workout history on a new device from the metadata saved with
-  // each workout session. Local entries remain available if the cloud is offline.
   useEffect(() => {
     if (!userId || !isSupabaseConfigured() || cloudHistoryLoadedFor.current === userId) return;
     cloudHistoryLoadedFor.current = userId;
     let cancelled = false;
     async function restoreHistory() {
-      const { data, error } = await supabase.from('workout_sessions')
+      const { data, error } = await supabase
+        .from('workout_sessions')
         .select('id,started_at,ended_at,completed_at,duration_seconds,exercises_completed,metadata')
         .eq('user_id', userId)
         .eq('workout_type', 'custom')
@@ -195,40 +265,50 @@ export function SixDayWorkout() {
         return;
       }
       if (cancelled || !Array.isArray(data)) return;
-      const restored: WorkoutHistoryEntry[] = data.flatMap(row => {
-        const metadata = row.metadata && typeof row.metadata === 'object' ? row.metadata as Record<string, unknown> : {};
+      const restored: WorkoutHistoryEntry[] = data.flatMap((row) => {
+        const metadata = row.metadata && typeof row.metadata === 'object' ? (row.metadata as Record<string, unknown>) : {};
         if (typeof metadata.dayName !== 'string' || typeof metadata.dayId !== 'string') return [];
         const startedAtValue = typeof row.started_at === 'string' ? new Date(row.started_at).getTime() : Number(metadata.startedAt);
         const completedAtValue = typeof row.ended_at === 'string' ? new Date(row.ended_at).getTime() : new Date(row.completed_at).getTime();
         const durationSeconds = Number(row.duration_seconds) || 0;
-        const exerciseResults = Array.isArray(metadata.exerciseResults) ? metadata.exerciseResults as WorkoutHistoryEntry['exerciseResults'] : [];
-        return [{
-          id: typeof metadata.localId === 'string' ? metadata.localId : row.id,
-          dayId: metadata.dayId,
-          dayName: metadata.dayName,
-          startedAt: Number.isFinite(startedAtValue) ? startedAtValue : completedAtValue - durationSeconds * 1000,
-          completedAt: Number.isFinite(completedAtValue) ? completedAtValue : Date.now(),
-          durationSeconds,
-          completedExercises: Number(row.exercises_completed) || 0,
-          totalExercises: Number(metadata.totalExercises) || (exerciseResults?.length ?? 0),
-          exerciseResults,
-        }];
+        const exerciseResults = Array.isArray(metadata.exerciseResults) ? (metadata.exerciseResults as WorkoutHistoryEntry['exerciseResults']) : [];
+        return [
+          {
+            id: typeof metadata.localId === 'string' ? metadata.localId : row.id,
+            dayId: metadata.dayId,
+            dayName: metadata.dayName,
+            startedAt: Number.isFinite(startedAtValue) ? startedAtValue : completedAtValue - durationSeconds * 1000,
+            completedAt: Number.isFinite(completedAtValue) ? completedAtValue : Date.now(),
+            durationSeconds,
+            completedExercises: Number(row.exercises_completed) || 0,
+            totalExercises: Number(metadata.totalExercises) || (exerciseResults?.length ?? 0),
+            exerciseResults,
+          },
+        ];
       });
       if (!restored.length) return;
       const merged = new Map<string, WorkoutHistoryEntry>();
-      [...loadHistory(), ...restored].forEach(entry => merged.set(entry.id, entry));
-      const next = [...merged.values()].sort((a,b) => b.completedAt - a.completedAt).slice(0,100);
+      [...loadHistory(), ...restored].forEach((entry) => merged.set(entry.id, entry));
+      const next = [...merged.values()].sort((a, b) => b.completedAt - a.completedAt).slice(0, 100);
       localStorage.setItem(WORKOUT_HISTORY_KEY, JSON.stringify(next));
       setHistory(next);
     }
     void restoreHistory();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [userId]);
 
   const current = days[active];
-  const progress = useMemo(() => { const total = current.exercises.length; return total ? Math.round(current.exercises.filter(e => e.done).length / total * 100) : 0; }, [current]);
-  const todayHistory = useMemo(() => history.filter(h => dayKey(h.completedAt) === todayKey()), [history]);
-  const persist = (next: Day[]) => { setDays(next); localStorage.setItem(KEY, JSON.stringify(next)); };
+  const progress = useMemo(() => {
+    const total = current.exercises.length;
+    return total ? Math.round((current.exercises.filter((e) => e.done).length / total) * 100) : 0;
+  }, [current]);
+  const todayHistory = useMemo(() => history.filter((h) => dayKey(h.completedAt) === todayKey()), [history]);
+  const persist = (next: Day[]) => {
+    setDays(next);
+    localStorage.setItem(KEY, JSON.stringify(next));
+  };
 
   const syncStoryAfterWorkout = (durationSeconds: number) => {
     const today = todayKey();
@@ -239,62 +319,104 @@ export function SixDayWorkout() {
     const chapter = ALL_CHAPTERS.find((item) => item.number === Math.min(state.storyChapter + 1, 30));
     if (!chapter) return;
     const workoutCountToday = state.workoutSessions.filter((session) => dayKey(session.completedAt) === today).length + 1;
-    chapter.missions.filter((mission) => mission.type === 'workout' && !state.storyCompletedMissions[mission.id] && workoutCountToday >= mission.target)
+    chapter.missions
+      .filter((mission) => mission.type === 'workout' && !state.storyCompletedMissions[mission.id] && workoutCountToday >= mission.target)
       .forEach((mission) => completeStoryMission(mission.id, { xp: mission.xpReward, coins: 0 }));
-    window.dispatchEvent(new CustomEvent('stryven-story-event', { detail: { type: 'workout_completed', dayId: current.id, dayName: current.name, durationSeconds, date: today, workoutCountToday } }));
+    window.dispatchEvent(
+      new CustomEvent('stryven-story-event', { detail: { type: 'workout_completed', dayId: current.id, dayName: current.name, durationSeconds, date: today, workoutCountToday } }),
+    );
   };
 
-  const updateCurrent = (fn: (d: Day) => Day) => persist(days.map((d, i) => i === active ? fn(d) : d));
+  const updateCurrent = (fn: (d: Day) => Day) => persist(days.map((d, i) => (i === active ? fn(d) : d)));
   const toggle = (id: string) => {
-    const nextDays = days.map((d, i) => i === active ? { ...d, exercises: d.exercises.map(e => e.id === id ? { ...e, done: !e.done } : e) } : d);
+    const nextDays = days.map((d, i) =>
+      i === active ? { ...d, exercises: d.exercises.map((e) => (e.id === id ? { ...e, done: !e.done } : e)) } : d,
+    );
     persist(nextDays);
     const nextCurrent = nextDays[active];
-    if (nextCurrent.exercises.length > 0 && nextCurrent.exercises.every(e => e.done)) playSound('workoutComplete');
+    if (nextCurrent.exercises.length > 0 && nextCurrent.exercises.every((e) => e.done)) playSound('workoutComplete');
   };
-  const logSet = (id: string) => updateCurrent(d => ({ ...d, exercises: d.exercises.map(e => { if (e.id !== id) return e; const completedSets = Math.min(Math.max(1, e.sets), (e.completedSets ?? 0) + 1); return { ...e, completedSets, done: completedSets >= e.sets }; }) }));
-  const updateActualReps = (id: string, value: string) => updateCurrent(d => ({ ...d, exercises: d.exercises.map(e => e.id === id ? { ...e, actualReps: value.replace(/[^0-9]/g, '').slice(0, 4) } : e) }));
-  const startRest = () => { setRestRemaining(restDuration); setRestUntil(Date.now() + restDuration * 1000); setRestRunning(true); playSound('click'); };
-  const stopRest = () => { setRestRunning(false); setRestUntil(null); setRestRemaining(0); };
+  const logSet = (id: string) =>
+    updateCurrent((d) => ({
+      ...d,
+      exercises: d.exercises.map((e) => {
+        if (e.id !== id) return e;
+        const completedSets = Math.min(Math.max(1, e.sets), (e.completedSets ?? 0) + 1);
+        return { ...e, completedSets, done: completedSets >= e.sets };
+      }),
+    }));
+  const updateActualReps = (id: string, value: string) =>
+    updateCurrent((d) => ({
+      ...d,
+      exercises: d.exercises.map((e) => (e.id === id ? { ...e, actualReps: value.replace(/[^0-9]/g, '').slice(0, 4) } : e)),
+    }));
+  const startRest = () => {
+    setRestRemaining(restDuration);
+    setRestUntil(Date.now() + restDuration * 1000);
+    setRestRunning(true);
+    playSound('click');
+  };
+  const stopRest = () => {
+    setRestRunning(false);
+    setRestUntil(null);
+    setRestRemaining(0);
+  };
 
-  const saveDayName = () => { const value = dayName.trim(); if (!value) return; updateCurrent(d => ({ ...d, name: value })); setEditingDay(false); };
+  const saveDayName = () => {
+    const value = dayName.trim();
+    if (!value) return;
+    updateCurrent((d) => ({ ...d, name: value }));
+    setEditingDay(false);
+  };
+
   const saveExercise = () => {
     if (!exerciseDraft) return;
     const name = exerciseDraft.name.trim();
     const reps = exerciseDraft.reps.trim();
     if (!name || !reps) return;
     const sets = Number.isFinite(exerciseDraft.sets) && exerciseDraft.sets > 0 ? exerciseDraft.sets : 1;
-    updateCurrent(d => ({
+    updateCurrent((d) => ({
       ...d,
       exercises: exerciseDraft.id
-        ? d.exercises.map(e => e.id === exerciseDraft.id ? { ...e, name, sets, reps, section: exerciseDraft.section, image: exerciseDraft.image } : e)
-        : [...d.exercises, { id: `${Date.now()}-${Math.random()}`, name, sets, reps, section: exerciseDraft.section, done: false, image: exerciseDraft.image }]
+        ? d.exercises.map((e) =>
+            e.id === exerciseDraft.id ? { ...e, name, sets, reps, section: exerciseDraft.section, image: exerciseDraft.image } : e,
+          )
+        : [
+            ...d.exercises,
+            { id: `${Date.now()}-${Math.random()}`, name, sets, reps, section: exerciseDraft.section, done: false, image: exerciseDraft.image },
+          ],
     }));
     setExerciseDraft(null);
   };
-  const remove = (id: string) => updateCurrent(d => ({ ...d, exercises: d.exercises.filter(e => e.id !== id) }));
 
-  const compressExerciseImage = (file: File) => new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(reader.error);
-    reader.onload = () => {
-      const img = new Image();
-      img.onerror = () => reject(new Error('Unable to read image'));
-      img.onload = () => {
-        const maxSize = 640;
-        const scale = Math.min(1, maxSize / Math.max(img.naturalWidth, img.naturalHeight));
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
-        canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
-        const ctx = canvas.getContext('2d');
-        if (!ctx) { reject(new Error('Canvas unavailable')); return; }
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const webp = canvas.toDataURL('image/webp', 0.7);
-        resolve(webp.startsWith('data:image/webp') ? webp : canvas.toDataURL('image/jpeg', 0.65));
+  const remove = (id: string) => updateCurrent((d) => ({ ...d, exercises: d.exercises.filter((e) => e.id !== id) }));
+
+  const compressExerciseImage = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(reader.error);
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Unable to read image'));
+        img.onload = () => {
+          const maxSize = 640;
+          const scale = Math.min(1, maxSize / Math.max(img.naturalWidth, img.naturalHeight));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+          canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Canvas unavailable'));
+            return;
+          }
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const webp = canvas.toDataURL('image/webp', 0.7);
+          resolve(webp.startsWith('data:image/webp') ? webp : canvas.toDataURL('image/jpeg', 0.65));
+        };
+        img.src = String(reader.result);
       };
-      img.src = String(reader.result);
-    };
-    reader.readAsDataURL(file);
-  });
+      reader.readAsDataURL(file);
+    });
 
   const handleExerciseImage = async (file?: File) => {
     if (!file || !file.type.startsWith('image/') || !exerciseDraft) return;
@@ -317,21 +439,57 @@ export function SixDayWorkout() {
       const savedDate = localStorage.getItem(DATE_KEY);
       if (savedDate === currentDate) return;
       const stored = load();
-      const next = stored.map(d => ({ ...d, exercises: d.exercises.map(e => ({ ...e, done: false })) }));
+      const next = stored.map((d) => ({ ...d, exercises: d.exercises.map((e) => ({ ...e, done: false })) }));
       setDays(next);
       localStorage.setItem(KEY, JSON.stringify(next));
       localStorage.setItem(DATE_KEY, currentDate);
     };
     checkNewDay();
-    const onVisibility = () => { if (document.visibilityState === 'visible') checkNewDay(); };
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') checkNewDay();
+    };
     document.addEventListener('visibilitychange', onVisibility);
     return () => document.removeEventListener('visibilitychange', onVisibility);
   }, []);
 
-  useEffect(() => { const onHistory = () => setHistory(loadHistory()); window.addEventListener('stryven-workout-history-updated', onHistory); return () => window.removeEventListener('stryven-workout-history-updated', onHistory); }, []);
-  useEffect(() => { try { if (startedAt === null && elapsed === 0) localStorage.removeItem(ACTIVE_SESSION_KEY); else localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify({ active, elapsed, startedAt })); } catch { /* Storage may be unavailable; the active session remains usable in memory. */ } }, [active, elapsed, startedAt]);
-  useEffect(() => { if (!running || startedAt === null) return; const tick = () => setElapsed(Math.max(0, Math.floor((Date.now() - startedAt) / 1000))); tick(); const id = window.setInterval(tick, 1000); return () => window.clearInterval(id); }, [running, startedAt]);
-  useEffect(() => { if (!restRunning || restUntil === null) return; const tick = () => { const remaining = Math.max(0, Math.ceil((restUntil - Date.now()) / 1000)); setRestRemaining(remaining); if (remaining === 0) { setRestRunning(false); setRestUntil(null); playSound('task'); } }; tick(); const id = window.setInterval(tick, 1000); return () => window.clearInterval(id); }, [restRunning, restUntil]);
+  useEffect(() => {
+    const onHistory = () => setHistory(loadHistory());
+    window.addEventListener('stryven-workout-history-updated', onHistory);
+    return () => window.removeEventListener('stryven-workout-history-updated', onHistory);
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (startedAt === null && elapsed === 0) localStorage.removeItem(ACTIVE_SESSION_KEY);
+      else localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify({ active, elapsed, startedAt }));
+    } catch {
+      /* Storage may be unavailable */
+    }
+  }, [active, elapsed, startedAt]);
+
+  useEffect(() => {
+    if (!running || startedAt === null) return;
+    const tick = () => setElapsed(Math.max(0, Math.floor((Date.now() - startedAt) / 1000)));
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, [running, startedAt]);
+
+  useEffect(() => {
+    if (!restRunning || restUntil === null) return;
+    const tick = () => {
+      const remaining = Math.max(0, Math.ceil((restUntil - Date.now()) / 1000));
+      setRestRemaining(remaining);
+      if (remaining === 0) {
+        setRestRunning(false);
+        setRestUntil(null);
+        playSound('task');
+      }
+    };
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, [restRunning, restUntil]);
 
   useEffect(() => {
     if (!exerciseDraft) return;
@@ -342,18 +500,57 @@ export function SixDayWorkout() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [exerciseDraft]);
 
-  const startTimer = () => { if (running) return; const now = Date.now(); setStartedAt(now - elapsed * 1000); setRunning(true); playSound('click'); };
-  const pauseTimer = () => { setRunning(false); playSound('click'); };
-  const resetTimer = () => { setRunning(false); setElapsed(0); setStartedAt(null); };
+  const startTimer = () => {
+    if (running) return;
+    const now = Date.now();
+    setStartedAt(now - elapsed * 1000);
+    setRunning(true);
+    playSound('click');
+  };
+  const pauseTimer = () => {
+    setRunning(false);
+    playSound('click');
+  };
+  const resetTimer = () => {
+    setRunning(false);
+    setElapsed(0);
+    setStartedAt(null);
+  };
   const finishTimer = () => {
     if (startedAt === null) return;
     const durationSeconds = Math.max(1, elapsed);
     const completedAt = Date.now();
-    const entry: WorkoutHistoryEntry = { id: `${completedAt}-${Math.random()}`, dayId: current.id, dayName: current.name, startedAt, completedAt, durationSeconds, completedExercises: current.exercises.filter(exercise => exercise.done).length, totalExercises: current.exercises.length, exerciseResults: current.exercises.map(exercise => ({ id: exercise.id, name: exercise.name, sets: exercise.sets, reps: exercise.reps, completedSets: exercise.completedSets ?? 0, actualReps: exercise.actualReps ?? '', done: exercise.done })) };
+    const entry: WorkoutHistoryEntry = {
+      id: `${completedAt}-${Math.random()}`,
+      dayId: current.id,
+      dayName: current.name,
+      startedAt,
+      completedAt,
+      durationSeconds,
+      completedExercises: current.exercises.filter((exercise) => exercise.done).length,
+      totalExercises: current.exercises.length,
+      exerciseResults: current.exercises.map((exercise) => ({
+        id: exercise.id,
+        name: exercise.name,
+        sets: exercise.sets,
+        reps: exercise.reps,
+        completedSets: exercise.completedSets ?? 0,
+        actualReps: exercise.actualReps ?? '',
+        done: exercise.done,
+      })),
+    };
     const nextHistory = [entry, ...loadHistory()].slice(0, 100);
     localStorage.setItem(WORKOUT_HISTORY_KEY, JSON.stringify(nextHistory));
     setHistory(nextHistory);
-    saveWorkoutSession('custom', durationSeconds, { localId: entry.id, dayId: entry.dayId, dayName: entry.dayName, startedAt: entry.startedAt, completedAt: entry.completedAt, totalExercises: entry.totalExercises, exerciseResults: entry.exerciseResults });
+    saveWorkoutSession('custom', durationSeconds, {
+      localId: entry.id,
+      dayId: entry.dayId,
+      dayName: entry.dayName,
+      startedAt: entry.startedAt,
+      completedAt: entry.completedAt,
+      totalExercises: entry.totalExercises,
+      exerciseResults: entry.exerciseResults,
+    });
     syncStoryAfterWorkout(durationSeconds);
     playSound('workoutComplete');
     toast({ title: 'Training session saved', message: `${current.name} (${formatDuration(durationSeconds)}) recorded.`, type: 'success' });
@@ -361,123 +558,462 @@ export function SixDayWorkout() {
     resetTimer();
     stopRest();
   };
-  const formatDate = (timestamp: number) => new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }).format(timestamp);
-  const formatDuration = (seconds: number) => `${Math.floor(seconds / 60)}m ${String(seconds % 60).padStart(2,'0')}s`;
 
-  const exerciseModal = exerciseDraft && typeof document !== 'undefined' ? createPortal(
-    <div className="fixed inset-0 z-[99999] flex items-start sm:items-center justify-center overflow-y-auto overscroll-contain bg-black/70 p-3 sm:p-5" role="presentation" onClick={() => setExerciseDraft(null)}>
-      <div role="dialog" aria-modal="true" aria-label={exerciseDraft.id ? 'Edit exercise' : 'Add exercise'} className="card !w-[min(92vw,560px)] !max-w-[560px] !max-h-[calc(100dvh-1.5rem)] !overflow-y-auto overscroll-contain p-4 sm:p-5 space-y-3 sm:space-y-4 my-0 sm:my-auto shrink-0" onClick={e => e.stopPropagation()}>
-        <div className="flex justify-between items-center gap-3">
-          <h2 className="font-display text-lg sm:text-xl font-bold truncate">{exerciseDraft.id ? 'Edit Exercise' : 'Add Exercise'}</h2>
-          <button type="button" aria-label="Close" className="btn-ghost p-2 flex-shrink-0" onClick={() => setExerciseDraft(null)}><X size={19}/></button>
-        </div>
-        <input autoFocus className="input" placeholder="Exercise name" value={exerciseDraft.name} onChange={e => setExerciseDraft({ ...exerciseDraft, name: e.target.value })}/>
-        <div className="grid grid-cols-2 gap-2 sm:gap-3">
-          <input className="input" type="number" min="1" value={exerciseDraft.sets} onChange={e => setExerciseDraft({ ...exerciseDraft, sets: Number(e.target.value) || 1 })}/>
-          <input className="input" placeholder="Reps / time" value={exerciseDraft.reps} onChange={e => setExerciseDraft({ ...exerciseDraft, reps: e.target.value })}/>
-        </div>
-        <select className="input" value={exerciseDraft.section} onChange={e => setExerciseDraft({ ...exerciseDraft, section: e.target.value as Section })}>
-          <option value="stretching">Stretching</option><option value="main">Main Training</option><option value="plyometric">Plyometric</option>
-        </select>
-        <div className="space-y-2">
-          <label className="text-xs text-ink-400">Exercise image</label>
-          <input
-            className="input"
-            type="file"
-            accept="image/*"
-            onChange={e => { void handleExerciseImage(e.target.files?.[0]); e.currentTarget.value = ''; }}
-          />
-          {exerciseDraft.image && (
-            <div className="relative overflow-hidden rounded-xl border border-white/10 bg-ink-950/40">
-              <img src={exerciseDraft.image} alt="Exercise preview" className="w-full max-h-40 sm:max-h-52 object-contain" />
+  const formatDate = (timestamp: number) =>
+    new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }).format(timestamp);
+  const formatDuration = (seconds: number) => `${Math.floor(seconds / 60)}m ${String(seconds % 60).padStart(2, '0')}s`;
+
+  const exerciseModal =
+    exerciseDraft && typeof document !== 'undefined'
+      ? createPortal(
+          <div
+            className="fixed inset-0 z-[99999] flex items-start sm:items-center justify-center overflow-y-auto overscroll-contain bg-black/75 backdrop-blur-sm p-3 sm:p-5"
+            role="presentation"
+            onClick={() => setExerciseDraft(null)}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label={exerciseDraft.id ? 'Edit exercise' : 'Add exercise'}
+              className="sv-surface !w-[min(92vw,540px)] !max-w-[540px] !max-h-[calc(100dvh-1.5rem)] !overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4 my-0 sm:my-auto shrink-0"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center gap-3">
+                <h2 className="font-display text-lg sm:text-xl font-bold text-ink-100 truncate">
+                  {exerciseDraft.id ? 'Edit Exercise' : 'Add Exercise'}
+                </h2>
+                <button
+                  type="button"
+                  aria-label="Close"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl text-ink-300 hover:bg-white/10"
+                  onClick={() => setExerciseDraft(null)}
+                >
+                  <X size={19} />
+                </button>
+              </div>
+              <input
+                autoFocus
+                className="input"
+                placeholder="Exercise name"
+                value={exerciseDraft.name}
+                onChange={(e) => setExerciseDraft({ ...exerciseDraft, name: e.target.value })}
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  className="input tabular-nums"
+                  type="number"
+                  min="1"
+                  aria-label="Sets"
+                  value={exerciseDraft.sets}
+                  onChange={(e) => setExerciseDraft({ ...exerciseDraft, sets: Number(e.target.value) || 1 })}
+                />
+                <input
+                  className="input"
+                  placeholder="Reps / time"
+                  aria-label="Reps or time"
+                  value={exerciseDraft.reps}
+                  onChange={(e) => setExerciseDraft({ ...exerciseDraft, reps: e.target.value })}
+                />
+              </div>
+              <select
+                className="input"
+                aria-label="Training section"
+                value={exerciseDraft.section}
+                onChange={(e) => setExerciseDraft({ ...exerciseDraft, section: e.target.value as Section })}
+              >
+                <option value="stretching">Stretching</option>
+                <option value="main">Main Training</option>
+                <option value="plyometric">Plyometric</option>
+              </select>
+              <div className="space-y-2">
+                <label className="eyebrow-label text-ink-300 block">Exercise reference image</label>
+                <input
+                  className="input"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    void handleExerciseImage(e.target.files?.[0]);
+                    e.currentTarget.value = '';
+                  }}
+                />
+                {exerciseDraft.image && (
+                  <div className="relative overflow-hidden rounded-xl border border-white/10 bg-ink-950/60">
+                    <img src={exerciseDraft.image} alt="Exercise preview" className="w-full max-h-48 object-contain" />
+                    <button
+                      type="button"
+                      className="btn-ghost absolute right-2 top-2 !min-h-[38px] p-2"
+                      onClick={() => setExerciseDraft({ ...exerciseDraft, image: undefined })}
+                      aria-label="Remove exercise image"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                )}
+              </div>
               <button
                 type="button"
-                className="btn-ghost absolute right-2 top-2 p-2"
-                onClick={() => setExerciseDraft({ ...exerciseDraft, image: undefined })}
-                aria-label="Remove exercise image"
+                className="btn-primary sticky bottom-0 z-10 w-full"
+                onClick={saveExercise}
+                disabled={!exerciseDraft.name.trim() || !exerciseDraft.reps.trim()}
               >
-                <X size={16}/>
+                Save Exercise
               </button>
             </div>
-          )}
-        </div>
-        <button type="button" className="btn-primary sticky bottom-0 z-10 w-full py-3 bg-ink-950/95 backdrop-blur" onClick={saveExercise} disabled={!exerciseDraft.name.trim() || !exerciseDraft.reps.trim()}>Save Exercise</button>
+          </div>,
+          document.body,
+        )
+      : null;
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Training System"
+        title="Training Command"
+        description="Build your own 6-day training split, log sets and reps in real time, and track every session."
+        right={
+          <div className="sv-surface px-4 py-2.5 flex items-center gap-2.5 text-xs font-mono tabular-nums">
+            <Dumbbell size={16} className="text-frost-400" />
+            <span className="font-bold text-ink-100">
+              {todayHistory.length} session{todayHistory.length === 1 ? '' : 's'} today
+            </span>
+          </div>
+        }
+      />
+
+      {/* 6-Day Selector Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+        {days.map((d, i) => {
+          const isSelected = active === i;
+          return (
+            <button
+              key={d.id}
+              type="button"
+              onClick={() => {
+                if (!running && startedAt === null) setActive(i);
+              }}
+              disabled={running || startedAt !== null}
+              className={`sv-surface p-3.5 text-left transition min-h-[76px] ${
+                isSelected ? '!border-ember-400 bg-ember-500/15' : 'hover:border-white/25'
+              } ${running || startedAt !== null ? 'cursor-default opacity-80' : ''}`}
+            >
+              <span className="eyebrow-label block">Day {i + 1}</span>
+              <p className="font-display font-bold text-sm text-ink-100 truncate mt-1">{d.name}</p>
+              <p className="text-xs font-mono tabular-nums text-ink-400 mt-1">
+                {d.exercises.filter((e) => e.done).length}/{d.exercises.length} done
+              </p>
+            </button>
+          );
+        })}
       </div>
-    </div>,
-    document.body
-  ) : null;
 
-  return <div className="stryven-training-system space-y-5">
-    <div><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl card flex items-center justify-center theme-accent-bg"><Trophy size={19} className="theme-accent"/></div><div><h1 className="section-title">Training Command</h1><p className="text-sm text-ink-300">Build each session from exercises you choose. No preset routine is forced on you.</p></div></div></div>
-
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">{days.map((d, i) => <button type="button" key={d.id} onClick={() => { if (!running && startedAt === null) setActive(i); }} disabled={running || startedAt !== null} className={`card p-3 text-left transition-all ${active === i ? 'theme-accent-border theme-accent-bg' : 'hover:border-white/20'} ${running || startedAt !== null ? 'cursor-default opacity-80' : ''}`}><p className="text-xs text-ink-400">DAY {i + 1}</p><p className="font-bold truncate mt-1">{d.name}</p><p className="text-xs text-ink-400 mt-1">{d.exercises.filter(e => e.done).length}/{d.exercises.length} complete</p></button>)}</div>
-
-    <div className="card-premium p-5 sm:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>{editingDay ? <div className="flex gap-2"><input autoFocus value={dayName} onChange={e => setDayName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveDayName()} className="input" placeholder="Day name" /><button type="button" onClick={saveDayName} className="btn-primary">Save</button><button type="button" onClick={() => setEditingDay(false)} className="btn-ghost" aria-label="Cancel renaming day"><X size={16}/></button></div> : <div><div className="flex items-center gap-2"><h2 className="font-display text-2xl font-bold">{current.name}</h2><button type="button" className="btn-ghost p-2" aria-label="Edit day name" onClick={() => { setDayName(current.name); setEditingDay(true); }} disabled={running}><Pencil size={15}/></button></div><p className="text-sm text-ink-400">Day {active + 1} • {progress}% complete</p></div>}</div>
-        <button type="button" onClick={() => setExerciseDraft({ name: '', sets: 3, reps: '8-12', section: 'main' })} className="btn-primary" disabled={running}><Plus size={17}/> Add Exercise</button>
-      </div>
-      <div className="relative isolate z-[1] h-2 bg-ink-950 rounded-full overflow-hidden mt-5"><div className="relative z-[2] h-full bg-gradient-to-r from-ember-500 to-gold-500 transition-all" style={{ width: `${progress}%` }}/></div>
-    </div>
-
-    <div className="card-premium p-5 sm:p-6 border border-white/10">
-      <div className="flex items-center gap-2 mb-3"><Clock size={18} className="theme-accent"/><h2 className="font-display text-lg font-bold">Workout Timer</h2><span className="ml-auto text-xs text-ink-400">{todayHistory.length} session{todayHistory.length === 1 ? '' : 's'} today</span></div>
-      <div className="text-center py-2"><div className="font-mono text-4xl sm:text-5xl font-bold tracking-wider tabular-nums">{formatTimerClock(elapsed)}</div><p className="text-xs text-ink-400 mt-2">Session will be saved under <span className="font-semibold text-ink-200">{current.name}</span></p></div>
-      <div className="flex flex-wrap justify-center gap-2 mt-4">{!running ? <button type="button" className="btn-primary" onClick={startTimer}><Play size={16}/> {elapsed > 0 ? 'Resume' : 'Start Session'}</button> : <button type="button" className="btn-ghost" onClick={pauseTimer}><Pause size={16}/> Pause</button>}<button type="button" className="btn-ghost" onClick={resetTimer} disabled={elapsed === 0 && startedAt === null}><RotateCcw size={16}/> Reset</button><button type="button" className="btn-primary" onClick={finishTimer} disabled={startedAt === null}><Square size={15}/> Finish & Save</button></div>
-    </div>
-
-    <div className="card-premium p-4 sm:p-5 border border-white/10">
-      <div className="flex flex-wrap items-center gap-3"><div className="flex items-center gap-2"><Clock size={17} className="theme-accent"/><h2 className="font-display font-bold">Rest Timer</h2></div><strong className="ml-auto font-mono text-2xl tabular-nums">{formatTimerClock(restRemaining)}</strong></div>
-      <div className="flex flex-wrap gap-2 mt-3">{[30,60,90,120].map(seconds=><button key={seconds} type="button" className={`btn-ghost px-3 py-2 text-xs ${restDuration===seconds?'theme-accent-border theme-accent-bg':''}`} onClick={()=>setRestDuration(seconds)} disabled={restRunning}>{seconds}s</button>)}<button type="button" className="btn-primary ml-auto" onClick={restRunning?stopRest:startRest}>{restRunning?'Stop Rest':'Start Rest'}</button></div>
-    </div>
-
-    {(['stretching','main','plyometric'] as Section[]).map(section => { const items = current.exercises.filter(e => e.section === section); return <div key={section} className="card p-4 sm:p-5"><div className="flex items-center justify-between mb-3"><h3 className="font-display font-bold uppercase tracking-wider theme-accent">{labels[section]}</h3><span className="text-xs text-ink-400">{items.filter(e => e.done).length}/{items.length}</span></div>{items.length === 0 ? <p className="text-sm text-ink-400 py-3">No exercises yet.</p> : <div className="space-y-2">{items.map(ex => <div key={ex.id} className={`flex flex-wrap items-center gap-2.5 sm:gap-3 rounded-xl border p-3 transition-all ${ex.done ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-white/5 bg-ink-950/30'}`}><button type="button" onClick={() => toggle(ex.id)} className={`w-7 h-7 shrink-0 rounded-md border-2 flex items-center justify-center transition-all ${ex.done ? 'bg-emerald-500 border-emerald-500' : 'border-ink-500 hover:border-white/50'}`} aria-label={ex.done ? `Mark ${ex.name} incomplete` : `Mark ${ex.name} complete`}>{ex.done && <Check size={15}/>}</button><div className="flex-1 min-w-[160px] flex items-center gap-3">
-  {ex.image && <img src={ex.image} alt="" className="w-12 h-12 rounded-lg object-cover border border-white/10 shrink-0" />}
-  <div className="min-w-0 flex-1"><p className={`font-medium truncate ${ex.done ? 'line-through text-ink-400' : ''}`}>{ex.name}</p><p className="text-xs text-ink-400">{ex.sets} sets × {ex.reps} · {ex.completedSets ?? 0}/{ex.sets} sets logged</p></div></div><div className="flex items-center gap-1.5 ml-auto"><input type="number" min="0" max="9999" inputMode="numeric" aria-label={`Actual reps for ${ex.name}`} className="input !w-[88px] !px-2.5 !py-2 text-xs" placeholder="Reps" value={ex.actualReps ?? ''} onChange={e=>updateActualReps(ex.id,e.target.value)} disabled={startedAt===null}/><button type="button" className="btn-ghost px-2.5 py-2 text-xs" onClick={()=>{logSet(ex.id); if((ex.completedSets ?? 0)+1>=ex.sets) startRest();}} disabled={startedAt===null || (ex.completedSets ?? 0)>=ex.sets} title="Log one completed set">+ Set</button><button type="button" className="btn-ghost p-2" aria-label={`Edit ${ex.name}`} onClick={() => setExerciseDraft({ id: ex.id, name: ex.name, sets: ex.sets, reps: ex.reps, section: ex.section, image: ex.image })} disabled={running}><Pencil size={14}/></button><button type="button" className="btn-ghost p-2 text-danger-400" aria-label={`Delete ${ex.name}`} onClick={() => remove(ex.id)} disabled={running}><Trash2 size={14}/></button></div></div>)}</div>}</div>; })}
-
-    <div className="card-premium p-5 sm:p-6">
-      <div className="flex items-center gap-2 mb-4"><History size={18} className="theme-accent"/><div><h2 className="font-display text-lg font-bold">Workout History</h2><p className="text-xs text-ink-400">Duration, time and training day are preserved for every saved session.</p></div></div>
-      {history.length === 0 ? <div className="py-7 text-center text-sm text-ink-400">No completed sessions yet. Start the timer and finish your first workout.</div> : <div className="space-y-2">{history.slice(0, 8).map(entry => {
-        const hasDetails = Array.isArray(entry.exerciseResults) && entry.exerciseResults.length > 0;
-        const expanded = expandedHistoryId === entry.id;
-        return <div key={entry.id} className="rounded-xl border border-white/5 bg-ink-950/30 p-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="w-9 h-9 rounded-lg card flex items-center justify-center"><Clock size={16} className="theme-accent"/></div>
-            <div className="flex-1 min-w-[140px]">
-              <p className="font-semibold">{entry.dayName}</p>
-              <p className="text-xs text-ink-400">{formatDate(entry.completedAt)}</p>
-              {typeof entry.completedExercises === 'number' && <p className="text-xs text-ink-400">{entry.completedExercises}/{entry.totalExercises ?? entry.completedExercises} exercises confirmed · {entry.exerciseResults?.reduce((sum,exercise)=>sum+exercise.completedSets,0) ?? 0} sets logged</p>}
-            </div>
-            <div className="text-sm font-mono font-semibold">{formatDuration(entry.durationSeconds)}</div>
-            {hasDetails && (
-              <button
-                type="button"
-                className="btn-ghost px-2.5 py-1.5 text-xs"
-                aria-expanded={expanded}
-                aria-label={expanded ? `Hide details for ${entry.dayName}` : `Show details for ${entry.dayName}`}
-                onClick={() => setExpandedHistoryId(expanded ? null : entry.id)}
-              >
-                {expanded ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}
-                <span>Details</span>
-              </button>
+      {/* Selected Day Header & Progress */}
+      <section className="sv-surface p-5 sm:p-6 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            {editingDay ? (
+              <div className="flex flex-wrap gap-2">
+                <input
+                  autoFocus
+                  value={dayName}
+                  onChange={(e) => setDayName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && saveDayName()}
+                  className="input max-w-xs"
+                  placeholder="Day name"
+                />
+                <button type="button" onClick={saveDayName} className="btn-primary">
+                  Save
+                </button>
+                <button type="button" onClick={() => setEditingDay(false)} className="btn-ghost" aria-label="Cancel renaming day">
+                  <X size={16} />
+                </button>
+              </div>
+            ) : (
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-display text-2xl font-bold text-ink-100">{current.name}</h2>
+                  <button
+                    type="button"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl text-ink-400 hover:bg-white/5 hover:text-ink-100 transition"
+                    aria-label="Edit day name"
+                    onClick={() => {
+                      setDayName(current.name);
+                      setEditingDay(true);
+                    }}
+                    disabled={running}
+                  >
+                    <Pencil size={15} />
+                  </button>
+                </div>
+                <p className="text-xs font-mono tabular-nums text-ink-400">
+                  Day {active + 1} · {progress}% exercises confirmed
+                </p>
+              </div>
             )}
           </div>
-          {expanded && hasDetails && (
-            <div className="mt-3 pt-3 border-t border-white/10 space-y-1.5">
-              {entry.exerciseResults!.map((ex) => (
-                <div key={ex.id} className="flex flex-wrap items-center justify-between gap-2 text-xs text-ink-300 px-2 py-1 rounded bg-white/[0.02]">
-                  <span className="font-medium text-ink-100">{ex.done ? '✓ ' : ''}{ex.name}</span>
-                  <span className="font-mono text-ink-400">{ex.completedSets}/{ex.sets} sets · target {ex.reps}{ex.actualReps ? ` · actual ${ex.actualReps}` : ''}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>;
-      })}</div>}
-    </div>
+          <button
+            type="button"
+            onClick={() => setExerciseDraft({ name: '', sets: 3, reps: '8-12', section: 'main' })}
+            className="btn-primary"
+            disabled={running}
+          >
+            <Plus size={17} />
+            <span>Add Exercise</span>
+          </button>
+        </div>
 
-    {exerciseModal}
-  </div>;
+        <div className="h-2 bg-ink-950 rounded-full overflow-hidden border border-white/5">
+          <div className="h-full bg-ember-500 transition-all duration-300" style={{ width: `${progress}%` }} />
+        </div>
+      </section>
+
+      {/* Workout & Rest Timers */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <section className="lg:col-span-7 sv-surface p-5 sm:p-6 space-y-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Clock size={18} className="text-ember-400" />
+              <h2 className="font-display text-lg font-bold text-ink-100">Workout Timer</h2>
+            </div>
+            <span className="text-xs font-mono text-ink-400">Target: {current.name}</span>
+          </div>
+          <div className="text-center py-2">
+            <div className="font-mono text-4xl sm:text-5xl font-bold tracking-wider tabular-nums text-ink-100">
+              {formatTimerClock(elapsed)}
+            </div>
+          </div>
+          <div className="flex flex-wrap justify-center gap-2.5">
+            {!running ? (
+              <button type="button" className="btn-primary" onClick={startTimer}>
+                <Play size={16} />
+                <span>{elapsed > 0 ? 'Resume' : 'Start Session'}</span>
+              </button>
+            ) : (
+              <button type="button" className="btn-ghost" onClick={pauseTimer}>
+                <Pause size={16} />
+                <span>Pause</span>
+              </button>
+            )}
+            <button type="button" className="btn-ghost" onClick={resetTimer} disabled={elapsed === 0 && startedAt === null}>
+              <RotateCcw size={16} />
+              <span>Reset</span>
+            </button>
+            <button
+              type="button"
+              className={startedAt === null ? 'btn-ghost' : 'btn-primary'}
+              onClick={finishTimer}
+              disabled={startedAt === null}
+            >
+              <Square size={15} />
+              <span>Finish &amp; Save</span>
+            </button>
+          </div>
+        </section>
+
+        <section className="lg:col-span-5 sv-surface p-5 sm:p-6 flex flex-col justify-between gap-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Clock size={18} className="text-frost-400" />
+              <h2 className="font-display text-lg font-bold text-ink-100">Rest Timer</h2>
+            </div>
+            <strong className="font-mono text-2xl tabular-nums text-frost-400">{formatTimerClock(restRemaining)}</strong>
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            {[30, 60, 90, 120].map((seconds) => (
+              <button
+                key={seconds}
+                type="button"
+                className={`btn-ghost !px-2 text-xs font-mono tabular-nums ${
+                  restDuration === seconds ? '!border-frost-400 !bg-frost-500/15 text-frost-400' : ''
+                }`}
+                onClick={() => setRestDuration(seconds)}
+                disabled={restRunning}
+              >
+                {seconds}s
+              </button>
+            ))}
+          </div>
+          <button type="button" className="btn-primary w-full" onClick={restRunning ? stopRest : startRest}>
+            {restRunning ? 'Stop Rest' : `Start ${restDuration}s Rest`}
+          </button>
+        </section>
+      </div>
+
+      {/* Exercise Sections */}
+      {(['stretching', 'main', 'plyometric'] as Section[]).map((section) => {
+        const items = current.exercises.filter((e) => e.section === section);
+        return (
+          <section key={section} className="sv-surface p-4 sm:p-6 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-display text-base font-bold uppercase tracking-wider text-ember-400">{labels[section]}</h3>
+              <span className="font-mono text-xs tabular-nums text-ink-400">
+                {items.filter((e) => e.done).length}/{items.length}
+              </span>
+            </div>
+
+            {items.length === 0 ? (
+              <p className="text-sm text-ink-400 py-2">No exercises in {labels[section].toLowerCase()} yet.</p>
+            ) : (
+              <div className="space-y-2.5">
+                {items.map((ex) => (
+                  <div
+                    key={ex.id}
+                    className={`flex flex-wrap items-center gap-3 rounded-xl border p-3 transition ${
+                      ex.done ? 'border-emerald-500/35 bg-emerald-500/10' : 'border-white/10 bg-ink-950/60'
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => toggle(ex.id)}
+                      className={`h-11 w-11 shrink-0 rounded-xl border flex items-center justify-center transition ${
+                        ex.done ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-white/20 text-ink-300 hover:border-ember-400'
+                      }`}
+                      aria-label={ex.done ? `Mark ${ex.name} incomplete` : `Mark ${ex.name} complete`}
+                    >
+                      {ex.done && <Check size={17} />}
+                    </button>
+
+                    <div className="flex-1 min-w-[150px] flex items-center gap-3">
+                      {ex.image && <img src={ex.image} alt="" className="w-12 h-12 rounded-lg object-cover border border-white/10 shrink-0" />}
+                      <div className="min-w-0 flex-1">
+                        <p className={`font-semibold text-sm truncate ${ex.done ? 'line-through text-ink-400' : 'text-ink-100'}`}>{ex.name}</p>
+                        <p className="text-xs font-mono tabular-nums text-ink-400">
+                          {ex.sets} sets × {ex.reps} · {ex.completedSets ?? 0}/{ex.sets} sets logged
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 ml-auto">
+                      <input
+                        type="number"
+                        min="0"
+                        max="9999"
+                        inputMode="numeric"
+                        aria-label={`Actual reps for ${ex.name}`}
+                        className="input !w-[88px] !px-2.5 text-xs tabular-nums"
+                        placeholder="Reps"
+                        value={ex.actualReps ?? ''}
+                        onChange={(e) => updateActualReps(ex.id, e.target.value)}
+                        disabled={startedAt === null}
+                      />
+                      <button
+                        type="button"
+                        className="btn-ghost !px-3 text-xs"
+                        onClick={() => {
+                          logSet(ex.id);
+                          if ((ex.completedSets ?? 0) + 1 >= ex.sets) startRest();
+                        }}
+                        disabled={startedAt === null || (ex.completedSets ?? 0) >= ex.sets}
+                        title="Log one completed set"
+                      >
+                        + Set
+                      </button>
+                      <button
+                        type="button"
+                        className="flex h-11 w-11 items-center justify-center rounded-xl text-ink-400 hover:bg-white/5 hover:text-ink-100 transition"
+                        aria-label={`Edit ${ex.name}`}
+                        onClick={() => setExerciseDraft({ id: ex.id, name: ex.name, sets: ex.sets, reps: ex.reps, section: ex.section, image: ex.image })}
+                        disabled={running}
+                      >
+                        <Pencil size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        className="flex h-11 w-11 items-center justify-center rounded-xl text-ink-400 hover:bg-danger-500/15 hover:text-danger-400 transition"
+                        aria-label={`Delete ${ex.name}`}
+                        onClick={() => remove(ex.id)}
+                        disabled={running}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        );
+      })}
+
+      {/* Workout History */}
+      <section className="sv-surface p-5 sm:p-6 space-y-4">
+        <div className="flex items-center gap-2.5">
+          <History size={18} className="text-ember-400" />
+          <div>
+            <h2 className="font-display text-lg font-bold text-ink-100">Workout History</h2>
+            <p className="text-xs text-ink-400">Duration, time, and completed sets are preserved for every saved session.</p>
+          </div>
+        </div>
+
+        {history.length === 0 ? (
+          <EmptyState
+            icon={<History size={20} />}
+            title="No completed sessions yet"
+            description="Start the workout timer above and finish a session to record your first log."
+          />
+        ) : (
+          <div className="space-y-2.5">
+            {history.slice(0, 8).map((entry) => {
+              const hasDetails = Array.isArray(entry.exerciseResults) && entry.exerciseResults.length > 0;
+              const expanded = expandedHistoryId === entry.id;
+              return (
+                <div key={entry.id} className="glass-soft p-3.5">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ember-500/10 text-ember-400">
+                      <Clock size={16} />
+                    </div>
+                    <div className="flex-1 min-w-[140px]">
+                      <p className="font-semibold text-sm text-ink-100">{entry.dayName}</p>
+                      <p className="text-xs text-ink-400">{formatDate(entry.completedAt)}</p>
+                      {typeof entry.completedExercises === 'number' && (
+                        <p className="text-xs font-mono tabular-nums text-ink-400 mt-0.5">
+                          {entry.completedExercises}/{entry.totalExercises ?? entry.completedExercises} exercises ·{' '}
+                          {entry.exerciseResults?.reduce((sum, exercise) => sum + exercise.completedSets, 0) ?? 0} sets logged
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-sm font-mono font-bold tabular-nums text-ink-100">{formatDuration(entry.durationSeconds)}</div>
+                    {hasDetails && (
+                      <button
+                        type="button"
+                        className="btn-ghost !min-h-[40px] px-3 text-xs"
+                        aria-expanded={expanded}
+                        aria-label={expanded ? `Hide details for ${entry.dayName}` : `Show details for ${entry.dayName}`}
+                        onClick={() => setExpandedHistoryId(expanded ? null : entry.id)}
+                      >
+                        {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                        <span>Details</span>
+                      </button>
+                    )}
+                  </div>
+                  {expanded && hasDetails && (
+                    <div className="mt-3 pt-3 border-t border-white/10 space-y-1.5">
+                      {entry.exerciseResults!.map((ex) => (
+                        <div
+                          key={ex.id}
+                          className="flex flex-wrap items-center justify-between gap-2 text-xs text-ink-300 px-2.5 py-1.5 rounded-lg bg-ink-950/60"
+                        >
+                          <span className="font-medium text-ink-100">
+                            {ex.done ? '✓ ' : ''}
+                            {ex.name}
+                          </span>
+                          <span className="font-mono tabular-nums text-ink-400">
+                            {ex.completedSets}/{ex.sets} sets · target {ex.reps}
+                            {ex.actualReps ? ` · actual ${ex.actualReps}` : ''}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {exerciseModal}
+    </div>
+  );
 }
 
 export default SixDayWorkout;

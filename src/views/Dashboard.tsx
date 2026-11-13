@@ -1,172 +1,645 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import {
+  ArrowUpRight,
+  BarChart3,
+  CheckCircle2,
+  Circle,
+  Clock3,
+  Dumbbell,
+  Flame,
+  Target,
+  TrendingUp,
+  Trophy,
+  Zap,
+} from 'lucide-react';
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useStore } from '../store/useStore';
 import { getRankByXp, getNextRank } from '../data/ranks';
-import { AURAS, TITLES, WEAPONS } from '../data/collections';
+import { AURAS, FRAMES, TITLES } from '../data/collections';
+import { DAILY_CHALLENGES } from '../data/tasks';
+import { BOSS_CHALLENGES } from '../data/challenges';
+import { calculateAverageDiscipline, countTotalCompletedQuests, evaluateRequirement, snapshotFromState } from '../lib/progression';
 import { UserAvatar } from '../components/ui/UserAvatar';
+import { RankBadge } from '../components/ui/RankBadge';
 import { XpBar } from '../components/ui/XpBar';
-import { ArrowUpRight, Award, CheckCircle2, Circle, Clock3, Dumbbell, Flame, Shield, Sparkles, Target, Zap } from 'lucide-react';
+import { EmptyState } from '../components/ui/EmptyState';
 import type { ViewId } from '../components/Navigation';
 
-interface DashboardProps { onNavigate: (v: ViewId) => void; }
+interface DashboardProps {
+  onNavigate: (v: ViewId) => void;
+}
+
+type ChartRange = 7 | 14 | 30;
+
+function formatDuration(seconds: number): string {
+  const safe = Math.max(0, Math.floor(seconds || 0));
+  const hrs = Math.floor(safe / 3600);
+  const mins = Math.floor((safe % 3600) / 60);
+  return hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+}
+
+function dateKeyLocal(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
 
 export function Dashboard({ onNavigate }: DashboardProps) {
   const { state, toggleCoreTask, toggleCustomTask } = useStore();
+  const [range, setRange] = useState<ChartRange>(14);
+  const [refreshSeconds, setRefreshSeconds] = useState(() => {
+    const next = new Date();
+    next.setHours(24, 0, 0, 0);
+    return Math.max(0, Math.floor((next.getTime() - Date.now()) / 1000));
+  });
+
+  useEffect(() => {
+    const update = () => {
+      const next = new Date();
+      next.setHours(24, 0, 0, 0);
+      setRefreshSeconds(Math.max(0, Math.floor((next.getTime() - Date.now()) / 1000)));
+    };
+    const timer = window.setInterval(update, 1000);
+    update();
+    return () => window.clearInterval(timer);
+  }, []);
+
   const rank = getRankByXp(state.xp);
   const nextRank = getNextRank(state.xp);
-  const today = new Date();
-  const greeting = today.getHours() < 12 ? 'Good morning' : today.getHours() < 18 ? 'Good afternoon' : 'Good evening';
-  const dateLabel = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).format(today);
-  const [refreshSeconds, setRefreshSeconds] = useState(() => { const next = new Date(); next.setHours(24, 0, 0, 0); return Math.max(0, Math.floor((next.getTime() - Date.now()) / 1000)); });
-  useEffect(() => {
-    const update = () => { const next = new Date(); next.setHours(24, 0, 0, 0); setRefreshSeconds(Math.max(0, Math.floor((next.getTime() - Date.now()) / 1000))); };
-    const timer = window.setInterval(update, 1000); update(); return () => window.clearInterval(timer);
-  }, []);
-  const refreshCountdown = `${String(Math.floor(refreshSeconds / 3600)).padStart(2, '0')}:${String(Math.floor((refreshSeconds % 3600) / 60)).padStart(2, '0')}:${String(refreshSeconds % 60).padStart(2, '0')}`;
-  const core = state.mainTasks.filter(task => task.enabled);
-  const missions = [...core.map(task => ({ id: task.id, label: task.label, icon: task.emoji, xp: task.points, done: Boolean(state.coreCompleted[task.id]), custom: false })), ...state.customTasks.map(task => ({ id: task.id, label: task.label, icon: '✦', xp: task.points, done: Boolean(state.customCompleted[task.id]), custom: true }))];
-  const completedToday = missions.filter(mission => mission.done).length;
-  const recentHistory = [...state.history].sort((a,b) => a.date.localeCompare(b.date)).slice(-14);
-  const chartMax = Math.max(100, ...recentHistory.map(day => day.xpGained));
-  const chartPoints = recentHistory.map((day,index) => ({ ...day, x: recentHistory.length < 2 ? 300 : 24 + index * (552 / (recentHistory.length - 1)), y: 150 - (day.xpGained / chartMax) * 118 }));
-  const chartLine = chartPoints.map(point => `${point.x},${point.y}`).join(' ');
-  const totalCompleted = state.history.reduce((sum,day) => sum + Object.values(day.coreCompleted).filter(Boolean).length + Object.values(day.customCompleted).filter(Boolean).length, 0);
-  const lastSession = [...state.workoutSessions].sort((a,b) => b.completedAt-a.completedAt)[0];
-  const disciplineAverage = state.history.length ? Math.round(state.history.reduce((sum,day)=>sum+day.disciplineScore,0)/state.history.length) : null;
-  const nextRankProgress = nextRank ? Math.max(0,Math.min(100,((state.xp-rank.xpRequired)/Math.max(1,nextRank.xpRequired-rank.xpRequired))*100)) : 100;
-  const equippedTitle = TITLES.find(item => item.id === state.equipped.title);
-  const equippedAura = AURAS.find(item => item.id === state.equipped.aura);
-  const equippedWeapon = WEAPONS.find(item => item.id === state.equipped.weapon);
-  const formatDuration = (seconds:number) => `${Math.floor(seconds/3600)}h ${Math.floor(seconds%3600/60)}m`;
-  const formatSessionDate = (timestamp:number) => new Intl.DateTimeFormat(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(timestamp);
+  const now = new Date();
+  const greeting = now.getHours() < 12 ? 'Good morning' : now.getHours() < 18 ? 'Good afternoon' : 'Good evening';
+  const dateLabel = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  }).format(now);
+  const refreshCountdown = `${String(Math.floor(refreshSeconds / 3600)).padStart(2, '0')}:${String(
+    Math.floor((refreshSeconds % 3600) / 60),
+  ).padStart(2, '0')}:${String(refreshSeconds % 60).padStart(2, '0')}`;
 
-  return <div className="sv-command sv-dashboard">
-    <section className="sv-command-hero">
-      <div className="sv-command-hero__scan"/>
-      <div className="sv-command-hero__main">
-        <div className="sv-eyebrow"><span className="sv-online-dot"/> STRYVEN // COMMAND CENTER</div>
-        <div className="sv-hero-identity">
-          <UserAvatar avatar={state.avatar} rank={rank} size="lg"/>
-          <div><span>{greeting.toUpperCase()} // HUNTER ONLINE</span><h1 className="sv-system-title">THE SYSTEM</h1><p><b style={{color:rank.color}}>{rank.name}</b><i/> HUNTER: {state.username || 'Hunter'} <i/> LEVEL {state.level}</p></div>
+  const core = state.mainTasks.filter((t) => t.enabled);
+  const missions = [
+    ...core.map((task) => ({
+      id: task.id,
+      label: task.label,
+      icon: task.emoji,
+      xp: task.points,
+      done: Boolean(state.coreCompleted[task.id]),
+      custom: false,
+    })),
+    ...state.customTasks.map((task) => ({
+      id: task.id,
+      label: task.label,
+      icon: '✦',
+      xp: task.points,
+      done: Boolean(state.customCompleted[task.id]),
+      custom: true,
+    })),
+  ];
+  const completedToday = missions.filter((m) => m.done).length;
+  const totalQuestsRecorded = countTotalCompletedQuests(state);
+  const lastSession = [...state.workoutSessions].sort((a, b) => b.completedAt - a.completedAt)[0];
+  const disciplineAverage = calculateAverageDiscipline(state);
+  const nextRankProgress = nextRank
+    ? Math.max(0, Math.min(100, ((state.xp - rank.xpRequired) / Math.max(1, nextRank.xpRequired - rank.xpRequired)) * 100))
+    : 100;
+
+  const equippedTitle = TITLES.find((item) => item.id === state.equipped.title);
+  const equippedAura = AURAS.find((item) => item.id === state.equipped.aura);
+  const equippedFrame = FRAMES.find((item) => item.id === state.equipped.frame);
+
+  const todayStrKey = dateKeyLocal(now);
+  const historyMap = useMemo(() => new Map(state.history.map((d) => [d.date, d])), [state.history]);
+  const chartData = useMemo(() => {
+    const rows: { label: string; xp: number }[] = [];
+    for (let offset = range - 1; offset >= 0; offset--) {
+      const d = new Date();
+      d.setHours(12, 0, 0, 0);
+      d.setDate(d.getDate() - offset);
+      const key = dateKeyLocal(d);
+      const rec = historyMap.get(key);
+      rows.push({
+        label: d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+        xp: key === todayStrKey ? state.dailyXp : rec?.xpGained ?? 0,
+      });
+    }
+    return rows;
+  }, [range, historyMap, todayStrKey, state.dailyXp]);
+
+  const hasAnyHistory = state.history.length > 0 || state.dailyXp > 0;
+  const chartXpSum = chartData.reduce((s, r) => s + r.xp, 0);
+
+  const activeChallenges = DAILY_CHALLENGES.filter((c) => state.dailyChallengeIds.includes(c.id));
+  const snap = snapshotFromState(state);
+  const nextBossChallenge =
+    BOSS_CHALLENGES.find((b) => !state.bossDefeated?.[b.id]) ?? BOSS_CHALLENGES[BOSS_CHALLENGES.length - 1];
+  const nextBossEval = evaluateRequirement(nextBossChallenge.requirement, snap);
+
+  const recentActivity = useMemo(() => {
+    const workoutEvents = state.workoutSessions.map((s) => ({
+      id: `w-${s.id}`,
+      title: `${s.type.toUpperCase()} Training`,
+      detail: `${formatDuration(s.durationSeconds)} logged`,
+      at: s.completedAt,
+      kind: 'training' as const,
+    }));
+    const dayEvents = state.history.map((h) => ({
+      id: `d-${h.date}`,
+      title: h.allMainDone ? 'All Main Quests Completed' : 'Daily Activity Saved',
+      detail: `${h.date} · +${h.xpGained.toLocaleString()} XP`,
+      at: new Date(`${h.date}T20:00:00`).getTime(),
+      kind: 'daily' as const,
+    }));
+    return [...workoutEvents, ...dayEvents].sort((a, b) => b.at - a.at).slice(0, 5);
+  }, [state.workoutSessions, state.history]);
+
+  return (
+    <div className="space-y-6">
+      {/* Hunter Command Center Hero */}
+      <section className="sv-surface p-5 sm:p-7">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+          <div className="xl:col-span-7 space-y-5">
+            <div className="flex flex-wrap items-center gap-4">
+              <UserAvatar
+                avatar={state.avatar}
+                rank={rank}
+                size="lg"
+                frameColor={equippedFrame?.color}
+              />
+              <div className="min-w-0 flex-1">
+                <p className="eyebrow-label text-frost-400">
+                  {greeting} · {dateLabel}
+                </p>
+                <h1
+                  className="mt-1 font-display text-2xl sm:text-3xl font-bold tracking-tight truncate"
+                  style={{ color: state.nameColor || undefined }}
+                >
+                  {state.username || 'Hunter'}
+                </h1>
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-300">
+                  <span className="font-semibold" style={{ color: rank.color }}>
+                    {rank.name}
+                  </span>
+                  <span className="text-ink-600">·</span>
+                  <span className="font-mono tabular-nums">Level {state.level}</span>
+                  {equippedTitle && (
+                    <>
+                      <span className="text-ink-600">·</span>
+                      <span className="text-ink-200">{equippedTitle.name}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <p className="text-sm text-ink-300 leading-relaxed max-w-2xl">
+              Your command center tracks verified daily quests, structured training logs, and long-term consistency.
+            </p>
+
+            <div className="flex flex-wrap gap-2.5">
+              <button type="button" onClick={() => onNavigate('workout')} className="btn-primary">
+                <Dumbbell size={16} />
+                <span>Start Training</span>
+                <ArrowUpRight size={15} />
+              </button>
+              <button type="button" onClick={() => onNavigate('quests')} className="btn-ghost">
+                <Target size={16} />
+                <span>Open Quests</span>
+              </button>
+              <button type="button" onClick={() => onNavigate('evolution')} className="btn-ghost">
+                <TrendingUp size={16} />
+                <span>Evolution</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="xl:col-span-5 glass-soft p-4 sm:p-5 space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <span className="eyebrow-label">Total Progression</span>
+                <p className="mt-1 font-display text-2xl sm:text-3xl font-bold tabular-nums text-ink-100">
+                  {state.xp.toLocaleString()} <span className="text-sm font-mono text-ink-400">XP</span>
+                </p>
+              </div>
+              <RankBadge rank={rank} size="md" auraColor={equippedAura?.color} />
+            </div>
+
+            <XpBar xp={state.xp} />
+
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-ink-400">
+                  {nextRank ? `Until ${nextRank.name}` : 'Maximum Rank Reached'}
+                </span>
+                <span className="font-mono font-semibold tabular-nums text-ink-200">
+                  {nextRank ? `${Math.max(0, nextRank.xpRequired - state.xp).toLocaleString()} XP (${Math.round(nextRankProgress)}%)` : '100%'}
+                </span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-ink-950 overflow-hidden border border-white/5">
+                <div
+                  className="h-full rounded-full bg-ember-500 transition-all duration-500"
+                  style={{ width: `${nextRankProgress}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5 pt-1 border-t border-white/10">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-ink-400">Daily XP Cap</span>
+                <span className="font-mono font-semibold tabular-nums text-frost-400">
+                  {state.dailyXp.toLocaleString()} / 10,000 XP
+                </span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-ink-950 overflow-hidden border border-white/5">
+                <div
+                  className="h-full rounded-full bg-frost-500 transition-all duration-500"
+                  style={{ width: `${Math.min(100, (state.dailyXp / 10000) * 100)}%` }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
-        <p className="sv-hero-copy">{dateLabel}. Your next level is built from the actions you confirm today. Choose a mission or enter training.</p>
-        <div className="sv-hero-actions">
-          <button className="sv-btn sv-btn--primary" onClick={()=>onNavigate('workout')}><Dumbbell size={16}/> START TRAINING <ArrowUpRight size={14}/></button>
-          <button className="sv-btn sv-btn--ghost" onClick={()=>onNavigate('missions')}><Target size={16}/> VIEW MISSIONS</button>
-        </div>
+      </section>
+
+      {/* 4 Primary KPI Metrics */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4" aria-label="Key metrics">
+        <MetricCard icon={<Zap size={18} />} label="Total XP" value={state.xp.toLocaleString()} detail={`Level ${state.level}`} />
+        <MetricCard
+          icon={<CheckCircle2 size={18} />}
+          label="Quests Completed"
+          value={String(totalQuestsRecorded)}
+          detail={`${completedToday}/${missions.length} confirmed today`}
+        />
+        <MetricCard
+          icon={<Dumbbell size={18} />}
+          label="Training Sessions"
+          value={String(state.workoutSessions.length)}
+          detail={`${formatDuration(state.totalWorkoutSeconds)} logged`}
+        />
+        <MetricCard
+          icon={<Flame size={18} />}
+          label="Current Streak"
+          value={`${state.streak} days`}
+          detail={`Best: ${state.bestStreak} days`}
+        />
+      </section>
+
+      {/* Daily Quests & Training Chamber */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <section className="lg:col-span-7 sv-surface p-5 sm:p-6 flex flex-col gap-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="eyebrow-label text-ember-400">Daily Quests · Resets in {refreshCountdown}</p>
+              <h2 className="mt-1 font-display text-xl font-bold text-ink-100">Today&apos;s Mission Board</h2>
+              <p className="text-xs text-ink-400 mt-0.5 tabular-nums">
+                {completedToday} of {missions.length} quests confirmed today
+              </p>
+            </div>
+            <button type="button" onClick={() => onNavigate('quests')} className="btn-ghost text-xs">
+              <span>Manage Quests</span>
+              <ArrowUpRight size={14} />
+            </button>
+          </div>
+
+          <div className="h-2 w-full rounded-full bg-ink-950 overflow-hidden border border-white/5">
+            <div
+              className="h-full rounded-full bg-ember-500 transition-all duration-300"
+              style={{ width: `${missions.length ? (completedToday / missions.length) * 100 : 0}%` }}
+            />
+          </div>
+
+          {missions.length > 0 ? (
+            <div className="space-y-2">
+              {missions.slice(0, 5).map((mission) => (
+                <div
+                  key={mission.id}
+                  className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 transition ${
+                    mission.done
+                      ? 'border-emerald-500/30 bg-emerald-500/10'
+                      : 'border-white/10 bg-ink-950/60 hover:border-white/20'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    disabled={mission.done}
+                    onClick={() => (mission.custom ? toggleCustomTask(mission.id) : toggleCoreTask(mission.id))}
+                    aria-label={mission.done ? `${mission.label} completed` : `Complete ${mission.label}`}
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition ${
+                      mission.done
+                        ? 'text-emerald-400 cursor-default'
+                        : 'text-ink-400 hover:bg-white/5 hover:text-ember-400'
+                    }`}
+                  >
+                    {mission.done ? <CheckCircle2 size={21} /> : <Circle size={21} />}
+                  </button>
+                  <span className="text-lg shrink-0" aria-hidden="true">
+                    {mission.icon}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className={`text-sm font-medium truncate ${mission.done ? 'line-through text-ink-400' : 'text-ink-100'}`}>
+                      {mission.label}
+                    </p>
+                    <p className="text-[11px] font-mono text-ink-400">
+                      {mission.custom ? 'Extra Quest' : 'Main Quest'}
+                    </p>
+                  </div>
+                  <span className="font-mono text-xs font-semibold tabular-nums text-ember-400 shrink-0">
+                    +{mission.xp} XP
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={<Target size={20} />}
+              title="No active quests"
+              description="Create your first daily quest in Quests to begin tracking XP."
+              action={
+                <button type="button" onClick={() => onNavigate('quests')} className="btn-primary text-xs">
+                  Add Quests
+                </button>
+              }
+            />
+          )}
+        </section>
+
+        <section className="lg:col-span-5 sv-surface p-5 sm:p-6 flex flex-col justify-between gap-4">
+          <div className="space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="eyebrow-label text-frost-400">Training Overview</p>
+                <h2 className="mt-1 font-display text-xl font-bold text-ink-100">Training Chamber</h2>
+                <p className="text-xs text-ink-400 mt-0.5">Structured 6-day plans and live workout timer.</p>
+              </div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-frost-500/10 border border-frost-500/30 text-frost-400">
+                <Dumbbell size={18} />
+              </div>
+            </div>
+
+            {lastSession ? (
+              <div className="glass-soft p-4 flex items-center gap-3.5">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ember-500/15 text-ember-400">
+                  <Clock3 size={18} />
+                </div>
+                <div className="min-w-0">
+                  <p className="eyebrow-label">Last Recorded Session</p>
+                  <p className="text-sm font-semibold text-ink-100 truncate mt-0.5">
+                    {lastSession.type.toUpperCase()} Training
+                  </p>
+                  <p className="text-xs text-ink-400 tabular-nums mt-0.5">
+                    {new Intl.DateTimeFormat(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    }).format(lastSession.completedAt)}{' '}
+                    · {formatDuration(lastSession.durationSeconds)}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <EmptyState
+                icon={<Dumbbell size={20} />}
+                title="No training logged yet"
+                description="Start a workout timer in Training to log sets, reps, and duration."
+              />
+            )}
+
+            <div className="grid grid-cols-3 gap-2.5">
+              <div className="glass-soft p-3 text-center">
+                <span className="eyebrow-label block">Sessions</span>
+                <strong className="mt-1 block font-display text-lg font-bold tabular-nums text-ink-100">
+                  {state.workoutSessions.length}
+                </strong>
+              </div>
+              <div className="glass-soft p-3 text-center">
+                <span className="eyebrow-label block">Duration</span>
+                <strong className="mt-1 block font-display text-lg font-bold tabular-nums text-ink-100">
+                  {formatDuration(state.totalWorkoutSeconds)}
+                </strong>
+              </div>
+              <div className="glass-soft p-3 text-center">
+                <span className="eyebrow-label block">Today</span>
+                <strong className="mt-1 block font-display text-sm font-bold text-ink-100">
+                  {state.workoutsCompletedToday > 0 ? 'Logged' : 'Pending'}
+                </strong>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" onClick={() => onNavigate('workout')} className="btn-primary w-full">
+            <Dumbbell size={16} />
+            <span>Open Training</span>
+            <ArrowUpRight size={15} />
+          </button>
+        </section>
       </div>
-      <div className="sv-command-hero__progress">
-        <span>HUNTER PROGRESSION</span><strong>{state.xp.toLocaleString()} <small>XP</small></strong>
-        <div className="sv-rank-seal" style={{borderColor:rank.color,boxShadow:'0 0 50px '+rank.glow}}><b>{rank.emoji}</b><span style={{color:rank.color}}>{rank.name}</span></div>
-        <XpBar xp={state.xp}/>
-        <small>{nextRank ? `${Math.max(0,nextRank.xpRequired-state.xp).toLocaleString()} XP UNTIL ${nextRank.name.toUpperCase()}` : 'MAXIMUM RANK'}</small>
-        <div className="sv-dashboard-rankline"><span>Rank progress</span><b>{Math.round(nextRankProgress)}%</b></div><div className="sv-page-progress"><span style={{width:`${nextRankProgress}%`}}/></div>
-        <div className="sv-dashboard-rankline" style={{marginTop:'0.75rem'}}><span>Daily XP Cap</span><b>{state.dailyXp.toLocaleString()} / 10,000 XP</b></div><div className="sv-page-progress"><span style={{width:`${Math.min(100, (state.dailyXp / 10000) * 100)}%`}}/></div>
-      </div>
-    </section>
 
-    <section className="sv-dashboard-stat-grid">
-      <Stat icon={<Zap size={17}/>} label="TOTAL XP" value={state.xp.toLocaleString()} detail="Lifetime progression"/>
-      <Stat icon={<CheckCircle2 size={17}/>} label="MISSIONS COMPLETED" value={String(totalCompleted)} detail="Recorded in history"/>
-      <Stat icon={<Dumbbell size={17}/>} label="TRAINING SESSIONS" value={String(state.workoutSessions.length)} detail={formatDuration(state.totalWorkoutSeconds) + ' logged'}/>
-      <Stat icon={<Flame size={17}/>} label="CURRENT STREAK" value={`${state.streak} days`} detail={`Best: ${state.bestStreak} days`}/>
-    </section>
-
-    <div className="sv-dashboard-grid">
-      <section className="sv-section sv-surface">
-        <div className="sv-section-head"><div><span className="sv-eyebrow">01 // DAILY QUESTS · REFRESHES IN {refreshCountdown}</span><h2>Mission Board</h2><p>{completedToday} of {missions.length} missions confirmed today.</p></div><button onClick={()=>onNavigate('missions')}>ALL MISSIONS <ArrowUpRight size={13}/></button></div>
-        <div className="sv-page-progress"><span style={{width:`${missions.length?completedToday/missions.length*100:0}%`}}/></div>
-        <div className="sv-dashboard-missions">{missions.slice(0,5).map(mission=><article key={mission.id} className={`sv-dashboard-mission ${mission.done?'is-complete':''}`}><button disabled={mission.done} title={mission.done?'Mission reward already claimed':'Confirm mission complete'} aria-label={mission.done?'Mission completed; reward already claimed':'Confirm mission complete'} onClick={()=>mission.custom?toggleCustomTask(mission.id):toggleCoreTask(mission.id)}>{mission.done?<CheckCircle2 size={19}/>:<Circle size={19}/>}</button><span className="sv-dashboard-mission-icon">{mission.icon}</span><div><b>{mission.label}</b><small>{mission.custom?'PERSONAL MISSION':'SYSTEM MISSION'}</small></div><strong>+{mission.xp} XP</strong></article>)}
-          {missions.length===0&&<div className="sv-empty-record">NO ACTIVE MISSIONS. ADD A MISSION TO BEGIN.</div>}
-        </div>
-      </section>
-
-      <section className="sv-section sv-surface sv-training-command">
-        <div className="sv-section-head"><div><span className="sv-eyebrow">02 // TRAINING COMMAND</span><h2>Training Chamber</h2><p>Choose exercises and record your session.</p></div><Dumbbell size={19}/></div>
-        {lastSession ? <div className="sv-last-session"><div className="sv-last-session-icon"><Clock3 size={20}/></div><div><small>LAST RECORDED SESSION</small><b>{lastSession.type.toUpperCase()} TRAINING</b><span>{formatSessionDate(lastSession.completedAt)} · {formatDuration(lastSession.durationSeconds)}</span></div></div> : <div className="sv-training-empty"><Dumbbell size={24}/><b>No training session recorded yet</b><span>Your first session will appear here.</span></div>}
-        <div className="sv-training-facts"><div><small>SESSIONS</small><b>{state.workoutSessions.length}</b></div><div><small>TOTAL TIME</small><b>{formatDuration(state.totalWorkoutSeconds)}</b></div><div><small>TODAY</small><b>{state.workoutsCompletedToday>0?'RECORDED':'NOT RECORDED'}</b></div></div>
-        <button className="sv-btn sv-btn--primary sv-dashboard-full-button" onClick={()=>onNavigate('workout')}>OPEN TRAINING <ArrowUpRight size={15}/></button>
-      </section>
-    </div>
-
-    <section className="sv-section sv-surface">
-      <div className="sv-section-head"><div><span className="sv-eyebrow">03 // PROGRESS INTELLIGENCE</span><h2>Recent Progress</h2><p>XP earned on dates available in your saved history.</p></div><button onClick={()=>onNavigate('analytics')}>ANALYTICS <ArrowUpRight size={13}/></button></div>
-      {recentHistory.length ? <div className="sv-progress-chart">
-        <div className="sv-progress-chart__summary"><strong>{recentHistory.reduce((sum,day)=>sum+day.xpGained,0).toLocaleString()} XP</strong><span>RECORDED IN THE LAST {recentHistory.length} ACTIVE DAYS</span></div>
-        <div className="sv-progress-chart__plot">
-          <div className="sv-progress-chart__axis"><span>{chartMax.toLocaleString()}</span><span>{Math.round(chartMax/2).toLocaleString()}</span><span>0</span></div>
-          <svg viewBox="0 0 600 180" role="img" aria-label="Daily XP earned trend chart" preserveAspectRatio="none">
-            <defs><linearGradient id="svProgressFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#a78bfa" stopOpacity=".34"/><stop offset="100%" stopColor="#a78bfa" stopOpacity="0"/></linearGradient></defs>
-            {[32,91,150].map(y=><line key={y} x1="24" y1={y} x2="576" y2={y} stroke="currentColor" strokeOpacity=".12" strokeDasharray="4 6"/>)}
-            {chartPoints.length>1&&<polygon points={`24,150 ${chartLine} 576,150`} fill="url(#svProgressFill)"/>}
-            {chartPoints.length>1&&<polyline points={chartLine} fill="none" stroke="#a78bfa" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>}
-            {chartPoints.map(point=><circle key={point.date} cx={point.x} cy={point.y} r="4" fill="#0c0d15" stroke="#c4b5fd" strokeWidth="2"><title>{point.date}: {point.xpGained} XP</title></circle>)}
-          </svg>
-        </div>
-        <div className="sv-progress-chart__labels"><span>{recentHistory[0].date}</span><span>{recentHistory[recentHistory.length-1].date}</span></div>
-      </div> : <div className="sv-empty-record">YOUR PROGRESS CHART WILL APPEAR AFTER YOUR FIRST SAVED DAY.</div>}
-    </section>
-
-    <div className="sv-dashboard-grid">
-      <section className="sv-section sv-surface">
-        <div className="sv-section-head"><div><span className="sv-eyebrow">04 // ATTRIBUTE REGISTER</span><h2>Hunter Attributes</h2><p>Only tracked records are shown as values.</p></div><button onClick={()=>onNavigate('profile')}>PROFILE <ArrowUpRight size={13}/></button></div>
-        <div className="sv-dashboard-attributes">
-          <Attribute label="STRENGTH" value={`${state.workoutSessions.length} sessions`} detail="Training log"/>
-          <Attribute label="ENDURANCE" value={formatDuration(state.totalWorkoutSeconds)} detail="Training time"/>
-          <Attribute label="MOBILITY" value="Not tracked" detail="No saved metric"/>
-          <Attribute label="FLEXIBILITY" value="Not tracked" detail="No saved metric"/>
-          <Attribute label="DISCIPLINE" value={disciplineAverage===null?'Not tracked':`${disciplineAverage}%`} detail="Saved daily score"/>
-          <Attribute label="FOCUS" value="Not tracked" detail="No saved metric"/>
-          <Attribute label="LEARNING" value="Not tracked" detail="No saved metric"/>
-          <Attribute label="CONSISTENCY" value={`${state.streak}-day streak`} detail="Current streak"/>
-        </div>
-      </section>
-
-      <section className="sv-section sv-surface sv-loadout-command">
-        <div className="sv-section-head">
+      {/* Weekly Development Graph */}
+      <section className="sv-surface p-5 sm:p-6 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <span className="sv-eyebrow">05 // RANK &amp; LOADOUT STATUS</span>
-            <h2>Hunter Loadout</h2>
-            <p>Active rank seal, equipped items, and recorded milestones.</p>
+            <p className="eyebrow-label text-ember-400">Progress Trajectory</p>
+            <h2 className="mt-1 font-display text-xl font-bold text-ink-100">Weekly Development</h2>
+            <p className="text-xs text-ink-400 mt-0.5 tabular-nums">
+              {chartXpSum.toLocaleString()} XP recorded across the selected {range}-day window
+            </p>
           </div>
-          <button onClick={()=>onNavigate('settings')}>SETTINGS <ArrowUpRight size={13}/></button>
-        </div>
-
-        <div className="sv-loadout-status-list">
-          <div className="sv-loadout-status-item">
-            <span><Sparkles size={14}/> TITLE</span>
-            <b>{equippedTitle?.name || 'None equipped'}</b>
-          </div>
-          <div className="sv-loadout-status-item">
-            <span><Zap size={14}/> AURA</span>
-            <b>{equippedAura?.name || 'None equipped'}</b>
-          </div>
-          <div className="sv-loadout-status-item">
-            <span><Target size={14}/> WEAPON</span>
-            <b>{equippedWeapon?.name || 'None equipped'}</b>
-          </div>
-          <div className="sv-loadout-status-item">
-            <span><Shield size={14}/> STREAK SHIELD</span>
-            <b>{state.streakShield ? 'Active protection' : 'Standard streak'}</b>
+          <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-ink-950/90 p-1">
+            {([7, 14, 30] as ChartRange[]).map((days) => (
+              <button
+                key={days}
+                type="button"
+                onClick={() => setRange(days)}
+                className={`min-h-[38px] px-3 rounded-lg font-mono text-xs font-semibold transition ${
+                  range === days ? 'bg-ember-500/20 text-ember-400 border border-ember-500/40' : 'text-ink-400 hover:text-ink-100'
+                }`}
+              >
+                {days}D
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="sv-training-facts">
-          <div><small>INVENTORY</small><b>{state.inventory.length} items</b></div>
-          <div><small>ACHIEVEMENTS</small><b><Award size={12} style={{display:'inline',marginRight:4,color:'#f4c95d'}}/>{state.achievements.length}</b></div>
-          <div><small>NEXT RANK</small><b>{nextRank ? `${Math.round(nextRankProgress)}%` : 'MAX'}</b></div>
-        </div>
+        {hasAnyHistory ? (
+          <div className="h-[230px] w-full">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="dashXpFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="rgb(var(--accent-500))" stopOpacity={0.35} />
+                    <stop offset="100%" stopColor="rgb(var(--accent-500))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+                <XAxis dataKey="label" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis width={42} tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#0d111a',
+                    border: '1px solid rgba(255,255,255,0.14)',
+                    borderRadius: '12px',
+                    color: '#f4f7ff',
+                    fontSize: '12px',
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="xp"
+                  name="XP Earned"
+                  stroke="rgb(var(--accent-400))"
+                  strokeWidth={2.5}
+                  fill="url(#dashXpFill)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <EmptyState
+            icon={<BarChart3 size={20} />}
+            title="No daily history recorded yet"
+            description="Complete a quest or workout session today to populate your development curve."
+          />
+        )}
       </section>
+
+      {/* Attributes, Active Challenges & Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <section className="lg:col-span-4 sv-surface p-5 sm:p-6 space-y-4">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <p className="eyebrow-label text-frost-400">Attribute Summary</p>
+              <h2 className="mt-1 font-display text-lg font-bold text-ink-100">Tracked Metrics</h2>
+            </div>
+            <button type="button" onClick={() => onNavigate('evolution')} className="btn-ghost !min-h-[38px] px-3 text-xs">
+              Details
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-2.5">
+            <AttrTile label="Strength" value={`${state.workoutSessions.length} sessions`} />
+            <AttrTile label="Endurance" value={formatDuration(state.totalWorkoutSeconds)} />
+            <AttrTile label="Discipline" value={disciplineAverage === null ? 'Not tracked' : `${disciplineAverage}%`} />
+            <AttrTile label="Consistency" value={`${state.streak}d streak`} />
+            <AttrTile label="Mobility" value="Not tracked" />
+            <AttrTile label="Focus" value="Not tracked" />
+          </div>
+        </section>
+
+        <section className="lg:col-span-4 sv-surface p-5 sm:p-6 flex flex-col justify-between gap-4">
+          <div className="space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="eyebrow-label text-gold-400">Active Challenges</p>
+                <h2 className="mt-1 font-display text-lg font-bold text-ink-100">Trials &amp; Milestones</h2>
+              </div>
+              <Trophy size={18} className="text-gold-400 shrink-0" />
+            </div>
+
+            <div className="glass-soft p-3.5 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-ink-100">{nextBossChallenge.title}</span>
+                <span className="font-mono text-gold-400 tabular-nums">{nextBossEval.pct}%</span>
+              </div>
+              <p className="text-xs text-ink-400 line-clamp-2">{nextBossChallenge.description}</p>
+              <div className="h-1.5 rounded-full bg-ink-950 overflow-hidden">
+                <div className="h-full bg-gold-500 rounded-full" style={{ width: `${nextBossEval.pct}%` }} />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              {activeChallenges.slice(0, 2).map((ch) => {
+                const done = Boolean(state.dailyChallengeCompleted[ch.id]);
+                const met = ch.check(state);
+                return (
+                  <div key={ch.id} className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-ink-950/60 px-3 py-2 text-xs">
+                    <span className="truncate text-ink-200">{ch.label}</span>
+                    <span className={`font-mono shrink-0 ${done ? 'text-emerald-400' : met ? 'text-gold-400' : 'text-ink-400'}`}>
+                      {done ? 'Claimed' : met ? 'Ready' : `+${ch.xp} XP`}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <button type="button" onClick={() => onNavigate('challenges')} className="btn-ghost w-full text-xs">
+            <span>View All Challenges</span>
+            <ArrowUpRight size={14} />
+          </button>
+        </section>
+
+        <section className="lg:col-span-4 sv-surface p-5 sm:p-6 space-y-3">
+          <div>
+            <p className="eyebrow-label text-ink-400">Recent Activity</p>
+            <h2 className="mt-1 font-display text-lg font-bold text-ink-100">Latest Logs</h2>
+          </div>
+
+          {recentActivity.length > 0 ? (
+            <div className="space-y-2">
+              {recentActivity.map((item) => (
+                <div key={item.id} className="flex items-center gap-3 rounded-xl border border-white/10 bg-ink-950/60 px-3 py-2.5">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/5 text-frost-400">
+                    {item.kind === 'training' ? <Dumbbell size={15} /> : <CheckCircle2 size={15} />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-ink-100 truncate">{item.title}</p>
+                    <p className="text-[11px] text-ink-400 truncate">{item.detail}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={<Clock3 size={18} />}
+              title="No recent activity"
+              description="Saved quests and workouts appear here in chronological order."
+            />
+          )}
+        </section>
+      </div>
+
+      {/* Personal Development Summary Bar */}
+      <footer className="sv-surface px-4 py-3.5 flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-ink-300">
+        <span className="eyebrow-label text-ember-400">Daily Summary</span>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 tabular-nums">
+          <span>
+            <strong className="text-ink-100">{completedToday}/{missions.length}</strong> Quests
+          </span>
+          <span>
+            <strong className="text-ink-100">{state.dailyXp.toLocaleString()}</strong> / 10,000 Daily XP
+          </span>
+          <span>
+            <strong className="text-ink-100">{state.workoutsCompletedToday > 0 ? 'Training Logged' : 'Training Pending'}</strong>
+          </span>
+        </div>
+      </footer>
     </div>
-
-
-
-    <div className="sv-today-strip"><span>TODAY // SYSTEM STATUS</span><b>{completedToday}/{missions.length} OBJECTIVES CONFIRMED</b><i/><b>{state.dailyXp.toLocaleString()} / 10,000 XP (DAILY CAP)</b><i/><b>{state.workoutsCompletedToday>0?'TRAINING RECORDED':'TRAINING PENDING'}</b></div>
-  </div>;
+  );
 }
 
-function Stat({icon,label,value,detail}:{icon:React.ReactNode;label:string;value:string;detail:string}) {
-  return <article className="sv-dashboard-stat"><span>{icon}</span><div><small>{label}</small><strong>{value}</strong><p>{detail}</p></div></article>;
+function MetricCard({ icon, label, value, detail }: { icon: ReactNode; label: string; value: string; detail: string }) {
+  return (
+    <article className="sv-surface p-4 sm:p-5 flex items-start gap-3.5">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-ember-500/30 bg-ember-500/12 text-ember-400">
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <span className="eyebrow-label block">{label}</span>
+        <strong className="mt-1 block font-display text-2xl font-bold tabular-nums text-ink-100 truncate">
+          {value}
+        </strong>
+        <p className="mt-0.5 text-xs text-ink-400 truncate">{detail}</p>
+      </div>
+    </article>
+  );
 }
-function Attribute({label,value,detail}:{label:string;value:string;detail:string}) {
-  return <div className="sv-dashboard-attribute"><small>{label}</small><b>{value}</b><span>{detail}</span></div>;
+
+function AttrTile({ label, value }: { label: string; value: string }) {
+  const untracked = value === 'Not tracked';
+  return (
+    <div className="glass-soft p-3">
+      <span className="eyebrow-label block">{label}</span>
+      <strong className={`mt-1 block text-xs font-semibold tabular-nums ${untracked ? 'text-ink-500' : 'text-ink-100'}`}>
+        {value}
+      </strong>
+    </div>
+  );
 }
